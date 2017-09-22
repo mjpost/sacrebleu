@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+"""
+Standardized, reportable BLEU script.
+Based on Rico Sennrich's `multi-bleu-detok.perl`.
+Knows all the standard test sets; downloads and tokenizes them for you.
+
+Why use this version of BLEU?
+- It automatically downloads and manages common test sets
+- It properly computes scores on detokenized outputs, using its own tokenization
+- It produces the same values as (semi-)official scripts from WMT
+- It produces a short version string that facilitates cross-lab comparisons
+- It outputs the BLEU score without the comma, so you don't have to remove it with 'sed'
+  (Looking at you, multi-bleu.perl)
+
+en-de+m.nist+lc
+"""
+
+VERSION = '0.1'
+
+import re
+import os
+import sys
+import math
+import argparse
+
+from collections import defaultdict
+
+SACREBLEU = os.environ.get('SACREBLEU',os.path.join(os.environ.get('HOME'), '.sacrebleu'))
+
+data = {
+    'wmt17': {
+        'data': ['http://data.statmt.org/wmt17/translation-task/test.tgz'],
+        'cs-en': ['test/newstest2017-csen-src.cs.sgm', 'test/newstest2017-csen-ref.en.sgm'],
+    },
+    'wmt16': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
+    'wmt15': 'http://statmt.org/wmt15/test.tgz',
+    'wmt14': {
+        'data': 'http://statmt.org/wmt14/test-filtered.tgz',
+        'en-de': [ ]
+    },
+    'wmt14full': 'http://statmt.org/wmt14/test-full.tgz',
+    'wmt13': 'http://statmt.org/wmt13/test.tgz',
+    'wmt12': 'http://statmt.org/wmt12/test.tgz',
+    'wmt11': 'http://statmt.org/wmt11/test.tgz',
+    'wmt10': 'http://statmt.org/wmt10/test.tgz',
+    'wmt09': 'http://statmt.org/wmt09/test.tgz',
+    'wmt08': 'http://statmt.org/wmt08/test.tgz',
+}
+
+
+def tokenize(line):
+    norm = line
+
+    # language-independent part:
+    norm = norm.replace('<skipped>', '')
+    norm = norm.replace('-\n', '')
+    norm = norm.replace('\n', ' ')
+    norm = norm.replace('&quot;', '"')
+    norm = norm.replace('&amp;', '"')
+    norm = norm.replace('&ltt;', '"')
+    norm = norm.replace('&gt;', '"')
+    
+    # language-dependent part (assuming Western languages):
+    norm = " {} ".format(norm)
+    norm = re.sub(r'([\{-\~\[-\` -\&\(-\+\:-\@\/])', ' \\1 ', norm)
+    norm = re.sub(r'([^0-9])([\.,])', '\\1 \\2 ', norm) # tokenize period and comma unless preceded by a digit
+    norm = re.sub(r'([\.,])([^0-9])', ' \\1 \\2', norm) # tokenize period and comma unless followed by a digit
+    norm = re.sub(r'([0-9])(-)', '\\1 \\2 ', norm) # tokenize dash when preceded by a digit
+    norm = re.sub(r'\s+', ' ', norm) # one space only between words
+    norm = re.sub(r'^\s+', '', norm) # no leading space
+    norm = re.sub(r'\s+$', '', norm) # no trailing space
+
+    return norm
+
+def lowercase(s):
+    return s.lower()
+
+def metric():
+    pass
+
+funcs = {
+    'lc': lowercase,
+    'met': metric,
+    'tok': tokenize
+}
+
+def _read(file):
+    if file.endswith('.gz'):
+        return gzip.open(file, 'rt')
+    return open(file, 'rt')
+
+
+def my_log(num):
+    """Floors the log function"""
+
+    if num == 0.0:
+        return -9999999999
+    return math.log(num)
+
+
+def build_signature(args):
+    sig = '{}.{}-{}'.format(VERSION, args.test_set, args.pair)
+    
+    if args.lc is not None:
+        sig += "+lc"
+
+    return sig
+
+def extract_ngrams(line, max=4):
+    """Extract
+
+    :param line: a segment containing a sequence of words
+    :param max: collect n-grams from 1<=n<=max
+    :return a dictionary containing ngrams and counts
+    """
+
+    ngrams = defaultdict(int)
+    tokens = line.split()
+    for n in range(1, max+1):
+        for i in range(0, len(tokens)-n+1):
+            ngram = ' '.join(tokens[i:i+n])
+            ngrams[ngram] += 1
+    return ngrams
+
+
+def ref_stats(output, refs):
+    ngrams = defaultdict(int)
+    closest_diff = None
+    closest_len = None
+    for ref in refs:
+        tokens = ref.split()
+        reflen = len(tokens)
+        diff = abs(len(output.split()) - reflen)
+        if closest_diff is None or diff < closest_diff:
+            closest_diff = diff
+            closest_len = reflen
+        elif diff == closest_diff:
+            if reflen < closest_len:
+                closest_len = len
+
+        ngrams_ref = extract_ngrams(ref)
+        for ngram in ngrams_ref.keys():
+            ngrams[ngram] = max(ngrams[ngram], ngrams_ref[ngram])
+
+    return ngrams, closest_diff, closest_len
+
+
+if __name__ == '__main__':
+
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('--test-set', '-t', type=str, default='wmt14',
+                            help='The test set to use')
+    arg_parser.add_argument('--sig', default=None, type=str,
+                            help='Signature string')
+    arg_parser.add_argument('-lc', action='store_true', default=False,
+                            help='Case-insensitive BLEU')
+    arg_parser.add_argument('--json', action='store_true', default=False,
+                            help='Output JSON instead of plain text')
+    arg_parser.add_argument('--language-pair', '-l', dest='pair',
+                            help='source-target language pair (2-char ISO639-1 codes')
+    arg_parser.add_argument('refs', nargs='*', default=[],
+                            help='references')
+    args = arg_parser.parse_args()
+
+    version_str = build_signature(args)
+
+    refs = args.refs
+    fhs = [sys.stdin] + [_read(x) for x in refs]
+
+    sys_len = 0
+    ref_len = 0
+
+    correct = defaultdict(int)
+    total = defaultdict(int)
+
+    for sentno, lines in enumerate(zip(*fhs)):
+        if args.lc:
+            lines = [x.lower() for x in lines]
+
+        output, *refs = [tokenize(x.rstrip()) for x in lines]
+    
+        ref_ngrams, closest_diff, closest_len = ref_stats(output, refs)
+
+        sys_len += len(output.split())
+        ref_len += closest_len
+
+        sys_ngrams = extract_ngrams(output)
+        for ngram in sys_ngrams.keys():
+            n = len(ngram.split())
+
+            total[n] += sys_ngrams[ngram]
+            correct[n] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
+
+    bleu_stats = [0, 0, 0, 0, 0]
+
+    for n in range(1, 5):
+        bleu_stats[n] = correct[n] / total[n] if total.get(n) > 0 else 0.
+
+    brevity_penalty = 1.0
+    if sys_len < ref_len:
+        brevity_penalty = math.exp(1 - ref_len / sys_len)
+
+    bleu = 1. * brevity_penalty * math.exp(sum(map(my_log, bleu_stats[1:])) / 4)
+
+    print(version_str)
+    print('BLEU = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(100 * bleu, 100 * bleu_stats[1], 100 * bleu_stats[2], 100 * bleu_stats[3], 100 * bleu_stats[4], brevity_penalty, sys_len / ref_len, sys_len, ref_len))
+          
+          
+
+    
