@@ -21,9 +21,11 @@ import re
 import os
 import sys
 import math
+import tarfile
+import urllib.request, urllib.parse
 import argparse
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 SACREBLEU = os.environ.get('SACREBLEU',os.path.join(os.environ.get('HOME'), '.sacrebleu'))
 
@@ -91,7 +93,11 @@ def _read(file):
 
 
 def my_log(num):
-    """Floors the log function"""
+    """Floors the log function
+
+    :param num: the number
+    :return: log(num) floored to a very low number
+    """
 
     if num == 0.0:
         return -9999999999
@@ -107,21 +113,21 @@ def build_signature(args):
     return sig
 
 def extract_ngrams(line, max=4):
-    """Extract
+    """Extracts all the ngrams (1 <= n <= 4) from a sequence of tokens.
 
     :param line: a segment containing a sequence of words
     :param max: collect n-grams from 1<=n<=max
-    :return a dictionary containing ngrams and counts
+    :return: a dictionary containing ngrams and counts
     """
 
     ngrams = defaultdict(int)
     tokens = line.split()
     for n in range(1, max+1):
-        for i in range(0, len(tokens)-n+1):
+        for i in range(0, len(tokens) - n + 1):
             ngram = ' '.join(tokens[i:i+n])
             ngrams[ngram] += 1
-    return ngrams
 
+    return ngrams
 
 def ref_stats(output, refs):
     ngrams = defaultdict(int)
@@ -145,27 +151,35 @@ def ref_stats(output, refs):
     return ngrams, closest_diff, closest_len
 
 
-if __name__ == '__main__':
+def download_test_set(test_set, langpair):
+    """Downloads the specified test to the system location specified by the SACREBLEU environment variable.
+    :param test_set: the test set to download
+    :param langpair: the language pair (needed for some datasets)
+    :return: the file path, or None if no such dataset could be found
+    """
 
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('--test-set', '-t', type=str, default='wmt14',
-                            help='The test set to use')
-    arg_parser.add_argument('--sig', default=None, type=str,
-                            help='Signature string')
-    arg_parser.add_argument('-lc', action='store_true', default=False,
-                            help='Case-insensitive BLEU')
-    arg_parser.add_argument('--json', action='store_true', default=False,
-                            help='Output JSON instead of plain text')
-    arg_parser.add_argument('--language-pair', '-l', dest='pair',
-                            help='source-target language pair (2-char ISO639-1 codes')
-    arg_parser.add_argument('refs', nargs='*', default=[],
-                            help='references')
-    args = arg_parser.parse_args()
+    # if not data.has_key(test_set):
+    #     return None
+    
+    dataset = data[test_set]['data'][0]
+    outfile = os.path.join(SACREBLEU, test_set, os.path.basename(dataset))
+    if not os.path.exists(os.path.dirname(outfile)):
+        print("Creating", os.path.dirname(outfile))
+        os.makedirs(os.path.dirname(outfile))
+    if not os.path.exists(outfile):
+        print("Downloading to", outfile)
+    with urllib.request.urlopen(dataset) as f, open(outfile, 'wb') as out:
+        out.write(f.read())
 
-    version_str = build_signature(args)
+    tarfile.extractall(outfile)
 
-    refs = args.refs
-    fhs = [sys.stdin] + [_read(x) for x in refs]
+    return outfile
+
+BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
+
+def bleu(instream, refstreams):
+
+    fhs = [sys.stdin] + refstreams
 
     sys_len = 0
     ref_len = 0
@@ -191,19 +205,50 @@ if __name__ == '__main__':
             total[n] += sys_ngrams[ngram]
             correct[n] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
 
-    bleu_stats = [0, 0, 0, 0, 0]
+    precisions  = [0, 0, 0, 0, 0]
 
     for n in range(1, 5):
-        bleu_stats[n] = correct[n] / total[n] if total.get(n) > 0 else 0.
+        precisions[n] = 100. * correct[n] / total[n] if total.get(n) > 0 else 0.
 
     brevity_penalty = 1.0
     if sys_len < ref_len:
         brevity_penalty = math.exp(1 - ref_len / sys_len)
 
-    bleu = 1. * brevity_penalty * math.exp(sum(map(my_log, bleu_stats[1:])) / 4)
+    bleu = 1. * brevity_penalty * math.exp(sum(map(my_log, precisions[1:])) / 4)
 
-    print(version_str)
-    print('BLEU = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(100 * bleu, 100 * bleu_stats[1], 100 * bleu_stats[2], 100 * bleu_stats[3], 100 * bleu_stats[4], brevity_penalty, sys_len / ref_len, sys_len, ref_len))
+    return BLEU._make([bleu, *precisions[1:], brevity_penalty, sys_len, ref_len])
+
+
+if __name__ == '__main__':
+
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('--test-set', '-t', type=str, default=None,
+                            help='The test set to use')
+    arg_parser.add_argument('--sig', default=None, type=str,
+                            help='Signature string')
+    arg_parser.add_argument('-lc', action='store_true', default=False,
+                            help='Case-insensitive BLEU')
+    arg_parser.add_argument('--json', action='store_true', default=False,
+                            help='Output JSON instead of plain text')
+    arg_parser.add_argument('--language-pair', '-l', dest='pair', default='??-??',
+                            help='source-target language pair (2-char ISO639-1 codes')
+    arg_parser.add_argument('refs', nargs='*', default=[],
+                            help='references')
+    args = arg_parser.parse_args()
+
+    version_str = build_signature(args)
+
+    if args.test_set:
+        download_test_set(args.test_set, args.pair)
+
+        refs = None
+    else:        
+        refs = args.refs
+    
+    # bleu, precisions, brevity_penalty, sys_len, ref_len = bleu(sys.stdin, [_read(x) for x in refs])
+    bleu = bleu(sys.stdin, [_read(x) for x in refs])
+
+    print('BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(version_str, bleu.score, bleu.ngram1, bleu.ngram2, bleu.ngram3, bleu.ngram4, bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
           
           
 
