@@ -146,7 +146,7 @@ def my_log(num):
 
 
 def build_signature(args):
-    sig = '{}.{}-{}'.format(VERSION, args.test_set, args.pair)
+    sig = '{}.{}-{}'.format(VERSION, args.test_set, args.langpair)
     
     if args.lc is not None:
         sig += "+lc"
@@ -192,6 +192,18 @@ def ref_stats(output, refs):
     return ngrams, closest_diff, closest_len
 
 
+def process_to_text(rawfile, txtfile):
+    """Copies raw files to 
+    :param rawfile: the input file (possibly SGML)
+    :param txtfile: the plaintext file
+    """
+
+    if rawfile.endswith('.sgm'):
+        with _read(rawfile) as fin, open(txtfile, 'wt') as fout:
+            for line in fin:
+                if line.startswith('<seg '):
+                    fout.write(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line))
+
 def download_test_set(test_set, langpair=None):
     """Downloads the specified test to the system location specified by the SACREBLEU environment variable.
     :param test_set: the test set to download
@@ -204,23 +216,33 @@ def download_test_set(test_set, langpair=None):
     
     dataset = data[test_set]['data']
     outdir = os.path.join(SACREBLEU, test_set)
-    print(dataset)
-    outfile = os.path.join(outdir, os.path.basename(dataset))
-    if not os.path.exists(os.path.dirname(outfile)):
-        print("Creating", os.path.dirname(outfile), file=sys.stdout)
-        os.makedirs(os.path.dirname(outfile))
-    if not os.path.exists(outfile):
+    if not os.path.exists(os.path.dirname(outdir)):
+        print("Creating", os.path.dirname(outdir), file=sys.stdout)
+        os.makedirs(os.path.dirname(outdir))
+
+    tarball = os.path.join(outdir, os.path.basename(dataset))
+    if not os.path.exists(tarball):
         # TODO: check MD5sum
-        print("Downloading {} to {}".format(dataset, outfile), file=sys.stdout)
-        with urllib.request.urlopen(dataset) as f, open(outfile, 'wb') as out:
+        print("Downloading {} to {}".format(dataset, tarball), file=sys.stdout)
+        with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
             out.write(f.read())
 
-    print('Extracting {}'.format(outfile), file=sys.stdout)
-    tar = tarfile.open(outfile)
-    tar.extractall(path=outdir)
+    rawdir = os.path.join(outdir, 'raw')
+    print('Extracting {}'.format(tarball))
+    tar = tarfile.open(tarball)
+    tar.extractall(path=rawdir)
 
-    if langpair is not None:
-        pass
+    src, tgt = langpair.split('-')
+    for langpair in data[test_set].keys():
+        if langpair == 'data':
+            continue
+        rawfile = os.path.join(rawdir, data[test_set][langpair][0])
+        outfile = os.path.join(outdir, '{}.src'.format(langpair))
+        process_to_text(rawfile, outfile)
+
+        rawfile = os.path.join(rawdir, data[test_set][langpair][1])
+        outfile = os.path.join(outdir, '{}.ref'.format(langpair))
+        process_to_text(rawfile, outfile)
 
     return outfile
 
@@ -285,7 +307,7 @@ if __name__ == '__main__':
                             help='Case-insensitive BLEU')
     arg_parser.add_argument('--json', action='store_true', default=False,
                             help='Output JSON instead of plain text')
-    arg_parser.add_argument('--language-pair', '-l', dest='pair', default='??-??',
+    arg_parser.add_argument('--language-pair', '-l', dest='langpair', default='??-??',
                             help='source-target language pair (2-char ISO639-1 codes')
     arg_parser.add_argument('--download', type=str, default=None,
                             help='Just download a test set and quit')
@@ -296,11 +318,11 @@ if __name__ == '__main__':
     version_str = build_signature(args)
 
     if args.download:
-        download_test_set(args.download)
+        download_test_set(args.download, args.langpair)
         sys.exit(0)
 
     if args.test_set:
-        download_test_set(args.test_set, args.pair)
+        download_test_set(args.test_set, args.langpair)
 
         refs = None
     else:        
