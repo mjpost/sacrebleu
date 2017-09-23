@@ -27,26 +27,67 @@ import argparse
 
 from collections import defaultdict, namedtuple
 
+# Where to store downloaded test sets.
+# Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
 SACREBLEU = os.environ.get('SACREBLEU',os.path.join(os.environ.get('HOME'), '.sacrebleu'))
 
+# This defines data locations.
+# At the top level are test sets.
+# Beneath each test set, we define the location to download the test data.
+# The other keys are each language pair contained in the tarball, and the respective locations of the source and reference data within each.
+# Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
+# The canonical location of unpacked, processed data is $SACREBLEU/TEST/PAIR/test.{SOURCE,TARGET}
 data = {
     'wmt17': {
-        'data': ['http://data.statmt.org/wmt17/translation-task/test.tgz'],
+        'data': 'http://data.statmt.org/wmt17/translation-task/test.tgz',
         'cs-en': ['test/newstest2017-csen-src.cs.sgm', 'test/newstest2017-csen-ref.en.sgm'],
+        'en-cs': ['test/newstest2017-encs-src.en.sgm', 'test/newstest2017-encs-ref.cs.sgm'],
+        'de-en': ['test/newstest2017-deen-src.de.sgm', 'test/newstest2017-deen-ref.en.sgm'],
+        'en-de': ['test/newstest2017-ende-src.en.sgm', 'test/newstest2017-ende-ref.de.sgm'],
+        'en-fi': ['test/newstest2017-enfi-src.en.sgm', 'test/newstest2017-enfi-ref.fi.sgm'],
+#        'en-fi': ['test/newstestB2017-enfi-src.en.sgm', 'test/newstestB2017-enfi-ref.fi.sgm'],
+        'en-lv': ['test/newstest2017-enlv-src.en.sgm', 'test/newstest2017-enlv-ref.lv.sgm'],
+        'en-ru': ['test/newstest2017-enru-src.en.sgm', 'test/newstest2017-enru-ref.ru.sgm'],
+        'en-tr': ['test/newstest2017-entr-src.en.sgm', 'test/newstest2017-entr-ref.tr.sgm'],
+        'en-zh': ['test/newstest2017-enzh-src.en.sgm', 'test/newstest2017-enzh-ref.zh.sgm'],
+        'fi-en': ['test/newstest2017-fien-src.fi.sgm', 'test/newstest2017-fien-ref.en.sgm'],
+#        'fi-en': ['test/newstestB2017-fien-src.fi.sgm', 'test/newstestB2017-fien-ref.en.sgm'],
+        'lv-en': ['test/newstest2017-lven-ref.en.sgm', 'test/newstest2017-lven-src.lv.sgm'],
+        'ru-en': ['test/newstest2017-ruen-src.ru.sgm', 'test/newstest2017-ruen-ref.en.sgm'],
+        'tr-en': ['test/newstest2017-tren-ref.en.sgm', 'test/newstest2017-tren-src.tr.sgm'],
+        'zh-en': ['test/newstest2017-zhen-src.zh.sgm', 'test/newstest2017-zhen-ref.en.sgm'],
     },
-    'wmt16': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
-    'wmt15': 'http://statmt.org/wmt15/test.tgz',
+    'wmt16': {
+        'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
+    },
+    'wmt15': {
+        'data': 'http://statmt.org/wmt15/test.tgz',
+    },
     'wmt14': {
         'data': 'http://statmt.org/wmt14/test-filtered.tgz',
         'en-de': [ ]
     },
-    'wmt14full': 'http://statmt.org/wmt14/test-full.tgz',
-    'wmt13': 'http://statmt.org/wmt13/test.tgz',
-    'wmt12': 'http://statmt.org/wmt12/test.tgz',
-    'wmt11': 'http://statmt.org/wmt11/test.tgz',
-    'wmt10': 'http://statmt.org/wmt10/test.tgz',
-    'wmt09': 'http://statmt.org/wmt09/test.tgz',
-    'wmt08': 'http://statmt.org/wmt08/test.tgz',
+    'wmt14full': {
+        'data': 'http://statmt.org/wmt14/test-full.tgz',
+    },
+    'wmt13': {
+        'data': 'http://statmt.org/wmt13/test.tgz',
+    },
+    'wmt12': {
+        'data': 'http://statmt.org/wmt12/test.tgz',
+    },
+    'wmt11': {
+        'data': 'http://statmt.org/wmt11/test.tgz',
+    },
+    'wmt10': {
+        'data': 'http://statmt.org/wmt10/test.tgz',
+    },
+    'wmt09': {
+        'data': 'http://statmt.org/wmt09/test.tgz',
+    },
+    'wmt08': {
+        'data': 'http://statmt.org/wmt08/test.tgz',
+    }
 }
 
 
@@ -151,7 +192,7 @@ def ref_stats(output, refs):
     return ngrams, closest_diff, closest_len
 
 
-def download_test_set(test_set, langpair):
+def download_test_set(test_set, langpair=None):
     """Downloads the specified test to the system location specified by the SACREBLEU environment variable.
     :param test_set: the test set to download
     :param langpair: the language pair (needed for some datasets)
@@ -161,23 +202,37 @@ def download_test_set(test_set, langpair):
     # if not data.has_key(test_set):
     #     return None
     
-    dataset = data[test_set]['data'][0]
-    outfile = os.path.join(SACREBLEU, test_set, os.path.basename(dataset))
+    dataset = data[test_set]['data']
+    outdir = os.path.join(SACREBLEU, test_set)
+    print(dataset)
+    outfile = os.path.join(outdir, os.path.basename(dataset))
     if not os.path.exists(os.path.dirname(outfile)):
-        print("Creating", os.path.dirname(outfile))
+        print("Creating", os.path.dirname(outfile), file=sys.stdout)
         os.makedirs(os.path.dirname(outfile))
     if not os.path.exists(outfile):
-        print("Downloading to", outfile)
-    with urllib.request.urlopen(dataset) as f, open(outfile, 'wb') as out:
-        out.write(f.read())
+        # TODO: check MD5sum
+        print("Downloading {} to {}".format(dataset, outfile), file=sys.stdout)
+        with urllib.request.urlopen(dataset) as f, open(outfile, 'wb') as out:
+            out.write(f.read())
 
-    tarfile.extractall(outfile)
+    print('Extracting {}'.format(outfile), file=sys.stdout)
+    tar = tarfile.open(outfile)
+    tar.extractall(path=outdir)
+
+    if langpair is not None:
+        pass
 
     return outfile
 
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
 
-def bleu(instream, refstreams):
+def bleu(instream, refstreams) -> BLEU:
+    """Produces the BLEU scores along with its sufficient statistics from a source against one or more references.
+
+    :param instream: the input stream, one segment per line
+    :param refstreams: a list of reference streams
+    :return: a BLEU object containing everything you'd want
+    """
 
     fhs = [sys.stdin] + refstreams
 
@@ -232,11 +287,17 @@ if __name__ == '__main__':
                             help='Output JSON instead of plain text')
     arg_parser.add_argument('--language-pair', '-l', dest='pair', default='??-??',
                             help='source-target language pair (2-char ISO639-1 codes')
+    arg_parser.add_argument('--download', type=str, default=None,
+                            help='Just download a test set and quit')
     arg_parser.add_argument('refs', nargs='*', default=[],
                             help='references')
     args = arg_parser.parse_args()
 
     version_str = build_signature(args)
+
+    if args.download:
+        download_test_set(args.download)
+        sys.exit(0)
 
     if args.test_set:
         download_test_set(args.test_set, args.pair)
