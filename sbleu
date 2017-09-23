@@ -59,6 +59,19 @@ data = {
     },
     'wmt16': {
         'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
+        'cs-en': ['test/newstest2016-csen-src.cs.sgm', 'test/newstest2016-csen-ref.en.sgm'],
+        'de-en': ['test/newstest2016-deen-src.de.sgm', 'test/newstest2016-deen-ref.en.sgm'],
+        'en-cs': ['test/newstest2016-encs-src.en.sgm', 'test/newstest2016-encs-ref.cs.sgm'],
+        'en-de': ['test/newstest2016-ende-src.en.sgm', 'test/newstest2016-ende-ref.de.sgm'],
+        'en-fi': ['test/newstest2016-enfi-src.en.sgm', 'test/newstest2016-enfi-ref.fi.sgm'],
+#        'en-fi': ['test/newstestB2016-enfi-src.en.sgm', 'test/newstestB2016-enfi-ref.fi.sgm'],
+        'en-ro': ['test/newstest2016-enro-src.en.sgm', 'test/newstest2016-enro-ref.ro.sgm'],
+        'en-ru': ['test/newstest2016-enru-src.en.sgm', 'test/newstest2016-enru-ref.ru.sgm'],
+        'en-tr': ['test/newstest2016-entr-src.en.sgm', 'test/newstest2016-entr-ref.tr.sgm'],
+        'fi-en': ['test/newstest2016-fien-src.fi.sgm', 'test/newstest2016-fien-ref.en.sgm'],
+        'ro-en': ['test/newstest2016-roen-src.ro.sgm', 'test/newstest2016-roen-ref.en.sgm'],
+        'ru-en': ['test/newstest2016-ruen-src.ru.sgm', 'test/newstest2016-ruen-ref.en.sgm'],
+        'tr-en': ['test/newstest2016-tren-src.tr.sgm', 'test/newstest2016-tren-ref.en.sgm'],
     },
     'wmt15': {
         'data': 'http://statmt.org/wmt15/test.tgz',
@@ -198,11 +211,12 @@ def process_to_text(rawfile, txtfile):
     :param txtfile: the plaintext file
     """
 
-    if rawfile.endswith('.sgm'):
+    if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
         with _read(rawfile) as fin, open(txtfile, 'wt') as fout:
             for line in fin:
                 if line.startswith('<seg '):
                     fout.write(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line))
+
 
 def download_test_set(test_set, langpair=None):
     """Downloads the specified test to the system location specified by the SACREBLEU environment variable.
@@ -233,18 +247,18 @@ def download_test_set(test_set, langpair=None):
     tar.extractall(path=rawdir)
 
     src, tgt = langpair.split('-')
-    for langpair in data[test_set].keys():
-        if langpair == 'data':
+    languages = data[test_set].keys() if langpair is None else [langpair]
+    for pair in languages:
+        if pair == 'data':
             continue
-        rawfile = os.path.join(rawdir, data[test_set][langpair][0])
-        outfile = os.path.join(outdir, '{}.src'.format(langpair))
+        rawfile = os.path.join(rawdir, data[test_set][pair][0])
+        outfile = os.path.join(outdir, '{}.src'.format(pair))
         process_to_text(rawfile, outfile)
 
-        rawfile = os.path.join(rawdir, data[test_set][langpair][1])
-        outfile = os.path.join(outdir, '{}.ref'.format(langpair))
+        rawfile = os.path.join(rawdir, data[test_set][pair][1])
+        outfile = os.path.join(outdir, '{}.ref'.format(pair))
         process_to_text(rawfile, outfile)
 
-    return outfile
 
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
 
