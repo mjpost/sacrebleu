@@ -224,7 +224,7 @@ data = {
         'en-es': ['test/test2008-src.en.sgm', 'test/test2008-src.es.sgm'],
         'fr-en': ['test/test2008-src.fr.sgm', 'test/test2008-src.en.sgm'],
         'en-fr': ['test/test2008-src.en.sgm', 'test/test2008-src.fr.sgm']
-    }
+    },
 }
 
 
@@ -498,7 +498,7 @@ if __name__ == '__main__':
 
     if args.test_set and args.langpair is None:
         print('I need a language pair (-l).')
-        print('Available language pairs for test set "{}": {}'.format(args.test_set, ', '.join(data[args.test_set].keys())))
+        print('Available language pairs for test set "{}": {}'.format(args.test_set, ', '.join(filter(lambda x: x != 'data', data[args.test_set].keys()))))
         sys.exit(1)
 
     if args.echo:
