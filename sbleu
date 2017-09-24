@@ -22,6 +22,7 @@ import os
 import sys
 import math
 import tarfile
+import logging
 import urllib.request, urllib.parse
 import argparse
 
@@ -228,11 +229,25 @@ def process_to_text(rawfile, txtfile):
                     fout.write(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line))
 
 
+def print_test_set(test_set, langpair, side):
+    """Prints to STDOUT the specified side of the specified test set
+    :param test_set: the test set to print
+    :param langpair: the language pair
+    :param side: 'src' for source, 'ref' for reference
+    """
+
+    where = download_test_set(test_set, langpair)
+    infile = where[0] if side == 'src' else where[1]
+    with open(infile) as fin:
+        for line in fin:
+            print(line.rstrip())
+
+
 def download_test_set(test_set, langpair=None):
     """Downloads the specified test to the system location specified by the SACREBLEU environment variable.
     :param test_set: the test set to download
     :param langpair: the language pair (needed for some datasets)
-    :return: the file path, or None if no such dataset could be found
+    :return: the set of processed files
     """
 
     # if not data.has_key(test_set):
@@ -241,21 +256,23 @@ def download_test_set(test_set, langpair=None):
     dataset = data[test_set]['data']
     outdir = os.path.join(SACREBLEU, test_set)
     if not os.path.exists(outdir):
-        print("Creating", outdir)
+        logging.info("Creating", outdir)
         os.makedirs(outdir)
 
     tarball = os.path.join(outdir, os.path.basename(dataset))
     if not os.path.exists(tarball):
         # TODO: check MD5sum
-        print("Downloading {} to {}".format(dataset, tarball), file=sys.stdout)
+        logging.info("Downloading {} to {}".format(dataset, tarball), file=sys.stdout)
         with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
             out.write(f.read())
 
     # Extract the tarball
     rawdir = os.path.join(outdir, 'raw')
-    print('Extracting {}'.format(tarball))
+    logging.info('Extracting {}'.format(tarball))
     tar = tarfile.open(tarball)
     tar.extractall(path=rawdir)
+
+    found = []
 
     # Process the files into plain text
     languages = data[test_set].keys() if langpair is None else [langpair]
@@ -266,10 +283,14 @@ def download_test_set(test_set, langpair=None):
         rawfile = os.path.join(rawdir, data[test_set][pair][0])
         outfile = os.path.join(outdir, '{}.src'.format(pair))
         process_to_text(rawfile, outfile)
+        found.append(outfile)
 
         rawfile = os.path.join(rawdir, data[test_set][pair][1])
         outfile = os.path.join(outdir, '{}.ref'.format(pair))
         process_to_text(rawfile, outfile)
+        found.append(outfile)
+
+    return found
 
 
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
@@ -337,14 +358,28 @@ if __name__ == '__main__':
                             help='source-target language pair (2-char ISO639-1 codes')
     arg_parser.add_argument('--download', type=str, default=None,
                             help='Just download a test set and quit')
+    arg_parser.add_argument('--print', choices=['src', 'ref'], type=str, default=None,
+                            help='Just output the source or reference and quit.')
     arg_parser.add_argument('refs', nargs='*', default=[],
                             help='references')
+    arg_parser.add_argument('--verbose', '-v', default=False, action='store_true',
+                            help='Verbose output.')
     args = arg_parser.parse_args()
 
     version_str = build_signature(args)
 
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
+
     if args.download:
         download_test_set(args.download, args.langpair)
+        sys.exit(0)
+
+    if args.print:
+        if args.langpair is None or args.test_set is None:
+            logging.warn("--print requires a test set (--t) and a language pair (-l)")
+            sys.exit(1)
+        print_test_set(args.test_set, args.langpair, args.print, )
         sys.exit(0)
 
     if args.test_set:
