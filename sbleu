@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 """
-Standardized, reportable BLEU script.
-Based on Rico Sennrich's `multi-bleu-detok.perl`.
-Knows all the standard test sets; downloads and tokenizes them for you.
+Standardized, parameter versioning BLEU script.
+Inspired by Rico Sennrich's `multi-bleu-detok.perl`.
+Knows all the standard test sets; downloads, processes, and tokenizes them for you.
 
 Why use this version of BLEU?
-- It automatically downloads and manages common test sets
-- It properly computes scores on detokenized outputs, using its own tokenization
-- It produces the same values as (semi-)official scripts from WMT
+- It properly computes scores on detokenized outputs, using WMT ([Conferene on Machine Translation](http://statmt.org/wmt17)) standard tokenization
+- It automatically downloads common WMT test sets and processes them to plain text
+- It produces the same values as official scripts from WMT
 - It produces a short version string that facilitates cross-lab comparisons
-- It outputs the BLEU score without the comma, so you don't have to remove it with 'sed'
-  (Looking at you, multi-bleu.perl)
-
-en-de+m.nist+lc
+- It outputs the BLEU score without the comma, so you don't have to remove it with `sed` (Looking at you, multi-bleu.perl)
 
 Usage:
 
