@@ -13,6 +13,30 @@ Why use this version of BLEU?
   (Looking at you, multi-bleu.perl)
 
 en-de+m.nist+lc
+
+Usage:
+
+Download the source for one of the pre-defined test sets:
+
+    ./sbleu --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
+
+(or use the short flags for faster typing):
+
+    ./sbleu -t wmt14 -l de-en --echo src > wmt14-de-en.src
+
+After tokenizing, translating, and detokenizing it, you can score it easily:
+
+    cat output.detok.txt | ./sbleu -t wmt14 -l de-en
+
+SacreBLEU knows about common test sets, but you can also use it to score system outputs with arbitrary references.
+It also works in backwards compatible model where you manually specify the reference(s), similar to the format of `multi-bleu.txt` or Rico Sennrich's `multi-bleu-detok.perl`:
+
+    ./sbleu -t wmt14 -l de-en --echo ref > wmt14-de-en.ref
+    cat ouput.detok.txt | ./sbleu wmt14-de-en.ref
+
+Or, more generally:
+
+    cat output.txt | ./sbleu REF1 [REF2 ...]
 """
 
 VERSION = '0.1'
@@ -76,13 +100,42 @@ data = {
     },
     'wmt15': {
         'data': 'http://statmt.org/wmt15/test.tgz',
+        'en-fr': ['test/newsdiscusstest2015-enfr-src.en.sgm', 'test/newsdiscusstest2015-enfr-ref.fr.sgm'],
+        'fr-en': ['test/newsdiscusstest2015-fren-src.fr.sgm', 'test/newsdiscusstest2015-fren-ref.en.sgm'],
+        'cs-en': ['test/newstest2015-csen-src.cs.sgm', 'test/newstest2015-csen-ref.en.sgm'],
+        'de-en': ['test/newstest2015-deen-src.de.sgm', 'test/newstest2015-deen-ref.en.sgm'],
+        'en-cs': ['test/newstest2015-encs-src.en.sgm', 'test/newstest2015-encs-ref.cs.sgm'],
+        'en-de': ['test/newstest2015-ende-src.en.sgm', 'test/newstest2015-ende-ref.de.sgm'],
+        'en-fi': ['test/newstest2015-enfi-src.en.sgm', 'test/newstest2015-enfi-ref.fi.sgm'],
+        'en-ru': ['test/newstest2015-enru-src.en.sgm', 'test/newstest2015-enru-ref.ru.sgm'],
+        'fi-en': ['test/newstest2015-fien-src.fi.sgm', 'test/newstest2015-fien-ref.en.sgm'],
+        'ru-en': ['test/newstest2015-ruen-src.ru.sgm', 'test/newstest2015-ruen-ref.en.sgm']
     },
     'wmt14': {
         'data': 'http://statmt.org/wmt14/test-filtered.tgz',
-        'en-de': [ ]
+        'cs-en': ['test/newstest2014-csen-src.cs.sgm', 'test/newstest2014-csen-ref.en.sgm'],
+        'en-cs': ['test/newstest2014-csen-src.en.sgm', 'test/newstest2014-csen-ref.cs.sgm'],
+        'de-en': ['test/newstest2014-deen-src.de.sgm', 'test/newstest2014-deen-ref.en.sgm'],
+        'en-de': ['test/newstest2014-deen-src.en.sgm', 'test/newstest2014-deen-ref.de.sgm'],
+        'en-fr': ['test/newstest2014-fren-src.en.sgm', 'test/newstest2014-fren-ref.fr.sgm'],
+        'fr-en': ['test/newstest2014-fren-src.fr.sgm', 'test/newstest2014-fren-ref.en.sgm'],
+        'en-hi': ['test/newstest2014-hien-src.en.sgm', 'test/newstest2014-hien-ref.hi.sgm'],
+        'hi-en': ['test/newstest2014-hien-src.hi.sgm', 'test/newstest2014-hien-ref.en.sgm'],
+        'en-ru': ['test/newstest2014-ruen-src.en.sgm', 'test/newstest2014-ruen-ref.ru.sgm'],
+        'ru-en': ['test/newstest2014-ruen-src.ru.sgm', 'test/newstest2014-ruen-ref.en.sgm']
     },
     'wmt14full': {
         'data': 'http://statmt.org/wmt14/test-full.tgz',
+        'cs-en': ['test-full/newstest2014-csen-src.cs.sgm', 'test-full/newstest2014-csen-ref.en.sgm'],
+        'en-cs': ['test-full/newstest2014-csen-src.en.sgm', 'test-full/newstest2014-csen-ref.cs.sgm'],
+        'de-en': ['test-full/newstest2014-deen-src.de.sgm', 'test-full/newstest2014-deen-ref.en.sgm'],
+        'en-de': ['test-full/newstest2014-deen-src.en.sgm', 'test-full/newstest2014-deen-ref.de.sgm'],
+        'en-fr': ['test-full/newstest2014-fren-src.en.sgm', 'test-full/newstest2014-fren-ref.fr.sgm'],
+        'fr-en': ['test-full/newstest2014-fren-src.fr.sgm', 'test-full/newstest2014-fren-ref.en.sgm'],
+        'en-hi': ['test-full/newstest2014-hien-src.en.sgm', 'test-full/newstest2014-hien-ref.hi.sgm'],
+        'hi-en': ['test-full/newstest2014-hien-src.hi.sgm', 'test-full/newstest2014-hien-ref.en.sgm'],
+        'en-ru': ['test-full/newstest2014-ruen-src.en.sgm', 'test-full/newstest2014-ruen-ref.ru.sgm'],
+        'ru-en': ['test-full/newstest2014-ruen-src.ru.sgm', 'test-full/newstest2014-ruen-ref.en.sgm']
     },
     'wmt13': {
         'data': 'http://statmt.org/wmt13/test.tgz',
@@ -358,8 +411,8 @@ if __name__ == '__main__':
                             help='source-target language pair (2-char ISO639-1 codes')
     arg_parser.add_argument('--download', type=str, default=None,
                             help='Just download a test set and quit')
-    arg_parser.add_argument('--print', choices=['src', 'ref'], type=str, default=None,
-                            help='Just output the source or reference and quit.')
+    arg_parser.add_argument('--echo', choices=['src', 'ref'], type=str, default=None,
+                            help='Just output the source or reference to STDOUT and quit.')
     arg_parser.add_argument('refs', nargs='*', default=[],
                             help='references')
     arg_parser.add_argument('--verbose', '-v', default=False, action='store_true',
@@ -375,11 +428,11 @@ if __name__ == '__main__':
         download_test_set(args.download, args.langpair)
         sys.exit(0)
 
-    if args.print:
+    if args.echo:
         if args.langpair is None or args.test_set is None:
-            logging.warn("--print requires a test set (--t) and a language pair (-l)")
+            logging.warn("--echo requires a test set (--t) and a language pair (-l)")
             sys.exit(1)
-        print_test_set(args.test_set, args.langpair, args.print, )
+        print_test_set(args.test_set, args.langpair, args.echo)
         sys.exit(0)
 
     if args.test_set:
