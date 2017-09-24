@@ -33,7 +33,7 @@ It also works in backwards compatible model where you manually specify the refer
 
 Or, more generally:
 
-    cat output.txt | ./sbleu REF1 [REF2 ...]
+    cat output.detok.txt | ./sbleu REF1 [REF2 ...]
 """
 
 VERSION = '0.1'
