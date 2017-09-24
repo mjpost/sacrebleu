@@ -341,12 +341,13 @@ def process_to_text(rawfile, txtfile):
     :param txtfile: the plaintext file
     """
 
-    if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
-        logging.info("Processing {} to {}".format(rawfile, txtfile))
-        with _read(rawfile) as fin, open(txtfile, 'wt') as fout:
-            for line in fin:
-                if line.startswith('<seg '):
-                    fout.write(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line))
+    if not os.path.exists(txtfile):
+        if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
+            logging.info("Processing {} to {}".format(rawfile, txtfile))
+            with _read(rawfile) as fin, open(txtfile, 'wt') as fout:
+                for line in fin:
+                    if line.startswith('<seg '):
+                        fout.write(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line))
 
 
 def print_test_set(test_set, langpair, side):
@@ -380,17 +381,17 @@ def download_test_set(test_set, langpair=None):
         os.makedirs(outdir)
 
     tarball = os.path.join(outdir, os.path.basename(dataset))
+    rawdir = os.path.join(outdir, 'raw')
     if not os.path.exists(tarball):
         # TODO: check MD5sum
         logging.info("Downloading {} to {}".format(dataset, tarball))
         with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
             out.write(f.read())
 
-    # Extract the tarball
-    rawdir = os.path.join(outdir, 'raw')
-    logging.info('Extracting {}'.format(tarball))
-    tar = tarfile.open(tarball)
-    tar.extractall(path=rawdir)
+        # Extract the tarball
+        logging.info('Extracting {}'.format(tarball))
+        tar = tarfile.open(tarball)
+        tar.extractall(path=rawdir)
 
     found = []
 
