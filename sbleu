@@ -124,7 +124,7 @@ data = {
         'en-ru': ['test/newstest2014-ruen-src.en.sgm', 'test/newstest2014-ruen-ref.ru.sgm'],
         'ru-en': ['test/newstest2014-ruen-src.ru.sgm', 'test/newstest2014-ruen-ref.en.sgm']
     },
-    'wmt14full': {
+    'wmt14/full': {
         'data': 'http://statmt.org/wmt14/test-full.tgz',
         'cs-en': ['test-full/newstest2014-csen-src.cs.sgm', 'test-full/newstest2014-csen-ref.en.sgm'],
         'en-cs': ['test-full/newstest2014-csen-src.en.sgm', 'test-full/newstest2014-csen-ref.cs.sgm'],
@@ -148,27 +148,93 @@ data = {
         'fr-en': ['test/newstest2013-src.fr.sgm', 'test/newstest2013-src.en.sgm'],
         'en-fr': ['test/newstest2013-src.en.sgm', 'test/newstest2013-src.fr.sgm'],
         'ru-en': ['test/newstest2013-src.ru.sgm', 'test/newstest2013-src.en.sgm'],
-        'en-ru': ['test/newstest2013-src.en.sgm', 'test/newstest2013-src.ru.sgm'],
+        'en-ru': ['test/newstest2013-src.en.sgm', 'test/newstest2013-src.ru.sgm']
     },
     'wmt12': {
         'data': 'http://statmt.org/wmt12/test.tgz',
+        'cs-en': ['test/newstest2012-src.cs.sgm', 'test/newstest2012-src.en.sgm'],
+        'en-cs': ['test/newstest2012-src.en.sgm', 'test/newstest2012-src.cs.sgm'],
+        'de-en': ['test/newstest2012-src.de.sgm', 'test/newstest2012-src.en.sgm'],
+        'en-de': ['test/newstest2012-src.en.sgm', 'test/newstest2012-src.de.sgm'],
+        'es-en': ['test/newstest2012-src.es.sgm', 'test/newstest2012-src.en.sgm'],
+        'en-es': ['test/newstest2012-src.en.sgm', 'test/newstest2012-src.es.sgm'],
+        'fr-en': ['test/newstest2012-src.fr.sgm', 'test/newstest2012-src.en.sgm'],
+        'en-fr': ['test/newstest2012-src.en.sgm', 'test/newstest2012-src.fr.sgm']
     },
     'wmt11': {
         'data': 'http://statmt.org/wmt11/test.tgz',
+        'cs-en': ['newstest2011-src.cs.sgm', 'newstest2011-src.en.sgm'],
+        'en-cs': ['newstest2011-src.en.sgm', 'newstest2011-src.cs.sgm'],
+        'de-en': ['newstest2011-src.de.sgm', 'newstest2011-src.en.sgm'],
+        'en-de': ['newstest2011-src.en.sgm', 'newstest2011-src.de.sgm'],
+        'fr-en': ['newstest2011-src.fr.sgm', 'newstest2011-src.en.sgm'],
+        'en-fr': ['newstest2011-src.en.sgm', 'newstest2011-src.fr.sgm'],
+        'es-en': ['newstest2011-src.es.sgm', 'newstest2011-src.en.sgm'],
+        'en-es': ['newstest2011-src.en.sgm', 'newstest2011-src.es.sgm']
     },
     'wmt10': {
         'data': 'http://statmt.org/wmt10/test.tgz',
+        'cs-en': ['test/newstest2010-src.cz.sgm', 'test/newstest2010-src.en.sgm'],
+        'en-cs': ['test/newstest2010-src.en.sgm', 'test/newstest2010-src.cz.sgm'],
+        'de-en': ['test/newstest2010-src.de.sgm', 'test/newstest2010-src.en.sgm'],
+        'en-de': ['test/newstest2010-src.en.sgm', 'test/newstest2010-src.de.sgm'],
+        'es-en': ['test/newstest2010-src.es.sgm', 'test/newstest2010-src.en.sgm'],
+        'en-es': ['test/newstest2010-src.en.sgm', 'test/newstest2010-src.es.sgm'],
+        'fr-en': ['test/newstest2010-src.fr.sgm', 'test/newstest2010-src.en.sgm'],
+        'en-fr': ['test/newstest2010-src.en.sgm', 'test/newstest2010-src.fr.sgm']
     },
     'wmt09': {
         'data': 'http://statmt.org/wmt09/test.tgz',
+        'cs-en': ['test/newstest2009-src.cz.sgm', 'test/newstest2009-src.en.sgm'],
+        'en-cs': ['test/newstest2009-src.en.sgm', 'test/newstest2009-src.cz.sgm'],
+        'de-en': ['test/newstest2009-src.de.sgm', 'test/newstest2009-src.en.sgm'],
+        'en-de': ['test/newstest2009-src.en.sgm', 'test/newstest2009-src.de.sgm'],
+        'es-en': ['test/newstest2009-src.es.sgm', 'test/newstest2009-src.en.sgm'],
+        'en-es': ['test/newstest2009-src.en.sgm', 'test/newstest2009-src.es.sgm'],
+        'fr-en': ['test/newstest2009-src.fr.sgm', 'test/newstest2009-src.en.sgm'],
+        'en-fr': ['test/newstest2009-src.en.sgm', 'test/newstest2009-src.fr.sgm'],
+        'hu-en': ['test/newstest2009-src.hu.sgm', 'test/newstest2009-src.en.sgm'],
+        'en-hu': ['test/newstest2009-src.en.sgm', 'test/newstest2009-src.hu.sgm'],
+        'it-en': ['test/newstest2009-src.it.sgm', 'test/newstest2009-src.en.sgm'],
+        'en-it': ['test/newstest2009-src.en.sgm', 'test/newstest2009-src.it.sgm']
     },
     'wmt08': {
         'data': 'http://statmt.org/wmt08/test.tgz',
+        'cs-en': ['test/newstest2008-src.cz.sgm', 'test/newstest2008-src.en.sgm'],
+        'en-cs': ['test/newstest2008-src.en.sgm', 'test/newstest2008-src.cz.sgm'],
+        'de-en': ['test/newstest2008-src.de.sgm', 'test/newstest2008-src.en.sgm'],
+        'en-de': ['test/newstest2008-src.en.sgm', 'test/newstest2008-src.de.sgm'],
+        'es-en': ['test/newstest2008-src.es.sgm', 'test/newstest2008-src.en.sgm'],
+        'en-es': ['test/newstest2008-src.en.sgm', 'test/newstest2008-src.es.sgm'],
+        'fr-en': ['test/newstest2008-src.fr.sgm', 'test/newstest2008-src.en.sgm'],
+        'en-fr': ['test/newstest2008-src.en.sgm', 'test/newstest2008-src.fr.sgm'],
+        'hu-en': ['test/newstest2008-src.hu.sgm', 'test/newstest2008-src.en.sgm'],
+        'en-hu': ['test/newstest2008-src.en.sgm', 'test/newstest2008-src.hu.sgm']
+    },
+    'wmt08/nc': {
+        'data': 'http://statmt.org/wmt08/test.tgz',
+        'cs-en': ['test/nc-test2008-src.cz.sgm', 'test/nc-test2008-src.en.sgm'],
+        'en-cs': ['test/nc-test2008-src.en.sgm', 'test/nc-test2008-src.cz.sgm']
+    },
+    'wmt08/europarl': {
+        'data': 'http://statmt.org/wmt08/test.tgz',
+        'de-en': ['test/test2008-src.de.sgm', 'test/test2008-src.en.sgm'],
+        'en-de': ['test/test2008-src.en.sgm', 'test/test2008-src.de.sgm'],
+        'es-en': ['test/test2008-src.es.sgm', 'test/test2008-src.en.sgm'],
+        'en-es': ['test/test2008-src.en.sgm', 'test/test2008-src.es.sgm'],
+        'fr-en': ['test/test2008-src.fr.sgm', 'test/test2008-src.en.sgm'],
+        'en-fr': ['test/test2008-src.en.sgm', 'test/test2008-src.fr.sgm']
     }
 }
 
 
 def tokenize(line):
+    """Tokenizes an input line using a relatively minimal tokenization that is however equivalent to mteval-v13a, used by WMT.
+
+    :param line: a segment to tokenize
+    :return: the tokenized line
+    """
+
     norm = line
 
     # language-independent part:
@@ -276,6 +342,7 @@ def process_to_text(rawfile, txtfile):
     """
 
     if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
+        logging.info("Processing {} to {}".format(rawfile, txtfile))
         with _read(rawfile) as fin, open(txtfile, 'wt') as fout:
             for line in fin:
                 if line.startswith('<seg '):
@@ -309,13 +376,13 @@ def download_test_set(test_set, langpair=None):
     dataset = data[test_set]['data']
     outdir = os.path.join(SACREBLEU, test_set)
     if not os.path.exists(outdir):
-        logging.info("Creating", outdir)
+        logging.info('Creating {}'.format(outdir))
         os.makedirs(outdir)
 
     tarball = os.path.join(outdir, os.path.basename(dataset))
     if not os.path.exists(tarball):
         # TODO: check MD5sum
-        logging.info("Downloading {} to {}".format(dataset, tarball), file=sys.stdout)
+        logging.info("Downloading {} to {}".format(dataset, tarball))
         with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
             out.write(f.read())
 
@@ -400,6 +467,7 @@ if __name__ == '__main__':
 
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--test-set', '-t', type=str, default=None,
+                            choices=data.keys(),
                             help='The test set to use')
     arg_parser.add_argument('--sig', default=None, type=str,
                             help='Signature string')
@@ -427,6 +495,11 @@ if __name__ == '__main__':
     if args.download:
         download_test_set(args.download, args.langpair)
         sys.exit(0)
+
+    if args.test_set and args.langpair is None:
+        print('I need a language pair (-l).')
+        print('Available language pairs for test set "{}": {}'.format(args.test_set, ', '.join(data[args.test_set].keys())))
+        sys.exit(1)
 
     if args.echo:
         if args.langpair is None or args.test_set is None:
