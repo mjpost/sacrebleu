@@ -85,6 +85,16 @@ data = {
     },
     'wmt13': {
         'data': 'http://statmt.org/wmt13/test.tgz',
+        'cs-en': ['test/newstest2013-src.cs.sgm', 'test/newstest2013-src.en.sgm'],
+        'en-cs': ['test/newstest2013-src.en.sgm', 'test/newstest2013-src.cs.sgm'],
+        'de-en': ['test/newstest2013-src.de.sgm', 'test/newstest2013-src.en.sgm'],
+        'en-de': ['test/newstest2013-src.en.sgm', 'test/newstest2013-src.de.sgm'],
+        'es-en': ['test/newstest2013-src.es.sgm', 'test/newstest2013-src.en.sgm'],
+        'en-es': ['test/newstest2013-src.en.sgm', 'test/newstest2013-src.es.sgm'],
+        'fr-en': ['test/newstest2013-src.fr.sgm', 'test/newstest2013-src.en.sgm'],
+        'en-fr': ['test/newstest2013-src.en.sgm', 'test/newstest2013-src.fr.sgm'],
+        'ru-en': ['test/newstest2013-src.ru.sgm', 'test/newstest2013-src.en.sgm'],
+        'en-ru': ['test/newstest2013-src.en.sgm', 'test/newstest2013-src.ru.sgm'],
     },
     'wmt12': {
         'data': 'http://statmt.org/wmt12/test.tgz',
@@ -230,9 +240,9 @@ def download_test_set(test_set, langpair=None):
     
     dataset = data[test_set]['data']
     outdir = os.path.join(SACREBLEU, test_set)
-    if not os.path.exists(os.path.dirname(outdir)):
-        print("Creating", os.path.dirname(outdir), file=sys.stdout)
-        os.makedirs(os.path.dirname(outdir))
+    if not os.path.exists(outdir):
+        print("Creating", outdir)
+        os.makedirs(outdir)
 
     tarball = os.path.join(outdir, os.path.basename(dataset))
     if not os.path.exists(tarball):
@@ -241,16 +251,18 @@ def download_test_set(test_set, langpair=None):
         with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
             out.write(f.read())
 
+    # Extract the tarball
     rawdir = os.path.join(outdir, 'raw')
     print('Extracting {}'.format(tarball))
     tar = tarfile.open(tarball)
     tar.extractall(path=rawdir)
 
-    src, tgt = langpair.split('-')
+    # Process the files into plain text
     languages = data[test_set].keys() if langpair is None else [langpair]
     for pair in languages:
         if pair == 'data':
             continue
+        src, tgt = pair.split('-')
         rawfile = os.path.join(rawdir, data[test_set][pair][0])
         outfile = os.path.join(outdir, '{}.src'.format(pair))
         process_to_text(rawfile, outfile)
@@ -321,7 +333,7 @@ if __name__ == '__main__':
                             help='Case-insensitive BLEU')
     arg_parser.add_argument('--json', action='store_true', default=False,
                             help='Output JSON instead of plain text')
-    arg_parser.add_argument('--language-pair', '-l', dest='langpair', default='??-??',
+    arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes')
     arg_parser.add_argument('--download', type=str, default=None,
                             help='Just download a test set and quit')
