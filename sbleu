@@ -510,9 +510,8 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if args.test_set:
-        download_test_set(args.test_set, args.langpair)
-
-        refs = None
+        src, ref = download_test_set(args.test_set, args.langpair)
+        refs = [ref]
     else:        
         refs = args.refs
     
