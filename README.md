@@ -18,11 +18,11 @@ To these problems, SacreBLEU provides these solutions:
 
 Download the source for one of the pre-defined test sets:
 
-    ./sbleu --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
-
-(or use the short flags for less typing):
-
     ./sbleu -t wmt14 -l de-en --echo src > wmt14-de-en.src
+
+(you can also use long parameter names for readability):
+
+    ./sbleu --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
 
 After tokenizing, translating, and detokenizing it, you can score it easily:
 
@@ -37,6 +37,11 @@ It also works in backwards compatible model where you manually specify the refer
 Or, more generally:
 
     cat output.detok.txt | ./sbleu REF1 [REF2 ...]
+    
+SacreBLEU generates version strings like the following.
+Put them in a footnote in your paper!
+
+    BLEU+case.mixed+lang.de-en+test.wmt17 = 32.97 66.1/40.2/26.6/18.1 (BP = 0.980 ratio = 0.980 hyp_len = 63134 ref_len = 64399)
 
 # Motivation
 
