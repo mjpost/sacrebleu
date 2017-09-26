@@ -1,13 +1,17 @@
-# sacreBLEU
+# SacreBLEU
 
-This repository addresses a couple of problems with score comparisons in the machine translation resarch community:
+SacreBLEU addresses a couple of problems with score comparisons in the machine translation resarch community:
 
-- Although there is a standard metric, BLEU, it is subject to many parameters, which are often not specified in papers.
-- Although there are standard test sets (e.g., those from WMT), they are released in slightly different formats each year, are wrapped in XML, and are in general a slight bother to deal with
+- Although there is a standard metric, BLEU, it is subject to many parameters (casing, tokenization, reference length), which are often not specified in papers.
+- BLEU scores are not comparable when the references are tokenized differently.
+- It is often not clear exactly what parameter settings a particular paper used, even if they list the script.
+- Although there are standard test sets (e.g., those from WMT), they are released in slightly different formats each year, are wrapped in XML, and are in general a slight bother to deal with.
 
-To these problems, sacreBLEU provides these solutions:
+To these problems, SacreBLEU provides these solutions:
 
-- BLEU scores are produced on *detokenized* output. sacreBLEU provides its own tokenizations. It includes a version string in its output that encapsulates all the parameters, aiding repeatability.
+- BLEU scores are produced (as they should be) on *detokenized* output. 
+- SacreBLEU provides its own tokenization that is the same as those used by mteval-13a.pl, the official WMT scoring script.
+- It includes a version string in its output that encapsulates all the parameters, helping with repeatability across papers.
 - It automatically downloads WMT datasets, unpacks them, and puts them in plain text format.
 
 # Quick start
@@ -16,7 +20,7 @@ Download the source for one of the pre-defined test sets:
 
     ./sbleu --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
 
-(or use the short flags for faster typing):
+(or use the short flags for less typing):
 
     ./sbleu -t wmt14 -l de-en --echo src > wmt14-de-en.src
 
@@ -34,12 +38,11 @@ Or, more generally:
 
     cat output.detok.txt | ./sbleu REF1 [REF2 ...]
 
-# In more detail
+# Motivation
 
 Computing BLEU scores is a mess.
 Every decoder has its own implementation, offered borrowed from Moses.
-Moses itself has at least five implementations as standalone scripts, with little indication of how
-they differ (multi-bleu, bsbleu, mteval-v11b, mteval-v12, mteval-v13a).
+Moses itself has at least five implementations as standalone scripts, with little indication of how they differ (multi-bleu, bsbleu, mteval-v11b, mteval-v12, mteval-v13a).
 Different flags passed to each of these scripts can drastically affect the final score.
 Other decoders have their own implementations, often borrowed from Moses, but perhaps with subtle changes.
 And most importantly, all of these handle tokenization in different ways.
@@ -50,7 +53,7 @@ SacreBLEU aims to solve these problems by providing a common reference implement
 The defaults are set the way that BLEU should be computed, and furthermore, the script outputs a short version string that allows others to know exactly what you do.
 As an added bonus, it automatically downloads and manages test sets for you, so that you can simply tell it to score against 'wmt14', without having to hunt down a path on your local file system.
 It is all designed to take BLEU a little more seriously.
-After all, even with all its problems, BLEU is default and---admit it---well-loved metric of an entire research community.
+After all, even with all its problems, BLEU is default and---admit it---well-loved metric of our entire research community.
 Sacre BLEU.
 
 # License
