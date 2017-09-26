@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Standardized, parameter versioning BLEU script.
-Inspired by Rico Sennrich's `multi-bleu-detok.perl`.
-Knows all the standard test sets; downloads, processes, and tokenizes them for you.
+Standardized, parameter versioning BLEU script to facilitate cross-paper comparisons.
+Inspired by Rico Sennrich's `multi-bleu-detok.perl`, it produces the official WMT scores but works with plain text.
+It also knows all the standard test sets and handles downloading, processing, and tokenization for you.
 
 Why use this version of BLEU?
 - It properly computes scores on detokenized outputs, using WMT ([Conferene on Machine Translation](http://statmt.org/wmt17)) standard tokenization
 - It automatically downloads common WMT test sets and processes them to plain text
 - It produces the same values as official scripts from WMT
-- It produces a short version string that facilitates cross-lab comparisons
+- It produces a short version string that facilitates repeatability
 - It outputs the BLEU score without the comma, so you don't have to remove it with `sed` (Looking at you, multi-bleu.perl)
 
 Usage:
@@ -35,8 +35,6 @@ Or, more generally:
 
     cat output.detok.txt | ./sbleu REF1 [REF2 ...]
 """
-
-VERSION = '0.1'
 
 import re
 import os
@@ -67,17 +65,20 @@ data = {
         'de-en': ['test/newstest2017-deen-src.de.sgm', 'test/newstest2017-deen-ref.en.sgm'],
         'en-de': ['test/newstest2017-ende-src.en.sgm', 'test/newstest2017-ende-ref.de.sgm'],
         'en-fi': ['test/newstest2017-enfi-src.en.sgm', 'test/newstest2017-enfi-ref.fi.sgm'],
-#        'en-fi': ['test/newstestB2017-enfi-src.en.sgm', 'test/newstestB2017-enfi-ref.fi.sgm'],
         'en-lv': ['test/newstest2017-enlv-src.en.sgm', 'test/newstest2017-enlv-ref.lv.sgm'],
         'en-ru': ['test/newstest2017-enru-src.en.sgm', 'test/newstest2017-enru-ref.ru.sgm'],
         'en-tr': ['test/newstest2017-entr-src.en.sgm', 'test/newstest2017-entr-ref.tr.sgm'],
         'en-zh': ['test/newstest2017-enzh-src.en.sgm', 'test/newstest2017-enzh-ref.zh.sgm'],
         'fi-en': ['test/newstest2017-fien-src.fi.sgm', 'test/newstest2017-fien-ref.en.sgm'],
-#        'fi-en': ['test/newstestB2017-fien-src.fi.sgm', 'test/newstestB2017-fien-ref.en.sgm'],
         'lv-en': ['test/newstest2017-lven-ref.en.sgm', 'test/newstest2017-lven-src.lv.sgm'],
         'ru-en': ['test/newstest2017-ruen-src.ru.sgm', 'test/newstest2017-ruen-ref.en.sgm'],
         'tr-en': ['test/newstest2017-tren-ref.en.sgm', 'test/newstest2017-tren-src.tr.sgm'],
         'zh-en': ['test/newstest2017-zhen-src.zh.sgm', 'test/newstest2017-zhen-ref.en.sgm'],
+    },
+    'wmt17/B': {
+        'data': 'http://data.statmt.org/wmt17/translation-task/test.tgz',
+        'en-fi': ['test/newstestB2017-enfi-src.en.sgm', 'test/newstestB2017-enfi-ref.fi.sgm'],
+        'fi-en': ['test/newstestB2017-fien-src.fi.sgm', 'test/newstestB2017-fien-ref.en.sgm'],
     },
     'wmt16': {
         'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
@@ -86,7 +87,6 @@ data = {
         'en-cs': ['test/newstest2016-encs-src.en.sgm', 'test/newstest2016-encs-ref.cs.sgm'],
         'en-de': ['test/newstest2016-ende-src.en.sgm', 'test/newstest2016-ende-ref.de.sgm'],
         'en-fi': ['test/newstest2016-enfi-src.en.sgm', 'test/newstest2016-enfi-ref.fi.sgm'],
-#        'en-fi': ['test/newstestB2016-enfi-src.en.sgm', 'test/newstestB2016-enfi-ref.fi.sgm'],
         'en-ro': ['test/newstest2016-enro-src.en.sgm', 'test/newstest2016-enro-ref.ro.sgm'],
         'en-ru': ['test/newstest2016-enru-src.en.sgm', 'test/newstest2016-enru-ref.ru.sgm'],
         'en-tr': ['test/newstest2016-entr-src.en.sgm', 'test/newstest2016-entr-ref.tr.sgm'],
@@ -94,6 +94,10 @@ data = {
         'ro-en': ['test/newstest2016-roen-src.ro.sgm', 'test/newstest2016-roen-ref.en.sgm'],
         'ru-en': ['test/newstest2016-ruen-src.ru.sgm', 'test/newstest2016-ruen-ref.en.sgm'],
         'tr-en': ['test/newstest2016-tren-src.tr.sgm', 'test/newstest2016-tren-ref.en.sgm'],
+    },
+    'wmt16/B': {
+        'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
+        'en-fi': ['test/newstestB2016-enfi-src.en.sgm', 'test/newstestB2016-enfi-ref.fi.sgm'],
     },
     'wmt15': {
         'data': 'http://statmt.org/wmt15/test.tgz',
@@ -226,7 +230,8 @@ data = {
 
 
 def tokenize(line):
-    """Tokenizes an input line using a relatively minimal tokenization that is however equivalent to mteval-v13a, used by WMT.
+    """
+    Tokenizes an input line using a relatively minimal tokenization that is however equivalent to mteval-v13a, used by WMT.
 
     :param line: a segment to tokenize
     :return: the tokenized line
@@ -255,18 +260,6 @@ def tokenize(line):
 
     return norm
 
-def lowercase(s):
-    return s.lower()
-
-def metric():
-    pass
-
-funcs = {
-    'lc': lowercase,
-    'met': metric,
-    'tok': tokenize
-}
-
 def _read(file):
     if file.endswith('.gz'):
         return gzip.open(file, 'rt')
@@ -274,7 +267,8 @@ def _read(file):
 
 
 def my_log(num):
-    """Floors the log function
+    """
+    Floors the log function
 
     :param num: the number
     :return: log(num) floored to a very low number
@@ -286,12 +280,29 @@ def my_log(num):
 
 
 def build_signature(args):
-    sig = '{}.{}-{}'.format(VERSION, args.test_set, args.langpair)
-    
-    if args.lc is not None:
-        sig += "+lc"
+    """
+    Builds a signature that uniquely identifies the scoring parameters used.
+    :param args: the arguments passed into the script
+    :return: the signature
+    """
+    sig = 'BLEU'
 
-    return sig
+    data = {}
+
+    if args.test_set is not None:
+        data['test'] = args.test_set
+
+    if args.langpair is not None:
+        data['lang'] = args.langpair
+
+    if args.lc:
+        data['case'] = 'lc'
+    else:
+        data['case'] = 'mixed'
+
+    sigstr = '+'.join(['{}.{}'.format(x,data[x]) for x in sorted(data.keys())])
+
+    return sigstr
 
 def extract_ngrams(line, max=4):
     """Extracts all the ngrams (1 <= n <= 4) from a sequence of tokens.
@@ -467,12 +478,8 @@ if __name__ == '__main__':
     arg_parser.add_argument('--test-set', '-t', type=str, default=None,
                             choices=data.keys(),
                             help='The test set to use')
-    arg_parser.add_argument('--sig', default=None, type=str,
-                            help='Signature string')
     arg_parser.add_argument('-lc', action='store_true', default=False,
                             help='Case-insensitive BLEU')
-    arg_parser.add_argument('--json', action='store_true', default=False,
-                            help='Output JSON instead of plain text')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes')
     arg_parser.add_argument('--download', type=str, default=None,
@@ -505,6 +512,13 @@ if __name__ == '__main__':
             sys.exit(1)
         print_test_set(args.test_set, args.langpair, args.echo)
         sys.exit(0)
+
+    if args.test_set is None and len(args.refs) == 0:
+        print('* FATAL: I need either -t (test set) or a list of references')
+        sys.exit(1)
+    elif args.test_set is not None and len(args.refs) > 0:
+        print('* FATAL: I need x-either a test set (-t) or a list of references')
+        sys.exit(1)
 
     if args.test_set:
         src, ref = download_test_set(args.test_set, args.langpair)
