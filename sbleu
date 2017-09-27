@@ -300,6 +300,9 @@ def build_signature(args):
     else:
         data['case'] = 'mixed'
 
+    if args.smooth > 0.0:
+        data['smooth'] = args.smooth
+
     sigstr = '+'.join(['{}.{}'.format(x,data[x]) for x in sorted(data.keys())])
 
     return sigstr
@@ -424,7 +427,7 @@ def download_test_set(test_set, langpair=None):
 
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
 
-def bleu(instream, refstreams) -> BLEU:
+def bleu(instream, refstreams, smooth=0.) -> BLEU:
     """Produces the BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param instream: the input stream, one segment per line
@@ -461,7 +464,7 @@ def bleu(instream, refstreams) -> BLEU:
     precisions  = [0, 0, 0, 0, 0]
 
     for n in range(1, 5):
-        precisions[n] = 100. * correct[n] / total[n] if total.get(n) > 0 else 0.
+        precisions[n] = max(smooth, 100. * correct[n] / total[n] if total.get(n) > 0 else 0)
 
     brevity_penalty = 1.0
     if sys_len < ref_len:
@@ -480,6 +483,8 @@ if __name__ == '__main__':
                             help='The test set to use')
     arg_parser.add_argument('-lc', action='store_true', default=False,
                             help='Case-insensitive BLEU')
+    arg_parser.add_argument('--smooth', '-s', type=float, default=0.0,
+                            help='Smooth zero-count precisions with specified value')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes')
     arg_parser.add_argument('--download', type=str, default=None,
@@ -527,7 +532,7 @@ if __name__ == '__main__':
         refs = args.refs
     
     # bleu, precisions, brevity_penalty, sys_len, ref_len = bleu(sys.stdin, [_read(x) for x in refs])
-    bleu = bleu(sys.stdin, [_read(x) for x in refs])
+    bleu = bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth)
 
     print('BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(version_str, bleu.score, bleu.ngram1, bleu.ngram2, bleu.ngram3, bleu.ngram4, bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
           
