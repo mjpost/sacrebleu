@@ -49,7 +49,7 @@ from collections import defaultdict, namedtuple
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
-SACREBLEU = os.environ.get('SACREBLEU',os.path.join(os.environ.get('HOME'), '.sacrebleu'))
+SACREBLEU = os.environ.get('SACREBLEU', os.path.join(os.environ.get('HOME'), '.sacrebleu'))
 
 # This defines data locations.
 # At the top level are test sets.
@@ -516,7 +516,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if args.test_set and args.langpair is None:
-        print('I need a language pair (-l).')
+        print('* FATAL: I need a language pair (-l).')
         print('Available language pairs for test set "{}": {}'.format(args.test_set, ', '.join(filter(lambda x: x != 'data', data[args.test_set].keys()))))
         sys.exit(1)
 
@@ -529,6 +529,7 @@ if __name__ == '__main__':
 
     if args.test_set is None and len(args.refs) == 0:
         print('* FATAL: I need either -t (test set) or a list of references')
+        print('The available test sets are: {}'.format(sorted(data.keys(), reverse=True)))
         sys.exit(1)
     elif args.test_set is not None and len(args.refs) > 0:
         print('* FATAL: I need x-either a test set (-t) or a list of references')
