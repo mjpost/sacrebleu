@@ -287,6 +287,13 @@ def build_signature(args):
     """
     sig = 'BLEU'
 
+    abbr = {
+        'test':   't',
+        'lang':   'l',
+        'smooth': 's',
+        'case':   'c'
+    }
+
     data = {}
 
     if args.test_set is not None:
@@ -303,7 +310,7 @@ def build_signature(args):
     if args.smooth > 0.0:
         data['smooth'] = args.smooth
 
-    sigstr = '+'.join(['{}.{}'.format(x,data[x]) for x in sorted(data.keys())])
+    sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x,data[x]) for x in sorted(data.keys())])
 
     return sigstr
 
@@ -493,6 +500,8 @@ if __name__ == '__main__':
                             help='Just output the source or reference to STDOUT and quit.')
     arg_parser.add_argument('refs', nargs='*', default=[],
                             help='references')
+    arg_parser.add_argument('--short', default=False, action='store_true',
+                            help='Generates a shorter (less human readable) signature tag.')
     arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',
                             help='Suppress informative output.')
     args = arg_parser.parse_args()
