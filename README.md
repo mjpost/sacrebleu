@@ -2,9 +2,9 @@
 
 SacréBLEU is a standard BLEU implementation that:
 
-- Produces scores on *detokenized* output. 
-- Exactly reproduces scores from `mteval-13a.pl`, the official WMT scoring script.
 - Automatically downloads WMT datasets, unpacks them, and puts them in plain text format. You just specify the test set name.
+- Properly produces scores on detokenized outputs. 
+- Exactly reproduces scores from `mteval-13a.pl`, the official WMT scoring script.
 - Includes a version string in its output that encapsulates all the parameters, helping with repeatability across papers.
 
 Its goal is to address the following problems in machine translation research:
