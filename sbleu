@@ -479,7 +479,7 @@ def bleu(instream, refstreams, smooth=0.) -> BLEU:
 
     bleu = 1. * brevity_penalty * math.exp(sum(map(my_log, precisions[1:])) / 4)
 
-    return BLEU._make([bleu, *precisions[1:], brevity_penalty, sys_len, ref_len])
+    return BLEU._make([bleu, precisions[1], precisions[2], precisions[3], precisions[4], brevity_penalty, sys_len, ref_len])
 
 
 if __name__ == '__main__':
