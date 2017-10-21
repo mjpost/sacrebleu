@@ -229,7 +229,7 @@ data = {
 }
 
 
-def tokenize(line):
+def tokenize_13a(line):
     """
     Tokenizes an input line using a relatively minimal tokenization that is however equivalent to mteval-v13a, used by WMT.
 
@@ -260,6 +260,10 @@ def tokenize(line):
 
     return norm
 
+tokenizers = {
+    '13a': tokenize_13a
+}
+
 def _read(file):
     if file.endswith('.gz'):
         return gzip.open(file, 'rt')
@@ -279,7 +283,7 @@ def my_log(num):
     return math.log(num)
 
 
-def build_signature(args):
+def build_signature(args, numrefs):
     """
     Builds a signature that uniquely identifies the scoring parameters used.
     :param args: the arguments passed into the script
@@ -287,14 +291,17 @@ def build_signature(args):
     """
     sig = 'BLEU'
 
+    # Abbreviations for the signature
     abbr = {
         'test':   't',
         'lang':   'l',
         'smooth': 's',
-        'case':   'c'
+        'case':   'c',
+        'tok':    'tok',
+        'numrefs': '#'
     }
 
-    data = {}
+    data = {'tok' : args.tokenize}
 
     if args.test_set is not None:
         data['test'] = args.test_set
@@ -309,6 +316,8 @@ def build_signature(args):
 
     if args.smooth > 0.0:
         data['smooth'] = args.smooth
+
+    data['numrefs'] = numrefs
 
     sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x,data[x]) for x in sorted(data.keys())])
 
@@ -454,7 +463,7 @@ def bleu(instream, refstreams, smooth=0.) -> BLEU:
         if args.lc:
             lines = [x.lower() for x in lines]
 
-        output, *refs = [tokenize(x.rstrip()) for x in lines]
+        output, *refs = [tokenizers[args.tokenize](x.rstrip()) for x in lines]
     
         ref_ngrams, closest_diff, closest_len = ref_stats(output, refs)
 
@@ -479,7 +488,7 @@ def bleu(instream, refstreams, smooth=0.) -> BLEU:
 
     bleu = 1. * brevity_penalty * math.exp(sum(map(my_log, precisions[1:])) / 4)
 
-    return BLEU._make([bleu, precisions[1], precisions[2], precisions[3], precisions[4], brevity_penalty, sys_len, ref_len])
+    return BLEU._make([bleu, precisions[1], precisions[2], precisions[3], precisions[4], brevity_penalty, sys_len, ref_len, len(refstreams)])
 
 
 if __name__ == '__main__':
@@ -492,6 +501,8 @@ if __name__ == '__main__':
                             help='Case-insensitive BLEU')
     arg_parser.add_argument('--smooth', '-s', type=float, default=0.0,
                             help='Smooth zero-count precisions with specified value')
+    arg_parser.add_argument('--tokenize', '-tok', choices=['13a'], default='13a',
+                            help='Tokenization method to use.')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes')
     arg_parser.add_argument('--download', type=str, default=None,
@@ -505,8 +516,6 @@ if __name__ == '__main__':
     arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',
                             help='Suppress informative output.')
     args = arg_parser.parse_args()
-
-    version_str = build_signature(args)
 
     if not args.quiet:
         logging.basicConfig(level=logging.INFO)
@@ -542,7 +551,9 @@ if __name__ == '__main__':
         refs = args.refs
     
     # bleu, precisions, brevity_penalty, sys_len, ref_len = bleu(sys.stdin, [_read(x) for x in refs])
-    bleu = bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth)
+    bleu, params = bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth)
+
+    version_str = build_signature(args, len(refs))
 
     print('BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(version_str, bleu.score, bleu.ngram1, bleu.ngram2, bleu.ngram3, bleu.ngram4, bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
           
