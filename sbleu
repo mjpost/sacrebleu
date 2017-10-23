@@ -450,12 +450,12 @@ def download_test_set(test_set, langpair=None):
             continue
         src, tgt = pair.split('-')
         rawfile = os.path.join(rawdir, data[test_set][pair][0])
-        outfile = os.path.join(outdir, '{}.src'.format(pair))
+        outfile = os.path.join(outdir, '{}.{}'.format(pair, src))
         process_to_text(rawfile, outfile)
         found.append(outfile)
 
         rawfile = os.path.join(rawdir, data[test_set][pair][1])
-        outfile = os.path.join(outdir, '{}.ref'.format(pair))
+        outfile = os.path.join(outdir, '{}.{}'.format(pair, tgt))
         process_to_text(rawfile, outfile)
         found.append(outfile)
 
