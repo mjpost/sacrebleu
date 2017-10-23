@@ -551,6 +551,8 @@ if __name__ == '__main__':
                             help='references')
     arg_parser.add_argument('--short', default=False, action='store_true',
                             help='Generates a shorter (less human readable) signature tag.')
+    arg_parser.add_argument('--force', default=False, action='store_true',
+                            help='Insist that your tokenized input is actually detokenized.')
     arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',
                             help='Suppress informative output.')
     args = arg_parser.parse_args()
@@ -591,7 +593,7 @@ if __name__ == '__main__':
         refs = args.refs
     
     # bleu, precisions, brevity_penalty, sys_len, ref_len = bleu(sys.stdin, [_read(x) for x in refs])
-    bleu = bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth)
+    bleu = bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth, force=args.force)
 
     version_str = build_signature(args, len(refs))
 
