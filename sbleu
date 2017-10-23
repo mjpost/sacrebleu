@@ -574,7 +574,7 @@ if __name__ == '__main__':
         refs = args.refs
     
     # bleu, precisions, brevity_penalty, sys_len, ref_len = bleu(sys.stdin, [_read(x) for x in refs])
-    bleu, params = bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth)
+    bleu = bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth)
 
     version_str = build_signature(args, len(refs))
 
