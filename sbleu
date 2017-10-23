@@ -34,6 +34,11 @@ It also works in backwards compatible model where you manually specify the refer
 Or, more generally:
 
     cat output.detok.txt | ./sbleu REF1 [REF2 ...]
+
+VERSION HISTORY
+
+- version 1.0 (23 October 2017).
+  Written by Matt Post.
 """
 
 import re
@@ -464,7 +469,7 @@ def download_test_set(test_set, langpair=None):
 
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
 
-def bleu(instream, refstreams, smooth=0.) -> BLEU:
+def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
     """Produces the BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param instream: the input stream, one segment per line
@@ -480,9 +485,21 @@ def bleu(instream, refstreams, smooth=0.) -> BLEU:
     correct = defaultdict(int)
     total = defaultdict(int)
 
+    # look for already-tokenized sentences
+    tokenized_count = 0
+
     for sentno, lines in enumerate(zip(*fhs)):
         if args.lc:
             lines = [x.lower() for x in lines]
+
+        if lines[0].rstrip().endswith(' .'):
+            tokenized_count += 1
+
+            if tokenized_count > 100 and not force:
+                logging.critical('FATAL: That\'s > 100 lines that end in a tokenized period (\'.\')')
+                logging.critical('It looks like you forgot to detokenize your test data, which will hurt your score.')
+                logging.critical('If you insist your data is tokenized, rerun with \'--force\'.')
+                sys.exit(1)
 
         output, *refs = [tokenizers[args.tokenize](x.rstrip()) for x in lines]
     
