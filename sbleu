@@ -38,6 +38,9 @@ Or, more generally:
 VERSION HISTORY
 
 - version 1.0 (23 October 2017).
+  Support for WMT 2008--2017.
+  Single tokenization (v13a) with lowercase fix (proper lower() instead of just A-Z)
+
   Written by Matt Post.
 """
 
@@ -496,9 +499,9 @@ def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
             tokenized_count += 1
 
             if tokenized_count > 100 and not force:
-                logging.critical('FATAL: That\'s > 100 lines that end in a tokenized period (\'.\')')
-                logging.critical('It looks like you forgot to detokenize your test data, which will hurt your score.')
-                logging.critical('If you insist your data is tokenized, rerun with \'--force\'.')
+                logging.error('FATAL: That\'s > 100 lines that end in a tokenized period (\'.\')')
+                logging.error('It looks like you forgot to detokenize your test data, which will hurt your score.')
+                logging.error('If you insist your data is tokenized, rerun with \'--force\'.')
                 sys.exit(1)
 
         output, *refs = [tokenizers[args.tokenize](x.rstrip()) for x in lines]
@@ -516,7 +519,7 @@ def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
             correct[n] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
 
     if sum(total) == 0:
-        logging.critical('No input?')
+        logging.error('No input?')
         sys.exit(1)
 
     precisions  = [0, 0, 0, 0, 0]
@@ -535,7 +538,7 @@ def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
 
 if __name__ == '__main__':
 
-    arg_parser = argparse.ArgumentParser()
+    arg_parser = argparse.ArgumentParser(description='sacréBLEU: Hassle-free computation of shareable BLEU scores.')
     arg_parser.add_argument('--test-set', '-t', type=str, default=None,
                             choices=data.keys(),
                             help='The test set to use')
@@ -546,15 +549,15 @@ if __name__ == '__main__':
     arg_parser.add_argument('--tokenize', '-tok', choices=['13a'], default='13a',
                             help='Tokenization method to use.')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
-                            help='source-target language pair (2-char ISO639-1 codes')
+                            help='source-target language pair (2-char ISO639-1 codes)')
     arg_parser.add_argument('--download', type=str, default=None,
-                            help='Just download a test set and quit')
+                            help='Download a test set and quit')
     arg_parser.add_argument('--echo', choices=['src', 'ref'], type=str, default=None,
-                            help='Just output the source or reference to STDOUT and quit.')
+                            help='Output the source or reference to STDOUT and quit.')
     arg_parser.add_argument('refs', nargs='*', default=[],
-                            help='references')
+                            help='Optional list of references (for backwards-compatibility with older scripts).')
     arg_parser.add_argument('--short', default=False, action='store_true',
-                            help='Generates a shorter (less human readable) signature tag.')
+                            help='Produce a shorter (less human readable) signature.')
     arg_parser.add_argument('--force', default=False, action='store_true',
                             help='Insist that your tokenized input is actually detokenized.')
     arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',
@@ -562,15 +565,15 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
 
     if not args.quiet:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.INFO, format='sacréBLEU: %(message)s')
 
     if args.download:
         download_test_set(args.download, args.langpair)
         sys.exit(0)
 
     if args.test_set and args.langpair is None:
-        print('* FATAL: I need a language pair (-l).')
-        print('Available language pairs for test set "{}": {}'.format(args.test_set, ', '.join(filter(lambda x: x != 'data', data[args.test_set].keys()))))
+        logging.error('I need a language pair (-l).')
+        logging.error('Available language pairs for test set "{}": {}'.format(args.test_set, ', '.join(filter(lambda x: '-' in x, data[args.test_set].keys()))))
         sys.exit(1)
 
     if args.echo:
@@ -581,13 +584,14 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if args.test_set is None and len(args.refs) == 0:
-        print('* FATAL: I need either -t (test set) or a list of references')
-        print('The available test sets are: ')
+        logging.error('I need either -t (test set) or a list of references')
+        logging.error('The available test sets are: ')
         for ts in sorted(data.keys(), reverse=True):
-            print('  {}: {}'.format(ts, data[ts].get('description', '')))
+            logging.error('  {}: {}'.format(ts, data[ts].get('description', '')))
         sys.exit(1)
+
     elif args.test_set is not None and len(args.refs) > 0:
-        print('* FATAL: I need x-either a test set (-t) or a list of references')
+        logging.error('I need x-either a test set (-t) or a list of references')
         sys.exit(1)
 
     if args.test_set:
