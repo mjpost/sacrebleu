@@ -60,9 +60,10 @@ SACREBLEU = os.environ.get('SACREBLEU', os.path.join(os.environ.get('HOME'), '.s
 data = {
     'wmt17': {
         'data': 'http://data.statmt.org/wmt17/translation-task/test.tgz',
+        'description': 'Official evaluation data.',
         'cs-en': ['test/newstest2017-csen-src.cs.sgm', 'test/newstest2017-csen-ref.en.sgm'],
-        'en-cs': ['test/newstest2017-encs-src.en.sgm', 'test/newstest2017-encs-ref.cs.sgm'],
         'de-en': ['test/newstest2017-deen-src.de.sgm', 'test/newstest2017-deen-ref.en.sgm'],
+        'en-cs': ['test/newstest2017-encs-src.en.sgm', 'test/newstest2017-encs-ref.cs.sgm'],
         'en-de': ['test/newstest2017-ende-src.en.sgm', 'test/newstest2017-ende-ref.de.sgm'],
         'en-fi': ['test/newstest2017-enfi-src.en.sgm', 'test/newstest2017-enfi-ref.fi.sgm'],
         'en-lv': ['test/newstest2017-enlv-src.en.sgm', 'test/newstest2017-enlv-ref.lv.sgm'],
@@ -77,11 +78,19 @@ data = {
     },
     'wmt17/B': {
         'data': 'http://data.statmt.org/wmt17/translation-task/test.tgz',
+        'description': 'Extra EN-FI and FI-EN data.',
         'en-fi': ['test/newstestB2017-enfi-src.en.sgm', 'test/newstestB2017-enfi-ref.fi.sgm'],
         'fi-en': ['test/newstestB2017-fien-src.fi.sgm', 'test/newstestB2017-fien-ref.en.sgm'],
     },
+    'wmt17/improved': {
+        'data': 'http://data.statmt.org/wmt17/translation-task/test-update-1.tgz',
+        'description': 'Improved zh-en and en-zh translations.',
+        'en-zh': ['newstest2017-enzh-src.en.sgm', 'newstest2017-enzh-ref.zh.sgm'],
+        'zh-en': ['newstest2017-zhen-src.zh.sgm', 'newstest2017-zhen-ref.en.sgm'],
+    },
     'wmt16': {
         'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
+        'description': 'Official evaluation data.',
         'cs-en': ['test/newstest2016-csen-src.cs.sgm', 'test/newstest2016-csen-ref.en.sgm'],
         'de-en': ['test/newstest2016-deen-src.de.sgm', 'test/newstest2016-deen-ref.en.sgm'],
         'en-cs': ['test/newstest2016-encs-src.en.sgm', 'test/newstest2016-encs-ref.cs.sgm'],
@@ -97,10 +106,12 @@ data = {
     },
     'wmt16/B': {
         'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
+        'description': 'Extra EN-FI data.',
         'en-fi': ['test/newstestB2016-enfi-src.en.sgm', 'test/newstestB2016-enfi-ref.fi.sgm'],
     },
     'wmt15': {
         'data': 'http://statmt.org/wmt15/test.tgz',
+        'description': 'Official evaluation data.',
         'en-fr': ['test/newsdiscusstest2015-enfr-src.en.sgm', 'test/newsdiscusstest2015-enfr-ref.fr.sgm'],
         'fr-en': ['test/newsdiscusstest2015-fren-src.fr.sgm', 'test/newsdiscusstest2015-fren-ref.en.sgm'],
         'cs-en': ['test/newstest2015-csen-src.cs.sgm', 'test/newstest2015-csen-ref.en.sgm'],
@@ -114,6 +125,7 @@ data = {
     },
     'wmt14': {
         'data': 'http://statmt.org/wmt14/test-filtered.tgz',
+        'description': 'Official evaluation data.',
         'cs-en': ['test/newstest2014-csen-src.cs.sgm', 'test/newstest2014-csen-ref.en.sgm'],
         'en-cs': ['test/newstest2014-csen-src.en.sgm', 'test/newstest2014-csen-ref.cs.sgm'],
         'de-en': ['test/newstest2014-deen-src.de.sgm', 'test/newstest2014-deen-ref.en.sgm'],
@@ -127,6 +139,7 @@ data = {
     },
     'wmt14/full': {
         'data': 'http://statmt.org/wmt14/test-full.tgz',
+        'description': 'Evaluation data released after official evaluation for further research.',
         'cs-en': ['test-full/newstest2014-csen-src.cs.sgm', 'test-full/newstest2014-csen-ref.en.sgm'],
         'en-cs': ['test-full/newstest2014-csen-src.en.sgm', 'test-full/newstest2014-csen-ref.cs.sgm'],
         'de-en': ['test-full/newstest2014-deen-src.de.sgm', 'test-full/newstest2014-deen-ref.en.sgm'],
@@ -140,6 +153,7 @@ data = {
     },
     'wmt13': {
         'data': 'http://statmt.org/wmt13/test.tgz',
+        'description': 'Official evaluation data.',
         'cs-en': ['test/newstest2013-src.cs.sgm', 'test/newstest2013-src.en.sgm'],
         'en-cs': ['test/newstest2013-src.en.sgm', 'test/newstest2013-src.cs.sgm'],
         'de-en': ['test/newstest2013-src.de.sgm', 'test/newstest2013-src.en.sgm'],
@@ -153,6 +167,7 @@ data = {
     },
     'wmt12': {
         'data': 'http://statmt.org/wmt12/test.tgz',
+        'description': 'Official evaluation data.',
         'cs-en': ['test/newstest2012-src.cs.sgm', 'test/newstest2012-src.en.sgm'],
         'en-cs': ['test/newstest2012-src.en.sgm', 'test/newstest2012-src.cs.sgm'],
         'de-en': ['test/newstest2012-src.de.sgm', 'test/newstest2012-src.en.sgm'],
@@ -164,6 +179,7 @@ data = {
     },
     'wmt11': {
         'data': 'http://statmt.org/wmt11/test.tgz',
+        'description': 'Official evaluation data.',
         'cs-en': ['newstest2011-src.cs.sgm', 'newstest2011-src.en.sgm'],
         'en-cs': ['newstest2011-src.en.sgm', 'newstest2011-src.cs.sgm'],
         'de-en': ['newstest2011-src.de.sgm', 'newstest2011-src.en.sgm'],
@@ -175,6 +191,7 @@ data = {
     },
     'wmt10': {
         'data': 'http://statmt.org/wmt10/test.tgz',
+        'description': 'Official evaluation data.',
         'cs-en': ['test/newstest2010-src.cz.sgm', 'test/newstest2010-src.en.sgm'],
         'en-cs': ['test/newstest2010-src.en.sgm', 'test/newstest2010-src.cz.sgm'],
         'de-en': ['test/newstest2010-src.de.sgm', 'test/newstest2010-src.en.sgm'],
@@ -186,6 +203,7 @@ data = {
     },
     'wmt09': {
         'data': 'http://statmt.org/wmt09/test.tgz',
+        'description': 'Official evaluation data.',
         'cs-en': ['test/newstest2009-src.cz.sgm', 'test/newstest2009-src.en.sgm'],
         'en-cs': ['test/newstest2009-src.en.sgm', 'test/newstest2009-src.cz.sgm'],
         'de-en': ['test/newstest2009-src.de.sgm', 'test/newstest2009-src.en.sgm'],
@@ -201,6 +219,7 @@ data = {
     },
     'wmt08': {
         'data': 'http://statmt.org/wmt08/test.tgz',
+        'description': 'Official evaluation data.',
         'cs-en': ['test/newstest2008-src.cz.sgm', 'test/newstest2008-src.en.sgm'],
         'en-cs': ['test/newstest2008-src.en.sgm', 'test/newstest2008-src.cz.sgm'],
         'de-en': ['test/newstest2008-src.de.sgm', 'test/newstest2008-src.en.sgm'],
@@ -214,11 +233,13 @@ data = {
     },
     'wmt08/nc': {
         'data': 'http://statmt.org/wmt08/test.tgz',
+        'description': 'Official evaluation data (news commentary).',
         'cs-en': ['test/nc-test2008-src.cz.sgm', 'test/nc-test2008-src.en.sgm'],
         'en-cs': ['test/nc-test2008-src.en.sgm', 'test/nc-test2008-src.cz.sgm']
     },
     'wmt08/europarl': {
         'data': 'http://statmt.org/wmt08/test.tgz',
+        'description': 'Official evaluation data (Europarl).',
         'de-en': ['test/test2008-src.de.sgm', 'test/test2008-src.en.sgm'],
         'en-de': ['test/test2008-src.en.sgm', 'test/test2008-src.de.sgm'],
         'es-en': ['test/test2008-src.es.sgm', 'test/test2008-src.en.sgm'],
@@ -425,7 +446,7 @@ def download_test_set(test_set, langpair=None):
     # Process the files into plain text
     languages = data[test_set].keys() if langpair is None else [langpair]
     for pair in languages:
-        if pair == 'data':
+        if not '-' in pair:
             continue
         src, tgt = pair.split('-')
         rawfile = os.path.join(rawdir, data[test_set][pair][0])
@@ -488,7 +509,7 @@ def bleu(instream, refstreams, smooth=0.) -> BLEU:
 
     bleu = 1. * brevity_penalty * math.exp(sum(map(my_log, precisions[1:])) / 4)
 
-    return BLEU._make([bleu, precisions[1], precisions[2], precisions[3], precisions[4], brevity_penalty, sys_len, ref_len, len(refstreams)])
+    return BLEU._make([bleu, precisions[1], precisions[2], precisions[3], precisions[4], brevity_penalty, sys_len, ref_len])
 
 
 if __name__ == '__main__':
@@ -538,7 +559,9 @@ if __name__ == '__main__':
 
     if args.test_set is None and len(args.refs) == 0:
         print('* FATAL: I need either -t (test set) or a list of references')
-        print('The available test sets are: {}'.format(sorted(data.keys(), reverse=True)))
+        print('The available test sets are: ')
+        for ts in sorted(data.keys(), reverse=True):
+            print('  {}: {}'.format(ts, data[ts].get('description', '')))
         sys.exit(1)
     elif args.test_set is not None and len(args.refs) > 0:
         print('* FATAL: I need x-either a test set (-t) or a list of references')
