@@ -245,7 +245,7 @@ def tokenize_13a(line):
     norm = norm.replace('\n', ' ')
     norm = norm.replace('&quot;', '"')
     norm = norm.replace('&amp;', '"')
-    norm = norm.replace('&ltt;', '"')
+    norm = norm.replace('&lt;', '"')
     norm = norm.replace('&gt;', '"')
     
     # language-dependent part (assuming Western languages):
