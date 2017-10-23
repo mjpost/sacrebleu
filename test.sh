@@ -14,7 +14,7 @@ if [[ ! -d wmt17-submitted-data ]]; then
     tar xzf wmt17-submitted-data-v1.0.tgz
 fi
 
-for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru-en tr-en zh-en; do
+for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr fi-en lv-en ru-en tr-en zh-en; do
     source=$(echo $pair | cut -d- -f1)
     target=$(echo $pair | cut -d- -f2)    
     for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
