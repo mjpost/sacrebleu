@@ -515,6 +515,10 @@ def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
             total[n] += sys_ngrams[ngram]
             correct[n] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
 
+    if sum(total) == 0:
+        logging.critical('No input?')
+        sys.exit(1)
+
     precisions  = [0, 0, 0, 0, 0]
 
     for n in range(1, 5):
