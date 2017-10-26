@@ -44,7 +44,9 @@ VERSION HISTORY
 
 - version 1.0 (23 October 2017).
   Support for WMT 2008--2017.
-  Single tokenization (v13a) with lowercase fix (proper lower() instead of just A-Z)
+  Single tokenization (v13a) with lowercase fix (proper lower() instead of just A-Z).
+  Chinese tokenization.
+  Tested to match all WMT17 scores on all arcs.
 
   Written by Matt Post.
 """
@@ -69,7 +71,7 @@ SACREBLEU = os.environ.get('SACREBLEU', os.path.join(os.environ.get('HOME'), '.s
 # Beneath each test set, we define the location to download the test data.
 # The other keys are each language pair contained in the tarball, and the respective locations of the source and reference data within each.
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
-# The canonical location of unpacked, processed data is $SACREBLEU/TEST/PAIR/test.{SOURCE,TARGET}
+# The canonical location of unpacked, processed data is $SACREBLEU/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 data = {
     'wmt17': {
         'data': 'http://data.statmt.org/wmt17/translation-task/test.tgz',
@@ -91,7 +93,7 @@ data = {
     },
     'wmt17/B': {
         'data': 'http://data.statmt.org/wmt17/translation-task/test.tgz',
-        'description': 'Extra EN-FI and FI-EN data.',
+        'description': 'Additional reference for EN-FI and FI-EN.',
         'en-fi': ['test/newstestB2017-enfi-src.en.sgm', 'test/newstestB2017-enfi-ref.fi.sgm'],
         'fi-en': ['test/newstestB2017-fien-src.fi.sgm', 'test/newstestB2017-fien-ref.en.sgm'],
     },
@@ -119,7 +121,7 @@ data = {
     },
     'wmt16/B': {
         'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
-        'description': 'Extra EN-FI data.',
+        'description': 'Additional reference for EN-FI.',
         'en-fi': ['test/newstestB2016-enfi-src.en.sgm', 'test/newstestB2016-enfi-ref.fi.sgm'],
     },
     'wmt15': {
