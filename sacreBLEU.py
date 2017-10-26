@@ -662,8 +662,7 @@ def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
     return BLEU._make([bleu, precisions[1], precisions[2], precisions[3], precisions[4], brevity_penalty, sys_len, ref_len])
 
 
-if __name__ == '__main__':
-
+def main():
     arg_parser = argparse.ArgumentParser(description='sacréBLEU: Hassle-free computation of shareable BLEU scores.'
                                          'Quick usage: score your detokenized output against WMT\'14 EN-DE:'
                                          '    cat output.detok.de | ./sacreBLEU -t wmt14 -l en-de')
@@ -738,7 +737,10 @@ if __name__ == '__main__':
     version_str = build_signature(args, len(refs))
 
     print('BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(version_str, bleu.score, bleu.ngram1, bleu.ngram2, bleu.ngram3, bleu.ngram4, bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
-          
-          
+
+
+if __name__ == '__main__':
+    main()
+
 
     
