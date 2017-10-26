@@ -698,7 +698,13 @@ def main():
         download_test_set(args.download, args.langpair)
         sys.exit(0)
 
-    if args.test_set and args.langpair is None:
+    if args.test_set is not None and args.test_set not in data:
+        logging.error('The available test sets are: ')
+        for ts in sorted(data.keys(), reverse=True):
+            logging.error('  {}: {}'.format(ts, data[ts].get('description', '')))
+        sys.exit(1)
+
+    if args.test_set and (args.langpair is None or args.langpair not in data[args.test_set]):
         logging.error('I need a language pair (-l).')
         logging.error('Available language pairs for test set "{}": {}'.format(args.test_set, ', '.join(filter(lambda x: '-' in x, data[args.test_set].keys()))))
         sys.exit(1)
