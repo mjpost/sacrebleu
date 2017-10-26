@@ -18,29 +18,29 @@ Its goal is to address the following problems in machine translation research:
 
 Get a list of the available test sets:
 
-    ./sbleu    
+    ./sacreBLEU
 
 Download the source for one of the pre-defined test sets:
 
-    ./sbleu -t wmt14 -l de-en --echo src > wmt14-de-en.src
+    ./sacreBLEU -t wmt14 -l de-en --echo src > wmt14-de-en.src
 
 (you can also use long parameter names for readability):
 
-    ./sbleu --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
+    ./sacreBLEU --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
 
 After tokenizing, translating, and then detokenizing it, you can score it easily:
 
-    cat output.detok.txt | ./sbleu -t wmt14 -l de-en
+    cat output.detok.txt | ./sacreBLEU -t wmt14 -l de-en
 
 SacréBLEU knows about common WMT test sets, but you can also use it in a backward-compatible mode where you manually specify the reference(s).
 It uses the same invocation syntax as Moses' `multi-bleu.txt` or Rico Sennrich's `multi-bleu-detok.perl`:
 
-    ./sbleu -t wmt14 -l de-en --echo ref > wmt14-de-en.ref
-    cat ouput.detok.txt | ./sbleu wmt14-de-en.ref
+    ./sacreBLEU -t wmt14 -l de-en --echo ref > wmt14-de-en.ref
+    cat ouput.detok.txt | ./sacreBLEU wmt14-de-en.ref
 
 Or, more generally:
 
-    cat output.detok.txt | ./sbleu REF1 [REF2 ...]
+    cat output.detok.txt | ./sacreBLEU REF1 [REF2 ...]
     
 SacréBLEU generates version strings like the following.
 Put them in a footnote in your paper!

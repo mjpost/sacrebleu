@@ -5,7 +5,7 @@ Inspired by Rico Sennrich's `multi-bleu-detok.perl`, it produces the official WM
 It also knows all the standard test sets and handles downloading, processing, and tokenization for you.
 
 Why use this version of BLEU?
-- It properly computes scores on detokenized outputs, using WMT ([Conferene on Machine Translation](http://statmt.org/wmt17)) standard tokenization
+- It properly computes scores on detokenized outputs, using WMT ([Conference on Machine Translation](http://statmt.org/wmt17)) standard tokenization
 - It automatically downloads common WMT test sets and processes them to plain text
 - It produces the same values as official scripts from WMT
 - It produces a short version string that facilitates repeatability
@@ -15,25 +15,30 @@ Usage:
 
 Download the source for one of the pre-defined test sets:
 
-    ./sbleu --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
+    ./sacreBLEU --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
 
 (or use the short flags for faster typing):
 
-    ./sbleu -t wmt14 -l de-en --echo src > wmt14-de-en.src
+    ./sacreBLEU -t wmt14 -l de-en --echo src > wmt14-de-en.src
 
 After tokenizing, translating, and detokenizing it, you can score it easily:
 
-    cat output.detok.txt | ./sbleu -t wmt14 -l de-en
+    cat output.detok.txt | ./sacreBLEU -t wmt14 -l de-en
 
 SacreBLEU knows about common test sets, but you can also use it to score system outputs with arbitrary references.
 It also works in backwards compatible model where you manually specify the reference(s), similar to the format of `multi-bleu.txt` or Rico Sennrich's `multi-bleu-detok.perl`:
 
-    ./sbleu -t wmt14 -l de-en --echo ref > wmt14-de-en.ref
-    cat ouput.detok.txt | ./sbleu wmt14-de-en.ref
+    ./sacreBLEU -t wmt14 -l de-en --echo ref > wmt14-de-en.ref
+    cat ouput.detok.txt | ./sacreBLEU wmt14-de-en.ref
 
 Or, more generally:
 
-    cat output.detok.txt | ./sbleu REF1 [REF2 ...]
+    cat output.detok.txt | ./sacreBLEU REF1 [REF2 ...]
+
+CREDITS
+
+Official version at github.com/mjpost/sacreBLEU
+This was all Rico Sennrich's idea.
 
 VERSION HISTORY
 
@@ -538,7 +543,9 @@ def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
 
 if __name__ == '__main__':
 
-    arg_parser = argparse.ArgumentParser(description='sacréBLEU: Hassle-free computation of shareable BLEU scores.')
+    arg_parser = argparse.ArgumentParser(description='sacréBLEU: Hassle-free computation of shareable BLEU scores.'
+                                         'Quick usage: score your detokenized output against WMT\'14 EN-DE:'
+                                         '    cat output.detok.de | ./sacreBLEU -t wmt14 -l en-de')
     arg_parser.add_argument('--test-set', '-t', type=str, default=None,
                             choices=data.keys(),
                             help='The test set to use')
