@@ -294,8 +294,127 @@ def tokenize_13a(line):
 
     return norm
 
+
+def tokenize_zh(sentence):
+    """MIT License
+    Copyright (c) 2017 - Shujian Huang <huangsj@nju.edu.cn>
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+    The tokenization of Chinese text in this script contains two steps: separate each Chinese
+    characters (by utf-8 encoding); tokenize the non Chinese part (following the mteval script).
+    Author: Shujian Huang huangsj@nju.edu.cn
+
+    :param sentence: input sentence
+    :return: tokenized sentence
+    """
+
+    def isChineseChar(uchar):
+        """
+        :param uchar: input char in unicode
+        :return: whether the input char is a Chinese character.
+        """
+        if uchar >= u'\u3400' and uchar <= u'\u4db5':  # CJK Unified Ideographs Extension A, release 3.0
+            return True
+        elif uchar >= u'\u4e00' and uchar <= u'\u9fa5':  # CJK Unified Ideographs, release 1.1
+            return True
+        elif uchar >= u'\u9fa6' and uchar <= u'\u9fbb':  # CJK Unified Ideographs, release 4.1
+            return True
+        elif uchar >= u'\uf900' and uchar <= u'\ufa2d':  # CJK Compatibility Ideographs, release 1.1
+            return True
+        elif uchar >= u'\ufa30' and uchar <= u'\ufa6a':  # CJK Compatibility Ideographs, release 3.2
+            return True
+        elif uchar >= u'\ufa70' and uchar <= u'\ufad9':  # CJK Compatibility Ideographs, release 4.1
+            return True
+        elif uchar >= u'\u20000' and uchar <= u'\u2a6d6':  # CJK Unified Ideographs Extension B, release 3.1
+            return True
+        elif uchar >= u'\u2f800' and uchar <= u'\u2fa1d':  # CJK Compatibility Supplement, release 3.1
+            return True
+        elif uchar >= u'\uff00' and uchar <= u'\uffef':  # Full width ASCII, full width of English punctuation, half width Katakana, half wide half width kana, Korean alphabet
+            return True
+        elif uchar >= u'\u2e80' and uchar <= u'\u2eff':  # CJK Radicals Supplement
+            return True
+        elif uchar >= u'\u3000' and uchar <= u'\u303f':  # CJK punctuation mark
+            return True
+        elif uchar >= u'\u31c0' and uchar <= u'\u31ef':  # CJK stroke
+            return True
+        elif uchar >= u'\u2f00' and uchar <= u'\u2fdf':  # Kangxi Radicals
+            return True
+        elif uchar >= u'\u2ff0' and uchar <= u'\u2fff':  # Chinese character structure
+            return True
+        elif uchar >= u'\u3100' and uchar <= u'\u312f':  # Phonetic symbols
+            return True
+        elif uchar >= u'\u31a0' and uchar <= u'\u31bf':  # Phonetic symbols (Taiwanese and Hakka expansion)
+            return True
+        elif uchar >= u'\ufe10' and uchar <= u'\ufe1f':
+            return True
+        elif uchar >= u'\ufe30' and uchar <= u'\ufe4f':
+            return True
+        elif uchar >= u'\u2600' and uchar <= u'\u26ff':
+            return True
+        elif uchar >= u'\u2700' and uchar <= u'\u27bf':
+            return True
+        elif uchar >= u'\u3200' and uchar <= u'\u32ff':
+            return True
+        elif uchar >= u'\u3300' and uchar <= u'\u33ff':
+            return True
+        else:
+            return False
+
+    sentence = sentence.strip()
+    sentence_in_chars = ""
+    for c in sentence:
+        if isChineseChar(c):
+            sentence_in_chars += " "
+            sentence_in_chars += c 
+            sentence_in_chars += " "
+        else:
+            sentence_in_chars += c 
+    sentence = sentence_in_chars
+
+    # tokenize punctuation
+    sentence = re.sub(r'([\{-\~\[-\` -\&\(-\+\:-\@\/])', r' \1 ', sentence)
+
+    # tokenize period and comma unless preceded by a digit
+    sentence = re.sub(r'([^0-9])([\.,])', r'\1 \2 ', sentence)
+
+    # tokenize period and comma unless followed by a digit
+    sentence = re.sub(r'([\.,])([^0-9])', r' \1 \2', sentence)
+
+    # tokenize dash when preceded by a digit
+    sentence = re.sub(r'([0-9])(-)', r'\1 \2 ', sentence)
+
+    # one space only between words
+    sentence = re.sub(r'\s+', r' ', sentence)
+
+    # no leading space
+    sentence = re.sub(r'^\s+', r'', sentence)
+
+    # no trailing space
+    sentence = re.sub(r'\s+$', r'', sentence)
+
+    return sentence
+
+
 tokenizers = {
-    '13a': tokenize_13a
+    '13a': tokenize_13a,
+    'zh': tokenize_zh,
 }
 
 def _read(file):
@@ -553,7 +672,7 @@ if __name__ == '__main__':
                             help='Case-insensitive BLEU')
     arg_parser.add_argument('--smooth', '-s', type=float, default=0.0,
                             help='Smooth zero-count precisions with specified value')
-    arg_parser.add_argument('--tokenize', '-tok', choices=['13a'], default='13a',
+    arg_parser.add_argument('--tokenize', '-tok', choices=['13a','zh'], default='13a',
                             help='Tokenization method to use.')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes)')
@@ -596,7 +715,6 @@ if __name__ == '__main__':
         for ts in sorted(data.keys(), reverse=True):
             logging.error('  {}: {}'.format(ts, data[ts].get('description', '')))
         sys.exit(1)
-
     elif args.test_set is not None and len(args.refs) > 0:
         logging.error('I need x-either a test set (-t) or a list of references')
         sys.exit(1)
@@ -607,6 +725,11 @@ if __name__ == '__main__':
     else:        
         refs = args.refs
     
+    if args.langpair is not None:
+        source, target = args.langpair.split('-')
+        if target == 'zh' and args.tokenize != 'zh':
+            logging.warn('You should also pass "--tok zh" when scoring Chinese...')
+
     # bleu, precisions, brevity_penalty, sys_len, ref_len = bleu(sys.stdin, [_read(x) for x in refs])
     bleu = bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth, force=args.force)
 
