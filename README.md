@@ -13,7 +13,7 @@ Why use this version of BLEU?
 
 Install the Python module (Python 3 only)
 
-    pip3 install sacreBLEU
+    pip3 install sacrebleu
 
 This installs a shell script, `sacrebleu`.
 (You can also directly run the shell script `sacrebleu.py` in the source repository).
