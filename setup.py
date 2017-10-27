@@ -14,7 +14,7 @@ from setuptools import setup
 VERSION = '1.0.0'
 
 setup(
-    name = 'sacreBLEU',
+    name = 'sacrebleu',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
@@ -41,7 +41,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 5 - Stable',
+        'Development Status :: 5 - Production/Stable',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
@@ -59,7 +59,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords = ['machine translation', 'evaluation', 'NLP', 'natural language processing', 'computational linguistics'],
+    keywords = ['machine translation, evaluation, NLP, natural language processing, computational linguistics'],
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
