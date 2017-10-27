@@ -1,54 +1,53 @@
-# SacréBLEU
+SacréBLEU provides hassle-free computation of shareable, comparable, and reproducible BLEU scores.
+Inspired by Rico Sennrich's `multi-bleu-detok.perl`, it produces the official WMT scores but works with plain text.
+It also knows all the standard test sets and handles downloading, processing, and tokenization for you.
 
-SacréBLEU is a standard BLEU implementation that:
+Why use this version of BLEU?
+- It automatically downloads common WMT test sets and processes them to plain text
+- It produces a short version string that facilitates cross-paper comparisons
+- It properly computes scores on detokenized outputs, using WMT ([Conference on Machine Translation](http://statmt.org/wmt17)) standard tokenization
+- It produces the same values as official script (`mteval-v13a.pl`) used by WMT
+- It outputs the BLEU score without the comma, so you don't have to remove it with `sed` (Looking at you, multi-bleu.perl)
 
-- Automatically downloads WMT datasets, unpacks them, and puts them in plain text format. You just specify the test set name.
-- Properly produces scores on detokenized outputs. 
-- Exactly reproduces scores from `mteval-13a.pl`, the official scoring script of the [Conference on Machine Translation](http://statmt.org/wmt17) (WMT).
-- Includes a version string in its output that encapsulates all the parameters, helping with repeatability across papers.
+# QUICK START
 
-Its goal is to address the following problems in machine translation research:
+Install the Python module (Python 3 only)
 
-- BLEU scores computed against differently-tokenized references are not comparable.
-- BLEU is a standard metric, but it is subject to a handful of parameters (casing, tokenization, reference length) which can wildly affect the score and which are often not specified in papers.
-- Even when specified, it can be hard to dig up the details
-- WMT's test sets are released in slightly different formats each year, are wrapped in XML, and are in general a slight bother to deal with.
+    pip3 install sacreBLEU
 
-# Quick start
+This installs a shell script, `sacrebleu`.
+(You can also directly run the shell script `sacrebleu.py` in the source repository).
 
-Get a list of the available test sets:
+Get a list of available test sets:
 
-    ./sacreBLEU
+    sacrebleu
 
 Download the source for one of the pre-defined test sets:
 
-    ./sacreBLEU -t wmt14 -l de-en --echo src > wmt14-de-en.src
+    sacrebleu -t wmt14 -l de-en --echo src > wmt14-de-en.src
 
 (you can also use long parameter names for readability):
 
-    ./sacreBLEU --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
+    sacrebleu --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
 
-After tokenizing, translating, and then detokenizing it, you can score it easily:
+After tokenizing, translating, and detokenizing it, you can score your decoder output easily:
 
-    cat output.detok.txt | ./sacreBLEU -t wmt14 -l de-en
+    cat output.detok.txt | sacrebleu -t wmt14 -l de-en
 
-SacréBLEU knows about common WMT test sets, but you can also use it in a backward-compatible mode where you manually specify the reference(s).
-It uses the same invocation syntax as Moses' `multi-bleu.txt` or Rico Sennrich's `multi-bleu-detok.perl`:
+SacréBLEU knows about common WMT test sets, but you can also use it to score system outputs with arbitrary references.
+It also works in backwards compatible model where you manually specify the reference(s), similar to the format of `multi-bleu.txt`:
 
-    ./sacreBLEU -t wmt14 -l de-en --echo ref > wmt14-de-en.ref
-    cat ouput.detok.txt | ./sacreBLEU wmt14-de-en.ref
+    cat output.detok.txt | sacrebleu REF1 [REF2 ...]
 
-Or, more generally:
+Note that the system output and references will all be tokenized internally.
 
-    cat output.detok.txt | ./sacreBLEU REF1 [REF2 ...]
-    
 SacréBLEU generates version strings like the following.
 Put them in a footnote in your paper!
-Use `--short` for a shorter hash.
+Use `--short` for a shorter hash if you like.
 
     BLEU+case.mixed+lang.de-en+test.wmt17 = 32.97 66.1/40.2/26.6/18.1 (BP = 0.980 ratio = 0.980 hyp_len = 63134 ref_len = 64399)
 
-# Motivation
+# MOTIVATION
 
 Comparing BLEU scores is harder than it should be.
 Every decoder has its own implementation, offered borrowed from Moses.
@@ -67,12 +66,21 @@ It is all designed to take BLEU a little more seriously.
 After all, even with all its problems, BLEU is default and---admit it---well-loved metric of our entire research community.
 Sacré BLEU.
 
-# License
+# VERSION HISTORY
+
+- version 1.0 (23 October 2017).
+  Support for WMT 2008--2017.
+  Single tokenization (v13a) with lowercase fix (proper lower() instead of just A-Z).
+  Chinese tokenization.
+  Tested to match all WMT17 scores on all arcs.
+
+# LICENSE
 
 SacréBLEU is licensed under the Apache 2.0 License.
 
-# Credits
+# CREDITS
 
 This was all Rico Sennrich's idea.
+Written by Matt Post.
+The official version can be found at github.com/mjpost/sacreBLEU
 
-Written by Matt Post, September 2017.

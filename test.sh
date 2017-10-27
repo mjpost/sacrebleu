@@ -5,6 +5,16 @@
 # or add "-lc" to sacreBLEU) because mteval-v13a.pl does not lowercase properly: it uses
 # tr/[A-Z]/[a-z].
 
+if [[ -z $MOSES ]]; then
+    echo "Please define \$MOSES to point to your Moses installation."
+    exit 1
+fi
+
+if [[ $(which sacrebleu > /dev/null) -ne 0 ]]; then
+    echo "Please install sacreBLEU."
+    exit 1
+fi
+
 [[ ! -d data ]] && mkdir data
 cd data
 
@@ -25,7 +35,7 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr fi-en lv-en ru-en tr
 
         bleu1=$($MOSES/scripts/generic/mteval-v13a.pl -c -s $src -r $ref -t $sgm 2> /dev/null | grep "BLEU score" | cut -d' ' -f9)
         bleu1=$(echo "print($bleu1 * 100)" | python)
-        bleu2=$(cat $txt | ~/code/sacreBLEU/sbleu -t wmt17 -l $source-$target | cut -d' ' -f3)
+        bleu2=$(cat $txt | sacrebleu -t wmt17 -l $source-$target | cut -d' ' -f3)
 
         echo "$source-$target $sys mteval: $bleu1 sacreBLEU: $bleu2"
     done

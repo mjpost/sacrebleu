@@ -21,7 +21,7 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version = VERSION,
 
-    description = 'Hassle-free computation of shareable BLEU scores',
+    description = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores',
     long_description = 'SacréBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.',
 
     # The project's main homepage.
@@ -66,7 +66,7 @@ setup(
 #    packages = ['sacreBLEU'],
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment this:
-    py_modules = ["sacreBLEU"],
+    py_modules = ["sacrebleu"],
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -85,7 +85,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'sacreBLEU = sacreBLEU:main',
+            'sacrebleu = sacrebleu:main',
         ],
     },
 )
