@@ -634,7 +634,7 @@ def download_test_set(test_set, langpair=None):
 
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
 
-def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
+def compute_bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
     """Produces the BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param instream: the input stream, one segment per line
@@ -774,7 +774,7 @@ def main():
             logging.warn('You should also pass "--tok zh" when scoring Chinese...')
 
     # bleu, precisions, brevity_penalty, sys_len, ref_len = bleu(sys.stdin, [_read(x) for x in refs])
-    bleu = bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth, force=args.force)
+    bleu = compute_bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth, force=args.force)
 
     version_str = build_signature(args, len(refs))
 
