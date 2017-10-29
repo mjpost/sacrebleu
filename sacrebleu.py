@@ -621,7 +621,7 @@ def download_test_set(test_set, langpair=None):
     # Process the files into plain text
     languages = data[test_set].keys() if langpair is None else [langpair]
     for pair in languages:
-        if not '-' in pair:
+        if '-' not in pair:
             continue
         src, tgt = pair.split('-')
         rawfile = os.path.join(rawdir, data[test_set][pair][0])
@@ -640,7 +640,7 @@ def download_test_set(test_set, langpair=None):
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
 
 
-def compute_bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
+def compute_bleu(instream, refstreams, smooth=0., force=False, lc=False, tokenize=False) -> BLEU:
     """Produces the BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param instream: the input stream, one segment per line
@@ -660,7 +660,7 @@ def compute_bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
     tokenized_count = 0
 
     for sentno, lines in enumerate(zip(*fhs)):
-        if args.lc:
+        if lc:
             lines = [x.lower() for x in lines]
 
         if lines[0].rstrip().endswith(' .'):
@@ -672,7 +672,7 @@ def compute_bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
                 logging.error('If you insist your data is tokenized, rerun with \'--force\'.')
                 sys.exit(1)
 
-        output, *refs = [tokenizers[args.tokenize](x.rstrip()) for x in lines]
+        output, *refs = [tokenizers[tokenize](x.rstrip()) for x in lines]
 
         ref_ngrams, closest_diff, closest_len = ref_stats(output, refs)
 
@@ -774,13 +774,16 @@ def main():
     else:
         refs = args.refs
 
+    # Read references
+    refs = [_read(x) for x in refs]
+
     if args.langpair is not None:
         source, target = args.langpair.split('-')
         if target == 'zh' and args.tokenize != 'zh':
             logging.warn('You should also pass "--tok zh" when scoring Chinese...')
 
-    # bleu, precisions, brevity_penalty, sys_len, ref_len = bleu(sys.stdin, [_read(x) for x in refs])
-    bleu = compute_bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth, force=args.force)
+    bleu = compute_bleu(sys.stdin, refs, smooth=args.smooth, force=args.force,
+                        lc=args.lc, tokenize=args.tokenize)
 
     version_str = build_signature(args, len(refs))
 
