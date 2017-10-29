@@ -93,7 +93,8 @@ import sys
 import math
 import tarfile
 import logging
-import urllib.request, urllib.parse
+import urllib.request
+import urllib.parse
 import argparse
 
 from collections import defaultdict, namedtuple
@@ -323,12 +324,12 @@ def tokenize_13a(line):
     # language-dependent part (assuming Western languages):
     norm = " {} ".format(norm)
     norm = re.sub(r'([\{-\~\[-\` -\&\(-\+\:-\@\/])', ' \\1 ', norm)
-    norm = re.sub(r'([^0-9])([\.,])', '\\1 \\2 ', norm) # tokenize period and comma unless preceded by a digit
-    norm = re.sub(r'([\.,])([^0-9])', ' \\1 \\2', norm) # tokenize period and comma unless followed by a digit
-    norm = re.sub(r'([0-9])(-)', '\\1 \\2 ', norm) # tokenize dash when preceded by a digit
-    norm = re.sub(r'\s+', ' ', norm) # one space only between words
-    norm = re.sub(r'^\s+', '', norm) # no leading space
-    norm = re.sub(r'\s+$', '', norm) # no trailing space
+    norm = re.sub(r'([^0-9])([\.,])', '\\1 \\2 ', norm)  # tokenize period and comma unless preceded by a digit
+    norm = re.sub(r'([\.,])([^0-9])', ' \\1 \\2', norm)  # tokenize period and comma unless followed by a digit
+    norm = re.sub(r'([0-9])(-)', '\\1 \\2 ', norm)  # tokenize dash when preceded by a digit
+    norm = re.sub(r'\s+', ' ', norm)  # one space only between words
+    norm = re.sub(r'^\s+', '', norm)  # no leading space
+    norm = re.sub(r'\s+$', '', norm)  # no trailing space
 
     return norm
 
@@ -455,6 +456,7 @@ tokenizers = {
     'zh': tokenize_zh,
 }
 
+
 def _read(file):
     if file.endswith('.gz'):
         return gzip.open(file, 'rt')
@@ -484,15 +486,15 @@ def build_signature(args, numrefs):
 
     # Abbreviations for the signature
     abbr = {
-        'test':   't',
-        'lang':   'l',
+        'test': 't',
+        'lang': 'l',
         'smooth': 's',
-        'case':   'c',
-        'tok':    'tok',
+        'case': 'c',
+        'tok': 'tok',
         'numrefs': '#'
     }
 
-    data = {'tok' : args.tokenize}
+    data = {'tok': args.tokenize}
 
     if args.test_set is not None:
         data['test'] = args.test_set
@@ -510,9 +512,10 @@ def build_signature(args, numrefs):
 
     data['numrefs'] = numrefs
 
-    sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x,data[x]) for x in sorted(data.keys())])
+    sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, data[x]) for x in sorted(data.keys())])
 
     return sigstr
+
 
 def extract_ngrams(line, max=4):
     """Extracts all the ngrams (1 <= n <= 4) from a sequence of tokens.
@@ -524,12 +527,13 @@ def extract_ngrams(line, max=4):
 
     ngrams = defaultdict(int)
     tokens = line.split()
-    for n in range(1, max+1):
+    for n in range(1, max + 1):
         for i in range(0, len(tokens) - n + 1):
-            ngram = ' '.join(tokens[i:i+n])
+            ngram = ' '.join(tokens[i: i + n])
             ngrams[ngram] += 1
 
     return ngrams
+
 
 def ref_stats(output, refs):
     ngrams = defaultdict(int)
@@ -634,6 +638,7 @@ def download_test_set(test_set, langpair=None):
 
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
 
+
 def compute_bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
     """Produces the BLEU scores along with its sufficient statistics from a source against one or more references.
 
@@ -684,7 +689,7 @@ def compute_bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
         logging.error('No input?')
         sys.exit(1)
 
-    precisions  = [0, 0, 0, 0, 0]
+    precisions = [0, 0, 0, 0, 0]
 
     for n in range(1, 5):
         precisions[n] = max(smooth, 100. * correct[n] / total[n] if total.get(n) > 0 else 0)
@@ -709,7 +714,7 @@ def main():
                             help='Case-insensitive BLEU')
     arg_parser.add_argument('--smooth', '-s', type=float, default=0.0,
                             help='Smooth zero-count precisions with specified value')
-    arg_parser.add_argument('--tokenize', '-tok', choices=['13a','zh'], default='13a',
+    arg_parser.add_argument('--tokenize', '-tok', choices=['13a', 'zh'], default='13a',
                             help='Tokenization method to use.')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes)')
@@ -783,6 +788,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
