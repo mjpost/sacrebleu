@@ -483,7 +483,6 @@ def build_signature(args, numrefs):
     :param args: the arguments passed into the script
     :return: the signature
     """
-    sig = 'BLEU'
 
     # Abbreviations for the signature
     abbr = {
