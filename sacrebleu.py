@@ -83,7 +83,7 @@ SacréBLEU is licensed under the Apache 2.0 License.
 # CREDITS
 
 This was all Rico Sennrich's idea.
-Written by Matt Post.  
+Written by Matt Post.
 The official version can be found at github.com/mjpost/sacreBLEU
 """
 
@@ -319,7 +319,7 @@ def tokenize_13a(line):
     norm = norm.replace('&amp;', '"')
     norm = norm.replace('&lt;', '"')
     norm = norm.replace('&gt;', '"')
-    
+
     # language-dependent part (assuming Western languages):
     norm = " {} ".format(norm)
     norm = re.sub(r'([\{-\~\[-\` -\&\(-\+\:-\@\/])', ' \\1 ', norm)
@@ -420,10 +420,10 @@ def tokenize_zh(sentence):
     for c in sentence:
         if isChineseChar(c):
             sentence_in_chars += " "
-            sentence_in_chars += c 
+            sentence_in_chars += c
             sentence_in_chars += " "
         else:
-            sentence_in_chars += c 
+            sentence_in_chars += c
     sentence = sentence_in_chars
 
     # tokenize punctuation
@@ -554,7 +554,7 @@ def ref_stats(output, refs):
 
 
 def process_to_text(rawfile, txtfile):
-    """Copies raw files to 
+    """Copies raw files to
     :param rawfile: the input file (possibly SGML)
     :param txtfile: the plaintext file
     """
@@ -591,7 +591,7 @@ def download_test_set(test_set, langpair=None):
 
     # if not data.has_key(test_set):
     #     return None
-    
+
     dataset = data[test_set]['data']
     outdir = os.path.join(SACREBLEU, test_set)
     if not os.path.exists(outdir):
@@ -667,7 +667,7 @@ def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
                 sys.exit(1)
 
         output, *refs = [tokenizers[args.tokenize](x.rstrip()) for x in lines]
-    
+
         ref_ngrams, closest_diff, closest_len = ref_stats(output, refs)
 
         sys_len += len(output.split())
@@ -765,9 +765,9 @@ def main():
     if args.test_set:
         src, ref = download_test_set(args.test_set, args.langpair)
         refs = [ref]
-    else:        
+    else:
         refs = args.refs
-    
+
     if args.langpair is not None:
         source, target = args.langpair.split('-')
         if target == 'zh' and args.tokenize != 'zh':
@@ -785,4 +785,4 @@ if __name__ == '__main__':
     main()
 
 
-    
+
