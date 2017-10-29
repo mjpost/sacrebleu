@@ -91,6 +91,7 @@ import re
 import os
 import sys
 import math
+import gzip
 import tarfile
 import logging
 import urllib.request
