@@ -26,7 +26,7 @@ fi
 
 for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr fi-en lv-en ru-en tr-en zh-en; do
     source=$(echo $pair | cut -d- -f1)
-    target=$(echo $pair | cut -d- -f2)    
+    target=$(echo $pair | cut -d- -f2)
     for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
         sys=$(basename $sgm .sgm | perl -pe 's/newstest2017\.//')
         txt=$(dirname $sgm | perl -pe 's/sgm/txt/')/$(basename $sgm .sgm)
