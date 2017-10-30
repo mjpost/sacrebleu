@@ -34,7 +34,7 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr fi-en lv-en ru-en tr
         ref=wmt17-submitted-data/sgm/references/newstest2017-$source$target-ref.$target.sgm
 
         bleu1=$($MOSES/scripts/generic/mteval-v13a.pl -c -s $src -r $ref -t $sgm 2> /dev/null | grep "BLEU score" | cut -d' ' -f9)
-        bleu1=$(echo "print($bleu1 * 100)" | python)
+        bleu1=$(echo "${bleu1} * 100" | bc)
         bleu2=$(cat $txt | sacrebleu -t wmt17 -l $source-$target | cut -d' ' -f3)
 
         echo "$source-$target $sys mteval: $bleu1 sacreBLEU: $bleu2"
