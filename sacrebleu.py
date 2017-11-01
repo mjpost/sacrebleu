@@ -83,7 +83,7 @@ SacréBLEU is licensed under the Apache 2.0 License.
 # CREDITS
 
 This was all Rico Sennrich's idea.
-Written by Matt Post.  
+Written by Matt Post.
 The official version can be found at github.com/mjpost/sacreBLEU
 """
 
@@ -91,9 +91,11 @@ import re
 import os
 import sys
 import math
+import gzip
 import tarfile
 import logging
-import urllib.request, urllib.parse
+import urllib.request
+import urllib.parse
 import argparse
 
 from collections import defaultdict, namedtuple
@@ -319,16 +321,16 @@ def tokenize_13a(line):
     norm = norm.replace('&amp;', '"')
     norm = norm.replace('&lt;', '"')
     norm = norm.replace('&gt;', '"')
-    
+
     # language-dependent part (assuming Western languages):
     norm = " {} ".format(norm)
     norm = re.sub(r'([\{-\~\[-\` -\&\(-\+\:-\@\/])', ' \\1 ', norm)
-    norm = re.sub(r'([^0-9])([\.,])', '\\1 \\2 ', norm) # tokenize period and comma unless preceded by a digit
-    norm = re.sub(r'([\.,])([^0-9])', ' \\1 \\2', norm) # tokenize period and comma unless followed by a digit
-    norm = re.sub(r'([0-9])(-)', '\\1 \\2 ', norm) # tokenize dash when preceded by a digit
-    norm = re.sub(r'\s+', ' ', norm) # one space only between words
-    norm = re.sub(r'^\s+', '', norm) # no leading space
-    norm = re.sub(r'\s+$', '', norm) # no trailing space
+    norm = re.sub(r'([^0-9])([\.,])', '\\1 \\2 ', norm)  # tokenize period and comma unless preceded by a digit
+    norm = re.sub(r'([\.,])([^0-9])', ' \\1 \\2', norm)  # tokenize period and comma unless followed by a digit
+    norm = re.sub(r'([0-9])(-)', '\\1 \\2 ', norm)  # tokenize dash when preceded by a digit
+    norm = re.sub(r'\s+', ' ', norm)  # one space only between words
+    norm = re.sub(r'^\s+', '', norm)  # no leading space
+    norm = re.sub(r'\s+$', '', norm)  # no trailing space
 
     return norm
 
@@ -420,10 +422,10 @@ def tokenize_zh(sentence):
     for c in sentence:
         if isChineseChar(c):
             sentence_in_chars += " "
-            sentence_in_chars += c 
+            sentence_in_chars += c
             sentence_in_chars += " "
         else:
-            sentence_in_chars += c 
+            sentence_in_chars += c
     sentence = sentence_in_chars
 
     # tokenize punctuation
@@ -455,6 +457,7 @@ tokenizers = {
     'zh': tokenize_zh,
 }
 
+
 def _read(file):
     if file.endswith('.gz'):
         return gzip.open(file, 'rt')
@@ -480,19 +483,18 @@ def build_signature(args, numrefs):
     :param args: the arguments passed into the script
     :return: the signature
     """
-    sig = 'BLEU'
 
     # Abbreviations for the signature
     abbr = {
-        'test':   't',
-        'lang':   'l',
+        'test': 't',
+        'lang': 'l',
         'smooth': 's',
-        'case':   'c',
-        'tok':    'tok',
+        'case': 'c',
+        'tok': 'tok',
         'numrefs': '#'
     }
 
-    data = {'tok' : args.tokenize}
+    data = {'tok': args.tokenize}
 
     if args.test_set is not None:
         data['test'] = args.test_set
@@ -510,9 +512,10 @@ def build_signature(args, numrefs):
 
     data['numrefs'] = numrefs
 
-    sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x,data[x]) for x in sorted(data.keys())])
+    sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, data[x]) for x in sorted(data.keys())])
 
     return sigstr
+
 
 def extract_ngrams(line, max=4):
     """Extracts all the ngrams (1 <= n <= 4) from a sequence of tokens.
@@ -524,12 +527,13 @@ def extract_ngrams(line, max=4):
 
     ngrams = defaultdict(int)
     tokens = line.split()
-    for n in range(1, max+1):
+    for n in range(1, max + 1):
         for i in range(0, len(tokens) - n + 1):
-            ngram = ' '.join(tokens[i:i+n])
+            ngram = ' '.join(tokens[i: i + n])
             ngrams[ngram] += 1
 
     return ngrams
+
 
 def ref_stats(output, refs):
     ngrams = defaultdict(int)
@@ -554,7 +558,7 @@ def ref_stats(output, refs):
 
 
 def process_to_text(rawfile, txtfile):
-    """Copies raw files to 
+    """Copies raw files to
     :param rawfile: the input file (possibly SGML)
     :param txtfile: the plaintext file
     """
@@ -591,7 +595,7 @@ def download_test_set(test_set, langpair=None):
 
     # if not data.has_key(test_set):
     #     return None
-    
+
     dataset = data[test_set]['data']
     outdir = os.path.join(SACREBLEU, test_set)
     if not os.path.exists(outdir):
@@ -616,7 +620,7 @@ def download_test_set(test_set, langpair=None):
     # Process the files into plain text
     languages = data[test_set].keys() if langpair is None else [langpair]
     for pair in languages:
-        if not '-' in pair:
+        if '-' not in pair:
             continue
         src, tgt = pair.split('-')
         rawfile = os.path.join(rawdir, data[test_set][pair][0])
@@ -634,7 +638,8 @@ def download_test_set(test_set, langpair=None):
 
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
 
-def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
+
+def compute_bleu(instream, refstreams, smooth=0., force=False, lc=False, tokenize=False) -> BLEU:
     """Produces the BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param instream: the input stream, one segment per line
@@ -654,7 +659,7 @@ def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
     tokenized_count = 0
 
     for sentno, lines in enumerate(zip(*fhs)):
-        if args.lc:
+        if lc:
             lines = [x.lower() for x in lines]
 
         if lines[0].rstrip().endswith(' .'):
@@ -666,8 +671,8 @@ def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
                 logging.error('If you insist your data is tokenized, rerun with \'--force\'.')
                 sys.exit(1)
 
-        output, *refs = [tokenizers[args.tokenize](x.rstrip()) for x in lines]
-    
+        output, *refs = [tokenizers[tokenize](x.rstrip()) for x in lines]
+
         ref_ngrams, closest_diff, closest_len = ref_stats(output, refs)
 
         sys_len += len(output.split())
@@ -684,7 +689,7 @@ def bleu(instream, refstreams, smooth=0., force=False) -> BLEU:
         logging.error('No input?')
         sys.exit(1)
 
-    precisions  = [0, 0, 0, 0, 0]
+    precisions = [0, 0, 0, 0, 0]
 
     for n in range(1, 5):
         precisions[n] = max(smooth, 100. * correct[n] / total[n] if total.get(n) > 0 else 0)
@@ -709,7 +714,7 @@ def main():
                             help='Case-insensitive BLEU')
     arg_parser.add_argument('--smooth', '-s', type=float, default=0.0,
                             help='Smooth zero-count precisions with specified value')
-    arg_parser.add_argument('--tokenize', '-tok', choices=['13a','zh'], default='13a',
+    arg_parser.add_argument('--tokenize', '-tok', choices=['13a', 'zh'], default='13a',
                             help='Tokenization method to use.')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes)')
@@ -765,16 +770,19 @@ def main():
     if args.test_set:
         src, ref = download_test_set(args.test_set, args.langpair)
         refs = [ref]
-    else:        
+    else:
         refs = args.refs
-    
+
+    # Read references
+    refs = [_read(x) for x in refs]
+
     if args.langpair is not None:
         source, target = args.langpair.split('-')
         if target == 'zh' and args.tokenize != 'zh':
             logging.warn('You should also pass "--tok zh" when scoring Chinese...')
 
-    # bleu, precisions, brevity_penalty, sys_len, ref_len = bleu(sys.stdin, [_read(x) for x in refs])
-    bleu = bleu(sys.stdin, [_read(x) for x in refs], smooth=args.smooth, force=args.force)
+    bleu = compute_bleu(sys.stdin, refs, smooth=args.smooth, force=args.force,
+                        lc=args.lc, tokenize=args.tokenize)
 
     version_str = build_signature(args, len(refs))
 
@@ -783,6 +791,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-    
