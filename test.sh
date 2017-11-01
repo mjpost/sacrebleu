@@ -18,13 +18,17 @@ fi
 [[ ! -d data ]] && mkdir data
 cd data
 
-if [[ ! -d wmt17-submitted-data ]]; then
-    echo "Downloading and unpacking WMT'17 system submissions (46 MB)..."
-    wget -q http://data.statmt.org/wmt17/translation-task/wmt17-submitted-data-v1.0.tgz
-    tar xzf wmt17-submitted-data-v1.0.tgz
-fi
+#if [[ ! -d wmt17-submitted-data ]]; then
+#    echo "Downloading and unpacking WMT'17 system submissions (46 MB)..."
+#    wget -q http://data.statmt.org/wmt17/translation-task/wmt17-submitted-data-v1.0.tgz
+#    tar xzf wmt17-submitted-data-v1.0.tgz
+#fi
 
 for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr fi-en lv-en ru-en tr-en zh-en; do
+    tokenizer=13a
+    if [[ $pair == "en-zh" ]]; then
+        tokenizer=zh
+    fi
     source=$(echo $pair | cut -d- -f1)
     target=$(echo $pair | cut -d- -f2)
     for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do

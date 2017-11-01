@@ -70,6 +70,9 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
+- version 1.0.1 (1 November 2017)
+  Code reformatting due to Ozan Çağlayan.
+
 - version 1.0 (23 October 2017).
   Support for WMT 2008--2017.
   Single tokenization (v13a) with lowercase fix (proper lower() instead of just A-Z).
