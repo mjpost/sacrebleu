@@ -50,23 +50,20 @@ Use `--short` for a shorter hash if you like.
 # MOTIVATION
 
 Comparing BLEU scores is harder than it should be.
-Every decoder has its own implementation, offered borrowed from Moses.
-Moses itself has a number of implementations as standalone scripts, with little indication of how they differ (note: they mostly don't, but `multi-bleu.pl` expects tokenized output).
+Every decoder has its own implementation, often borrowed from Moses, but maybe with subtle changes.
+Moses itself has a number of implementations as standalone scripts, with little indication of how they differ (note: they mostly don't, but `multi-bleu.pl` expects tokenized input).
 Different flags passed to each of these scripts can produce wide swings in the final score.
-Other decoders have their own implementations, often borrowed from Moses, but perhaps with subtle changes.
-And most importantly, all of these handle tokenization in different ways.
+All of these may handle tokenization in different ways.
 On top of this, downloading and managing test sets is a moderate annoyance.
 Sacré bleu!
 What a mess.
 
 SacréBLEU aims to solve these problems by wrapping the original Papineni reference implementation together with other useful features.
-The defaults are set the way that BLEU should be computed, and furthermore, the script outputs a short version string that allows others to know exactly what you do.
+The defaults are set the way that BLEU should be computed, and furthermore, the script outputs a short version string that allows others to know exactly what you did.
 As an added bonus, it automatically downloads and manages test sets for you, so that you can simply tell it to score against 'wmt14', without having to hunt down a path on your local file system.
 It is all designed to take BLEU a little more seriously.
-After all, even with all its problems, BLEU is default and---admit it---well-loved metric of our entire research community.
+After all, even with all its problems, BLEU is the default and---admit it---well-loved metric of our entire research community.
 Sacré BLEU.
-
-# VERSION HISTORY
 
 - version 1.0 (23 October 2017).
   Support for WMT 2008--2017.
