@@ -69,7 +69,8 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
-- version 1.0.1 (1 November 2017)
+- version 1.0.1 (1 November 2017).
+  Small bugfix affecting some versions of Python.
   Code reformatting due to Ozan Çağlayan.
 
 - version 1.0 (23 October 2017).
