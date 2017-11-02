@@ -461,10 +461,10 @@ tokenizers = {
 }
 
 
-def _read(file):
+def _read(file, encoding):
     if file.endswith('.gz'):
-        return gzip.open(file, 'rt')
-    return open(file, 'rt')
+        return gzip.open(file, 'rt', encoding=encoding)
+    return open(file, 'rt', encoding=encoding)
 
 
 def my_log(num):
@@ -733,6 +733,8 @@ def main():
                             help='Insist that your tokenized input is actually detokenized.')
     arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',
                             help='Suppress informative output.')
+    arg_parser.add_argument('--encoding', '-e', type=str, default='utf-8',
+                            help='Open text files with specified encoding')
     args = arg_parser.parse_args()
 
     if not args.quiet:
@@ -777,7 +779,7 @@ def main():
         refs = args.refs
 
     # Read references
-    refs = [_read(x) for x in refs]
+    refs = [_read(x, args.encoding) for x in refs]
 
     if args.langpair is not None:
         source, target = args.langpair.split('-')
