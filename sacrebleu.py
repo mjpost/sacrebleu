@@ -551,7 +551,7 @@ def ref_stats(output, refs):
             closest_len = reflen
         elif diff == closest_diff:
             if reflen < closest_len:
-                closest_len = len
+                closest_len = reflen
 
         ngrams_ref = extract_ngrams(ref)
         for ngram in ngrams_ref.keys():
