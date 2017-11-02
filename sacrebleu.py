@@ -105,7 +105,13 @@ from collections import defaultdict, namedtuple
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
-SACREBLEU = os.environ.get('SACREBLEU', os.path.join(os.environ.get('HOME'), '.sacrebleu'))
+#
+# Querying for a HOME environment variable can result in None (e.g., on Windows)
+# in which case the os.path.join() throws a TypeError. Using expanduser() is
+# a safe way to get the user's home folder.
+from os.path import expanduser
+USERHOME = expanduser("~")
+SACREBLEU = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
 # This defines data locations.
 # At the top level are test sets.
