@@ -7,15 +7,11 @@
 # Chinese preprocessing was applied to all zh sources, references, and system outputs
 # (http://statmt.org/wmt17/tokenizeChinese.py), as was done for WMT17.
 
-if [[ -z $MOSES ]]; then
-    echo "Please define \$MOSES to point to your Moses installation."
-    exit 1
-fi
+set -eu
 
-if [[ $(which sacrebleu > /dev/null) -ne 0 ]]; then
-    echo "Please install sacreBLEU."
-    exit 1
-fi
+# TEST 1: download and process WMT17 data
+[[ -d ~/.sacrebleu/wmt17 ]] && rm -f ~/.sacrebleu/wmt17/{en-*,*-en*}
+./sacrebleu.py --echo src -t wmt17 -l cs-en > /dev/null
 
 [[ ! -d data ]] && mkdir data
 cd data

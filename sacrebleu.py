@@ -69,7 +69,7 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
-- 1.0.2 (4 November 2017).
+- 1.0.3 (4 November 2017).
    - Contributions from Christian Federmann:
    - Added explicit support for encoding  
    - Fixed Windows support
@@ -475,7 +475,11 @@ tokenizers = {
 }
 
 
-def _read(file, encoding):
+def _read(file, encoding='utf-8'):
+    """Convenience function for reading compressed or plain text files.
+    :param file: The file to read.
+    :param encoding: The file encoding.
+    """
     if file.endswith('.gz'):
         return gzip.open(file, 'rt', encoding=encoding)
     return open(file, 'rt', encoding=encoding)
@@ -577,7 +581,7 @@ def ref_stats(output, refs):
 
 
 def process_to_text(rawfile, txtfile):
-    """Copies raw files to
+    """Processes raw files to plain text files.
     :param rawfile: the input file (possibly SGML)
     :param txtfile: the plaintext file
     """
