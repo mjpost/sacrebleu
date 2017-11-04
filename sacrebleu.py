@@ -105,7 +105,13 @@ from collections import defaultdict, namedtuple
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
-SACREBLEU = os.environ.get('SACREBLEU', os.path.join(os.environ.get('HOME'), '.sacrebleu'))
+#
+# Querying for a HOME environment variable can result in None (e.g., on Windows)
+# in which case the os.path.join() throws a TypeError. Using expanduser() is
+# a safe way to get the user's home folder.
+from os.path import expanduser
+USERHOME = expanduser("~")
+SACREBLEU = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
 # This defines data locations.
 # At the top level are test sets.
@@ -461,10 +467,10 @@ tokenizers = {
 }
 
 
-def _read(file):
+def _read(file, encoding):
     if file.endswith('.gz'):
-        return gzip.open(file, 'rt')
-    return open(file, 'rt')
+        return gzip.open(file, 'rt', encoding=encoding)
+    return open(file, 'rt', encoding=encoding)
 
 
 def my_log(num):
@@ -551,7 +557,7 @@ def ref_stats(output, refs):
             closest_len = reflen
         elif diff == closest_diff:
             if reflen < closest_len:
-                closest_len = len
+                closest_len = reflen
 
         ngrams_ref = extract_ngrams(ref)
         for ngram in ngrams_ref.keys():
@@ -714,7 +720,7 @@ def main():
                             choices=data.keys(),
                             help='The test set to use')
     arg_parser.add_argument('-lc', action='store_true', default=False,
-                            help='Case-insensitive BLEU')
+                            help='Use case-insensitive BLEU (default: actual case)')
     arg_parser.add_argument('--smooth', '-s', type=float, default=0.0,
                             help='Smooth zero-count precisions with specified value')
     arg_parser.add_argument('--tokenize', '-tok', choices=['13a', 'zh'], default='13a',
@@ -733,6 +739,8 @@ def main():
                             help='Insist that your tokenized input is actually detokenized.')
     arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',
                             help='Suppress informative output.')
+    arg_parser.add_argument('--encoding', '-e', type=str, default='utf-8',
+                            help='Open text files with specified encoding (default: %(default)s)')
     args = arg_parser.parse_args()
 
     if not args.quiet:
@@ -777,7 +785,7 @@ def main():
         refs = args.refs
 
     # Read references
-    refs = [_read(x) for x in refs]
+    refs = [_read(x, args.encoding) for x in refs]
 
     if args.langpair is not None:
         source, target = args.langpair.split('-')
