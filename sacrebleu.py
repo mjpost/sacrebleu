@@ -720,7 +720,7 @@ def main():
                             choices=data.keys(),
                             help='The test set to use')
     arg_parser.add_argument('-lc', action='store_true', default=False,
-                            help='Case-insensitive BLEU')
+                            help='Use case-insensitive BLEU (default: actual case)')
     arg_parser.add_argument('--smooth', '-s', type=float, default=0.0,
                             help='Smooth zero-count precisions with specified value')
     arg_parser.add_argument('--tokenize', '-tok', choices=['13a', 'zh'], default='13a',
@@ -740,7 +740,7 @@ def main():
     arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',
                             help='Suppress informative output.')
     arg_parser.add_argument('--encoding', '-e', type=str, default='utf-8',
-                            help='Open text files with specified encoding')
+                            help='Open text files with specified encoding (default: %(default)s)')
     args = arg_parser.parse_args()
 
     if not args.quiet:
