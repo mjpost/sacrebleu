@@ -755,6 +755,8 @@ def main():
                             help='Suppress informative output.')
     arg_parser.add_argument('--encoding', '-e', type=str, default='utf-8',
                             help='Open text files with specified encoding (default: %(default)s)')
+    arg_parser.add_argument('-V', '--version', action='version',
+                            version='%(prog)s {}'.format(VERSION))
     args = arg_parser.parse_args()
 
     if not args.quiet:
