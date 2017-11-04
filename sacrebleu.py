@@ -109,7 +109,7 @@ import argparse
 
 from collections import defaultdict, namedtuple
 
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
