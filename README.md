@@ -7,7 +7,7 @@ Why use this version of BLEU?
 - It produces a short version string that facilitates cross-paper comparisons
 - It properly computes scores on detokenized outputs, using WMT ([Conference on Machine Translation](http://statmt.org/wmt17)) standard tokenization
 - It produces the same values as official script (`mteval-v13a.pl`) used by WMT
-- It outputs the BLEU score without the comma, so you don't have to remove it with `sed` (Looking at you, multi-bleu.perl)
+- It outputs the BLEU score without the comma, so you don't have to remove it with `sed` (Looking at you, `multi-bleu.perl`)
 
 # QUICK START
 
@@ -65,15 +65,23 @@ It is all designed to take BLEU a little more seriously.
 After all, even with all its problems, BLEU is the default and---admit it---well-loved metric of our entire research community.
 Sacré BLEU.
 
+# VERSION HISTORY
+
+- 1.0.2 (4 November 2017).
+   - Contributions from Christian Federmann:
+   - Added explicit support for encoding  
+   - Fixed Windows support
+   - Bugfix in handling reference length with multiple refs
+
 - version 1.0.1 (1 November 2017).
-  Minor bugfix affecting some versions of Python.
-  Code reformatting due to Ozan Çağlayan.
+   - Small bugfix affecting some versions of Python.
+   - Code reformatting due to Ozan Çağlayan.
 
 - version 1.0 (23 October 2017).
-  Support for WMT 2008--2017.
-  Single tokenization (v13a) with lowercase fix (proper lower() instead of just A-Z).
-  Chinese tokenization.
-  Tested to match all WMT17 scores on all arcs.
+   - Support for WMT 2008--2017.
+   - Single tokenization (v13a) with lowercase fix (proper lower() instead of just A-Z).
+   - Chinese tokenization.
+   - Tested to match all WMT17 scores on all arcs.
 
 # LICENSE
 
@@ -84,4 +92,3 @@ SacréBLEU is licensed under the Apache 2.0 License.
 This was all Rico Sennrich's idea.
 Written by Matt Post.
 The official version can be found at github.com/mjpost/sacreBLEU
-

@@ -10,8 +10,7 @@ See:
 
 # Always prefer setuptools over distutils
 from setuptools import setup
-
-VERSION = '1.0.1'
+import sacrebleu
 
 setup(
     name = 'sacrebleu',
@@ -19,14 +18,14 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version = VERSION,
+    version = sacrebleu.VERSION,
 
     description = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores',
     long_description = 'SacréBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.',
 
     # The project's main homepage.
     url = 'https://github.com/mjpost/sacreBLEU',
-    download_url = 'https://github.com/mjpost/sacreBLEU/archive/{}.tar.gz'.format(VERSION),
+    download_url = 'https://github.com/mjpost/sacreBLEU/archive/{}.tar.gz'.format(sacrebleu.VERSION),
 
     author = 'Matt Post',
     author_email = 'post@cs.jhu.edu',

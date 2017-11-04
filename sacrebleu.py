@@ -69,15 +69,21 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
+- 1.0.2 (4 November 2017).
+   - Contributions from Christian Federmann:
+   - Added explicit support for encoding  
+   - Fixed Windows support
+   - Bugfix in handling reference length with multiple refs
+
 - version 1.0.1 (1 November 2017).
-  Small bugfix affecting some versions of Python.
-  Code reformatting due to Ozan Çağlayan.
+   - Small bugfix affecting some versions of Python.
+   - Code reformatting due to Ozan Çağlayan.
 
 - version 1.0 (23 October 2017).
-  Support for WMT 2008--2017.
-  Single tokenization (v13a) with lowercase fix (proper lower() instead of just A-Z).
-  Chinese tokenization.
-  Tested to match all WMT17 scores on all arcs.
+   - Support for WMT 2008--2017.
+   - Single tokenization (v13a) with lowercase fix (proper lower() instead of just A-Z).
+   - Chinese tokenization.
+   - Tested to match all WMT17 scores on all arcs.
 
 # LICENSE
 
@@ -102,6 +108,8 @@ import urllib.parse
 import argparse
 
 from collections import defaultdict, namedtuple
+
+VERSION = '1.0.2'
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
@@ -500,10 +508,12 @@ def build_signature(args, numrefs):
         'smooth': 's',
         'case': 'c',
         'tok': 'tok',
-        'numrefs': '#'
+        'numrefs': '#',
+        'version': 'v'
     }
 
-    data = {'tok': args.tokenize}
+    data = {'tok': args.tokenize,
+            'version': VERSION}
 
     if args.test_set is not None:
         data['test'] = args.test_set
