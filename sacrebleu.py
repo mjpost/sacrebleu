@@ -673,7 +673,7 @@ def compute_bleu(instream, refstreams, smooth=0., force=False, lc=False, tokeniz
     :return: a BLEU object containing everything you'd want
     """
 
-    fhs = [sys.stdin] + refstreams
+    fhs = [instream] + refstreams
 
     sys_len = 0
     ref_len = 0
