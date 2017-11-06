@@ -109,6 +109,9 @@ import argparse
 
 from collections import defaultdict, namedtuple
 
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE,SIG_DFL) 
+
 VERSION = '1.0.3'
 
 # Where to store downloaded test sets.
