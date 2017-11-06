@@ -109,8 +109,16 @@ import argparse
 
 from collections import defaultdict, namedtuple
 
-from signal import signal, SIGPIPE, SIG_DFL
-signal(SIGPIPE,SIG_DFL) 
+try:
+    # SIGPIPE is not available on Windows machines, throwing an exception.
+    from signal import SIGPIPE
+
+    # If SIGPIPE is available, change behaviour to default instead of ignore.
+    from signal import signal, SIG_DFL
+    signal(SIGPIPE, SIG_DFL)
+
+except ImportError:
+    print('Could not import signal.SIGPIPE; expected on Windows machines.')
 
 VERSION = '1.0.3'
 
