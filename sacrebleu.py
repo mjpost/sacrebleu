@@ -486,7 +486,9 @@ def tokenize_zh(sentence):
 tokenizers = {
     '13a': tokenize_13a,
     'zh': tokenize_zh,
+    'none': lambda x: x,
 }
+DEFAULT_TOKENIZER='13a'
 
 
 def _read(file, encoding='utf-8'):
@@ -676,7 +678,7 @@ def download_test_set(test_set, langpair=None):
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
 
 
-def compute_bleu(instream, refstreams, smooth=0., force=False, lc=False, tokenize=False) -> BLEU:
+def compute_bleu(instream, refstreams, smooth=0., force=False, lc=False, tokenize=DEFAULT_TOKENIZER) -> BLEU:
     """Produces the BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param instream: the input stream, one segment per line
