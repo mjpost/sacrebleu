@@ -69,6 +69,9 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
+- 1.0.4 (in progress).
+   - Small bugfixes, windows compatibility (H/T Christian Federmann)
+
 - 1.0.3 (4 November 2017).
    - Contributions from Christian Federmann:
    - Added explicit support for encoding  
@@ -92,7 +95,7 @@ SacréBLEU is licensed under the Apache 2.0 License.
 # CREDITS
 
 This was all Rico Sennrich's idea.
-Written by Matt Post.
+Originally written by Matt Post.
 The official version can be found at github.com/mjpost/sacreBLEU
 """
 
@@ -118,9 +121,9 @@ try:
     signal(SIGPIPE, SIG_DFL)
 
 except ImportError:
-    print('Could not import signal.SIGPIPE; expected on Windows machines.')
+    logging.warn('Could not import signal.SIGPIPE (this is expected on Windows machines)')
 
-VERSION = '1.0.3'
+VERSION = '1.0.4'
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
