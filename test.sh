@@ -7,7 +7,7 @@
 # Chinese preprocessing was applied to all zh sources, references, and system outputs
 # (http://statmt.org/wmt17/tokenizeChinese.py), as was done for WMT17.
 
-set -eu
+set -u
 
 # TEST 1: download and process WMT17 data
 [[ -d ~/.sacrebleu/wmt17 ]] && rm -f ~/.sacrebleu/wmt17/{en-*,*-en*}
@@ -42,9 +42,10 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
         # mteval=$(echo "print($bleu1 * 100)" | python)
         score=$(cat $txt | ../sacrebleu.py -t wmt17 -l $source-$target --tok $tokenizer --force | cut -d' ' -f3)
 
-        failed=$(echo "print(abs($score-${MTEVAL[$i]}) > 0.03)" | python)
-        if [[ $failed -ne "False" ]]; then
-            echo "Failed test $pair/$sys"
+        echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$i]}) > 0.04 else 0)" | python
+
+        if [[ $? -eq 1 ]]; then
+            echo "Failed test $pair/$sys ($score ${MTEVAL[$i]})"
             exit 1
         fi
 #        echo "$source-$target $sys mteval: ${MTEVAL[$i]} sacreBLEU: $score mteval-v13a.pl | > 0.03: $diff"
