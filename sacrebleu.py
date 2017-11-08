@@ -126,7 +126,7 @@ import urllib.request
 import urllib.parse
 import argparse
 
-from collections import defaultdict, namedtuple
+from collections import Counter, namedtuple
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -572,7 +572,7 @@ def extract_ngrams(line, max=4):
     :return: a dictionary containing ngrams and counts
     """
 
-    ngrams = defaultdict(int)
+    ngrams = Counter()
     tokens = line.split()
     for n in range(1, max + 1):
         for i in range(0, len(tokens) - n + 1):
@@ -583,7 +583,7 @@ def extract_ngrams(line, max=4):
 
 
 def ref_stats(output, refs):
-    ngrams = defaultdict(int)
+    ngrams = Counter()
     closest_diff = None
     closest_len = None
     for ref in refs:
@@ -699,8 +699,8 @@ def compute_bleu(instream, refstreams, smooth='exp', force=False, lc=False, toke
     sys_len = 0
     ref_len = 0
 
-    correct = defaultdict(int)
-    total = defaultdict(int)
+    correct = [0 for n in range(0, 5)]
+    total = [0 for n in range(0, 5)]
 
     # look for already-tokenized sentences
     tokenized_count = 0
@@ -740,7 +740,7 @@ def compute_bleu(instream, refstreams, smooth='exp', force=False, lc=False, toke
 
     smooth_k = 1
     for n in range(1, 5):
-        if total.get(n) == 0:
+        if total[n] == 0:
             precisions[n] = 0
         elif correct[n] == 0:
             if smooth == 'exp':
