@@ -61,7 +61,7 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
             echo "Failed test $pair/$sys ($score ${MTEVAL[$i]})"
             exit 1
         fi
-#        echo "$source-$target $sys mteval: ${MTEVAL[$i]} sacreBLEU: $score mteval-v13a.pl | > 0.03: $diff"
+#        echo "$source-$target $sys mteval: ${MTEVAL[$i]} sacreBLEU: $score mteval-v13a.pl"
 
         let i++
     done

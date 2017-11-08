@@ -84,6 +84,8 @@ Sacré BLEU.
 # VERSION HISTORY
 
 - 1.0.4 (in progress).
+   - Smoothing (type 'exp', now the default) fixed to produce mteval-v13a.pl results
+   - Added 'floor' smoothing (adds 0.01 to 0 counts), 'none' smoothing
    - Small bugfixes, windows compatibility (H/T Christian Federmann)
 
 - 1.0.3 (4 November 2017).
@@ -504,7 +506,6 @@ tokenizers = {
 }
 DEFAULT_TOKENIZER='13a'
 
-
 def _read(file, encoding='utf-8'):
     """Convenience function for reading compressed or plain text files.
     :param file: The file to read.
@@ -547,23 +548,16 @@ def build_signature(args, numrefs):
     }
 
     data = {'tok': args.tokenize,
-            'version': VERSION}
+            'version': VERSION,
+            'smooth': args.smooth,
+            'numrefs': numrefs,
+            'case': 'lc' if args.lc else 'mixed'}
 
     if args.test_set is not None:
         data['test'] = args.test_set
 
     if args.langpair is not None:
         data['lang'] = args.langpair
-
-    if args.lc:
-        data['case'] = 'lc'
-    else:
-        data['case'] = 'mixed'
-
-    if args.smooth > 0.0:
-        data['smooth'] = args.smooth
-
-    data['numrefs'] = numrefs
 
     sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, data[x]) for x in sorted(data.keys())])
 
@@ -692,7 +686,7 @@ def download_test_set(test_set, langpair=None):
 BLEU = namedtuple('BLEU', 'score, ngram1, ngram2, ngram3, ngram4, bp, sys_len, ref_len')
 
 
-def compute_bleu(instream, refstreams, smooth=0., force=False, lc=False, tokenize=DEFAULT_TOKENIZER) -> BLEU:
+def compute_bleu(instream, refstreams, smooth='exp', force=False, lc=False, tokenize=DEFAULT_TOKENIZER) -> BLEU:
     """Produces the BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param instream: the input stream, one segment per line
@@ -744,8 +738,18 @@ def compute_bleu(instream, refstreams, smooth=0., force=False, lc=False, tokeniz
 
     precisions = [0, 0, 0, 0, 0]
 
+    smooth_k = 1
     for n in range(1, 5):
-        precisions[n] = max(smooth, 100. * correct[n] / total[n] if total.get(n) > 0 else 0)
+        if total.get(n) == 0:
+            precisions[n] = 0
+        elif correct[n] == 0:
+            if smooth == 'exp':
+                smooth_k *= 2
+                precisions[n] = 100. / (smooth_k * total[n])
+            elif smooth == 'floor':
+                precisions[n] = 1. / total[n]
+        else:
+            precisions[n] = 100. * correct[n] / total[n]
 
     brevity_penalty = 1.0
     if sys_len < ref_len:
@@ -765,8 +769,8 @@ def main():
                             help='The test set to use')
     arg_parser.add_argument('-lc', action='store_true', default=False,
                             help='Use case-insensitive BLEU (default: actual case)')
-    arg_parser.add_argument('--smooth', '-s', type=float, default=0.0,
-                            help='Smooth zero-count precisions with specified value')
+    arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'none'], default='exp',
+                            help='Smoothing method: exponential decay (default), floor (0 count -> 0.01), or none')
     arg_parser.add_argument('--tokenize', '-tok', choices=['13a', 'zh'], default='13a',
                             help='Tokenization method to use.')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,

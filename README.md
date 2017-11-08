@@ -67,9 +67,14 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
+- 1.0.4 (in progress).
+   - Smoothing (type 'exp', now the default) fixed to produce mteval-v13a.pl results
+   - Added 'floor' smoothing (adds 0.01 to 0 counts), 'none' smoothing
+   - Small bugfixes, windows compatibility (H/T Christian Federmann)
+
 - 1.0.3 (4 November 2017).
    - Contributions from Christian Federmann:
-   - Added explicit support for encoding
+   - Added explicit support for encoding  
    - Fixed Windows support
    - Bugfix in handling reference length with multiple refs
 
