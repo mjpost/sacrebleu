@@ -37,11 +37,11 @@ setup(
     long_description = 'SacréBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.',
 
     # The project's main homepage.
-    url = 'https://github.com/mjpost/sacreBLEU',
-    download_url = 'https://github.com/mjpost/sacreBLEU/archive/{}.tar.gz'.format(sacrebleu.VERSION),
+    url = 'https://github.com/awslabs/sockeye',
 
-    author = 'Matt Post',
-    author_email = 'post@cs.jhu.edu',
+    author = 'Amazon',
+    author_email='sockeye-dev@amazon.com',
+    maintainer_email='sockeye-dev@amazon.com',
 
     license = 'Apache License 2.0',
 

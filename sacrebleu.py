@@ -83,12 +83,11 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
-- 1.1.0 (in progress).
+- 1.1.0 (8 November 2017).
    - Factored code a bit to facilitate API:
-      - compute_bleu: works on raw stats
+      - compute_bleu: works from raw stats
       - corpus_bleu for use from the command line
       - raw_corpus_bleu: turns off tokenization, command-line sanity checks, floor smoothing
-   - Bootstrap resampling (-b_
    - Smoothing (type 'exp', now the default) fixed to produce mteval-v13a.pl results
    - Added 'floor' smoothing (adds 0.01 to 0 counts, more versatile via API), 'none' smoothing (via API)
    - Small bugfixes, windows compatibility (H/T Christian Federmann)
@@ -117,7 +116,7 @@ SacréBLEU is licensed under the Apache 2.0 License.
 
 This was all Rico Sennrich's idea.
 Originally written by Matt Post.
-The official version can be found at github.com/mjpost/sacreBLEU
+The official version can be found at github.com/awslabs/sockeye, under `contrib/sacrebleu`.
 """
 
 import re
@@ -145,7 +144,7 @@ try:
 except ImportError:
     logging.warn('Could not import signal.SIGPIPE (this is expected on Windows machines)')
 
-VERSION = '1.1.0-alpha'
+VERSION = '1.1.0'
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
