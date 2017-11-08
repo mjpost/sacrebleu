@@ -83,7 +83,7 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
-- 1.1.1 (8 November 2017).
+- 1.1.2 (8 November 2017).
    - Factored code a bit to facilitate API:
       - compute_bleu: works from raw stats
       - corpus_bleu for use from the command line
@@ -144,7 +144,7 @@ try:
 except ImportError:
     logging.warn('Could not import signal.SIGPIPE (this is expected on Windows machines)')
 
-VERSION = '1.1.1'
+VERSION = '1.1.2'
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
@@ -724,7 +724,7 @@ def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: in
     if sys_len < ref_len:
         brevity_penalty = math.exp(1 - ref_len / sys_len) if sys_len > 0 else 0.0
 
-    bleu = 1. * brevity_penalty * math.exp(sum(map(my_log, precisions)) / NGRAM_ORDER)
+    bleu = brevity_penalty * math.exp(sum(map(my_log, precisions)) / NGRAM_ORDER)
 
     return BLEU._make([bleu, correct, total, precisions, brevity_penalty, sys_len, ref_len])
     

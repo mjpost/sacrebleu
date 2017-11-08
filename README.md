@@ -67,7 +67,7 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
-- 1.1.1 (8 November 2017).
+- 1.1.2 (8 November 2017).
    - Factored code a bit to facilitate API:
       - compute_bleu: works from raw stats
       - corpus_bleu for use from the command line

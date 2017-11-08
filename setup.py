@@ -23,7 +23,13 @@ See:
 
 # Always prefer setuptools over distutils
 from setuptools import setup
-import sacrebleu
+import re
+import os
+
+def get_version():
+    VERSION_RE = re.compile(r'''VERSION\s+=\s+['"]([0-9.]+)['"]''')
+    init = open(os.path.join(os.path.dirname(__file__), 'sacrebleu.py')).read()
+    return VERSION_RE.search(init).group(1)
 
 setup(
     name = 'sacrebleu',
@@ -31,7 +37,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version = sacrebleu.VERSION,
+    version = get_version(),
 
     description = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores',
     long_description = 'SacréBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.',
@@ -72,10 +78,6 @@ setup(
 
     # What does your project relate to?
     keywords = ['machine translation, evaluation, NLP, natural language processing, computational linguistics'],
-
-    # You can just specify the packages manually here if your project is
-    # simple. Or you can use find_packages().
-#    packages = ['sacreBLEU'],
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment this:
     py_modules = ["sacrebleu"],
