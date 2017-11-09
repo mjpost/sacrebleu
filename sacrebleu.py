@@ -83,6 +83,9 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
+- 1.1.4 (in progress)
+   - added effective order for sentence-level BLEU computation
+
 - 1.1.3 (8 November 2017).
    - Factored code a bit to facilitate API:
       - compute_bleu: works from raw stats
@@ -694,7 +697,8 @@ def download_test_set(test_set, langpair=None):
 BLEU = namedtuple('BLEU', 'score, counts, totals, precisions, bp, sys_len, ref_len')
 
 
-def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: int, smooth = 'none', smooth_floor = 0.01):
+def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: int, smooth = 'none', smooth_floor = 0.01,
+                 use_effective_order = False) -> BLEU:
     """Computes BLEU score from its sufficient statistics. Adds smoothing.
 
     :param correct: List of counts of correct ngrams, 1 <= n <= NGRAM_ORDER
@@ -703,15 +707,22 @@ def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: in
     :param ref_len: The cumulative reference length
     :param smooth: The smoothing method to use
     :param smooth_floor: The smoothing value added, if smooth method 'floor' is used
+    :param use_effective_order: Use effective order.
+    :return: A BLEU object with the score (100-based) and other statistics.
     """
 
     precisions = [0 for x in range(NGRAM_ORDER)]
 
     smooth_mteval = 1
+    effective_order = NGRAM_ORDER
     for n in range(NGRAM_ORDER):
         if total[n] == 0:
-            precisions[n] = 0
-        elif correct[n] == 0:
+            break
+
+        if use_effective_order:
+            effective_order = n + 1
+
+        if correct[n] == 0:
             if smooth == 'exp':
                 smooth_mteval *= 2
                 precisions[n] = 100. / (smooth_mteval * total[n])
@@ -720,17 +731,21 @@ def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: in
         else:
             precisions[n] = 100. * correct[n] / total[n]
 
+    # If the system guesses no i-grams, 1 <= i <= NGRAM_ORDER, the BLEU score is 0 (technically undefined).
+    # This is a problem for sentence-level BLEU or a corpus of short sentences, where systems will get no credit
+    # if sentence lengths fall under the NGRAM_ORDER threshold. This fix scales NGRAM_ORDER to the observed
+    # maximum order. It is only available through the API and off by default
+
     brevity_penalty = 1.0
     if sys_len < ref_len:
         brevity_penalty = math.exp(1 - ref_len / sys_len) if sys_len > 0 else 0.0
 
-    bleu = brevity_penalty * math.exp(sum(map(my_log, precisions)) / NGRAM_ORDER)
+    bleu = brevity_penalty * math.exp(sum(map(my_log, precisions[:effective_order])) / effective_order)
 
     return BLEU._make([bleu, correct, total, precisions, brevity_penalty, sys_len, ref_len])
-    
 
 
-def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=False, lc=False, tokenize=DEFAULT_TOKENIZER) -> BLEU:
+def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=False, lc=False, tokenize=DEFAULT_TOKENIZER, use_effective_order=False) -> BLEU:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param sys_stream: The system stream (a sequence of segments)
@@ -786,10 +801,10 @@ def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=F
             correct[n-1] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
             total[n-1] += sys_ngrams[ngram]
 
-    return compute_bleu(correct, total, sys_len, ref_len, smooth, smooth_floor)
+    return compute_bleu(correct, total, sys_len, ref_len, smooth, smooth_floor, use_effective_order)
 
 
-def raw_corpus_bleu(sys_stream, ref_streams, smooth_floor=0.0):
+def raw_corpus_bleu(sys_stream, ref_streams, smooth_floor=0.01):
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
     It uses no tokenization and 'floor' smoothing, with the floor default to 0 (no smoothing).
@@ -797,7 +812,7 @@ def raw_corpus_bleu(sys_stream, ref_streams, smooth_floor=0.0):
     :param sys_stream: the system stream (a sequence of segments)
     :param ref_streams: a list of one or more reference streams (each a sequence of segments)
     """
-    return corpus_bleu(sys_stream, ref_streams, smooth='floor', smooth_floor=smooth_floor, force=True, tokenize='none')
+    return corpus_bleu(sys_stream, ref_streams, smooth='floor', smooth_floor=smooth_floor, force=True, tokenize='none', use_effective_order=True)
 
 
 def main():
@@ -882,8 +897,7 @@ def main():
         if target == 'zh' and args.tokenize != 'zh':
             logging.warn('You should also pass "--tok zh" when scoring Chinese...')
 
-    bleu = corpus_bleu(sys.stdin, refs, smooth=args.smooth, force=args.force,
-                       lc=args.lc, tokenize=args.tokenize)
+    bleu = corpus_bleu(sys.stdin, refs, smooth=args.smooth, force=args.force, lc=args.lc, tokenize=args.tokenize)
 
     version_str = build_signature(args, len(refs))
 
