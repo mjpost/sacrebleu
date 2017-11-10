@@ -83,7 +83,7 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
-- next version
+- 1.1.4
    - added effective order for sentence-level BLEU computation
    - added unit tests from sockeye
 
@@ -148,7 +148,7 @@ try:
 except ImportError:
     logging.warn('Could not import signal.SIGPIPE (this is expected on Windows machines)')
 
-VERSION = '1.1.3'
+VERSION = '1.1.4'
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
