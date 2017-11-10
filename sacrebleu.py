@@ -83,8 +83,9 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
-- 1.1.4 (in progress)
+- next version
    - added effective order for sentence-level BLEU computation
+   - added unit tests from sockeye
 
 - 1.1.3 (8 November 2017).
    - Factored code a bit to facilitate API:

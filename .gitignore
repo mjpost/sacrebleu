@@ -1,1 +1,5 @@
 data/
+.coverage
+build
+dist
+__pycache__
