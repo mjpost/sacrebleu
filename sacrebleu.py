@@ -863,7 +863,10 @@ def main():
         sys.exit(1)
 
     if args.test_set and (args.langpair is None or args.langpair not in data[args.test_set]):
-        logging.error('I need a language pair (-l).')
+        if args.langpair is None:
+            logging.error('I need a language pair (-l).')
+        elif args.langpair not in data[args.test_set]:
+            logging.error('No such language pair "%s"', args.langpair)
         logging.error('Available language pairs for test set "{}": {}'.format(args.test_set, ', '.join(filter(lambda x: '-' in x, data[args.test_set].keys()))))
         sys.exit(1)
 
@@ -875,13 +878,13 @@ def main():
         sys.exit(0)
 
     if args.test_set is None and len(args.refs) == 0:
-        logging.error('I need either -t (test set) or a list of references')
+        logging.error('I need either a predefined test set (-t) or a list of references')
         logging.error('The available test sets are: ')
         for ts in sorted(data.keys(), reverse=True):
             logging.error('  {}: {}'.format(ts, data[ts].get('description', '')))
         sys.exit(1)
     elif args.test_set is not None and len(args.refs) > 0:
-        logging.error('I need x-either a test set (-t) or a list of references')
+        logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
         sys.exit(1)
 
     if args.test_set:
