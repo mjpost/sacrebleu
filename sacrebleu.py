@@ -83,7 +83,12 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
-- 1.1.4
+- 1.1.5 (12 November 2017)
+   - added -b option (only output the BLEU score)
+   - removed fi-en from list of WMT16/17 systems with more than one reference
+   - added WMT16/tworefs and WMT17/tworefs for scoring with both en-fi references
+
+- 1.1.4 (10 November 2017)
    - added effective order for sentence-level BLEU computation
    - added unit tests from sockeye
 
@@ -148,7 +153,7 @@ try:
 except ImportError:
     logging.warn('Could not import signal.SIGPIPE (this is expected on Windows machines)')
 
-VERSION = '1.1.4'
+VERSION = '1.1.5'
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
@@ -192,7 +197,11 @@ data = {
         'data': 'http://data.statmt.org/wmt17/translation-task/test.tgz',
         'description': 'Additional reference for EN-FI and FI-EN.',
         'en-fi': ['test/newstestB2017-enfi-src.en.sgm', 'test/newstestB2017-enfi-ref.fi.sgm'],
-        'fi-en': ['test/newstestB2017-fien-src.fi.sgm', 'test/newstestB2017-fien-ref.en.sgm'],
+    },
+    'wmt17/tworefs': {
+        'data': 'http://data.statmt.org/wmt17/translation-task/test.tgz',
+        'description': 'Systems with two references.',
+        'en-fi': ['test/newstest2017-enfi-src.en.sgm', 'test/newstest2017-enfi-ref.fi.sgm', 'test/newstestB2017-enfi-ref.fi.sgm'],
     },
     'wmt17/improved': {
         'data': 'http://data.statmt.org/wmt17/translation-task/test-update-1.tgz',
@@ -219,7 +228,12 @@ data = {
     'wmt16/B': {
         'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
         'description': 'Additional reference for EN-FI.',
-        'en-fi': ['test/newstestB2016-enfi-src.en.sgm', 'test/newstestB2016-enfi-ref.fi.sgm'],
+        'en-fi': ['test/newstest2016-enfi-src.en.sgm', 'test/newstestB2016-enfi-ref.fi.sgm'],
+    },
+    'wmt16/tworefs': {
+        'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
+        'description': 'EN-FI with two references.',
+        'en-fi': ['test/newstest2016-enfi-src.en.sgm', 'test/newstest2016-enfi-ref.fi.sgm', 'test/newstestB2016-enfi-ref.fi.sgm'],
     },
     'wmt15': {
         'data': 'http://statmt.org/wmt15/test.tgz',
@@ -687,10 +701,14 @@ def download_test_set(test_set, langpair=None):
         process_to_text(rawfile, outfile)
         found.append(outfile)
 
-        rawfile = os.path.join(rawdir, data[test_set][pair][1])
-        outfile = os.path.join(outdir, '{}.{}'.format(pair, tgt))
-        process_to_text(rawfile, outfile)
-        found.append(outfile)
+        for i, ref in enumerate(data[test_set][pair][1:]):
+            rawfile = os.path.join(rawdir, ref)
+            if len(data[test_set][pair][1:]) >= 2:
+                outfile = os.path.join(outdir, '{}.{}.{}'.format(pair, tgt, i))
+            else:
+                outfile = os.path.join(outdir, '{}.{}'.format(pair, tgt))
+            process_to_text(rawfile, outfile)
+            found.append(outfile)
 
     return found
 
@@ -890,8 +908,7 @@ def main():
         sys.exit(1)
 
     if args.test_set:
-        src, ref = download_test_set(args.test_set, args.langpair)
-        refs = [ref]
+        src, *refs = download_test_set(args.test_set, args.langpair)
     else:
         refs = args.refs
 
