@@ -53,7 +53,7 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
 
         # mteval=$($MOSES/scripts/generic/mteval-v13a.pl -c -s $src -r $ref -t $sgm 2> /dev/null | grep "BLEU score" | cut -d' ' -f9)
         # mteval=$(echo "print($bleu1 * 100)" | python)
-        score=$(cat $txt | ../sacrebleu.py -t wmt17 -l $source-$target --tok $tokenizer --force | cut -d' ' -f3)
+        score=$(cat $txt | ../sacrebleu.py -t wmt17 -l $source-$target --tok $tokenizer --force -b)
 
         echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$i]}) > 0.04 else 0)" | python
 
