@@ -83,6 +83,9 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
+- 1.1.6 (15 November 2017)
+   - bugfix for tokenization warning
+
 - 1.1.5 (12 November 2017)
    - added -b option (only output the BLEU score)
    - removed fi-en from list of WMT16/17 systems with more than one reference
@@ -797,14 +800,13 @@ def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=F
         if lc:
             lines = [x.lower() for x in lines]
 
-        if (tokenize == 'none' or not force) and lines[0].rstrip().endswith(' .'):
+        if (not force or tokenize != 'none') and lines[0].rstrip().endswith(' .'):
             tokenized_count += 1
 
-            if tokenized_count > 100:
-                logging.error('FATAL: That\'s > 100 lines that end in a tokenized period (\'.\')')
-                logging.error('It looks like you forgot to detokenize your test data, which will hurt your score.')
-                logging.error('If you insist your data is tokenized, rerun with \'--force\'.')
-                sys.exit(1)
+            if tokenized_count == 100:
+                logging.warning('That\'s > 100 lines that end in a tokenized period (\'.\')')
+                logging.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
+                logging.warning('If you insist your data is tokenized, you can suppress this message with \'--force\'.')
 
         output, *refs = [tokenizers[tokenize](x.rstrip()) for x in lines]
 
@@ -823,7 +825,7 @@ def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=F
     return compute_bleu(correct, total, sys_len, ref_len, smooth, smooth_floor, use_effective_order)
 
 
-def raw_corpus_bleu(sys_stream, ref_streams, smooth_floor=0.01):
+def raw_corpus_bleu(sys_stream, ref_streams, smooth_floor=0.01) -> BLEU:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
     It uses no tokenization and 'floor' smoothing, with the floor default to 0 (no smoothing).
