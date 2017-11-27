@@ -67,6 +67,13 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
+- 1.1.7 (27 November 2017)
+   - corpus_bleu() now raises an exception if input streams are different lengths
+   - thanks to Martin Popel for:
+      - small bugfix in tokenization_13a (not affecting WMT references)
+      - adding `--tok intl` (international tokenization)
+   - added wmt17/dev and wmt17/dev sets (for languages intro'd those years)
+
 - 1.1.6 (15 November 2017)
    - bugfix for tokenization warning
 
@@ -90,9 +97,9 @@ Sacré BLEU.
 
 - 1.0.3 (4 November 2017).
    - Contributions from Christian Federmann:
-   - Added explicit support for encoding  
-   - Fixed Windows support
-   - Bugfix in handling reference length with multiple refs
+      - Added explicit support for encoding
+      - Fixed Windows support
+      - Bugfix in handling reference length with multiple refs
 
 - version 1.0.1 (1 November 2017).
    - Small bugfix affecting some versions of Python.

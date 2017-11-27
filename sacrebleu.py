@@ -13,8 +13,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-VERSION = '1.1.6'
-
 """
 SacréBLEU provides hassle-free computation of shareable, comparable, and reproducible BLEU scores.
 Inspired by Rico Sennrich's `multi-bleu-detok.perl`, it produces the official WMT scores but works with plain text.
@@ -85,6 +83,13 @@ Sacré BLEU.
 
 # VERSION HISTORY
 
+- 1.1.7 (27 November 2017)
+   - corpus_bleu() now raises an exception if input streams are different lengths
+   - thanks to Martin Popel for:
+      - small bugfix in tokenization_13a (not affecting WMT references)
+      - adding `--tok intl` (international tokenization)
+   - added wmt17/dev and wmt17/dev sets (for languages intro'd those years)
+
 - 1.1.6 (15 November 2017)
    - bugfix for tokenization warning
 
@@ -108,9 +113,9 @@ Sacré BLEU.
 
 - 1.0.3 (4 November 2017).
    - Contributions from Christian Federmann:
-   - Added explicit support for encoding  
-   - Fixed Windows support
-   - Bugfix in handling reference length with multiple refs
+      - Added explicit support for encoding
+      - Fixed Windows support
+      - Bugfix in handling reference length with multiple refs
 
 - version 1.0.1 (1 November 2017).
    - Small bugfix affecting some versions of Python.
@@ -143,9 +148,13 @@ import logging
 import urllib.request
 import urllib.parse
 import argparse
+import unicodedata
 
 from collections import Counter, namedtuple
+from itertools import zip_longest
 from typing import List
+
+VERSION = '1.1.7'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -156,7 +165,7 @@ try:
     signal(SIGPIPE, SIG_DFL)
 
 except ImportError:
-    logging.warn('Could not import signal.SIGPIPE (this is expected on Windows machines)')
+    logging.warning('Could not import signal.SIGPIPE (this is expected on Windows machines)')
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
@@ -164,8 +173,7 @@ except ImportError:
 # Querying for a HOME environment variable can result in None (e.g., on Windows)
 # in which case the os.path.join() throws a TypeError. Using expanduser() is
 # a safe way to get the user's home folder.
-from os.path import expanduser
-USERHOME = expanduser("~")
+USERHOME = os.path.expanduser("~")
 SACREBLEU = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
 # n-gram order. Don't change this.
@@ -177,7 +185,7 @@ NGRAM_ORDER = 4
 # The other keys are each language pair contained in the tarball, and the respective locations of the source and reference data within each.
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
 # The canonical location of unpacked, processed data is $SACREBLEU/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
-data = {
+DATASETS = {
     'wmt17': {
         'data': 'http://data.statmt.org/wmt17/translation-task/test.tgz',
         'description': 'Official evaluation data.',
@@ -212,6 +220,14 @@ data = {
         'en-zh': ['newstest2017-enzh-src.en.sgm', 'newstest2017-enzh-ref.zh.sgm'],
         'zh-en': ['newstest2017-zhen-src.zh.sgm', 'newstest2017-zhen-ref.en.sgm'],
     },
+    'wmt17/dev': {
+        'data': 'http://data.statmt.org/wmt17/translation-task/dev.tgz',
+        'description': 'Development sets released for new languages in 2017.',
+        'en-lv': ['dev/newsdev2017-enlv-src.en.sgm', 'dev/newsdev2017-enlv-ref.lv.sgm'],
+        'en-zh': ['dev/newsdev2017-enzh-src.en.sgm', 'dev/newsdev2017-enzh-ref.zh.sgm'],
+        'lv-en': ['dev/newsdev2017-lven-src.lv.sgm', 'dev/newsdev2017-lven-ref.en.sgm'],
+        'zh-en': ['dev/newsdev2017-zhen-src.zh.sgm', 'dev/newsdev2017-zhen-ref.en.sgm'],
+    },
     'wmt16': {
         'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
         'description': 'Official evaluation data.',
@@ -237,6 +253,14 @@ data = {
         'data': 'http://data.statmt.org/wmt16/translation-task/test.tgz',
         'description': 'EN-FI with two references.',
         'en-fi': ['test/newstest2016-enfi-src.en.sgm', 'test/newstest2016-enfi-ref.fi.sgm', 'test/newstestB2016-enfi-ref.fi.sgm'],
+    },
+    'wmt16/dev': {
+        'data': 'http://data.statmt.org/wmt16/translation-task/dev.tgz',
+        'description': 'Development sets released for new languages in 2016.',
+        'en-ro': ['dev/newsdev2016-enro-src.en.sgm', 'dev/newsdev2016-enro-ref.ro.sgm'],
+        'en-tr': ['dev/newsdev2016-entr-src.en.sgm', 'dev/newsdev2016-entr-ref.tr.sgm'],
+        'ro-en': ['dev/newsdev2016-roen-src.ro.sgm', 'dev/newsdev2016-roen-ref.en.sgm'],
+        'tr-en': ['dev/newsdev2016-tren-src.tr.sgm', 'dev/newsdev2016-tren-ref.en.sgm']
     },
     'wmt15': {
         'data': 'http://statmt.org/wmt15/test.tgz',
@@ -394,9 +418,9 @@ def tokenize_13a(line):
     norm = norm.replace('-\n', '')
     norm = norm.replace('\n', ' ')
     norm = norm.replace('&quot;', '"')
-    norm = norm.replace('&amp;', '"')
-    norm = norm.replace('&lt;', '"')
-    norm = norm.replace('&gt;', '"')
+    norm = norm.replace('&amp;', '&')
+    norm = norm.replace('&lt;', '<')
+    norm = norm.replace('&gt;', '>')
 
     # language-dependent part (assuming Western languages):
     norm = " {} ".format(norm)
@@ -409,6 +433,46 @@ def tokenize_13a(line):
     norm = re.sub(r'\s+$', '', norm)  # no trailing space
 
     return norm
+
+
+class UnicodeRegex:
+    """Ad-hoc hack to recognize all punctuation and symbols.
+
+    without dependening on https://pypi.python.org/pypi/regex/."""
+    def _property_chars(prefix):
+        return ''.join(chr(x) for x in range(sys.maxunicode)
+                       if unicodedata.category(chr(x)).startswith(prefix))
+    punctuation = _property_chars('P')
+    nondigit_punct_re = re.compile(r'([^\d])([' + punctuation + r'])')
+    punct_nondigit_re = re.compile(r'([' + punctuation + r'])([^\d])')
+    symbol_re = re.compile('([' + _property_chars('S') + '])')
+
+
+def tokenize_v14_international(string):
+    r"""Tokenize a string following the official BLEU implementation.
+
+    See https://github.com/moses-smt/mosesdecoder/blob/master/scripts/generic/mteval-v14.pl#L954-L983
+    In our case, the input string is expected to be just one line
+    and no HTML entities de-escaping is needed.
+    So we just tokenize on punctuation and symbols,
+    except when a punctuation is preceded and followed by a digit
+    (e.g. a comma/dot as a thousand/decimal separator).
+
+    Note that a number (e.g., a year) followed by a dot at the end of sentence is NOT tokenized,
+    i.e. the dot stays with the number because `s/(\p{P})(\P{N})/ $1 $2/g`
+    does not match this case (unless we add a space after each sentence).
+    However, this error is already in the original mteval-v14.pl
+    and we want to be consistent with it.
+    The error is not present in the non-international version,
+    which uses `$norm_text = " $norm_text "` (or `norm = " {} ".format(norm)` in Python).
+
+    :param string: the input string
+    :return: a list of tokens
+    """
+    string = UnicodeRegex.nondigit_punct_re.sub(r'\1 \2 ', string)
+    string = UnicodeRegex.punct_nondigit_re.sub(r' \1 \2', string)
+    string = UnicodeRegex.symbol_re.sub(r' \1 ', string)
+    return string.strip()
 
 
 def tokenize_zh(sentence):
@@ -441,7 +505,7 @@ def tokenize_zh(sentence):
     :return: tokenized sentence
     """
 
-    def isChineseChar(uchar):
+    def is_chinese_char(uchar):
         """
         :param uchar: input char in unicode
         :return: whether the input char is a Chinese character.
@@ -490,18 +554,18 @@ def tokenize_zh(sentence):
             return True
         elif uchar >= u'\u3300' and uchar <= u'\u33ff':
             return True
-        else:
-            return False
+
+        return False
 
     sentence = sentence.strip()
     sentence_in_chars = ""
-    for c in sentence:
-        if isChineseChar(c):
+    for char in sentence:
+        if is_chinese_char(char):
             sentence_in_chars += " "
-            sentence_in_chars += c
+            sentence_in_chars += char
             sentence_in_chars += " "
         else:
-            sentence_in_chars += c
+            sentence_in_chars += char
     sentence = sentence_in_chars
 
     # tokenize punctuation
@@ -528,12 +592,13 @@ def tokenize_zh(sentence):
     return sentence
 
 
-tokenizers = {
+TOKENIZERS = {
     '13a': tokenize_13a,
+    'intl': tokenize_v14_international,
     'zh': tokenize_zh,
     'none': lambda x: x,
 }
-DEFAULT_TOKENIZER='13a'
+DEFAULT_TOKENIZER = '13a'
 
 def _read(file, encoding='utf-8'):
     """Convenience function for reading compressed or plain text files.
@@ -576,34 +641,34 @@ def build_signature(args, numrefs):
         'version': 'v'
     }
 
-    data = {'tok': args.tokenize,
-            'version': VERSION,
-            'smooth': args.smooth,
-            'numrefs': numrefs,
-            'case': 'lc' if args.lc else 'mixed'}
+    signature = {'tok': args.tokenize,
+                 'version': VERSION,
+                 'smooth': args.smooth,
+                 'numrefs': numrefs,
+                 'case': 'lc' if args.lc else 'mixed'}
 
     if args.test_set is not None:
-        data['test'] = args.test_set
+        signature['test'] = args.test_set
 
     if args.langpair is not None:
-        data['lang'] = args.langpair
+        signature['lang'] = args.langpair
 
-    sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, data[x]) for x in sorted(data.keys())])
+    sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, signature[x]) for x in sorted(signature.keys())])
 
     return sigstr
 
 
-def extract_ngrams(line, max=NGRAM_ORDER):
+def extract_ngrams(line, max_order=NGRAM_ORDER):
     """Extracts all the ngrams (1 <= n <= NGRAM_ORDER) from a sequence of tokens.
 
     :param line: a segment containing a sequence of words
-    :param max: collect n-grams from 1<=n<=max
+    :param max_order: collect n-grams from 1<=n<=max
     :return: a dictionary containing ngrams and counts
     """
 
     ngrams = Counter()
     tokens = line.split()
-    for n in range(1, max + 1):
+    for n in range(1, max_order + 1):
         for i in range(0, len(tokens) - n + 1):
             ngram = ' '.join(tokens[i: i + n])
             ngrams[ngram] += 1
@@ -641,7 +706,7 @@ def process_to_text(rawfile, txtfile):
 
     if not os.path.exists(txtfile):
         if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
-            logging.info("Processing {} to {}".format(rawfile, txtfile))
+            logging.info("Processing %s to %s", rawfile, txtfile)
             with _read(rawfile) as fin, open(txtfile, 'wt') as fout:
                 for line in fin:
                     if line.startswith('<seg '):
@@ -672,41 +737,41 @@ def download_test_set(test_set, langpair=None):
     # if not data.has_key(test_set):
     #     return None
 
-    dataset = data[test_set]['data']
+    dataset = DATASETS[test_set]['data']
     outdir = os.path.join(SACREBLEU, test_set)
     if not os.path.exists(outdir):
-        logging.info('Creating {}'.format(outdir))
+        logging.info('Creating %s', outdir)
         os.makedirs(outdir)
 
     tarball = os.path.join(outdir, os.path.basename(dataset))
     rawdir = os.path.join(outdir, 'raw')
     if not os.path.exists(tarball):
         # TODO: check MD5sum
-        logging.info("Downloading {} to {}".format(dataset, tarball))
+        logging.info("Downloading %s to %s", dataset, tarball)
         with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
             out.write(f.read())
 
         # Extract the tarball
-        logging.info('Extracting {}'.format(tarball))
+        logging.info('Extracting %s', tarball)
         tar = tarfile.open(tarball)
         tar.extractall(path=rawdir)
 
     found = []
 
     # Process the files into plain text
-    languages = data[test_set].keys() if langpair is None else [langpair]
+    languages = DATASETS[test_set].keys() if langpair is None else [langpair]
     for pair in languages:
         if '-' not in pair:
             continue
         src, tgt = pair.split('-')
-        rawfile = os.path.join(rawdir, data[test_set][pair][0])
+        rawfile = os.path.join(rawdir, DATASETS[test_set][pair][0])
         outfile = os.path.join(outdir, '{}.{}'.format(pair, src))
         process_to_text(rawfile, outfile)
         found.append(outfile)
 
-        for i, ref in enumerate(data[test_set][pair][1:]):
+        for i, ref in enumerate(DATASETS[test_set][pair][1:]):
             rawfile = os.path.join(rawdir, ref)
-            if len(data[test_set][pair][1:]) >= 2:
+            if len(DATASETS[test_set][pair][1:]) >= 2:
                 outfile = os.path.join(outdir, '{}.{}.{}'.format(pair, tgt, i))
             else:
                 outfile = os.path.join(outdir, '{}.{}'.format(pair, tgt))
@@ -735,7 +800,7 @@ def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: in
 
     precisions = [0 for x in range(NGRAM_ORDER)]
 
-    smooth_mteval = 1
+    smooth_mteval = 1.
     effective_order = NGRAM_ORDER
     for n in range(NGRAM_ORDER):
         if total[n] == 0:
@@ -767,7 +832,7 @@ def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: in
     return BLEU._make([bleu, correct, total, precisions, brevity_penalty, sys_len, ref_len])
 
 
-def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=False, lc=False, tokenize=DEFAULT_TOKENIZER, use_effective_order=False) -> BLEU:
+def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=False, lowercase=False, tokenize=DEFAULT_TOKENIZER, use_effective_order=False) -> BLEU:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param sys_stream: The system stream (a sequence of segments)
@@ -775,7 +840,7 @@ def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=F
     :param smooth: The smoothing method to use
     :param smooth_floor: For 'floor' smoothing, the floor to use
     :param force: Ignore data that looks already tokenized
-    :param lc: Lowercase the data
+    :param lowercase: Lowercase the data
     :param tokenize: The tokenizer to use
     :return: a BLEU object containing everything you'd want
     """
@@ -796,8 +861,11 @@ def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=F
     tokenized_count = 0
 
     fhs = [sys_stream] + ref_streams
-    for sentno, lines in enumerate(zip(*fhs)):
-        if lc:
+    for lines in zip_longest(*fhs):
+        if None in lines:
+            raise EOFError("Source and reference streams have different lengths!")
+
+        if lowercase:
             lines = [x.lower() for x in lines]
 
         if (not force or tokenize != 'none') and lines[0].rstrip().endswith(' .'):
@@ -808,7 +876,7 @@ def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=F
                 logging.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
                 logging.warning('If you insist your data is tokenized, you can suppress this message with \'--force\'.')
 
-        output, *refs = [tokenizers[tokenize](x.rstrip()) for x in lines]
+        output, *refs = [TOKENIZERS[tokenize](x.rstrip()) for x in lines]
 
         ref_ngrams, closest_diff, closest_len = ref_stats(output, refs)
 
@@ -841,13 +909,13 @@ def main():
                                          'Quick usage: score your detokenized output against WMT\'14 EN-DE:'
                                          '    cat output.detok.de | ./sacreBLEU -t wmt14 -l en-de')
     arg_parser.add_argument('--test-set', '-t', type=str, default=None,
-                            choices=data.keys(),
+                            choices=DATASETS.keys(),
                             help='the test set to use')
     arg_parser.add_argument('-lc', action='store_true', default=False,
                             help='use case-insensitive BLEU (default: actual case)')
     arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'none'], default='exp',
                             help='smoothing method: exponential decay (default), floor (0 count -> 0.01), or none')
-    arg_parser.add_argument('--tokenize', '-tok', choices=['13a', 'zh'], default='13a',
+    arg_parser.add_argument('--tokenize', '-tok', choices=[x for x in TOKENIZERS.keys() if x != 'none'], default='13a',
                             help='tokenization method to use')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes)')
@@ -878,23 +946,23 @@ def main():
         download_test_set(args.download, args.langpair)
         sys.exit(0)
 
-    if args.test_set is not None and args.test_set not in data:
+    if args.test_set is not None and args.test_set not in DATASETS:
         logging.error('The available test sets are: ')
-        for ts in sorted(data.keys(), reverse=True):
-            logging.error('  {}: {}'.format(ts, data[ts].get('description', '')))
+        for testset in sorted(DATASETS.keys(), reverse=True):
+            logging.error('  %s: %s', testset, DATASETS[testset].get('description', ''))
         sys.exit(1)
 
-    if args.test_set and (args.langpair is None or args.langpair not in data[args.test_set]):
+    if args.test_set and (args.langpair is None or args.langpair not in DATASETS[args.test_set]):
         if args.langpair is None:
             logging.error('I need a language pair (-l).')
-        elif args.langpair not in data[args.test_set]:
+        elif args.langpair not in DATASETS[args.test_set]:
             logging.error('No such language pair "%s"', args.langpair)
-        logging.error('Available language pairs for test set "{}": {}'.format(args.test_set, ', '.join(filter(lambda x: '-' in x, data[args.test_set].keys()))))
+        logging.error('Available language pairs for test set "%s": %s', args.test_set, ', '.join(filter(lambda x: '-' in x, DATASETS[args.test_set].keys())))
         sys.exit(1)
 
     if args.echo:
         if args.langpair is None or args.test_set is None:
-            logging.warn("--echo requires a test set (--t) and a language pair (-l)")
+            logging.warning("--echo requires a test set (--t) and a language pair (-l)")
             sys.exit(1)
         print_test_set(args.test_set, args.langpair, args.echo)
         sys.exit(0)
@@ -902,15 +970,15 @@ def main():
     if args.test_set is None and len(args.refs) == 0:
         logging.error('I need either a predefined test set (-t) or a list of references')
         logging.error('The available test sets are: ')
-        for ts in sorted(data.keys(), reverse=True):
-            logging.error('  {}: {}'.format(ts, data[ts].get('description', '')))
+        for testset in sorted(DATASETS.keys(), reverse=True):
+            logging.error('  %s: %s', testset, DATASETS[testset].get('description', ''))
         sys.exit(1)
     elif args.test_set is not None and len(args.refs) > 0:
         logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
         sys.exit(1)
 
     if args.test_set:
-        src, *refs = download_test_set(args.test_set, args.langpair)
+        _, *refs = download_test_set(args.test_set, args.langpair)
     else:
         refs = args.refs
 
@@ -918,11 +986,21 @@ def main():
     refs = [_read(x, args.encoding) for x in refs]
 
     if args.langpair is not None:
-        source, target = args.langpair.split('-')
+        _, target = args.langpair.split('-')
         if target == 'zh' and args.tokenize != 'zh':
-            logging.warn('You should also pass "--tok zh" when scoring Chinese...')
+            logging.warning('You should also pass "--tok zh" when scoring Chinese...')
 
-    bleu = corpus_bleu(sys.stdin, refs, smooth=args.smooth, force=args.force, lc=args.lc, tokenize=args.tokenize)
+    try:
+        bleu = corpus_bleu(sys.stdin, refs, smooth=args.smooth, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+    except EOFError:
+        logging.error('The input and reference stream(s) were of different lengths.\n'
+                      'This could be a problem with your system output, or with sacreBLEU\'s reference database.\n'
+                      'If the latter, you can clean out the references cache by typing:\n'
+                      '\n'
+                      '    rm -r %s/%s\n'
+                      '\n'
+                      'They will be downloaded automatically again the next time you run sacreBLEU.', SACREBLEU, args.test_set)
+        sys.exit(1)
 
     version_str = build_signature(args, len(refs))
 
