@@ -40,7 +40,7 @@ setup(
     version = get_version(),
 
     description = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores',
-    long_description = 'SacréBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.',
+    long_description = 'SacreBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.',
 
     # The project's main homepage.
     url = 'https://github.com/awslabs/sockeye',
