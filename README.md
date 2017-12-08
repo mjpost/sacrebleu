@@ -67,6 +67,11 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
+- 1.2.0 (TBD)
+   - added IWSLT datasets!
+   - added `--cite` to produce the citation for easy inclusion in papers
+   - removed accent mark (on private suggestion)
+
 - 1.1.7 (27 November 2017)
    - corpus_bleu() now raises an exception if input streams are different lengths
    - thanks to Martin Popel for:
