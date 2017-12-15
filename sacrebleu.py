@@ -1021,13 +1021,14 @@ def main():
     try:
         bleu = corpus_bleu(sys.stdin, refs, smooth=args.smooth, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
     except EOFError:
-        logging.error('The input and reference stream(s) were of different lengths.\n'
-                      'This could be a problem with your system output, or with sacreBLEU\'s reference database.\n'
-                      'If the latter, you can clean out the references cache by typing:\n'
-                      '\n'
-                      '    rm -r %s/%s\n'
-                      '\n'
-                      'They will be downloaded automatically again the next time you run sacreBLEU.', SACREBLEU, args.test_set)
+        logging.error('The input and reference stream(s) were of different lengths.\n')
+        if args.test_set is not None:
+            logging.error('This could be a problem with your system output or with sacreBLEU\'s reference database.\n'
+                          'If the latter, you can clean out the references cache by typing:\n'
+                          '\n'
+                          '    rm -r %s/%s\n'
+                          '\n'
+                          'They will be downloaded automatically again the next time you run sacreBLEU.', SACREBLEU, args.test_set)
         sys.exit(1)
 
     version_str = build_signature(args, len(refs))
