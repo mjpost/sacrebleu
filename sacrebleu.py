@@ -83,10 +83,11 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
-- 1.2.0 (TBD)
+- 1.1.8 (in progress)
    - added IWSLT datasets!
    - added `--cite` to produce the citation for easy inclusion in papers
    - removed accent mark (on private suggestion)
+   - added `--input` (`-i`) to set input to a file instead of STDIN
 
 - 1.1.7 (27 November 2017)
    - corpus_bleu() now raises an exception if input streams are different lengths
@@ -159,7 +160,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List
 
-VERSION = '1.2.0'
+VERSION = '1.1.8'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -952,6 +953,8 @@ def main():
                             help='download a test set and quit')
     arg_parser.add_argument('--echo', choices=['src', 'ref'], type=str, default=None,
                             help='output the source or reference to STDOUT and quit')
+    arg_parser.add_argument('--input', '-i', type=str, default='-',
+                            help='Read input from a file instead of STDIN')
     arg_parser.add_argument('refs', nargs='*', default=[],
                             help='optional list of references (for backwards-compatibility with older scripts)')
     arg_parser.add_argument('--short', default=False, action='store_true',
@@ -1024,6 +1027,10 @@ def main():
     else:
         refs = args.refs
 
+    inputfh = sys.stdin
+    if args.input != '-':
+        inputfh = _read(args.input, args.encoding)
+
     # Read references
     refs = [_read(x, args.encoding) for x in refs]
 
@@ -1033,7 +1040,7 @@ def main():
             logging.warning('You should also pass "--tok zh" when scoring Chinese...')
 
     try:
-        bleu = corpus_bleu(sys.stdin, refs, smooth=args.smooth, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+        bleu = corpus_bleu(inputfh, refs, smooth=args.smooth, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
     except EOFError:
         logging.error('The input and reference stream(s) were of different lengths.\n')
         if args.test_set is not None:
