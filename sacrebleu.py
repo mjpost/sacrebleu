@@ -863,7 +863,7 @@ def _clean(s):
     :param s: The string.
     :return: A cleaned-up string.
     """
-    return re.sub(r'^\s+', '', s.strip())
+    return re.sub(r'\s+', ' ', s.strip())
 
 
 def process_to_text(rawfile, txtfile):
