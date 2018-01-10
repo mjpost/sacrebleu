@@ -713,20 +713,34 @@ def ref_stats(output, refs):
     return ngrams, closest_diff, closest_len
 
 
+def _clean(s):
+    """
+    Removes trailing and leading spaces and collapses multiple consecutive internal spaces to a single one.
+
+    :param s: The string.
+    :return: A cleaned-up string.
+    """
+    return re.sub(r'^\s+', '', s.strip())
+
+
 def process_to_text(rawfile, txtfile):
     """Processes raw files to plain text files.
     :param rawfile: the input file (possibly SGML)
     :param txtfile: the plaintext file
     """
 
-    if not os.path.exists(txtfile):
+    if not os.path.exists(txtfile) or os.path.getsize(txtfile) == 0:
+        logging.info("Processing %s to %s", rawfile, txtfile)
         if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
-            logging.info("Processing %s to %s", rawfile, txtfile)
             with _read(rawfile) as fin, open(txtfile, 'wt') as fout:
                 for line in fin:
                     if line.startswith('<seg '):
-                        fout.write(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line))
-
+                        print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
+        elif rawfile.endswith('.xml'): # IWSLT
+            with _read(rawfile) as fin, open(txtfile, 'wt') as fout:
+                for line in fin:
+                    if line.startswith('<seg '):
+                        print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
 
 def print_test_set(test_set, langpair, side):
     """Prints to STDOUT the specified side of the specified test set
@@ -760,7 +774,7 @@ def download_test_set(test_set, langpair=None):
     for dataset in DATASETS[test_set]['data']:
         tarball = os.path.join(outdir, os.path.basename(dataset))
         rawdir = os.path.join(outdir, 'raw')
-        if not os.path.exists(tarball):
+        if not os.path.exists(tarball) or os.path.getsize(tarball) == 0:
             # TODO: check MD5sum
             logging.info("Downloading %s to %s", dataset, tarball)
             with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
