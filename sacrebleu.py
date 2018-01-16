@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 # Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
@@ -83,11 +84,12 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
-- 1.1.8 (in progress)
-   - added IWSLT 2017 test and tuning sets (for de, fr, and zh)
+- 1.2 (16 January 2018)
+   - added IWSLT 2017 test and tuning sets for DE, FR, and ZH
+     (Thanks to Mauro Cettolo and Marcello Federico).
    - added `--cite` to produce the citation for easy inclusion in papers
-   - removed accent mark (on private suggestion)
    - added `--input` (`-i`) to set input to a file instead of STDIN
+   - removed accent mark (on private suggestion)
 
 - 1.1.7 (27 November 2017)
    - corpus_bleu() now raises an exception if input streams are different lengths
