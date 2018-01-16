@@ -154,7 +154,6 @@ import gzip
 import tarfile
 import logging
 import urllib.request
-import urllib.parse
 import argparse
 import unicodedata
 
@@ -419,18 +418,18 @@ DATASETS = {
         'en-fr': ['test/test2008-src.en.sgm', 'test/test2008-src.fr.sgm']
     },
     'iwslt17': {
-        'data': ['http://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/fr/en-fr.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/fr/en/fr-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/de/en-de.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/de/en/de-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/ar/en-ar.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/ar/en/ar-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/ja/en-ja.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/ja/en/ja-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/ko/en-ko.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/ko/en/ko-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/zh/en-zh.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/zh/en/zh-en.tgz'],
+        'data': ['https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/fr/en-fr.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/fr/en/fr-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/de/en-de.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/de/en/de-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/ar/en-ar.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/ar/en/ar-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/ja/en-ja.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/ja/en/ja-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/ko/en-ko.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/ko/en/ko-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/zh/en-zh.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/zh/en/zh-en.tgz'],
         'description': 'Official evaluation data for IWSLT.',
         'citation': '@InProceedings{iwslt2017,\n  author    = {Cettolo, Mauro and Federico, Marcello and Bentivogli, Luisa and Niehues, Jan and Stüker, Sebastian and Sudoh, Katsuitho and Yoshino, Koichiro and Federmann, Christian},\n  title     = {Overview of the IWSLT 2017 Evaluation Campaign},\n  booktitle = {14th International Workshop on Spoken Language Translation},\n  month     = {December},\n  year      = {2017},\n  address   = {Tokyo, Japan},\n  pages     = {2--14},\n  url       = {http://workshop2017.iwslt.org/downloads/iwslt2017_proceeding_v2.pdf\n}',
         'en-fr': ['en-fr/IWSLT17.TED.tst2017.en-fr.en.xml', 'fr-en/IWSLT17.TED.tst2017.fr-en.fr.xml'],
@@ -441,12 +440,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2017.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2017.en-zh.en.xml'],
         },
     'iwslt17/tst2016': {
-        'data': ['http://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/fr/en-fr.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/fr/en/fr-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/de/en-de.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/de/en/de-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/zh/en-zh.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-ted-test/texts/zh/en/zh-en.tgz'],
+        'data': ['https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/fr/en-fr.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/fr/en/fr-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/de/en-de.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/de/en/de-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/zh/en-zh.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/zh/en/zh-en.tgz'],
         'description': 'Development data for IWSLT 2017.',
         'en-fr': ['en-fr/IWSLT17.TED.tst2016.en-fr.en.xml', 'fr-en/IWSLT17.TED.tst2016.fr-en.fr.xml'],
         'fr-en': ['fr-en/IWSLT17.TED.tst2016.fr-en.fr.xml', 'en-fr/IWSLT17.TED.tst2016.en-fr.en.xml'],
@@ -456,12 +455,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2016.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2016.en-zh.en.xml'],
     },
     'iwslt17/tst2015': {
-        'data': ['http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         'description': 'Development data for IWSLT 2017.',
         'en-fr': ['en-fr/IWSLT17.TED.tst2015.en-fr.en.xml', 'fr-en/IWSLT17.TED.tst2015.fr-en.fr.xml'],
         'fr-en': ['fr-en/IWSLT17.TED.tst2015.fr-en.fr.xml', 'en-fr/IWSLT17.TED.tst2015.en-fr.en.xml'],
@@ -471,12 +470,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2015.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2015.en-zh.en.xml'],
     },
     'iwslt17/tst2014': {
-        'data': ['http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         'description': 'Development data for IWSLT 2017.',
         'en-fr': ['en-fr/IWSLT17.TED.tst2014.en-fr.en.xml', 'fr-en/IWSLT17.TED.tst2014.fr-en.fr.xml'],
         'fr-en': ['fr-en/IWSLT17.TED.tst2014.fr-en.fr.xml', 'en-fr/IWSLT17.TED.tst2014.en-fr.en.xml'],
@@ -486,12 +485,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2014.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2014.en-zh.en.xml'],
     },
     'iwslt17/tst2013': {
-        'data': ['http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         'description': 'Development data for IWSLT 2017.',
         'en-fr': ['en-fr/IWSLT17.TED.tst2013.en-fr.en.xml', 'fr-en/IWSLT17.TED.tst2013.fr-en.fr.xml'],
         'fr-en': ['fr-en/IWSLT17.TED.tst2013.fr-en.fr.xml', 'en-fr/IWSLT17.TED.tst2013.en-fr.en.xml'],
@@ -501,12 +500,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2013.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2013.en-zh.en.xml'],
     },
     'iwslt17/tst2012': {
-        'data': ['http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         'description': 'Development data for IWSLT 2017.',
         'en-fr': ['en-fr/IWSLT17.TED.tst2012.en-fr.en.xml', 'fr-en/IWSLT17.TED.tst2012.fr-en.fr.xml'],
         'fr-en': ['fr-en/IWSLT17.TED.tst2012.fr-en.fr.xml', 'en-fr/IWSLT17.TED.tst2012.en-fr.en.xml'],
@@ -516,12 +515,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2012.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2012.en-zh.en.xml'],
     },
     'iwslt17/tst2011': {
-        'data': ['http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         'description': 'Development data for IWSLT 2017.',
         'en-fr': ['en-fr/IWSLT17.TED.tst2011.en-fr.en.xml', 'fr-en/IWSLT17.TED.tst2011.fr-en.fr.xml'],
         'fr-en': ['fr-en/IWSLT17.TED.tst2011.fr-en.fr.xml', 'en-fr/IWSLT17.TED.tst2011.en-fr.en.xml'],
@@ -531,12 +530,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2011.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2011.en-zh.en.xml'],
     },
     'iwslt17/tst2010': {
-        'data': ['http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         'description': 'Development data for IWSLT 2017.',
         'en-fr': ['en-fr/IWSLT17.TED.tst2010.en-fr.en.xml', 'fr-en/IWSLT17.TED.tst2010.fr-en.fr.xml'],
         'fr-en': ['fr-en/IWSLT17.TED.tst2010.fr-en.fr.xml', 'en-fr/IWSLT17.TED.tst2010.en-fr.en.xml'],
@@ -546,12 +545,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2010.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2010.en-zh.en.xml'],
     },
     'iwslt17/dev2010': {
-        'data': ['http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'http://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         'description': 'Development data for IWSLT 2017.',
         'en-fr': ['en-fr/IWSLT17.TED.dev2010.en-fr.en.xml', 'fr-en/IWSLT17.TED.dev2010.fr-en.fr.xml'],
         'fr-en': ['fr-en/IWSLT17.TED.dev2010.fr-en.fr.xml', 'en-fr/IWSLT17.TED.dev2010.en-fr.en.xml'],
@@ -922,8 +921,14 @@ def download_test_set(test_set, langpair=None):
         if not os.path.exists(tarball) or os.path.getsize(tarball) == 0:
             # TODO: check MD5sum
             logging.info("Downloading %s to %s", dataset, tarball)
-            with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
-                out.write(f.read())
+            try:
+                with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
+                    out.write(f.read())
+            except ssl.SSLError:
+                log.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
+                            'you may need to run the "Install Certificates.command" file located in the '
+                            '"Python 3" folder, often found under /Applications')
+                sys.exit(1)
 
             # Extract the tarball
             logging.info('Extracting %s', tarball)
