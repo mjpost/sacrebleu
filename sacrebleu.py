@@ -165,7 +165,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-VERSION = '1.1.8'
+VERSION = '1.2'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -1110,10 +1110,10 @@ def delete_whitespace(text: str) -> str:
 def get_sentence_statistics(hypothesis: str,
                             reference: str,
                             order: int = CHRF_ORDER,
-                            remove_whitespace: bool = CHRF_REMOVE_WS) -> numpy.array:
+                            remove_whitespace: bool = CHRF_REMOVE_WS) -> List[float]:
     hypothesis = delete_whitespace(hypothesis) if remove_whitespace else hypothesis
     reference = delete_whitespace(reference) if remove_whitespace else reference
-    statistics = numpy.zeros((order * 3))
+    statistics = [0] * (order * 3)
     for i in range(order):
         n = i + 1
         hypothesis_ngrams = extract_char_ngrams(hypothesis, n)
@@ -1128,15 +1128,16 @@ def get_sentence_statistics(hypothesis: str,
 def get_corpus_statistics(hypotheses: Iterable[str],
                           references: Iterable[str],
                           order: int = CHRF_ORDER,
-                          remove_whitespace: bool = CHRF_REMOVE_WS) -> numpy.array:
-    corpus_statistics = numpy.zeros((order * 3))
+                          remove_whitespace: bool = CHRF_REMOVE_WS) -> List[float]:
+    corpus_statistics = [0] * (order * 3)
     for hypothesis, reference in zip(hypotheses, references):
         statistics = get_sentence_statistics(hypothesis, reference, order=order, remove_whitespace=remove_whitespace)
-        corpus_statistics += statistics
+        for i in range(len(statistics)):
+            corpus_statistics[i] += statistics[i]
     return corpus_statistics
 
 
-def _avg_precision_and_recall(statistics: numpy.array, order: int) -> Tuple[float, float]:
+def _avg_precision_and_recall(statistics: List[float], order: int) -> Tuple[float, float]:
     avg_precision = 0.0
     avg_recall = 0.0
     effective_order = 0
