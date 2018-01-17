@@ -85,6 +85,7 @@ Sacre BLEU.
 # VERSION HISTORY
 
 - 1.2 (16 January 2018)
+   - added the chrF metric (`-m chrf` or `-m bleu chrf` for both)
    - added IWSLT 2017 test and tuning sets for DE, FR, and ZH
      (Thanks to Mauro Cettolo and Marcello Federico).
    - added `--cite` to produce the citation for easy inclusion in papers
@@ -156,10 +157,11 @@ import logging
 import urllib.request
 import argparse
 import unicodedata
+import numpy
 
 from collections import Counter, namedtuple
 from itertools import zip_longest
-from typing import List
+from typing import List, Iterable, Tuple
 
 VERSION = '1.1.8'
 
@@ -185,6 +187,11 @@ SACREBLEU = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
 # n-gram order. Don't change this.
 NGRAM_ORDER = 4
+
+# character order (for chrf)
+CHRF_ORDER = 6
+CHRF_BETA = 3.0
+TRIM_WS = True
 
 # This defines data locations.
 # At the top level are test sets.
@@ -759,7 +766,7 @@ TOKENIZERS = {
 }
 DEFAULT_TOKENIZER = '13a'
 
-def _read(file, encoding='utf-8'):
+def _open(file, encoding='utf-8'):
     """Convenience function for reading compressed or plain text files.
     :param file: The file to read.
     :param encoding: The file encoding.
@@ -817,7 +824,7 @@ def build_signature(args, numrefs):
     return sigstr
 
 
-def extract_ngrams(line, max_order=NGRAM_ORDER):
+def extract_ngrams(line, min_order=1, max_order=NGRAM_ORDER) -> Counter:
     """Extracts all the ngrams (1 <= n <= NGRAM_ORDER) from a sequence of tokens.
 
     :param line: a segment containing a sequence of words
@@ -827,12 +834,19 @@ def extract_ngrams(line, max_order=NGRAM_ORDER):
 
     ngrams = Counter()
     tokens = line.split()
-    for n in range(1, max_order + 1):
+    for n in range(min_order, max_order + 1):
         for i in range(0, len(tokens) - n + 1):
             ngram = ' '.join(tokens[i: i + n])
             ngrams[ngram] += 1
 
     return ngrams
+
+
+def extract_char_ngrams(s: str, n: int) -> Counter:
+    """
+    Yields counts of character n-grams from string s of order n.
+    """
+    return Counter([s[i:i + n] for i in range(len(s) - n + 1)])
 
 
 def ref_stats(output, refs):
@@ -876,12 +890,12 @@ def process_to_text(rawfile, txtfile):
     if not os.path.exists(txtfile) or os.path.getsize(txtfile) == 0:
         logging.info("Processing %s to %s", rawfile, txtfile)
         if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
-            with _read(rawfile) as fin, open(txtfile, 'wt') as fout:
+            with _open(rawfile) as fin, open(txtfile, 'wt') as fout:
                 for line in fin:
                     if line.startswith('<seg '):
                         print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
         elif rawfile.endswith('.xml'): # IWSLT
-            with _read(rawfile) as fin, open(txtfile, 'wt') as fout:
+            with _open(rawfile) as fin, open(txtfile, 'wt') as fout:
                 for line in fin:
                     if line.startswith('<seg '):
                         print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
@@ -1083,6 +1097,108 @@ def raw_corpus_bleu(sys_stream, ref_streams, smooth_floor=0.01) -> BLEU:
     return corpus_bleu(sys_stream, ref_streams, smooth='floor', smooth_floor=smooth_floor, force=True, tokenize='none', use_effective_order=True)
 
 
+def delete_whitespace(text: str) -> str:
+    """
+    Removes whitespaces from text.
+    """
+    return str(text).replace(' ', '') #re.sub(r'\s+', '', text)
+
+
+def get_sentence_statistics(hypothesis: str,
+                            reference: str,
+                            order: int = CHRF_ORDER,
+                            trim_whitespaces: bool = TRIM_WS) -> numpy.array:
+    hypothesis = delete_whitespace(hypothesis) if trim_whitespaces else hypothesis
+    reference = delete_whitespace(reference) if trim_whitespaces else reference
+    statistics = numpy.zeros((order * 3))
+    for i in range(order):
+        n = i + 1
+        hypothesis_ngrams = extract_char_ngrams(hypothesis, n)
+        reference_ngrams = extract_char_ngrams(reference, n)
+        common_ngrams = hypothesis_ngrams & reference_ngrams
+        statistics[3 * i + 0] = sum(hypothesis_ngrams.values())
+        statistics[3 * i + 1] = sum(reference_ngrams.values())
+        statistics[3 * i + 2] = sum(common_ngrams.values())
+    return statistics
+
+
+def get_corpus_statistics(hypotheses: Iterable[str],
+                          references: Iterable[str],
+                          order: int = CHRF_ORDER,
+                          trim_whitespaces: bool = TRIM_WS) -> numpy.array:
+    corpus_statistics = numpy.zeros((order * 3))
+    for hypothesis, reference in zip(hypotheses, references):
+        statistics = get_sentence_statistics(hypothesis, reference, order=order, trim_whitespaces=trim_whitespaces)
+        corpus_statistics += statistics
+    return corpus_statistics
+
+
+def _avg_precision_and_recall(statistics: numpy.array, order: int) -> Tuple[float, float]:
+    avg_precision = 0.0
+    avg_recall = 0.0
+    effective_order = 0
+    for i in range(order):
+        hypotheses_ngrams = statistics[3 * i + 0]
+        references_ngrams = statistics[3 * i + 1]
+        common_ngrams = statistics[3 * i + 2]
+        if hypotheses_ngrams > 0 and references_ngrams > 0:
+            avg_precision += common_ngrams / hypotheses_ngrams
+            avg_recall += common_ngrams / references_ngrams
+            effective_order += 1
+    if effective_order == 0:
+        return 0.0, 0.0
+    avg_precision /= effective_order
+    avg_recall /= effective_order
+    return avg_precision, avg_recall
+
+
+def _chrf(avg_precision, avg_recall, beta: float = CHRF_BETA) -> float:
+    if avg_precision + avg_recall == 0:
+        return 0.0
+    beta_square = beta ** 2
+    score = (1 + beta_square) * (avg_precision * avg_recall) / ((beta_square * avg_precision) + avg_recall)
+    return score
+
+
+def corpus_chrf(hypotheses: Iterable[str],
+                references: Iterable[str],
+                order: int = CHRF_ORDER,
+                trim_whitespaces: bool = TRIM_WS,
+                beta: float = CHRF_BETA) -> float:
+    """
+    Computes Chrf on a corpus.
+
+    :param hypotheses: Stream of hypotheses.
+    :param references: Stream of references
+    :param order: Maximum n-gram order.
+    :param trim_whitespaces: Whether to trim whitespaces from hypothesis and reference strings.
+    :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
+    :return: Chrf score.
+    """
+    corpus_statistics = get_corpus_statistics(hypotheses, references, order=order, trim_whitespaces=trim_whitespaces)
+    avg_precision, avg_recall = _avg_precision_and_recall(corpus_statistics, order)
+    return _chrf(avg_precision, avg_recall, beta=beta)
+
+
+def sentence_chrf(hypothesis: str,
+                  reference: str,
+                  order: int = CHRF_ORDER,
+                  trim_whitespaces: bool = TRIM_WS,
+                  beta: float = CHRF_BETA) -> float:
+    """
+    Computes ChrF on a single sentence pair.
+
+    :param hypothesis: Hypothesis string.
+    :param reference: Reference string.
+    :param order: Maximum n-gram order.
+    :param trim_whitespaces: Whether to trim whitespaces from hypothesis and reference strings.
+    :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
+    :return: Chrf score.
+    """
+    statistics = get_sentence_statistics(hypothesis, reference, order=order, trim_whitespaces=trim_whitespaces)
+    avg_precision, avg_recall = _avg_precision_and_recall(statistics, order)
+    return _chrf(avg_precision, avg_recall, beta=beta)
+
 def main():
     arg_parser = argparse.ArgumentParser(description='sacreBLEU: Hassle-free computation of shareable BLEU scores.'
                                          'Quick usage: score your detokenized output against WMT\'14 EN-DE:'
@@ -1106,6 +1222,12 @@ def main():
                             help='Read input from a file instead of STDIN')
     arg_parser.add_argument('refs', nargs='*', default=[],
                             help='optional list of references (for backwards-compatibility with older scripts)')
+    arg_parser.add_argument('--metrics', '-m', choices=['bleu', 'chrf'], nargs='+', default='bleu',
+                            help='metrics to compute (default: bleu)')
+    arg_parser.add_argument('--chrf-order', type=int, default=CHRF_ORDER,
+                            help='chrf character order (default: %(default)s)')
+    arg_parser.add_argument('--chrf-beta', type=float, default=CHRF_BETA,
+                            help='chrf BETA parameter (default: %(default)s)')
     arg_parser.add_argument('--short', default=False, action='store_true',
                             help='produce a shorter (less human readable) signature')
     arg_parser.add_argument('--score-only', '-b', default=False, action='store_true',
@@ -1176,12 +1298,11 @@ def main():
     else:
         refs = args.refs
 
-    inputfh = sys.stdin
-    if args.input != '-':
-        inputfh = _read(args.input, args.encoding)
+    inputfh = sys.stdin if args.input == '-' else _open(args.input, args.encoding)
+    system = inputfh.readlines()
 
     # Read references
-    refs = [_read(x, args.encoding) for x in refs]
+    refs = [_open(x, args.encoding).readlines() for x in refs]
 
     if args.langpair is not None:
         _, target = args.langpair.split('-')
@@ -1189,7 +1310,10 @@ def main():
             logging.warning('You should also pass "--tok zh" when scoring Chinese...')
 
     try:
-        bleu = corpus_bleu(inputfh, refs, smooth=args.smooth, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+        if 'bleu' in args.metrics:
+            bleu = corpus_bleu(system, refs, smooth=args.smooth, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+        if 'chrf' in args.metrics:
+            chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order)
     except EOFError:
         logging.error('The input and reference stream(s) were of different lengths.\n')
         if args.test_set is not None:
@@ -1201,13 +1325,19 @@ def main():
                           'They will be downloaded automatically again the next time you run sacreBLEU.', SACREBLEU, args.test_set)
         sys.exit(1)
 
-    version_str = build_signature(args, len(refs))
 
-    if args.score_only:
-        print('{:.2f}'.format(bleu.score))
-    else:
-        print('BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(version_str, bleu.score, bleu.precisions[0], bleu.precisions[1], bleu.precisions[2], bleu.precisions[3], bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
-
+    if 'bleu' in args.metrics:
+        if args.score_only:
+            print('{:.2f}'.format(bleu.score))
+        else:
+            version_str = build_signature(args, len(refs))
+            print('BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(version_str, bleu.score, bleu.precisions[0], bleu.precisions[1], bleu.precisions[2], bleu.precisions[3], bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
+    if 'chrf' in args.metrics:
+        if args.score_only:
+            print('{:.2f}'.format(chrf))
+        else:
+            version_str = build_signature_chrf(args, len(refs))
+            print('CHRF = {:.2f}'.format(chrf))
 
 if __name__ == '__main__':
     main()
