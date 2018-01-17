@@ -67,7 +67,10 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
-- 1.2 (16 January 2018)
+- 1.2 (17 January 2018)
+   - added the chrF metric (`-m chrf` or `-m bleu chrf` for both)
+     See 'CHRF: character n-gram F-score for automatic MT evaluation' by Maja Popovic (WMT 2015)
+     [http://www.statmt.org/wmt15/pdf/WMT49.pdf]
    - added IWSLT 2017 test and tuning sets for DE, FR, and ZH
      (Thanks to Mauro Cettolo and Marcello Federico).
    - added `--cite` to produce the citation for easy inclusion in papers

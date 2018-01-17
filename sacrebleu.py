@@ -84,8 +84,10 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
-- 1.2 (16 January 2018)
+- 1.2 (17 January 2018)
    - added the chrF metric (`-m chrf` or `-m bleu chrf` for both)
+     See 'CHRF: character n-gram F-score for automatic MT evaluation' by Maja Popovic (WMT 2015)
+     [http://www.statmt.org/wmt15/pdf/WMT49.pdf]
    - added IWSLT 2017 test and tuning sets for DE, FR, and ZH
      (Thanks to Mauro Cettolo and Marcello Federico).
    - added `--cite` to produce the citation for easy inclusion in papers
@@ -188,10 +190,11 @@ SACREBLEU = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 # n-gram order. Don't change this.
 NGRAM_ORDER = 4
 
-# character order (for chrf)
+# Default values for CHRF
 CHRF_ORDER = 6
-CHRF_BETA = 3.0
-TRIM_WS = True
+# default to 2 (per http://www.aclweb.org/anthology/W16-2341)
+CHRF_BETA = 2.0
+CHRF_REMOVE_WS = True
 
 # This defines data locations.
 # At the top level are test sets.
@@ -1101,15 +1104,15 @@ def delete_whitespace(text: str) -> str:
     """
     Removes whitespaces from text.
     """
-    return str(text).replace(' ', '') #re.sub(r'\s+', '', text)
+    return re.sub(r'\s+', '', text).strip()
 
 
 def get_sentence_statistics(hypothesis: str,
                             reference: str,
                             order: int = CHRF_ORDER,
-                            trim_whitespaces: bool = TRIM_WS) -> numpy.array:
-    hypothesis = delete_whitespace(hypothesis) if trim_whitespaces else hypothesis
-    reference = delete_whitespace(reference) if trim_whitespaces else reference
+                            remove_whitespace: bool = CHRF_REMOVE_WS) -> numpy.array:
+    hypothesis = delete_whitespace(hypothesis) if remove_whitespace else hypothesis
+    reference = delete_whitespace(reference) if remove_whitespace else reference
     statistics = numpy.zeros((order * 3))
     for i in range(order):
         n = i + 1
@@ -1125,10 +1128,10 @@ def get_sentence_statistics(hypothesis: str,
 def get_corpus_statistics(hypotheses: Iterable[str],
                           references: Iterable[str],
                           order: int = CHRF_ORDER,
-                          trim_whitespaces: bool = TRIM_WS) -> numpy.array:
+                          remove_whitespace: bool = CHRF_REMOVE_WS) -> numpy.array:
     corpus_statistics = numpy.zeros((order * 3))
     for hypothesis, reference in zip(hypotheses, references):
-        statistics = get_sentence_statistics(hypothesis, reference, order=order, trim_whitespaces=trim_whitespaces)
+        statistics = get_sentence_statistics(hypothesis, reference, order=order, remove_whitespace=remove_whitespace)
         corpus_statistics += statistics
     return corpus_statistics
 
@@ -1163,19 +1166,19 @@ def _chrf(avg_precision, avg_recall, beta: float = CHRF_BETA) -> float:
 def corpus_chrf(hypotheses: Iterable[str],
                 references: Iterable[str],
                 order: int = CHRF_ORDER,
-                trim_whitespaces: bool = TRIM_WS,
-                beta: float = CHRF_BETA) -> float:
+                beta: float = CHRF_BETA,
+                remove_whitespace: bool = CHRF_REMOVE_WS) -> float:
     """
     Computes Chrf on a corpus.
 
     :param hypotheses: Stream of hypotheses.
     :param references: Stream of references
     :param order: Maximum n-gram order.
-    :param trim_whitespaces: Whether to trim whitespaces from hypothesis and reference strings.
+    :param remove_whitespace: Whether to delete all whitespace from hypothesis and reference strings.
     :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
     :return: Chrf score.
     """
-    corpus_statistics = get_corpus_statistics(hypotheses, references, order=order, trim_whitespaces=trim_whitespaces)
+    corpus_statistics = get_corpus_statistics(hypotheses, references, order=order, remove_whitespace=remove_whitespace)
     avg_precision, avg_recall = _avg_precision_and_recall(corpus_statistics, order)
     return _chrf(avg_precision, avg_recall, beta=beta)
 
@@ -1183,19 +1186,19 @@ def corpus_chrf(hypotheses: Iterable[str],
 def sentence_chrf(hypothesis: str,
                   reference: str,
                   order: int = CHRF_ORDER,
-                  trim_whitespaces: bool = TRIM_WS,
-                  beta: float = CHRF_BETA) -> float:
+                  beta: float = CHRF_BETA,
+                  remove_whitespace: bool = CHRF_REMOVE_WS) -> float:
     """
     Computes ChrF on a single sentence pair.
 
     :param hypothesis: Hypothesis string.
     :param reference: Reference string.
     :param order: Maximum n-gram order.
-    :param trim_whitespaces: Whether to trim whitespaces from hypothesis and reference strings.
+    :param remove_whitespace: Whether to delete whitespaces from hypothesis and reference strings.
     :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
     :return: Chrf score.
     """
-    statistics = get_sentence_statistics(hypothesis, reference, order=order, trim_whitespaces=trim_whitespaces)
+    statistics = get_sentence_statistics(hypothesis, reference, order=order, remove_whitespace=remove_whitespace)
     avg_precision, avg_recall = _avg_precision_and_recall(statistics, order)
     return _chrf(avg_precision, avg_recall, beta=beta)
 
