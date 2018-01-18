@@ -165,7 +165,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-VERSION = '1.2'
+VERSION = '1.2.1'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -1340,7 +1340,6 @@ def main():
         if args.score_only:
             print('{:.2f}'.format(chrf))
         else:
-            version_str = build_signature_chrf(args, len(refs))
             print('CHRF = {:.2f}'.format(chrf))
 
 if __name__ == '__main__':
