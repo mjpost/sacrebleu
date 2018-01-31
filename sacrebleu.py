@@ -149,21 +149,20 @@ Originally written by Matt Post.
 The official version can be found at github.com/awslabs/sockeye, under `contrib/sacrebleu`.
 """
 
-import re
-import os
-import sys
-import math
-import gzip
-import tarfile
-import logging
-import urllib.request
 import argparse
-import unicodedata
-import numpy
-
+import gzip
+import logging
+import os
+import re
+import sys
+import tarfile
+import urllib.request
 from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
+
+import math
+import unicodedata
 
 VERSION = '1.2.1'
 
@@ -769,6 +768,7 @@ TOKENIZERS = {
 }
 DEFAULT_TOKENIZER = '13a'
 
+
 def _open(file, encoding='utf-8'):
     """Convenience function for reading compressed or plain text files.
     :param file: The file to read.
@@ -1028,7 +1028,8 @@ def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: in
     return BLEU._make([bleu, correct, total, precisions, brevity_penalty, sys_len, ref_len])
 
 
-def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=False, lowercase=False, tokenize=DEFAULT_TOKENIZER, use_effective_order=False) -> BLEU:
+def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=False, lowercase=False,
+                tokenize=DEFAULT_TOKENIZER, use_effective_order=False) -> BLEU:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param sys_stream: The system stream (a sequence of segments)
@@ -1203,6 +1204,7 @@ def sentence_chrf(hypothesis: str,
     avg_precision, avg_recall = _avg_precision_and_recall(statistics, order)
     return _chrf(avg_precision, avg_recall, beta=beta)
 
+
 def main():
     arg_parser = argparse.ArgumentParser(description='sacreBLEU: Hassle-free computation of shareable BLEU scores.'
                                          'Quick usage: score your detokenized output against WMT\'14 EN-DE:'
@@ -1277,7 +1279,8 @@ def main():
             logging.error('I need a language pair (-l).')
         elif args.langpair not in DATASETS[args.test_set]:
             logging.error('No such language pair "%s"', args.langpair)
-        logging.error('Available language pairs for test set "%s": %s', args.test_set, ', '.join(filter(lambda x: '-' in x, DATASETS[args.test_set].keys())))
+        logging.error('Available language pairs for test set "%s": %s', args.test_set,
+                      ', '.join(filter(lambda x: '-' in x, DATASETS[args.test_set].keys())))
         sys.exit(1)
 
     if args.echo:
@@ -1326,21 +1329,25 @@ def main():
                           '\n'
                           '    rm -r %s/%s\n'
                           '\n'
-                          'They will be downloaded automatically again the next time you run sacreBLEU.', SACREBLEU, args.test_set)
+                          'They will be downloaded automatically again the next time you run sacreBLEU.', SACREBLEU,
+                          args.test_set)
         sys.exit(1)
-
 
     if 'bleu' in args.metrics:
         if args.score_only:
             print('{:.2f}'.format(bleu.score))
         else:
             version_str = build_signature(args, len(refs))
-            print('BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(version_str, bleu.score, bleu.precisions[0], bleu.precisions[1], bleu.precisions[2], bleu.precisions[3], bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
+            print(
+                'BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(
+                    version_str, bleu.score, bleu.precisions[0], bleu.precisions[1], bleu.precisions[2],
+                    bleu.precisions[3], bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
     if 'chrf' in args.metrics:
         if args.score_only:
             print('{:.2f}'.format(chrf))
         else:
             print('CHRF = {:.2f}'.format(chrf))
+
 
 if __name__ == '__main__':
     main()
