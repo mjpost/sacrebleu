@@ -67,6 +67,10 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
+- 1.2.2 (28 January 2018)
+   - metrics (`-m`) are now printed in the order requested
+   - chrF now prints a version string (including the beta parameter, importantly)
+
 - 1.2 (17 January 2018)
    - added the chrF metric (`-m chrf` or `-m bleu chrf` for both)
      See 'CHRF: character n-gram F-score for automatic MT evaluation' by Maja Popovic (WMT 2015)
@@ -75,7 +79,7 @@ Sacre BLEU.
      (Thanks to Mauro Cettolo and Marcello Federico).
    - added `--cite` to produce the citation for easy inclusion in papers
    - added `--input` (`-i`) to set input to a file instead of STDIN
-   - removed accent mark (on private suggestion)
+   - removed accent mark after objection from UN official
 
 - 1.1.7 (27 November 2017)
    - corpus_bleu() now raises an exception if input streams are different lengths

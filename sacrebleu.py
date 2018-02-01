@@ -84,6 +84,10 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
+- 1.2.2 (28 January 2018)
+   - metrics (`-m`) are now printed in the order requested
+   - chrF now prints a version string (including the beta parameter, importantly)
+
 - 1.2 (17 January 2018)
    - added the chrF metric (`-m chrf` or `-m bleu chrf` for both)
      See 'CHRF: character n-gram F-score for automatic MT evaluation' by Maja Popovic (WMT 2015)
@@ -92,7 +96,7 @@ Sacre BLEU.
      (Thanks to Mauro Cettolo and Marcello Federico).
    - added `--cite` to produce the citation for easy inclusion in papers
    - added `--input` (`-i`) to set input to a file instead of STDIN
-   - removed accent mark (on private suggestion)
+   - removed accent mark after objection from UN official
 
 - 1.1.7 (27 November 2017)
    - corpus_bleu() now raises an exception if input streams are different lengths
@@ -164,7 +168,7 @@ from typing import List, Iterable, Tuple
 import math
 import unicodedata
 
-VERSION = '1.2.1'
+VERSION = '1.2.2'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -192,7 +196,8 @@ NGRAM_ORDER = 4
 # Default values for CHRF
 CHRF_ORDER = 6
 # default to 2 (per http://www.aclweb.org/anthology/W16-2341)
-CHRF_BETA = 2.0
+CHRF_BETA = 2
+# By default, remove whitespace (per the original paper)
 CHRF_REMOVE_WS = True
 
 # This defines data locations.
@@ -792,7 +797,7 @@ def my_log(num):
     return math.log(num)
 
 
-def build_signature(args, numrefs):
+def bleu_signature(args, numrefs):
     """
     Builds a signature that uniquely identifies the scoring parameters used.
     :param args: the arguments passed into the script
@@ -813,6 +818,42 @@ def build_signature(args, numrefs):
     signature = {'tok': args.tokenize,
                  'version': VERSION,
                  'smooth': args.smooth,
+                 'numrefs': numrefs,
+                 'case': 'lc' if args.lc else 'mixed'}
+
+    if args.test_set is not None:
+        signature['test'] = args.test_set
+
+    if args.langpair is not None:
+        signature['lang'] = args.langpair
+
+    sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, signature[x]) for x in sorted(signature.keys())])
+
+    return sigstr
+
+
+def chrf_signature(args, numrefs):
+    """
+    Builds a signature that uniquely identifies the scoring parameters used.
+    :param args: the arguments passed into the script
+    :return: the chrF signature
+    """
+
+    # Abbreviations for the signature
+    abbr = {
+        'test': 't',
+        'lang': 'l',
+        'numchars': 'n',
+        'space': 's',
+        'case': 'c',
+        'numrefs': '#',
+        'version': 'v'
+    }
+
+    signature = {'tok': args.tokenize,
+                 'version': VERSION,
+                 'space': args.chrf_whitespace,
+                 'numchars': args.chrf_order,
                  'numrefs': numrefs,
                  'case': 'lc' if args.lc else 'mixed'}
 
@@ -1157,7 +1198,7 @@ def _avg_precision_and_recall(statistics: List[float], order: int) -> Tuple[floa
     return avg_precision, avg_recall
 
 
-def _chrf(avg_precision, avg_recall, beta: float = CHRF_BETA) -> float:
+def _chrf(avg_precision, avg_recall, beta: int = CHRF_BETA) -> float:
     if avg_precision + avg_recall == 0:
         return 0.0
     beta_square = beta ** 2
@@ -1232,8 +1273,10 @@ def main():
                             help='metrics to compute (default: bleu)')
     arg_parser.add_argument('--chrf-order', type=int, default=CHRF_ORDER,
                             help='chrf character order (default: %(default)s)')
-    arg_parser.add_argument('--chrf-beta', type=float, default=CHRF_BETA,
+    arg_parser.add_argument('--chrf-beta', type=int, default=CHRF_BETA,
                             help='chrf BETA parameter (default: %(default)s)')
+    arg_parser.add_argument('--chrf-whitespace', action='store_true', default=not CHRF_REMOVE_WS,
+                            help='include whitespace in chrF calculation (default: %(default)s)')
     arg_parser.add_argument('--short', default=False, action='store_true',
                             help='produce a shorter (less human readable) signature')
     arg_parser.add_argument('--score-only', '-b', default=False, action='store_true',
@@ -1313,14 +1356,14 @@ def main():
 
     if args.langpair is not None:
         _, target = args.langpair.split('-')
-        if target == 'zh' and args.tokenize != 'zh':
+        if target == 'zh' and 'bleu' in args.metrics and args.tokenize != 'zh':
             logging.warning('You should also pass "--tok zh" when scoring Chinese...')
 
     try:
         if 'bleu' in args.metrics:
             bleu = corpus_bleu(system, refs, smooth=args.smooth, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
         if 'chrf' in args.metrics:
-            chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order)
+            chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
     except EOFError:
         logging.error('The input and reference stream(s) were of different lengths.\n')
         if args.test_set is not None:
@@ -1333,20 +1376,23 @@ def main():
                           args.test_set)
         sys.exit(1)
 
-    if 'bleu' in args.metrics:
-        if args.score_only:
-            print('{:.2f}'.format(bleu.score))
-        else:
-            version_str = build_signature(args, len(refs))
-            print(
-                'BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(
-                    version_str, bleu.score, bleu.precisions[0], bleu.precisions[1], bleu.precisions[2],
-                    bleu.precisions[3], bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
-    if 'chrf' in args.metrics:
-        if args.score_only:
-            print('{:.2f}'.format(chrf))
-        else:
-            print('CHRF = {:.2f}'.format(chrf))
+    for metric in args.metrics:
+        if metric == 'bleu':
+            if args.score_only:
+                print('{:.2f}'.format(bleu.score))
+            else:
+                version_str = bleu_signature(args, len(refs))
+                print(
+                    'BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(
+                        version_str, bleu.score, bleu.precisions[0], bleu.precisions[1], bleu.precisions[2],
+                        bleu.precisions[3], bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
+
+        elif metric == 'chrf':
+            if args.score_only:
+                print('{:.2f}'.format(chrf))
+            else:
+                version_str = chrf_signature(args, len(refs))
+                print('chrF{:d}+{} = {:.2f}'.format(args.chrf_beta, version_str, chrf))
 
 
 if __name__ == '__main__':
