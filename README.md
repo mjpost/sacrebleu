@@ -67,9 +67,10 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
-- 1.2.2 (28 January 2018)
+- 1.2.3 (28 January 2018)
    - metrics (`-m`) are now printed in the order requested
    - chrF now prints a version string (including the beta parameter, importantly)
+   - attempt to remove dependence on locale setting
 
 - 1.2 (17 January 2018)
    - added the chrF metric (`-m chrf` or `-m bleu chrf` for both)

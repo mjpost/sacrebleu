@@ -84,9 +84,10 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
-- 1.2.2 (28 January 2018)
+- 1.2.3 (28 January 2018)
    - metrics (`-m`) are now printed in the order requested
    - chrF now prints a version string (including the beta parameter, importantly)
+   - attempt to remove dependence on locale setting
 
 - 1.2 (17 January 2018)
    - added the chrF metric (`-m chrf` or `-m bleu chrf` for both)
@@ -156,6 +157,7 @@ The official version can be found at github.com/awslabs/sockeye, under `contrib/
 import argparse
 import gzip
 import logging
+import io
 import os
 import re
 import sys
@@ -168,7 +170,7 @@ from typing import List, Iterable, Tuple
 import math
 import unicodedata
 
-VERSION = '1.2.2'
+VERSION = '1.2.3'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -1269,7 +1271,7 @@ def main():
                             help='Read input from a file instead of STDIN')
     arg_parser.add_argument('refs', nargs='*', default=[],
                             help='optional list of references (for backwards-compatibility with older scripts)')
-    arg_parser.add_argument('--metrics', '-m', choices=['bleu', 'chrf'], nargs='+', default='bleu',
+    arg_parser.add_argument('--metrics', '-m', choices=['bleu', 'chrf'], nargs='+', default=['bleu'],
                             help='metrics to compute (default: bleu)')
     arg_parser.add_argument('--chrf-order', type=int, default=CHRF_ORDER,
                             help='chrf character order (default: %(default)s)')
@@ -1348,7 +1350,7 @@ def main():
     else:
         refs = args.refs
 
-    inputfh = sys.stdin if args.input == '-' else _open(args.input, args.encoding)
+    inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding) if args.input == '-' else _open(args.input, args.encoding)
     system = inputfh.readlines()
 
     # Read references
