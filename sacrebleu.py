@@ -199,8 +199,6 @@ NGRAM_ORDER = 4
 CHRF_ORDER = 6
 # default to 2 (per http://www.aclweb.org/anthology/W16-2341)
 CHRF_BETA = 2
-# By default, remove whitespace (per the original paper)
-CHRF_REMOVE_WS = True
 
 # This defines data locations.
 # At the top level are test sets.
@@ -1154,7 +1152,7 @@ def delete_whitespace(text: str) -> str:
 def get_sentence_statistics(hypothesis: str,
                             reference: str,
                             order: int = CHRF_ORDER,
-                            remove_whitespace: bool = CHRF_REMOVE_WS) -> List[float]:
+                            remove_whitespace: bool = True) -> List[float]:
     hypothesis = delete_whitespace(hypothesis) if remove_whitespace else hypothesis
     reference = delete_whitespace(reference) if remove_whitespace else reference
     statistics = [0] * (order * 3)
@@ -1172,7 +1170,7 @@ def get_sentence_statistics(hypothesis: str,
 def get_corpus_statistics(hypotheses: Iterable[str],
                           references: Iterable[str],
                           order: int = CHRF_ORDER,
-                          remove_whitespace: bool = CHRF_REMOVE_WS) -> List[float]:
+                          remove_whitespace: bool = True) -> List[float]:
     corpus_statistics = [0] * (order * 3)
     for hypothesis, reference in zip(hypotheses, references):
         statistics = get_sentence_statistics(hypothesis, reference, order=order, remove_whitespace=remove_whitespace)
@@ -1212,7 +1210,7 @@ def corpus_chrf(hypotheses: Iterable[str],
                 references: Iterable[str],
                 order: int = CHRF_ORDER,
                 beta: float = CHRF_BETA,
-                remove_whitespace: bool = CHRF_REMOVE_WS) -> float:
+                remove_whitespace: bool = True) -> float:
     """
     Computes Chrf on a corpus.
 
@@ -1232,7 +1230,7 @@ def sentence_chrf(hypothesis: str,
                   reference: str,
                   order: int = CHRF_ORDER,
                   beta: float = CHRF_BETA,
-                  remove_whitespace: bool = CHRF_REMOVE_WS) -> float:
+                  remove_whitespace: bool = True) -> float:
     """
     Computes ChrF on a single sentence pair.
 
@@ -1277,7 +1275,7 @@ def main():
                             help='chrf character order (default: %(default)s)')
     arg_parser.add_argument('--chrf-beta', type=int, default=CHRF_BETA,
                             help='chrf BETA parameter (default: %(default)s)')
-    arg_parser.add_argument('--chrf-whitespace', action='store_true', default=not CHRF_REMOVE_WS,
+    arg_parser.add_argument('--chrf-whitespace', action='store_true', default=False,
                             help='include whitespace in chrF calculation (default: %(default)s)')
     arg_parser.add_argument('--short', default=False, action='store_true',
                             help='produce a shorter (less human readable) signature')
