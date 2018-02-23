@@ -952,10 +952,15 @@ def print_test_set(test_set, langpair, side):
     """
 
     where = download_test_set(test_set, langpair)
-    infile = where[0] if side == 'src' else where[1]
-    with open(infile) as fin:
-        for line in fin:
-            print(line.rstrip())
+    if side == 'both':
+        with open(where[0]) as src_in, open(where[1]) as tgt_in:
+            for src, tgt in zip(src_in, tgt_in):
+                print(src.rstrip(), tgt.rstrip(), sep='\t')
+    else:
+        infile = where[0] if side == 'src' else where[1]
+        with open(infile) as fin:
+            for line in fin:
+                print(line.rstrip())
 
 
 def download_test_set(test_set, langpair=None):
@@ -1263,8 +1268,8 @@ def main():
                             help='source-target language pair (2-char ISO639-1 codes)')
     arg_parser.add_argument('--download', type=str, default=None,
                             help='download a test set and quit')
-    arg_parser.add_argument('--echo', choices=['src', 'ref'], type=str, default=None,
-                            help='output the source or reference to STDOUT and quit')
+    arg_parser.add_argument('--echo', choices=['src', 'ref', 'both'], type=str, default=None,
+                            help='output the source (src), reference (ref), or both (both, pasted) to STDOUT and quit')
     arg_parser.add_argument('--input', '-i', type=str, default='-',
                             help='Read input from a file instead of STDIN')
     arg_parser.add_argument('refs', nargs='*', default=[],
