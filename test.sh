@@ -22,8 +22,10 @@
 
 set -u
 
+export SACREBLEU=$(pwd)/.sacrebleu
+
 # TEST 1: download and process WMT17 data
-[[ -d ~/.sacrebleu/wmt17 ]] && rm -f ~/.sacrebleu/wmt17/{en-*,*-en*}
+[[ -d $SACREBLEU/wmt17 ]] && rm -f $SACREBLEU/wmt17/{en-*,*-en*}
 ./sacrebleu.py --echo src -t wmt17 -l cs-en > /dev/null
 
 [[ ! -d data ]] && mkdir data
