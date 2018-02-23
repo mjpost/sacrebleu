@@ -445,7 +445,7 @@ DATASETS = {
                  'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/zh/en-zh.tgz',
                  'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/zh/en/zh-en.tgz'],
         'description': 'Official evaluation data for IWSLT.',
-        'citation': '@InProceedings{iwslt2017,\n  author    = {Cettolo, Mauro and Federico, Marcello and Bentivogli, Luisa and Niehues, Jan and Stüker, Sebastian and Sudoh, Katsuitho and Yoshino, Koichiro and Federmann, Christian},\n  title     = {Overview of the IWSLT 2017 Evaluation Campaign},\n  booktitle = {14th International Workshop on Spoken Language Translation},\n  month     = {December},\n  year      = {2017},\n  address   = {Tokyo, Japan},\n  pages     = {2--14},\n  url       = {http://workshop2017.iwslt.org/downloads/iwslt2017_proceeding_v2.pdf\n}',
+        'citation': '@InProceedings{iwslt2017,\n  author    = {Cettolo, Mauro and Federico, Marcello and Bentivogli, Luisa and Niehues, Jan and Stüker, Sebastian and Sudoh, Katsuitho and Yoshino, Koichiro and Federmann, Christian},\n  title     = {Overview of the IWSLT 2017 Evaluation Campaign},\n  booktitle = {14th International Workshop on Spoken Language Translation},\n  month     = {December},\n  year      = {2017},\n  address   = {Tokyo, Japan},\n  pages     = {2--14},\n  url       = {http://workshop2017.iwslt.org/downloads/iwslt2017_proceeding_v2.pdf}\n}',
         'en-fr': ['en-fr/IWSLT17.TED.tst2017.en-fr.en.xml', 'fr-en/IWSLT17.TED.tst2017.fr-en.fr.xml'],
         'fr-en': ['fr-en/IWSLT17.TED.tst2017.fr-en.fr.xml', 'en-fr/IWSLT17.TED.tst2017.en-fr.en.xml'],
         'en-de': ['en-de/IWSLT17.TED.tst2017.en-de.en.xml', 'de-en/IWSLT17.TED.tst2017.de-en.de.xml'],
