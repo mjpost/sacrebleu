@@ -1111,13 +1111,13 @@ def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=F
         if lowercase:
             lines = [x.lower() for x in lines]
 
-        if (not force or tokenize != 'none') and lines[0].rstrip().endswith(' .'):
+        if not (force or tokenize == 'none') and lines[0].rstrip().endswith(' .'):
             tokenized_count += 1
 
             if tokenized_count == 100:
-                logging.warning('That\'s > 100 lines that end in a tokenized period (\'.\')')
+                logging.warning('That\'s 100 lines that end in a tokenized period (\'.\')')
                 logging.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
-                logging.warning('If you insist your data is tokenized, you can suppress this message with \'--force\'.')
+                logging.warning('If you insist your data is detokenized, or don\'t care, you can suppress this message with \'--force\'.')
 
         output, *refs = [TOKENIZERS[tokenize](x.rstrip()) for x in lines]
 

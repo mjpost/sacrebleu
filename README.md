@@ -67,6 +67,9 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
+- 1.2.4 (forthcoming)
+   - fixed logic with --force
+
 - 1.2.3 (28 January 2018)
    - metrics (`-m`) are now printed in the order requested
    - chrF now prints a version string (including the beta parameter, importantly)
