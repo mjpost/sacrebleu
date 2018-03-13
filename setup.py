@@ -28,8 +28,8 @@ import os
 
 def get_version():
     VERSION_RE = re.compile(r'''VERSION\s+=\s+['"]([0-9.]+)['"]''')
-    init = open(os.path.join(os.path.dirname(__file__), 'sacrebleu.py')).read()
-    return VERSION_RE.search(init).group(1)
+    with open(os.path.join(os.path.dirname(__file__), 'sacrebleu.py'), encoding='utf-8') as fin:
+        return VERSION_RE.search(fin.read()).group(1)
 
 setup(
     name = 'sacrebleu',
