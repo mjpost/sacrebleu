@@ -84,7 +84,7 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
-- 1.2.4 (13 March 2018)
+- 1.2.5 (13 March 2018)
    - added wmt18/dev datasets (en-et and et-en)
    - fixed logic with --force
    - locale-independent installation
@@ -176,7 +176,7 @@ from typing import List, Iterable, Tuple
 import math
 import unicodedata
 
-VERSION = '1.2.4'
+VERSION = '1.2.5'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -1365,7 +1365,7 @@ def main():
     else:
         refs = args.refs
 
-    inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding) if args.input == '-' else smart_open(args.input, args.encoding)
+    inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding) if args.input == '-' else smart_open(args.input, encoding=args.encoding)
     system = inputfh.readlines()
 
     # Read references

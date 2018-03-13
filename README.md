@@ -67,7 +67,7 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
-- 1.2.4 (13 March 2018)
+- 1.2.5 (13 March 2018)
    - added wmt18/dev datasets (en-et and et-en)
    - fixed logic with --force
    - locale-independent installation

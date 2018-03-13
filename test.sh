@@ -28,6 +28,14 @@ export SACREBLEU=$(pwd)/.sacrebleu
 [[ -d $SACREBLEU/wmt17 ]] && rm -f $SACREBLEU/wmt17/{en-*,*-en*}
 ./sacrebleu.py --echo src -t wmt17 -l cs-en > /dev/null
 
+# Test loading via file instead of STDIN
+./sacrebleu.py -t wmt17 -l en-de --echo ref > .wmt17.en-de.de.tmp
+score=$(./sacrebleu.py -t wmt17 -l en-de -i .wmt17.en-de.de.tmp -b)
+if [[ $score != '100.00' ]]; then
+    echo "File test failed."
+    exit 1
+fi
+
 [[ ! -d data ]] && mkdir data
 cd data
 
