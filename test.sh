@@ -45,6 +45,20 @@ if [[ ! -d wmt17-submitted-data ]]; then
    tar xzf wmt17-submitted-data-v1.0.tgz
 fi
 
+# Test echoing of source, reference, and both
+../sacrebleu.py -t wmt17/ms -l zh-en --echo src > .tmp.echo
+diff .tmp.echo $SACREBLEU/wmt17/ms/zh-en.zh
+if [[ $? -ne 0 ]]; then
+    echo "Source echo failed."
+    exit 1
+fi
+../sacrebleu.py -t wmt17/ms -l zh-en --echo ref | cut -f3 > .tmp.echo
+diff .tmp.echo $SACREBLEU/wmt17/ms/zh-en.en.2
+if [[ $? -ne 0 ]]; then
+    echo "Source echo failed."
+    exit 1
+fi
+
 export LC_ALL=C
 
 # Pre-computed results from Moses' mteval-v13a.pl

@@ -84,6 +84,11 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
+- 1.2.6 (22 March 2018)
+   - added wmt17/ms (Microsoft's [additional ZH-EN references](https://github.com/MicrosoftTranslator/Translator-HumanParityData)).
+     Try `sacrebleu -t wmt17/ms --cite`.
+   - `--echo ref` now pastes together all references, if there is more than one
+
 - 1.2.5 (13 March 2018)
    - added wmt18/dev datasets (en-et and et-en)
    - fixed logic with --force
@@ -167,7 +172,6 @@ import io
 import os
 import re
 import sys
-import tarfile
 import urllib.request
 from collections import Counter, namedtuple
 from itertools import zip_longest
@@ -176,7 +180,7 @@ from typing import List, Iterable, Tuple
 import math
 import unicodedata
 
-VERSION = '1.2.5'
+VERSION = '1.2.6'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -261,6 +265,13 @@ DATASETS = {
         'en-zh': ['dev/newsdev2017-enzh-src.en.sgm', 'dev/newsdev2017-enzh-ref.zh.sgm'],
         'lv-en': ['dev/newsdev2017-lven-src.lv.sgm', 'dev/newsdev2017-lven-ref.en.sgm'],
         'zh-en': ['dev/newsdev2017-zhen-src.zh.sgm', 'dev/newsdev2017-zhen-ref.en.sgm'],
+    },
+    'wmt17/ms': {
+        'data': ['https://github.com/MicrosoftTranslator/Translator-HumanParityData/archive/master.zip',
+                 'http://data.statmt.org/wmt17/translation-task/test-update-1.tgz'],
+        'description': 'Additional Chinese-English references from Microsoft Research.',
+        'citation': '@inproceedings{achieving-human-parity-on-automatic-chinese-to-english-news-translation,\n  author = {Hassan Awadalla, Hany and Aue, Anthony and Chen, Chang and Chowdhary, Vishal and Clark, Jonathan and Federmann, Christian and Huang, Xuedong and Junczys-Dowmunt, Marcin and Lewis, Will and Li, Mu and Liu, Shujie and Liu, Tie-Yan and Luo, Renqian and Menezes, Arul and Qin, Tao and Seide, Frank and Tan, Xu and Tian, Fei and Wu, Lijun and Wu, Shuangzhi and Xia, Yingce and Zhang, Dongdong and Zhang, Zhirui and Zhou, Ming},\n  title = {Achieving Human Parity on Automatic Chinese to English News Translation},\n  booktitle = {},\n  year = {2018},\n  month = {March},\n  abstract = {Machine translation has made rapid advances in recent years. Millions of people are using it today in online translation systems and mobile applications in order to communicate across language barriers. The question naturally arises whether such systems can approach or achieve parity with human translations. In this paper, we first address the problem of how to define and accurately measure human parity in translation. We then describe Microsoft’s machine translation system and measure the quality of its translations on the widely used WMT 2017 news translation task from Chinese to English. We find that our latest neural machine translation system has reached a new state-of-the-art, and that the translation quality is at human parity when compared to professional human translations. We also find that it significantly exceeds the quality of crowd-sourced non-professional translations.},\n  publisher = {},\n  url = {https://www.microsoft.com/en-us/research/publication/achieving-human-parity-on-automatic-chinese-to-english-news-translation/},\n  address = {},\n  pages = {},\n  journal = {},\n  volume = {},\n  chapter = {},\n  isbn = {},\n}',
+        'zh-en': ['newstest2017-zhen-src.zh.sgm', 'newstest2017-zhen-ref.en.sgm', 'Translator-HumanParityData-master/Translator-HumanParityData/References/Translator-HumanParityData-Reference-HT.txt', 'Translator-HumanParityData-master/Translator-HumanParityData/References/Translator-HumanParityData-Reference-PE.txt'],
     },
     'wmt16': {
         'data': ['http://data.statmt.org/wmt16/translation-task/test.tgz'],
@@ -955,6 +966,10 @@ def process_to_text(rawfile, txtfile):
                 for line in fin:
                     if line.startswith('<seg '):
                         print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
+        elif rawfile.endswith('.txt'): # wmt17/ms
+            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
+                for line in fin:
+                    print(line.rstrip(), file=fout)
 
 def print_test_set(test_set, langpair, side):
     """Prints to STDOUT the specified side of the specified test set
@@ -963,16 +978,15 @@ def print_test_set(test_set, langpair, side):
     :param side: 'src' for source, 'ref' for reference
     """
 
-    where = download_test_set(test_set, langpair)
-    if side == 'both':
-        with smart_open(where[0]) as src_in, smart_open(where[1]) as tgt_in:
-            for src, tgt in zip(src_in, tgt_in):
-                print(src.rstrip(), tgt.rstrip(), sep='\t')
-    else:
-        infile = where[0] if side == 'src' else where[1]
-        with smart_open(infile) as fin:
-            for line in fin:
-                print(line.rstrip())
+    files = download_test_set(test_set, langpair)
+    if side == 'src':
+        files = [files[0]]
+    elif side == 'ref':
+        files.pop(0)
+
+    streams = [smart_open(file) for file in files]
+    for lines in zip(*streams):
+        print('\t'.join(map(lambda x: x.rstrip(), lines)))
 
 
 def download_test_set(test_set, langpair=None):
@@ -981,9 +995,6 @@ def download_test_set(test_set, langpair=None):
     :param langpair: the language pair (needed for some datasets)
     :return: the set of processed files
     """
-
-    # if not data.has_key(test_set):
-    #     return None
 
     outdir = os.path.join(SACREBLEU, test_set)
     if not os.path.exists(outdir):
@@ -1007,8 +1018,15 @@ def download_test_set(test_set, langpair=None):
 
             # Extract the tarball
             logging.info('Extracting %s', tarball)
-            tar = tarfile.open(tarball)
-            tar.extractall(path=rawdir)
+            if tarball.endswith('.tar.gz') or tarball.endswith('.tgz'):
+                import tarfile
+                tar = tarfile.open(tarball)
+                tar.extractall(path=rawdir)
+            elif tarball.endswith('.zip'):
+                import zipfile
+                zipfile = zipfile.ZipFile(tarball, 'r')
+                zipfile.extractall(path=rawdir)
+                zipfile.close()
 
     found = []
 
