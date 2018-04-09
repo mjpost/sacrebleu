@@ -1328,6 +1328,9 @@ def main():
                             version='%(prog)s {}'.format(VERSION))
     args = arg_parser.parse_args()
 
+    # Explicitly set the encoding
+    sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=True)
+
     if not args.quiet:
         logging.basicConfig(level=logging.INFO, format='sacreBLEU: %(message)s')
 
