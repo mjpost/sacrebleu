@@ -1329,6 +1329,7 @@ def main():
     args = arg_parser.parse_args()
 
     # Explicitly set the encoding
+    sys.stdin = open(sys.stdin.fileno(), mode='r', encoding='utf-8', buffering=True)
     sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=True)
 
     if not args.quiet:
