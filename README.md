@@ -67,6 +67,9 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
+- Next release
+   - fixed another locale issue (with --echo)
+
 - 1.2.6 (22 March 2018)
    - added wmt17/ms (Microsoft's [additional ZH-EN references](https://github.com/MicrosoftTranslator/Translator-HumanParityData)).
      Try `sacrebleu -t wmt17/ms --cite`.
