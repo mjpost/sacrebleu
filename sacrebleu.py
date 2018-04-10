@@ -84,8 +84,9 @@ Sacre BLEU.
 
 # VERSION HISTORY
 
-- Next release
+- 1.2.7 (10 April 2018)
    - fixed another locale issue (with --echo)
+   - grudgingly enabled `-tok none` from the command line
 
 - 1.2.6 (22 March 2018)
    - added wmt17/ms (Microsoft's [additional ZH-EN references](https://github.com/MicrosoftTranslator/Translator-HumanParityData)).
@@ -183,7 +184,7 @@ from typing import List, Iterable, Tuple
 import math
 import unicodedata
 
-VERSION = '1.2.6'
+VERSION = '1.2.7'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -1295,7 +1296,7 @@ def main():
                             help='use case-insensitive BLEU (default: actual case)')
     arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'none'], default='exp',
                             help='smoothing method: exponential decay (default), floor (0 count -> 0.01), or none')
-    arg_parser.add_argument('--tokenize', '-tok', choices=[x for x in TOKENIZERS.keys() if x != 'none'], default='13a',
+    arg_parser.add_argument('--tokenize', '-tok', choices=TOKENIZERS.keys(), default='13a',
                             help='tokenization method to use')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes)')
@@ -1384,6 +1385,10 @@ def main():
     elif args.test_set is not None and len(args.refs) > 0:
         logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
         sys.exit(1)
+
+    if args.test_set is not None and args.tokenize == 'none':
+        logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
+                        "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
 
     if args.test_set:
         _, *refs = download_test_set(args.test_set, args.langpair)
