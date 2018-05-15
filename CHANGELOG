@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.2.9 (15 May 2018)
+   - Added zh-en, en-zh, tr-en, and en-tr datasets for wmt18/test-ts
+
 - 1.2.8 (14 May 2018)
    - Added wmt18/test-ts, the test sources (only) for [WMT18](http://statmt.org/wmt18/translation-task.html)
    - Moved README out of `sacrebleu.py` and the CHANGELOG into a separate file

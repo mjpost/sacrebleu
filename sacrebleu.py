@@ -37,7 +37,7 @@ from typing import List, Iterable, Tuple
 import math
 import unicodedata
 
-VERSION = '1.2.8'
+VERSION = '1.2.9'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -87,6 +87,10 @@ DATASETS = {
         'et-en': ['test/newstest2018-eten-src-ts.et.sgm'],
         'fi-en': ['test/newstest2018-fien-src-ts.fi.sgm'],
         'ru-en': ['test/newstest2018-ruen-src-ts.ru.sgm'],
+        'en-tr': ['test/newstest2018-entr-src-ts.en.sgm'],
+        'tr-en': ['test/newstest2018-tren-src-ts.tr.sgm'],
+        'en-zh': ['test/newstest2018-enzh-src-ts.en.sgm'],
+        'zh-en': ['test/newstest2018-zhen-src-ts.zh.sgm'],
     },
     'wmt18/dev': {
         'data': ['http://data.statmt.org/wmt18/translation-task/dev.tgz'],
