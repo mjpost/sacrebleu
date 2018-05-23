@@ -37,7 +37,7 @@ from typing import List, Iterable, Tuple
 import math
 import unicodedata
 
-VERSION = '1.2.9'
+VERSION = '1.3.0'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -74,6 +74,24 @@ CHRF_BETA = 2
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
 # The canonical location of unpacked, processed data is $SACREBLEU/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 DATASETS = {
+    'wmt18': {
+        'data': ['http://data.statmt.org/wmt18/translation-task/test.tgz'],
+        'description': 'Official evaluation data.',
+        'cs-en': ['test/newstest2018-csen-src.cs.sgm', 'test/newstest2018-csen-ref.en.sgm'],
+        'de-en': ['test/newstest2018-deen-src.de.sgm', 'test/newstest2018-deen-ref.en.sgm'],
+        'en-cs': ['test/newstest2018-encs-src.en.sgm', 'test/newstest2018-encs-ref.cs.sgm'],
+        'en-de': ['test/newstest2018-ende-src.en.sgm', 'test/newstest2018-ende-ref.de.sgm'],
+        'en-et': ['test/newstest2018-enet-src.en.sgm', 'test/newstest2018-enet-ref.et.sgm'],
+        'en-fi': ['test/newstest2018-enfi-src.en.sgm', 'test/newstest2018-enfi-ref.fi.sgm'],
+        'en-ru': ['test/newstest2018-enru-src.en.sgm', 'test/newstest2018-enru-ref.ru.sgm'],
+        'et-en': ['test/newstest2018-eten-src.et.sgm', 'test/newstest2018-eten-ref.en.sgm'],
+        'fi-en': ['test/newstest2018-fien-src.fi.sgm', 'test/newstest2018-fien-ref.en.sgm'],
+        'ru-en': ['test/newstest2018-ruen-src.ru.sgm', 'test/newstest2018-ruen-ref.en.sgm'],
+        'en-tr': ['test/newstest2018-entr-src.en.sgm', 'test/newstest2018-entr-ref.tr.sgm'],
+        'tr-en': ['test/newstest2018-tren-src.tr.sgm', 'test/newstest2018-tren-ref.en.sgm'],
+        'en-zh': ['test/newstest2018-enzh-src.en.sgm', 'test/newstest2018-enzh-ref.zh.sgm'],
+        'zh-en': ['test/newstest2018-zhen-src.zh.sgm', 'test/newstest2018-zhen-ref.en.sgm'],
+    },
     'wmt18/test-ts': {
         'data': ['http://data.statmt.org/wmt18/translation-task/test-ts.tgz'],
         'description': 'Official evaluation sources with extra test sets interleaved.',
@@ -661,7 +679,6 @@ def tokenize_zh(sentence):
     sentence = re.sub(r'\s+$', r'', sentence)
 
     return sentence
-
 
 TOKENIZERS = {
     '13a': tokenize_13a,

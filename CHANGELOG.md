@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.2.10 (23 May 2018)
+   - Added wmt18 test set (with references)
+
 - 1.2.9 (15 May 2018)
    - Added zh-en, en-zh, tr-en, and en-tr datasets for wmt18/test-ts
 
