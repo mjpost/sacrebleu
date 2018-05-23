@@ -37,7 +37,7 @@ from typing import List, Iterable, Tuple
 import math
 import unicodedata
 
-VERSION = '1.3.0'
+VERSION = '1.2.10'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
