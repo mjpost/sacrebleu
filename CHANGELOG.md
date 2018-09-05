@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.2.11 (29 August 2018)
+   - Added a function for sentence-level, smoothed BLEU
+
 - 1.2.10 (23 May 2018)
    - Added wmt18 test set (with references)
 
