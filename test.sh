@@ -31,7 +31,7 @@ export SACREBLEU=$(pwd)/.sacrebleu
 # Test loading via file instead of STDIN
 ./sacrebleu.py -t wmt17 -l en-de --echo ref > .wmt17.en-de.de.tmp
 score=$(./sacrebleu.py -t wmt17 -l en-de -i .wmt17.en-de.de.tmp -b)
-if [[ $score != '100.00' ]]; then
+if [[ $score != '100.0' ]]; then
     echo "File test failed."
     exit 1
 fi
@@ -79,7 +79,7 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
 
         # mteval=$($MOSES/scripts/generic/mteval-v13a.pl -c -s $src -r $ref -t $sgm 2> /dev/null | grep "BLEU score" | cut -d' ' -f9)
         # mteval=$(echo "print($bleu1 * 100)" | python)
-        score=$(cat $txt | PYTHONIOENCODING=ascii ../sacrebleu.py -t wmt17 -l $source-$target --tok $tokenizer -b)
+        score=$(cat $txt | PYTHONIOENCODING=ascii ../sacrebleu.py -w 2 -t wmt17 -l $source-$target --tok $tokenizer -b)
 
         echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$i]}) > 0.04 else 0)" | python
 

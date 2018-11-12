@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.2.12 (8 November 2018)
+   - Now outputs only only digit after the decimal
+
 - 1.2.11 (29 August 2018)
    - Added a function for sentence-level, smoothed BLEU
 

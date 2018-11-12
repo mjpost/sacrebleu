@@ -37,7 +37,7 @@ from typing import List, Iterable, Tuple
 import math
 import unicodedata
 
-VERSION = '1.2.11'
+VERSION = '1.2.12'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -1238,6 +1238,8 @@ def main():
                             help='open text files with specified encoding (default: %(default)s)')
     arg_parser.add_argument('--citation', '--cite', default=False, action='store_true',
                             help='dump the bibtex citation and quit.')
+    arg_parser.add_argument('--width', '-w', type=int, default=1,
+                            help='floating point width (default: %(default)s)')
     arg_parser.add_argument('-V', '--version', action='version',
                             version='%(prog)s {}'.format(VERSION))
     args = arg_parser.parse_args()
@@ -1336,23 +1338,24 @@ def main():
                           args.test_set)
         sys.exit(1)
 
+    width = args.width
     for metric in args.metrics:
         if metric == 'bleu':
             if args.score_only:
-                print('{:.2f}'.format(bleu.score))
+                print('{0:.{1}f}'.format(bleu.score, width))
             else:
                 version_str = bleu_signature(args, len(refs))
                 print(
-                    'BLEU+{} = {:.2f} {:.1f}/{:.1f}/{:.1f}/{:.1f} (BP = {:.3f} ratio = {:.3f} hyp_len = {:d} ref_len = {:d})'.format(
-                        version_str, bleu.score, bleu.precisions[0], bleu.precisions[1], bleu.precisions[2],
+                    'BLEU+{0} = {1:.{2}f} {3:.1f}/{4:.1f}/{5:.1f}/{6:.1f} (BP = {7:.3f} ratio = {8:.3f} hyp_len = {9:d} ref_len = {10:d})'.format(
+                        version_str, bleu.score, width, bleu.precisions[0], bleu.precisions[1], bleu.precisions[2],
                         bleu.precisions[3], bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
 
         elif metric == 'chrf':
             if args.score_only:
-                print('{:.2f}'.format(chrf))
+                print('{0:.{1}f}'.format(chrf, width))
             else:
                 version_str = chrf_signature(args, len(refs))
-                print('chrF{:d}+{} = {:.2f}'.format(args.chrf_beta, version_str, chrf))
+                print('chrF{0:d}+{1} = {2:.{3}f}'.format(args.chrf_beta, version_str, chrf, width))
 
 
 if __name__ == '__main__':

@@ -73,4 +73,4 @@ SacreBLEU is licensed under the Apache 2.0 License.
 
 This was all Rico Sennrich's idea.
 Originally written by Matt Post.
-The official version can be found at https://github.com/awslabs/sockeye/tree/master/contrib/sacrebleu.
+The official version can be found at https://github.com/awslabs/sockeye/tree/master/sockeye_contrib/sacrebleu.
