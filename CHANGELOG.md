@@ -1,5 +1,9 @@
 # VERSION HISTORY
 
+- 1.2.13 (22 January 2019)
+   - Added 'wmt19/dev' task for 'lt-en' and 'en-lt' (development data for new tasks).
+   - Added MD5 checksum for downloaded tarballs.
+
 - 1.2.12 (8 November 2018)
    - Now outputs only only digit after the decimal
 

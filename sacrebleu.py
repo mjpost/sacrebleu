@@ -24,20 +24,21 @@ See the [README.md] file for more information.
 
 import argparse
 import gzip
-import logging
+import hashlib
 import io
+import logging
+import math
 import os
 import re
 import sys
+import unicodedata
 import urllib.request
+
 from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-import math
-import unicodedata
-
-VERSION = '1.2.12'
+VERSION = '1.2.13'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -74,6 +75,13 @@ CHRF_BETA = 2
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
 # The canonical location of unpacked, processed data is $SACREBLEU/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 DATASETS = {
+    'wmt19/dev': {
+        'data': ['http://data.statmt.org/wmt19/translation-task/dev.tgz'],
+        'description': 'Development data for tasks new to 2019.',
+        'md5': ['67a883e61de05ae2d3aad2a560240b17'],
+        'lt-en': ['dev/newsdev2019-lten-src.lt.sgm', 'dev/newsdev2019-lten-ref.en.sgm'],
+        'en-lt': ['dev/newsdev2019-enlt-src.en.sgm', 'dev/newsdev2019-enlt-ref.lt.sgm']
+    },
     'wmt18': {
         'data': ['http://data.statmt.org/wmt18/translation-task/test.tgz'],
         'description': 'Official evaluation data.',
@@ -893,20 +901,34 @@ def download_test_set(test_set, langpair=None):
         logging.info('Creating %s', outdir)
         os.makedirs(outdir)
 
-    for dataset in DATASETS[test_set]['data']:
+    expected_checksums = DATASETS[test_set].get('md5', [None] * len(DATASETS[test_set]))
+    for dataset, expected_md5 in zip(DATASETS[test_set]['data'], expected_checksums):
         tarball = os.path.join(outdir, os.path.basename(dataset))
         rawdir = os.path.join(outdir, 'raw')
         if not os.path.exists(tarball) or os.path.getsize(tarball) == 0:
-            # TODO: check MD5sum
             logging.info("Downloading %s to %s", dataset, tarball)
             try:
                 with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
                     out.write(f.read())
             except ssl.SSLError:
-                log.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
+                logging.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
                             'you may need to run the "Install Certificates.command" file located in the '
                             '"Python 3" folder, often found under /Applications')
                 sys.exit(1)
+
+            # Check md5sum
+            if expected_md5 is not None:
+                md5 = hashlib.md5()
+                with open(tarball, 'rb') as infile:
+                    for line in infile:
+                        md5.update(line)
+                if md5.hexdigest() != expected_md5:
+                    logging.error('Fatal: MD5 sum of downloaded file was incorrect (got {}, expected {}).'.format(md5.hexdigest(), expected_md5))
+                    logging.error('Please manually delete "{}" and rerun the command.'.format(tarball))
+                    logging.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
+                    sys.exit(1)
+                else:
+                    logging.info('Checksum passed: {}'.format(md5.hexdigest()))
 
             # Extract the tarball
             logging.info('Extracting %s', tarball)
