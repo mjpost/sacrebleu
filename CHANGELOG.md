@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.2.14 (22 January 2019)
+   - Added mtnt1.1/train mtnt1.1/valid mtnt1.1/test data from [MTNT](http://www.cs.cmu.edu/~pmichel1/mtnt/)
+
 - 1.2.13 (22 January 2019)
    - Added 'wmt19/dev' task for 'lt-en' and 'en-lt' (development data for new tasks).
    - Added MD5 checksum for downloaded tarballs.

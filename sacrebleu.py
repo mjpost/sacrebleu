@@ -38,7 +38,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-VERSION = '1.2.13'
+VERSION = '1.2.14'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -75,6 +75,36 @@ CHRF_BETA = 2
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
 # The canonical location of unpacked, processed data is $SACREBLEU/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 DATASETS = {
+    'mtnt1.1/test': {
+        'data': ['https://github.com/pmichel31415/mtnt/releases/download/v1.1/MTNT.1.1.tar.gz'],
+        'description': 'Test data for the Machine Translation of Noisy Text task: http://www.cs.cmu.edu/~pmichel1/mtnt/',
+        'citation': '@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
+        'md5': ['8ce1831ac584979ba8cdcd9d4be43e1d'],
+        'en-fr': ['1:MTNT/test/test.en-fr.tsv', '2:MTNT/test/test.en-fr.tsv'],
+        'fr-en': ['1:MTNT/test/test.fr-en.tsv', '2:MTNT/test/test.fr-en.tsv'],
+        'en-ja': ['1:MTNT/test/test.en-ja.tsv', '2:MTNT/test/test.en-ja.tsv'],
+        'ja-en': ['1:MTNT/test/test.ja-en.tsv', '2:MTNT/test/test.ja-en.tsv'],
+    },
+    'mtnt1.1/valid': {
+        'data': ['https://github.com/pmichel31415/mtnt/releases/download/v1.1/MTNT.1.1.tar.gz'],
+        'description': 'Validation data for the Machine Translation of Noisy Text task: http://www.cs.cmu.edu/~pmichel1/mtnt/',
+        'citation': '@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
+        'md5': ['8ce1831ac584979ba8cdcd9d4be43e1d'],
+        'en-fr': ['1:MTNT/valid/valid.en-fr.tsv', '2:MTNT/valid/valid.en-fr.tsv'],
+        'fr-en': ['1:MTNT/valid/valid.fr-en.tsv', '2:MTNT/valid/valid.fr-en.tsv'],
+        'en-ja': ['1:MTNT/valid/valid.en-ja.tsv', '2:MTNT/valid/valid.en-ja.tsv'],
+        'ja-en': ['1:MTNT/valid/valid.ja-en.tsv', '2:MTNT/valid/valid.ja-en.tsv'],
+    },
+    'mtnt1.1/train': {
+        'data': ['https://github.com/pmichel31415/mtnt/releases/download/v1.1/MTNT.1.1.tar.gz'],
+        'description': 'Training data for the Machine Translation of Noisy Text task: http://www.cs.cmu.edu/~pmichel1/mtnt/',
+        'citation': '@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
+        'md5': ['8ce1831ac584979ba8cdcd9d4be43e1d'],
+        'en-fr': ['1:MTNT/train/train.en-fr.tsv', '2:MTNT/train/train.en-fr.tsv'],
+        'fr-en': ['1:MTNT/train/train.fr-en.tsv', '2:MTNT/train/train.fr-en.tsv'],
+        'en-ja': ['1:MTNT/train/train.en-ja.tsv', '2:MTNT/train/train.en-ja.tsv'],
+        'ja-en': ['1:MTNT/train/train.ja-en.tsv', '2:MTNT/train/train.ja-en.tsv'],
+    },
     'wmt19/dev': {
         'data': ['http://data.statmt.org/wmt19/translation-task/dev.tgz'],
         'description': 'Development data for tasks new to 2019.',
@@ -848,10 +878,11 @@ def _clean(s):
     return re.sub(r'\s+', ' ', s.strip())
 
 
-def process_to_text(rawfile, txtfile):
+def process_to_text(rawfile, txtfile, field: int=None):
     """Processes raw files to plain text files.
     :param rawfile: the input file (possibly SGML)
     :param txtfile: the plaintext file
+    :param field: For TSV files, which field to extract.
     """
 
     if not os.path.exists(txtfile) or os.path.getsize(txtfile) == 0:
@@ -870,6 +901,11 @@ def process_to_text(rawfile, txtfile):
             with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
                 for line in fin:
                     print(line.rstrip(), file=fout)
+        elif rawfile.endswith('.tsv'): # MTNT
+            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
+                for line in fin:
+                    print(line.rstrip().split('\t')[field], file=fout)
+
 
 def print_test_set(test_set, langpair, side):
     """Prints to STDOUT the specified side of the specified test set
@@ -950,19 +986,29 @@ def download_test_set(test_set, langpair=None):
         if '-' not in pair:
             continue
         src, tgt = pair.split('-')
-        rawfile = os.path.join(rawdir, DATASETS[test_set][pair][0])
-        outfile = os.path.join(outdir, '{}.{}'.format(pair, src))
-        process_to_text(rawfile, outfile)
-        found.append(outfile)
+        rawfile = DATASETS[test_set][pair][0]
+        field = None  # used for TSV files
+        if rawfile.endswith('.tsv'):
+            field, rawfile = rawfile.split(':', maxsplit=1)
+            field = int(field)
+        rawpath = os.path.join(rawdir, rawfile)
+        outpath = os.path.join(outdir, '{}.{}'.format(pair, src))
+        process_to_text(rawpath, outpath, field=field)
+        found.append(outpath)
 
-        for i, ref in enumerate(DATASETS[test_set][pair][1:]):
-            rawfile = os.path.join(rawdir, ref)
-            if len(DATASETS[test_set][pair][1:]) >= 2:
-                outfile = os.path.join(outdir, '{}.{}.{}'.format(pair, tgt, i))
+        refs = DATASETS[test_set][pair][1:]
+        for i, ref in enumerate(refs):
+            field = None
+            if ref.endswith('.tsv'):
+                field, ref = ref.split(':', maxsplit=1)
+                field = int(field)
+            rawpath = os.path.join(rawdir, ref)
+            if len(refs) >= 2:
+                outpath = os.path.join(outdir, '{}.{}.{}'.format(pair, tgt, i))
             else:
-                outfile = os.path.join(outdir, '{}.{}'.format(pair, tgt))
-            process_to_text(rawfile, outfile)
-            found.append(outfile)
+                outpath = os.path.join(outdir, '{}.{}'.format(pair, tgt))
+            process_to_text(rawpath, outpath, field=field)
+            found.append(outpath)
 
     return found
 
