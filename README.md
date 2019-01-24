@@ -1,4 +1,7 @@
-SacreBLEU ([Post, 2018](https://arxiv.org/abs/1804.08771)) provides hassle-free computation of shareable, comparable, and reproducible BLEU scores.
+[![PyPI version](https://badge.fury.io/py/sacrebleu.svg)](https://badge.fury.io/py/sacrebleu)
+[![GitHub issues](https://img.shields.io/github/issues/mjpost/sacreBLEU.svg)](https://github.com/awslabs/sockeye/issues)
+
+SacreBLEU ([Post, 2018](http://aclweb.org/anthology/W18-6319)) provides hassle-free computation of shareable, comparable, and reproducible BLEU scores.
 Inspired by Rico Sennrich's `multi-bleu-detok.perl`, it produces the official WMT scores but works with plain text.
 It also knows all the standard test sets and handles downloading, processing, and tokenization for you.
 
@@ -73,4 +76,19 @@ SacreBLEU is licensed under the Apache 2.0 License.
 
 This was all Rico Sennrich's idea.
 Originally written by Matt Post.
-The official version can be found at https://github.com/awslabs/sockeye/tree/master/sockeye_contrib/sacrebleu.
+The official version can be found at [https://github.com/awslabs/sockeye/tree/master/sockeye_contrib/sacrebleu]; the development version at [https://github.com/mjpost/sacrebleu].
+
+If you use SacreBLEU, please cite the following:
+
+```
+@InProceedings{W18-6319,
+  author = 	"Post, Matt",
+  title = 	"A Call for Clarity in Reporting {BLEU} Scores",
+  booktitle = 	"Proceedings of the Third Conference on Machine Translation: Research Papers",
+  year = 	"2018",
+  publisher = 	"Association for Computational Linguistics",
+  pages = 	"186--191",
+  location = 	"Belgium, Brussels",
+  url = 	"http://aclweb.org/anthology/W18-6319"
+}
+```
