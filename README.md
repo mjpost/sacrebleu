@@ -31,7 +31,7 @@ Download the source for one of the pre-defined test sets:
 
 (you can also use long parameter names for readability):
 
-    sacrebleu --test-set wmt14 --langpair de-en --echo src > wmt14-de-en.src
+    sacrebleu --test-set wmt14 --language-pair de-en --echo src > wmt14-de-en.src
 
 After tokenizing, translating, and detokenizing it, you can score your decoder output easily:
 
