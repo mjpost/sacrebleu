@@ -565,7 +565,7 @@ def tokenize_13a(line):
 class UnicodeRegex:
     """Ad-hoc hack to recognize all punctuation and symbols.
 
-    without dependening on https://pypi.python.org/pypi/regex/."""
+    without depending on https://pypi.python.org/pypi/regex/."""
     def _property_chars(prefix):
         return ''.join(chr(x) for x in range(sys.maxunicode)
                        if unicodedata.category(chr(x)).startswith(prefix))
