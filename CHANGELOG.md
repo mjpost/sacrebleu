@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.2.15 (30 January 2019)
+   - Added MD5 checksumming of downloaded files for all datasets.
+
 - 1.2.14 (22 January 2019)
    - Added mtnt1.1/train mtnt1.1/valid mtnt1.1/test data from [MTNT](http://www.cs.cmu.edu/~pmichel1/mtnt/)
 
