@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.2.16 (4 February 2019)
+   - Added gu-en and en-gu to wmt19/dev
+
 - 1.2.15 (30 January 2019)
    - Added MD5 checksumming of downloaded files for all datasets.
 
