@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.2.17 (6 February 2019)
+   - Added kk-en and en-kk to wmt19/dev
+
 - 1.2.16 (4 February 2019)
    - Added gu-en and en-gu to wmt19/dev
 

@@ -38,7 +38,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-VERSION = '1.2.16'
+VERSION = '1.2.17'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -108,11 +108,13 @@ DATASETS = {
     'wmt19/dev': {
         'data': ['http://data.statmt.org/wmt19/translation-task/dev.tgz'],
         'description': 'Development data for tasks new to 2019.',
-        'md5': ['a9dfeb593fd7d40e900baf44439cefe3'],
+        'md5': ['be4adb0403da408de8e7c3eab5783fa3'],
         'lt-en': ['dev/newsdev2019-lten-src.lt.sgm', 'dev/newsdev2019-lten-ref.en.sgm'],
         'en-lt': ['dev/newsdev2019-enlt-src.en.sgm', 'dev/newsdev2019-enlt-ref.lt.sgm'],
         'gu-en': ['dev/newsdev2019-guen-src.gu.sgm', 'dev/newsdev2019-guen-ref.en.sgm'],
         'en-gu': ['dev/newsdev2019-engu-src.en.sgm', 'dev/newsdev2019-engu-ref.gu.sgm'],
+        'kk-en': ['dev/newsdev2019-kken-src.kk.sgm', 'dev/newsdev2019-kken-ref.en.sgm'],
+        'en-kk': ['dev/newsdev2019-enkk-src.en.sgm', 'dev/newsdev2019-enkk-ref.kk.sgm'],
     },
     'wmt18': {
         'data': ['http://data.statmt.org/wmt18/translation-task/test.tgz'],
