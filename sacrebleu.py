@@ -38,7 +38,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-VERSION = '1.2.17'
+VERSION = '1.2.18'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -202,7 +202,7 @@ DATASETS = {
     },
     'wmt17/dev': {
         'data': ['http://data.statmt.org/wmt17/translation-task/dev.tgz'],
-        'md5': ['4a3dc2760bb077f4308cce96b06e6af6'],
+        'md5': ['9b1aa63c1cf49dccdd20b962fe313989'],
         'description': 'Development sets released for new languages in 2017.',
         'en-lv': ['dev/newsdev2017-enlv-src.en.sgm', 'dev/newsdev2017-enlv-ref.lv.sgm'],
         'en-zh': ['dev/newsdev2017-enzh-src.en.sgm', 'dev/newsdev2017-enzh-ref.zh.sgm'],
