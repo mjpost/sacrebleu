@@ -1,7 +1,10 @@
 # VERSION HISTORY
 
+- 1.2.19 (19 February 2019)
+   - Updated checksum for wmt19/dev (seems to have changed)
+
 - 1.2.18 (19 February 2019)
-   - Fixed checksum for wmt17/dev
+   - Fixed checksum for wmt17/dev (copy-paste error)
 
 - 1.2.17 (6 February 2019)
    - Added kk-en and en-kk to wmt19/dev
