@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.2.20 (28 February 2018)
+   - Tokenization now defaults to "zh" when language pair is known
+
 - 1.2.19 (19 February 2019)
    - Updated checksum for wmt19/dev (seems to have changed)
 

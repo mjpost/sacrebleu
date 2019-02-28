@@ -38,7 +38,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-VERSION = '1.2.19'
+VERSION = '1.2.20'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -58,7 +58,7 @@ except ImportError:
 # in which case the os.path.join() throws a TypeError. Using expanduser() is
 # a safe way to get the user's home folder.
 USERHOME = os.path.expanduser("~")
-SACREBLEU = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
+SACREBLEU_DIR = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
 # n-gram order. Don't change this.
 NGRAM_ORDER = 4
@@ -73,7 +73,7 @@ CHRF_BETA = 2
 # Beneath each test set, we define the location to download the test data.
 # The other keys are each language pair contained in the tarball, and the respective locations of the source and reference data within each.
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
-# The canonical location of unpacked, processed data is $SACREBLEU/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
+# The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 DATASETS = {
     'mtnt1.1/test': {
         'data': ['https://github.com/pmichel31415/mtnt/releases/download/v1.1/MTNT.1.1.tar.gz'],
@@ -783,6 +783,10 @@ def tokenize_zh(sentence):
             sentence_in_chars += char
     sentence = sentence_in_chars
 
+    # TODO: the code above could probably be replaced with the following line:
+    # import regex
+    # sentence = regex.sub(r'(\p{Han})', r' \1 ', sentence)
+
     # tokenize punctuation
     sentence = re.sub(r'([\{-\~\[-\` -\&\(-\+\:-\@\/])', r' \1 ', sentence)
 
@@ -798,11 +802,8 @@ def tokenize_zh(sentence):
     # one space only between words
     sentence = re.sub(r'\s+', r' ', sentence)
 
-    # no leading space
-    sentence = re.sub(r'^\s+', r'', sentence)
-
-    # no trailing space
-    sentence = re.sub(r'\s+$', r'', sentence)
+    # no leading or trailing spaces
+    sentence = sentence.strip()
 
     return sentence
 
@@ -1020,7 +1021,7 @@ def download_test_set(test_set, langpair=None):
     :return: the set of processed files
     """
 
-    outdir = os.path.join(SACREBLEU, test_set)
+    outdir = os.path.join(SACREBLEU_DIR, test_set)
     if not os.path.exists(outdir):
         logging.info('Creating %s', outdir)
         os.makedirs(outdir)
@@ -1362,7 +1363,7 @@ def main():
                             help='use case-insensitive BLEU (default: actual case)')
     arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'none'], default='exp',
                             help='smoothing method: exponential decay (default), floor (0 count -> 0.01), or none')
-    arg_parser.add_argument('--tokenize', '-tok', choices=TOKENIZERS.keys(), default='13a',
+    arg_parser.add_argument('--tokenize', '-tok', choices=TOKENIZERS.keys(), default=None,
                             help='tokenization method to use')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes)')
@@ -1458,6 +1459,17 @@ def main():
         logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
                         "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
 
+    # Internal tokenizer settings. Set to 'zh' for Chinese  DEFAULT_TOKENIZER (
+    if args.tokenize is None:
+        # set default
+        if args.langpair is not None and args.langpair.split('-')[1] == 'zh':
+            args.tokenize = 'zh'
+        else:
+            args.tokenize = DEFAULT_TOKENIZER
+
+    if args.langpair is not None and args.langpair.split('-')[1] == 'zh' and 'bleu' in args.metrics and args.tokenize != 'zh':
+        logging.warning('You should also pass "--tok zh" when scoring Chinese...')
+
     if args.test_set:
         _, *refs = download_test_set(args.test_set, args.langpair)
         if len(refs) == 0:
@@ -1472,11 +1484,6 @@ def main():
     # Read references
     refs = [smart_open(x, encoding=args.encoding).readlines() for x in refs]
 
-    if args.langpair is not None:
-        _, target = args.langpair.split('-')
-        if target == 'zh' and 'bleu' in args.metrics and args.tokenize != 'zh':
-            logging.warning('You should also pass "--tok zh" when scoring Chinese...')
-
     try:
         if 'bleu' in args.metrics:
             bleu = corpus_bleu(system, refs, smooth=args.smooth, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
@@ -1490,7 +1497,7 @@ def main():
                           '\n'
                           '    rm -r %s/%s\n'
                           '\n'
-                          'They will be downloaded automatically again the next time you run sacreBLEU.', SACREBLEU,
+                          'They will be downloaded automatically again the next time you run sacreBLEU.', SACREBLEU_DIR,
                           args.test_set)
         sys.exit(1)
 
