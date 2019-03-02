@@ -29,6 +29,9 @@ fi
 
 export SACREBLEU=$(pwd)/.sacrebleu
 
+# Only run this test
+limit_test=${1:-}
+
 # TEST 1: download and process WMT17 data
 [[ -d $SACREBLEU/wmt17 ]] && rm -f $SACREBLEU/wmt17/{en-*,*-en*}
 ./sacrebleu.py --echo src -t wmt17 -l cs-en > /dev/null
@@ -75,6 +78,9 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
     target=$(echo $pair | cut -d- -f2)
     for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
         name=$(basename $sgm)
+
+        if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
+
         sys=$(basename $sgm .sgm | perl -pe 's/newstest2017\.//')
         txt=$(dirname $sgm | perl -pe 's/sgm/txt/')/$(basename $sgm .sgm)
         src=wmt17-submitted-data/sgm/sources/newstest2017-$source$target-src.$source.sgm
@@ -96,5 +102,5 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
     done
 done
 
-echo "Tests passed."
+echo "Passed $i tests."
 exit 0
