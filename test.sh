@@ -102,5 +102,14 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
     done
 done
 
+score1=$( echo "Hello! How are you doing today?" | ../sacrebleu.py -w 2 -b <(echo "Hello! How are you  doing today?") )
+score2=$( echo "Hello! How are you doing today?" | ../sacrebleu.py -w 2 -b <(echo "Hello! How are you doing today?") )
+if [[ $score1 != $score2 ]]; then 
+  echo "Control character in reference test failed"
+  exit 1
+fi
+let i++
+echo "Passed control character in reference test"
+
 echo "Passed $i tests."
 exit 0
