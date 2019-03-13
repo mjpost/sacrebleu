@@ -38,7 +38,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-VERSION = '1.2.20'
+VERSION = '1.3.0'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -67,6 +67,9 @@ NGRAM_ORDER = 4
 CHRF_ORDER = 6
 # default to 2 (per http://www.aclweb.org/anthology/W16-2341)
 CHRF_BETA = 2
+
+# The default floor value to use with `--smooth floor`
+SMOOTH_VALUE_DEFAULT = 0.0
 
 # This defines data locations.
 # At the top level are test sets.
@@ -1105,16 +1108,29 @@ def download_test_set(test_set, langpair=None):
 BLEU = namedtuple('BLEU', 'score, counts, totals, precisions, bp, sys_len, ref_len')
 
 
-def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: int, smooth = 'none', smooth_floor = 0.01,
+def compute_bleu(correct: List[int], 
+                 total: List[int], 
+                 sys_len: int, 
+                 ref_len: int, 
+                 smooth_method = 'none', 
+                 smooth_value = SMOOTH_VALUE_DEFAULT,
                  use_effective_order = False) -> BLEU:
     """Computes BLEU score from its sufficient statistics. Adds smoothing.
+
+    Smoothing methods (citing "A Systematic Comparison of Smoothing Techniques for Sentence-Level BLEU", 
+    Boxing Chen and Colin Cherry, WMT 2014: http://aclweb.org/anthology/W14-3346)
+
+    - exp: NIST smoothing method (Method 3)
+    - floor: Method 1
+    - add-k: Method 2 (generalizing Lin and Och, 2004)
+    - none: do nothing.
 
     :param correct: List of counts of correct ngrams, 1 <= n <= NGRAM_ORDER
     :param total: List of counts of total ngrams, 1 <= n <= NGRAM_ORDER
     :param sys_len: The cumulative system length
     :param ref_len: The cumulative reference length
     :param smooth: The smoothing method to use
-    :param smooth_floor: The smoothing value added, if smooth method 'floor' is used
+    :param smooth_value: The smoothing value added, if smooth method 'floor' is used
     :param use_effective_order: Use effective order.
     :return: A BLEU object with the score (100-based) and other statistics.
     """
@@ -1124,6 +1140,9 @@ def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: in
     smooth_mteval = 1.
     effective_order = NGRAM_ORDER
     for n in range(NGRAM_ORDER):
+        if smooth_method == 'add-k' and n > 1:
+            correct[n] += smooth_value
+            total[n] += smooth_value
         if total[n] == 0:
             break
 
@@ -1131,11 +1150,11 @@ def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: in
             effective_order = n + 1
 
         if correct[n] == 0:
-            if smooth == 'exp':
+            if smooth_method == 'exp':
                 smooth_mteval *= 2
                 precisions[n] = 100. / (smooth_mteval * total[n])
-            elif smooth == 'floor':
-                precisions[n] = 100. * smooth_floor / total[n]
+            elif smooth_method == 'floor':
+                precisions[n] = 100. * smooth_value / total[n]
         else:
             precisions[n] = 100. * correct[n] / total[n]
 
@@ -1155,7 +1174,7 @@ def compute_bleu(correct: List[int], total: List[int], sys_len: int, ref_len: in
 
 def sentence_bleu(hypothesis: str,
                   reference: str,
-                  smooth_floor: float = 0.01,
+                  smooth_value: float = SMOOTH_VALUE_DEFAULT,
                   use_effective_order: bool = True):
     """
     Computes BLEU on a single sentence pair.
@@ -1165,25 +1184,31 @@ def sentence_bleu(hypothesis: str,
 
     :param hypothesis: Hypothesis string.
     :param reference: Reference string.
-    :param smooth_floor: For 'floor' smoothing, the floor value to use.
+    :param smooth_value: For 'floor' smoothing, the floor value to use.
     :param use_effective_order: Account for references that are shorter than the largest n-gram.
     :return: Returns a single BLEU score as a float.
     """
     bleu = corpus_bleu(hypothesis, reference,
-                       smooth='floor',
-                       smooth_floor=smooth_floor,
+                       smooth_method='floor',
+                       smooth_value=smooth_value,
                        use_effective_order=use_effective_order)
     return bleu.score
 
 
-def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=False, lowercase=False,
-                tokenize=DEFAULT_TOKENIZER, use_effective_order=False) -> BLEU:
+def corpus_bleu(sys_stream, 
+                ref_streams, 
+                smooth_method='exp', 
+                smooth_value=SMOOTH_VALUE_DEFAULT, 
+                force=False, 
+                lowercase=False,
+                tokenize=DEFAULT_TOKENIZER, 
+                use_effective_order=False) -> BLEU:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param sys_stream: The system stream (a sequence of segments)
     :param ref_streams: A list of one or more reference streams (each a sequence of segments)
     :param smooth: The smoothing method to use
-    :param smooth_floor: For 'floor' smoothing, the floor to use
+    :param smooth_value: For 'floor' smoothing, the floor to use
     :param force: Ignore data that looks already tokenized
     :param lowercase: Lowercase the data
     :param tokenize: The tokenizer to use
@@ -1234,10 +1259,12 @@ def corpus_bleu(sys_stream, ref_streams, smooth='exp', smooth_floor=0.0, force=F
             correct[n-1] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
             total[n-1] += sys_ngrams[ngram]
 
-    return compute_bleu(correct, total, sys_len, ref_len, smooth, smooth_floor, use_effective_order)
+    return compute_bleu(correct, total, sys_len, ref_len, smooth=smooth, smooth_value=smooth_value, use_effective_order=use_effective_order)
 
 
-def raw_corpus_bleu(sys_stream, ref_streams, smooth_floor=0.01) -> BLEU:
+def raw_corpus_bleu(sys_stream, 
+                    ref_streams, 
+                    smooth_value=SMOOTH_VALUE_DEFAULT) -> BLEU:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
     It uses no tokenization and 'floor' smoothing, with the floor default to 0 (no smoothing).
@@ -1245,7 +1272,7 @@ def raw_corpus_bleu(sys_stream, ref_streams, smooth_floor=0.01) -> BLEU:
     :param sys_stream: the system stream (a sequence of segments)
     :param ref_streams: a list of one or more reference streams (each a sequence of segments)
     """
-    return corpus_bleu(sys_stream, ref_streams, smooth='floor', smooth_floor=smooth_floor, force=True, tokenize='none', use_effective_order=True)
+    return corpus_bleu(sys_stream, ref_streams, smooth='floor', smooth_value=smooth_value, force=True, tokenize='none', use_effective_order=True)
 
 
 def delete_whitespace(text: str) -> str:
@@ -1361,8 +1388,10 @@ def main():
                             help='the test set to use')
     arg_parser.add_argument('-lc', action='store_true', default=False,
                             help='use case-insensitive BLEU (default: actual case)')
-    arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'none'], default='exp',
-                            help='smoothing method: exponential decay (default), floor (0 count -> 0.01), or none')
+    arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'add-n', 'none'], default='exp',
+                            help='smoothing method: exponential decay (default), floor (increment zero counts), add-k (increment num/denom by k for n>1), or none')
+    arg_parser.add_argument('--smooth-value', '-sv', type=float, default=SMOOTH_VALUE_DEFAULT,
+                            help='The value to pass to the smoothing technique, when relevant. Default: %(default)s.')
     arg_parser.add_argument('--tokenize', '-tok', choices=TOKENIZERS.keys(), default=None,
                             help='tokenization method to use')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
@@ -1486,7 +1515,7 @@ def main():
 
     try:
         if 'bleu' in args.metrics:
-            bleu = corpus_bleu(system, refs, smooth=args.smooth, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+            bleu = corpus_bleu(system, refs, smooth=args.smooth, smooth_value=args.smooth_value, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
         if 'chrf' in args.metrics:
             chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
     except EOFError:

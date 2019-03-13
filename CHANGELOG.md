@@ -1,5 +1,11 @@
 # VERSION HISTORY
 
+- 1.3.0 (2019-03-12)
+   - Added another smoothing approach (add-k) and a command-line option for setting smoothing values (--smooth-value)
+   - Changed interface to some functions (backwards incompatible)
+     - 'smooth' is now 'smooth_method'
+     - 'smooth_floor' is now 'smooth_value'
+
 - 1.2.20 (28 February 2018)
    - Tokenization now defaults to "zh" when language pair is known
 
