@@ -1259,7 +1259,7 @@ def corpus_bleu(sys_stream,
             correct[n-1] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
             total[n-1] += sys_ngrams[ngram]
 
-    return compute_bleu(correct, total, sys_len, ref_len, smooth=smooth, smooth_value=smooth_value, use_effective_order=use_effective_order)
+    return compute_bleu(correct, total, sys_len, ref_len, smooth_method=smooth_method, smooth_value=smooth_value, use_effective_order=use_effective_order)
 
 
 def raw_corpus_bleu(sys_stream, 
@@ -1272,7 +1272,7 @@ def raw_corpus_bleu(sys_stream,
     :param sys_stream: the system stream (a sequence of segments)
     :param ref_streams: a list of one or more reference streams (each a sequence of segments)
     """
-    return corpus_bleu(sys_stream, ref_streams, smooth='floor', smooth_value=smooth_value, force=True, tokenize='none', use_effective_order=True)
+    return corpus_bleu(sys_stream, ref_streams, smooth_method='floor', smooth_value=smooth_value, force=True, tokenize='none', use_effective_order=True)
 
 
 def delete_whitespace(text: str) -> str:
@@ -1515,7 +1515,7 @@ def main():
 
     try:
         if 'bleu' in args.metrics:
-            bleu = corpus_bleu(system, refs, smooth=args.smooth, smooth_value=args.smooth_value, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+            bleu = corpus_bleu(system, refs, smooth_method=args.smooth, smooth_value=args.smooth_value, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
         if 'chrf' in args.metrics:
             chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
     except EOFError:
