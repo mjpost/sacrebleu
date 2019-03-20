@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.2.21 (19 March 2019)
+   - Ctrl-M characters are now treated as normal characters, previously treated as newline.
+
 - 1.2.20 (28 February 2018)
    - Tokenization now defaults to "zh" when language pair is known
 

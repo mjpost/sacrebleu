@@ -38,7 +38,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-VERSION = '1.2.20'
+VERSION = '1.2.21'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -822,8 +822,8 @@ def smart_open(file, mode='rt', encoding='utf-8'):
     :param encoding: The file encoding.
     """
     if file.endswith('.gz'):
-        return gzip.open(file, mode=mode, encoding=encoding)
-    return open(file, mode=mode, encoding=encoding)
+        return gzip.open(file, mode=mode, encoding=encoding, newline="\n")
+    return open(file, mode=mode, encoding=encoding, newline="\n")
 
 
 def my_log(num):
@@ -1402,7 +1402,7 @@ def main():
     args = arg_parser.parse_args()
 
     # Explicitly set the encoding
-    sys.stdin = open(sys.stdin.fileno(), mode='r', encoding='utf-8', buffering=True)
+    sys.stdin = open(sys.stdin.fileno(), mode='r', encoding='utf-8', buffering=True, newline="\n")
     sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=True)
 
     if not args.quiet:
