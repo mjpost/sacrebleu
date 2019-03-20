@@ -38,7 +38,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-VERSION = '1.2.20'
+VERSION = '1.2.21'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
