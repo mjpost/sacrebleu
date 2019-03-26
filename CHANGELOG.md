@@ -1,7 +1,8 @@
 # VERSION HISTORY
 
 - 1.3.0 (2019-03-20)
-   - Added another smoothing approach (add-k) and a command-line option for setting smoothing values (--smooth-value)
+   - Added another smoothing approach (add-k) and a command-line option for choosing the smoothing method
+     (`--smooth exp|floor|add-n|none`) and the associated value (`--smooth-value`), when relevant.
    - Changed interface to some functions (backwards incompatible)
      - 'smooth' is now 'smooth_method'
      - 'smooth_floor' is now 'smooth_value'
