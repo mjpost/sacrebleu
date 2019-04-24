@@ -1174,6 +1174,7 @@ def compute_bleu(correct: List[int],
 
 def sentence_bleu(hypothesis: str,
                   reference: str,
+                  smooth_method: str = 'floor',
                   smooth_value: float = SMOOTH_VALUE_DEFAULT,
                   use_effective_order: bool = True):
     """
@@ -1189,7 +1190,7 @@ def sentence_bleu(hypothesis: str,
     :return: Returns a single BLEU score as a float.
     """
     bleu = corpus_bleu(hypothesis, reference,
-                       smooth_method='floor',
+                       smooth_method=smooth_method,
                        smooth_value=smooth_value,
                        use_effective_order=use_effective_order)
     return bleu.score
