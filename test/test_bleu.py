@@ -87,5 +87,5 @@ def test_offset(hypothesis, reference, expected_with_offset, expected_without_of
 
 @pytest.mark.parametrize("statistics, offset, expected_score", test_case_degenerate_stats)
 def test_degenerate_statistics(statistics, offset, expected_score):
-    score = sacrebleu.compute_bleu(statistics[0].common, statistics[0].total, statistics[1], statistics[2], smooth='floor', smooth_floor=offset).score / 100
+    score = sacrebleu.compute_bleu(statistics[0].common, statistics[0].total, statistics[1], statistics[2], smooth_method='floor', smooth_value=offset).score / 100
     assert score == expected_score
