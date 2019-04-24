@@ -1,6 +1,10 @@
 # VERSION HISTORY
 
-- 1.3.0 (2019-03-20)
+- 1.3.2 (2018-04-24)
+   - Bugfix in test case (thanks to Adam Roberts, @adarob)
+   - Passing smoothing method through `sentence_bleu`
+
+- 1.3.1 (2019-03-20)
    - Added another smoothing approach (add-k) and a command-line option for choosing the smoothing method
      (`--smooth exp|floor|add-n|none`) and the associated value (`--smooth-value`), when relevant.
    - Changed interface to some functions (backwards incompatible)
