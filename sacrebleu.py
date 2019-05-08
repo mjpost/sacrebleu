@@ -38,7 +38,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple
 
-VERSION = '1.3.2'
+VERSION = '1.3.3'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -108,6 +108,29 @@ DATASETS = {
         'en-ja': ['1:MTNT/train/train.en-ja.tsv', '2:MTNT/train/train.en-ja.tsv'],
         'ja-en': ['1:MTNT/train/train.ja-en.tsv', '2:MTNT/train/train.ja-en.tsv'],
     },
+    'wmt19': {
+        'data': ['http://data.statmt.org/wmt19/translation-task/test.tgz'],
+        'md5': ['84de7162d158e28403103b01aeefc39a'],
+        'cs-de': ['sgm/newstest2019-csde-src.cs.sgm', 'sgm/newstest2019-csde-ref.de.sgm'],
+        'de-cs': ['sgm/newstest2019-decs-src.de.sgm', 'sgm/newstest2019-decs-ref.cs.sgm'],
+        'de-en': ['sgm/newstest2019-deen-src.de.sgm', 'sgm/newstest2019-deen-ref.en.sgm'],
+        'de-fr': ['sgm/newstest2019-defr-src.de.sgm', 'sgm/newstest2019-defr-ref.fr.sgm'],
+        'en-cs': ['sgm/newstest2019-encs-src.en.sgm', 'sgm/newstest2019-encs-ref.cs.sgm'],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', 'sgm/newstest2019-ende-ref.de.sgm'],
+        'en-fi': ['sgm/newstest2019-enfi-src.en.sgm', 'sgm/newstest2019-enfi-ref.fi.sgm'],
+        'en-gu': ['sgm/newstest2019-engu-src.en.sgm', 'sgm/newstest2019-engu-ref.gu.sgm'],
+        'en-kk': ['sgm/newstest2019-enkk-src.en.sgm', 'sgm/newstest2019-enkk-ref.kk.sgm'],
+        'en-lt': ['sgm/newstest2019-enlt-src.en.sgm', 'sgm/newstest2019-enlt-ref.lt.sgm'],
+        'en-ru': ['sgm/newstest2019-enru-src.en.sgm', 'sgm/newstest2019-enru-ref.ru.sgm'],
+        'en-zh': ['sgm/newstest2019-enzh-src.en.sgm', 'sgm/newstest2019-enzh-ref.zh.sgm'],
+        'fi-en': ['sgm/newstest2019-fien-src.fi.sgm', 'sgm/newstest2019-fien-ref.en.sgm'],
+        'fr-de': ['sgm/newstest2019-frde-src.fr.sgm', 'sgm/newstest2019-frde-ref.de.sgm'],
+        'gu-en': ['sgm/newstest2019-guen-src.gu.sgm', 'sgm/newstest2019-guen-ref.en.sgm'],
+        'kk-en': ['sgm/newstest2019-kken-src.kk.sgm', 'sgm/newstest2019-kken-ref.en.sgm'],
+        'lt-en': ['sgm/newstest2019-lten-src.lt.sgm', 'sgm/newstest2019-lten-ref.en.sgm'],
+        'ru-en': ['sgm/newstest2019-ruen-src.ru.sgm', 'sgm/newstest2019-ruen-ref.en.sgm'],
+        'zh-en': ['sgm/newstest2019-zhen-src.zh.sgm', 'sgm/newstest2019-zhen-ref.en.sgm'],
+    },
     'wmt19/dev': {
         'data': ['http://data.statmt.org/wmt19/translation-task/dev.tgz'],
         'description': 'Development data for tasks new to 2019.',
@@ -123,6 +146,7 @@ DATASETS = {
         'data': ['http://data.statmt.org/wmt18/translation-task/test.tgz'],
         'md5': ['f996c245ecffea23d0006fa4c34e9064'],
         'description': 'Official evaluation data.',
+        'citation': '@inproceedings{bojar-etal-2018-findings,\n    title = "Findings of the 2018 Conference on Machine Translation ({WMT}18)",\n    author = "Bojar, Ond{\v{r}}ej  and\n      Federmann, Christian  and\n      Fishel, Mark  and\n      Graham, Yvette  and\n      Haddow, Barry  and\n      Koehn, Philipp  and\n      Monz, Christof",\n    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",\n    month = oct,\n    year = "2018",\n    address = "Belgium, Brussels",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W18-6401",\n    pages = "272--303",\n}',
         'cs-en': ['test/newstest2018-csen-src.cs.sgm', 'test/newstest2018-csen-ref.en.sgm'],
         'de-en': ['test/newstest2018-deen-src.de.sgm', 'test/newstest2018-deen-ref.en.sgm'],
         'en-cs': ['test/newstest2018-encs-src.en.sgm', 'test/newstest2018-encs-ref.cs.sgm'],

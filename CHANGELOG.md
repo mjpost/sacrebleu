@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.3.3 (2019-05-08)
+   - Added WMT'19 test sets
+
 - 1.3.2 (2018-04-24)
    - Bugfix in test case (thanks to Adam Roberts, @adarob)
    - Passing smoothing method through `sentence_bleu`
