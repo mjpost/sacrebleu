@@ -78,6 +78,15 @@ SMOOTH_VALUE_DEFAULT = 0.0
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
 # The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 DATASETS = {
+    'mtnt2019': {
+        'data': ['http://www.cs.cmu.edu/~pmichel1/hosting/MTNT2019.tar.gz'],
+        'description': 'Test set for the WMT 19 robustness shared task',
+        'md5': ['78a672e1931f106a8549023c0e8af8f6'],
+        'en-fr': ['2:MTNT2019/en-fr.final.tsv', '3:MTNT2019/en-fr.final.tsv'],
+        'fr-en': ['2:MTNT2019/fr-en.final.tsv', '3:MTNT2019/fr-en.final.tsv'],
+        'en-ja': ['2:MTNT2019/en-ja.final.tsv', '3:MTNT2019/en-ja.final.tsv'],
+        'ja-en': ['2:MTNT2019/ja-en.final.tsv', '3:MTNT2019/ja-en.final.tsv'],
+    },
     'mtnt1.1/test': {
         'data': ['https://github.com/pmichel31415/mtnt/releases/download/v1.1/MTNT.1.1.tar.gz'],
         'description': 'Test data for the Machine Translation of Noisy Text task: http://www.cs.cmu.edu/~pmichel1/mtnt/',
