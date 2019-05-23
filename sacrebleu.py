@@ -36,7 +36,7 @@ import urllib.request
 
 from collections import Counter, namedtuple
 from itertools import zip_longest
-from typing import List, Iterable, Tuple
+from typing import List, Iterable, Tuple, Union
 
 VERSION = '1.3.3'
 
@@ -1129,7 +1129,16 @@ def download_test_set(test_set, langpair=None):
     return found
 
 
-BLEU = namedtuple('BLEU', 'score, counts, totals, precisions, bp, sys_len, ref_len')
+class BLEU(namedtuple('BaseBLEU', 'score, counts, totals, precisions, bp, sys_len, ref_len')):
+
+    def format(self, width=2):
+        precisions = "/".join(f"{p:.1f}" for p in self.precisions)
+        return f'BLEU = {self.score:.{width}f} {precisions} (BP = {self.bp:.3f}' \
+               f' ratio = {(self.sys_len / self.ref_len):.3f} hyp_len = {self.sys_len:d}' \
+               f' ref_len = {self.ref_len:d})'
+
+    def __str__(self):
+        return self.format()
 
 
 def compute_bleu(correct: List[int], 
@@ -1220,8 +1229,8 @@ def sentence_bleu(hypothesis: str,
     return bleu.score
 
 
-def corpus_bleu(sys_stream, 
-                ref_streams, 
+def corpus_bleu(sys_stream: Union[str, Iterable[str]],
+                ref_streams: Union[str, List[Iterable[str]]],
                 smooth_method='exp', 
                 smooth_value=SMOOTH_VALUE_DEFAULT, 
                 force=False, 
@@ -1562,10 +1571,7 @@ def main():
                 print('{0:.{1}f}'.format(bleu.score, width))
             else:
                 version_str = bleu_signature(args, len(refs))
-                print(
-                    'BLEU+{0} = {1:.{2}f} {3:.1f}/{4:.1f}/{5:.1f}/{6:.1f} (BP = {7:.3f} ratio = {8:.3f} hyp_len = {9:d} ref_len = {10:d})'.format(
-                        version_str, bleu.score, width, bleu.precisions[0], bleu.precisions[1], bleu.precisions[2],
-                        bleu.precisions[3], bleu.bp, bleu.sys_len / bleu.ref_len, bleu.sys_len, bleu.ref_len))
+                print(bleu.format(width).replace('BLEU', 'BLEU+' + version_str))
 
         elif metric == 'chrf':
             if args.score_only:
