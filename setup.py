@@ -19,6 +19,31 @@ A setuptools based setup module.
 See:
 - https://packaging.python.org/en/latest/distributing.html
 - https://github.com/pypa/sampleproject
+
+To install:
+
+1. Setup pypi by creating ~/.pypirc
+
+        [distutils]
+        index-servers =
+          pypi
+          pypitest
+
+        [pypi]
+        username=
+        password=
+
+        [pypitest]
+        username=
+        password=
+
+2. Create the dist
+
+   python3 setup.py sdist
+
+3. Push
+
+   twine upload dist/sacrebleu-1.3.0.tar.gz
 """
 
 # Always prefer setuptools over distutils
@@ -45,7 +70,7 @@ setup(
     # The project's main homepage.
     url = 'https://github.com/mjpost/sacrebleu',
 
-    author = 'Amazon',
+    author = 'Matt Post',
     author_email='post@cs.jhu.edu',
     maintainer_email='post@cs.jhu.edu',
 
