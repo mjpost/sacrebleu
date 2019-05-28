@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.3.4 (2019-05-28)
+   - Added MTNT 2019 test sets
+
 - 1.3.3 (2019-05-08)
    - Added WMT'19 test sets
 
