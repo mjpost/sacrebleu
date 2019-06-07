@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.3.5 (2019-06-07)
+   - Restored Python 3.5 compatibility
+
 - 1.3.4 (2019-05-28)
    - Added MTNT 2019 test sets
    - Added a BLEU object
