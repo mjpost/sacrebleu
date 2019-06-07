@@ -1141,7 +1141,7 @@ def download_test_set(test_set, langpair=None):
 class BLEU(namedtuple('BaseBLEU', 'score, counts, totals, precisions, bp, sys_len, ref_len')):
 
     def format(self, width=2):
-        precisions = "/".join(f"{p:.1f}" for p in self.precisions)
+        precisions = "/".join(["{:.1f}".format(p) for p in self.precisions])
         return f'BLEU = {self.score:.{width}f} {precisions} (BP = {self.bp:.3f}' \
                f' ratio = {(self.sys_len / self.ref_len):.3f} hyp_len = {self.sys_len:d}' \
                f' ref_len = {self.ref_len:d})'
