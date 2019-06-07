@@ -29,6 +29,7 @@ import io
 import logging
 import math
 import os
+import portalocker
 import re
 import sys
 import unicodedata
@@ -1052,6 +1053,7 @@ def print_test_set(test_set, langpair, side):
 
 def download_test_set(test_set, langpair=None):
     """Downloads the specified test to the system location specified by the SACREBLEU environment variable.
+
     :param test_set: the test set to download
     :param langpair: the language pair (needed for some datasets)
     :return: the set of processed files
@@ -1066,6 +1068,9 @@ def download_test_set(test_set, langpair=None):
     for dataset, expected_md5 in zip(DATASETS[test_set]['data'], expected_checksums):
         tarball = os.path.join(outdir, os.path.basename(dataset))
         rawdir = os.path.join(outdir, 'raw')
+
+        lockfile = os.path.join(outdir, f'.lock.{test_set}')
+        lock = portalocker.Lock(lockfile, timeout=60)
         if not os.path.exists(tarball) or os.path.getsize(tarball) == 0:
             logging.info("Downloading %s to %s", dataset, tarball)
             try:
@@ -1102,6 +1107,8 @@ def download_test_set(test_set, langpair=None):
                 zipfile = zipfile.ZipFile(tarball, 'r')
                 zipfile.extractall(path=rawdir)
                 zipfile.close()
+
+        lock.close()
 
     found = []
 
