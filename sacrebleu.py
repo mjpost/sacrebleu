@@ -38,7 +38,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple, Union
 
-VERSION = '1.3.5'
+VERSION = '1.3.6'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -1142,19 +1142,24 @@ class BLEU(namedtuple('BaseBLEU', 'score, counts, totals, precisions, bp, sys_le
 
     def format(self, width=2):
         precisions = "/".join(["{:.1f}".format(p) for p in self.precisions])
-        return f'BLEU = {self.score:.{width}f} {precisions} (BP = {self.bp:.3f}' \
-               f' ratio = {(self.sys_len / self.ref_len):.3f} hyp_len = {self.sys_len:d}' \
-               f' ref_len = {self.ref_len:d})'
+        return 'BLEU = {score:.{width}f} {precisions} (BP = {bp:.3f} ratio = {ratio:.3f} hyp_len = {sys_len:d} ref_len = {ref_len:d})'.format(
+            score=self.score,
+            width=width,
+            precisions=precisions,
+            bp=self.bp,
+            ratio=self.sys_len / self.ref_len,
+            sys_len=self.sys_len,
+            ref_len=self.ref_len)
 
     def __str__(self):
         return self.format()
 
 
-def compute_bleu(correct: List[int], 
-                 total: List[int], 
-                 sys_len: int, 
-                 ref_len: int, 
-                 smooth_method = 'none', 
+def compute_bleu(correct: List[int],
+                 total: List[int],
+                 sys_len: int,
+                 ref_len: int,
+                 smooth_method = 'none',
                  smooth_value = SMOOTH_VALUE_DEFAULT,
                  use_effective_order = False) -> BLEU:
     """Computes BLEU score from its sufficient statistics. Adds smoothing.
