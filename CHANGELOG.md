@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.3.6 (2019-06-10)
+   - Removed another f-string for Python 3.5 compatibility
+
 - 1.3.5 (2019-06-07)
    - Restored Python 3.5 compatibility
 
