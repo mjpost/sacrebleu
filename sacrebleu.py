@@ -1577,7 +1577,6 @@ def main():
                     logging.error('FATAL: line {}: expected {} fields, but found {}.'.format(lineno, args.num_refs, len(splits)))
                     sys.exit(17)
                 for refno, split in enumerate(splits):
-                    print(f'{refno} {split}')
                     refs[refno].append(split)
             else:
                 refs[refno].append(line)
