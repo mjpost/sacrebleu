@@ -855,6 +855,7 @@ DEFAULT_TOKENIZER = '13a'
 def smart_open(file, mode='rt', encoding='utf-8'):
     """Convenience function for reading compressed or plain text files.
     :param file: The file to read.
+    :param mode: The file mode (read, write).
     :param encoding: The file encoding.
     """
     if file.endswith('.gz'):
@@ -1245,11 +1246,11 @@ def sentence_bleu(hypothesis: str,
 
 def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 ref_streams: Union[str, List[Iterable[str]]],
-                smooth_method='exp', 
-                smooth_value=SMOOTH_VALUE_DEFAULT, 
-                force=False, 
+                smooth_method='exp',
+                smooth_value=SMOOTH_VALUE_DEFAULT,
+                force=False,
                 lowercase=False,
-                tokenize=DEFAULT_TOKENIZER, 
+                tokenize=DEFAULT_TOKENIZER,
                 use_effective_order=False) -> BLEU:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
@@ -1450,6 +1451,8 @@ def main():
                             help='output the source (src), reference (ref), or both (both, pasted) to STDOUT and quit')
     arg_parser.add_argument('--input', '-i', type=str, default='-',
                             help='Read input from a file instead of STDIN')
+    arg_parser.add_argument('--num-refs', '-nr', type=int, default=1,
+                            help='Split the reference stream on tabs, and expect this many references. Default: %(default)s.')
     arg_parser.add_argument('refs', nargs='*', default=[],
                             help='optional list of references (for backwards-compatibility with older scripts)')
     arg_parser.add_argument('--metrics', '-m', choices=['bleu', 'chrf'], nargs='+', default=['bleu'],
@@ -1500,6 +1503,12 @@ def main():
         print(DATASETS[args.test_set]['citation'])
         sys.exit(0)
 
+    if args.num_refs != 1 and (args.test_set is not None or len(args.refs) > 1):
+        logging.error('The --num-refs argument allows you to provide any number of tab-delimited references in a single file.')
+        logging.error('You can only use it with externaly-provided references, however (i.e., not with `-t`),')
+        logging.error('and you cannot then provide multiple reference files.')
+        sys.exit(1)
+
     if args.test_set is not None and args.test_set not in DATASETS:
         logging.error('The available test sets are: ')
         for testset in sorted(DATASETS.keys(), reverse=True):
@@ -1548,18 +1557,30 @@ def main():
         logging.warning('You should also pass "--tok zh" when scoring Chinese...')
 
     if args.test_set:
-        _, *refs = download_test_set(args.test_set, args.langpair)
-        if len(refs) == 0:
+        _, *ref_files = download_test_set(args.test_set, args.langpair)
+        if len(ref_files) == 0:
             print('No references found for test set {}/{}.'.format(args.test_set, args.langpair))
             sys.exit(1)
     else:
-        refs = args.refs
+        ref_files = args.refs
 
     inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding) if args.input == '-' else smart_open(args.input, encoding=args.encoding)
     system = inputfh.readlines()
 
     # Read references
-    refs = [smart_open(x, encoding=args.encoding).readlines() for x in refs]
+    refs = [[] for x in range(max(len(ref_files), args.num_refs))]
+    for refno, ref_file in enumerate(ref_files):
+        for lineno, line in enumerate(smart_open(ref_file, encoding=args.encoding), 1):
+            if args.num_refs != 1:
+                splits = line.rstrip().split(sep='\t', maxsplit=args.num_refs-1)
+                if len(splits) != args.num_refs:
+                    logging.error('FATAL: line {}: expected {} fields, but found {}.'.format(lineno, args.num_refs, len(splits)))
+                    sys.exit(17)
+                for refno, split in enumerate(splits):
+                    print(f'{refno} {split}')
+                    refs[refno].append(split)
+            else:
+                refs[refno].append(line)
 
     try:
         if 'bleu' in args.metrics:
@@ -1567,9 +1588,9 @@ def main():
         if 'chrf' in args.metrics:
             chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
     except EOFError:
-        logging.error('The input and reference stream(s) were of different lengths.\n')
+        logging.error('The input and reference stream(s) were of different lengths.')
         if args.test_set is not None:
-            logging.error('This could be a problem with your system output or with sacreBLEU\'s reference database.\n'
+            logging.error('\nThis could be a problem with your system output or with sacreBLEU\'s reference database.\n'
                           'If the latter, you can clean out the references cache by typing:\n'
                           '\n'
                           '    rm -r %s/%s\n'

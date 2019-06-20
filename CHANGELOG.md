@@ -1,5 +1,10 @@
 # VERSION HISTORY
 
+- 1.3.7 (in progress)
+	- Can now read multiple refs from a single tab-delimited file.
+    You need to pass `--num-refs N` to tell it to run the split.
+    Only works with a single reference file passed from the command line.
+
 - 1.3.6 (2019-06-10)
    - Removed another f-string for Python 3.5 compatibility
 
