@@ -1202,7 +1202,7 @@ def compute_bleu(correct: List[int],
     :param ref_len: The cumulative reference length
     :param smooth: The smoothing method to use
     :param smooth_value: The smoothing value added, if smooth method 'floor' is used
-    :param use_effective_order: Use effective order.
+    :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of NGRAM_ORDER.
     :return: A BLEU object with the score (100-based) and other statistics.
     """
 
