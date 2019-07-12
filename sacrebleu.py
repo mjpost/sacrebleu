@@ -23,6 +23,7 @@ See the [README.md] file for more information.
 """
 
 import argparse
+import functools
 import gzip
 import hashlib
 import io
@@ -690,13 +691,30 @@ class UnicodeRegex:
     """Ad-hoc hack to recognize all punctuation and symbols.
 
     without depending on https://pypi.python.org/pypi/regex/."""
+    @staticmethod
     def _property_chars(prefix):
         return ''.join(chr(x) for x in range(sys.maxunicode)
                        if unicodedata.category(chr(x)).startswith(prefix))
-    punctuation = _property_chars('P')
-    nondigit_punct_re = re.compile(r'([^\d])([' + punctuation + r'])')
-    punct_nondigit_re = re.compile(r'([' + punctuation + r'])([^\d])')
-    symbol_re = re.compile('([' + _property_chars('S') + '])')
+
+    @staticmethod
+    @functools.lru_cache(maxsize=1)
+    def punctuation():
+        return UnicodeRegex._property_chars('P')
+
+    @staticmethod
+    @functools.lru_cache(maxsize=1)
+    def nondigit_punct_re():
+        return re.compile(r'([^\d])([' + UnicodeRegex.punctuation() + r'])')
+
+    @staticmethod
+    @functools.lru_cache(maxsize=1)
+    def punct_nondigit_re():
+        return re.compile(r'([' + UnicodeRegex.punctuation() + r'])([^\d])')
+
+    @staticmethod
+    @functools.lru_cache(maxsize=1)
+    def symbol_re():
+        return re.compile('([' + UnicodeRegex._property_chars('S') + '])')
 
 
 def tokenize_v14_international(string):
@@ -720,9 +738,9 @@ def tokenize_v14_international(string):
     :param string: the input string
     :return: a list of tokens
     """
-    string = UnicodeRegex.nondigit_punct_re.sub(r'\1 \2 ', string)
-    string = UnicodeRegex.punct_nondigit_re.sub(r' \1 \2', string)
-    string = UnicodeRegex.symbol_re.sub(r' \1 ', string)
+    string = UnicodeRegex.nondigit_punct_re().sub(r'\1 \2 ', string)
+    string = UnicodeRegex.punct_nondigit_re().sub(r' \1 \2', string)
+    string = UnicodeRegex.symbol_re().sub(r' \1 ', string)
     return string.strip()
 
 
