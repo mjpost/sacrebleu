@@ -30,6 +30,7 @@ import io
 import logging
 import math
 import os
+import portalocker
 import re
 import sys
 import unicodedata
@@ -1071,6 +1072,7 @@ def print_test_set(test_set, langpair, side):
 
 def download_test_set(test_set, langpair=None):
     """Downloads the specified test to the system location specified by the SACREBLEU environment variable.
+
     :param test_set: the test set to download
     :param langpair: the language pair (needed for some datasets)
     :return: the set of processed files
@@ -1085,42 +1087,45 @@ def download_test_set(test_set, langpair=None):
     for dataset, expected_md5 in zip(DATASETS[test_set]['data'], expected_checksums):
         tarball = os.path.join(outdir, os.path.basename(dataset))
         rawdir = os.path.join(outdir, 'raw')
-        if not os.path.exists(tarball) or os.path.getsize(tarball) == 0:
-            logging.info("Downloading %s to %s", dataset, tarball)
-            try:
-                with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
-                    out.write(f.read())
-            except ssl.SSLError:
-                logging.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
-                            'you may need to run the "Install Certificates.command" file located in the '
-                            '"Python 3" folder, often found under /Applications')
-                sys.exit(1)
 
-            # Check md5sum
-            if expected_md5 is not None:
-                md5 = hashlib.md5()
-                with open(tarball, 'rb') as infile:
-                    for line in infile:
-                        md5.update(line)
-                if md5.hexdigest() != expected_md5:
-                    logging.error('Fatal: MD5 sum of downloaded file was incorrect (got {}, expected {}).'.format(md5.hexdigest(), expected_md5))
-                    logging.error('Please manually delete "{}" and rerun the command.'.format(tarball))
-                    logging.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
+        lockfile = '{}.lock'.format(tarball)
+        with portalocker.Lock(lockfile, 'w', timeout=60) as out:
+            if not os.path.exists(tarball) or os.path.getsize(tarball) == 0:
+                logging.info("Downloading %s to %s", dataset, tarball)
+                try:
+                    with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
+                        out.write(f.read())
+                except ssl.SSLError:
+                    logging.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
+                                'you may need to run the "Install Certificates.command" file located in the '
+                                '"Python 3" folder, often found under /Applications')
                     sys.exit(1)
-                else:
-                    logging.info('Checksum passed: {}'.format(md5.hexdigest()))
 
-            # Extract the tarball
-            logging.info('Extracting %s', tarball)
-            if tarball.endswith('.tar.gz') or tarball.endswith('.tgz'):
-                import tarfile
-                tar = tarfile.open(tarball)
-                tar.extractall(path=rawdir)
-            elif tarball.endswith('.zip'):
-                import zipfile
-                zipfile = zipfile.ZipFile(tarball, 'r')
-                zipfile.extractall(path=rawdir)
-                zipfile.close()
+                # Check md5sum
+                if expected_md5 is not None:
+                    md5 = hashlib.md5()
+                    with open(tarball, 'rb') as infile:
+                        for line in infile:
+                            md5.update(line)
+                    if md5.hexdigest() != expected_md5:
+                        logging.error('Fatal: MD5 sum of downloaded file was incorrect (got {}, expected {}).'.format(md5.hexdigest(), expected_md5))
+                        logging.error('Please manually delete "{}" and rerun the command.'.format(tarball))
+                        logging.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
+                        sys.exit(1)
+                    else:
+                        logging.info('Checksum passed: {}'.format(md5.hexdigest()))
+
+                # Extract the tarball
+                logging.info('Extracting %s', tarball)
+                if tarball.endswith('.tar.gz') or tarball.endswith('.tgz'):
+                    import tarfile
+                    tar = tarfile.open(tarball)
+                    tar.extractall(path=rawdir)
+                elif tarball.endswith('.zip'):
+                    import zipfile
+                    zipfile = zipfile.ZipFile(tarball, 'r')
+                    zipfile.extractall(path=rawdir)
+                    zipfile.close()
 
     found = []
 
@@ -1197,7 +1202,7 @@ def compute_bleu(correct: List[int],
     :param ref_len: The cumulative reference length
     :param smooth: The smoothing method to use
     :param smooth_value: The smoothing value added, if smooth method 'floor' is used
-    :param use_effective_order: Use effective order.
+    :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of NGRAM_ORDER.
     :return: A BLEU object with the score (100-based) and other statistics.
     """
 
