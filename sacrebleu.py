@@ -967,10 +967,11 @@ def chrf_signature(args, numrefs):
 
 
 def extract_ngrams(line, min_order=1, max_order=NGRAM_ORDER) -> Counter:
-    """Extracts all the ngrams (1 <= n <= NGRAM_ORDER) from a sequence of tokens.
+    """Extracts all the ngrams (min_order <= n <= max_order) from a sequence of tokens.
 
-    :param line: a segment containing a sequence of words
-    :param max_order: collect n-grams from 1<=n<=max
+    :param line: A segment containing a sequence of words.
+    :param min_order: Minimum n-gram length (default: 1).
+    :param max_order: Maximum n-gram length (default: NGRAM_ORDER).
     :return: a dictionary containing ngrams and counts
     """
 
