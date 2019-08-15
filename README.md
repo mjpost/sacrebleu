@@ -23,7 +23,7 @@ This installs a shell script, `sacrebleu`.
 
 Get a list of available test sets:
 
-    sacrebleu
+    sacrebleu --list
 
 Download the source for one of the pre-defined test sets:
 
@@ -76,7 +76,7 @@ SacreBLEU is licensed under the Apache 2.0 License.
 
 This was all Rico Sennrich's idea.
 Originally written by Matt Post.
-The official version can be found at <https://github.com/awslabs/sockeye/tree/master/sockeye_contrib/sacrebleu>; the development version at <https://github.com/mjpost/sacrebleu>.
+The official version can be found at <https://github.com/mjpost/sacrebleu>.
 
 If you use SacreBLEU, please cite the following:
 
