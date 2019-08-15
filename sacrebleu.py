@@ -1465,10 +1465,10 @@ def main():
     arg_parser = argparse.ArgumentParser(description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
                                          'Quick usage: score your detokenized output against WMT\'14 EN-DE:\n'
                                          '    cat output.detok.de | sacrebleu -t wmt14 -l en-de',
+                                         #epilog = 'Available test sets: ' + ','.join(sorted(DATASETS.keys(), reverse=True)),
                                          formatter_class=argparse.RawDescriptionHelpFormatter)
     arg_parser.add_argument('--test-set', '-t', type=str, default=None,
-                            choices=DATASETS.keys(),
-                            help='the test set to use')
+                            help='the test set to use (see also --list)')
     arg_parser.add_argument('-lc', action='store_true', default=False,
                             help='use case-insensitive BLEU (default: actual case)')
     arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'add-n', 'none'], default='exp',
@@ -1507,6 +1507,8 @@ def main():
                             help='suppress informative output')
     arg_parser.add_argument('--encoding', '-e', type=str, default='utf-8',
                             help='open text files with specified encoding (default: %(default)s)')
+    arg_parser.add_argument('--list', default=False, action='store_true',
+                            help='print a list of all available test sets.')
     arg_parser.add_argument('--citation', '--cite', default=False, action='store_true',
                             help='dump the bibtex citation and quit.')
     arg_parser.add_argument('--width', '-w', type=int, default=1,
@@ -1524,6 +1526,10 @@ def main():
 
     if args.download:
         download_test_set(args.download, args.langpair)
+        sys.exit(0)
+
+    if args.list:
+        print(get_a_list_of_testset_names())
         sys.exit(0)
 
     if args.citation:
