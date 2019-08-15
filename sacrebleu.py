@@ -121,6 +121,7 @@ DATASETS = {
     },
     'wmt19': {
         'data': ['http://data.statmt.org/wmt19/translation-task/test.tgz'],
+        'description': 'Official evaluation data.',
         'md5': ['84de7162d158e28403103b01aeefc39a'],
         'cs-de': ['sgm/newstest2019-csde-src.cs.sgm', 'sgm/newstest2019-csde-ref.de.sgm'],
         'de-cs': ['sgm/newstest2019-decs-src.de.sgm', 'sgm/newstest2019-decs-ref.cs.sgm'],
@@ -1452,6 +1453,14 @@ def sentence_chrf(hypothesis: str,
     return _chrf(avg_precision, avg_recall, beta=beta)
 
 
+def get_a_list_of_testset_names():
+    """Return a string with a formatted list of available test sets plus their descriptions. """
+    message = 'The available test sets are:'
+    for testset in sorted(DATASETS.keys(), reverse=True):
+        message += '\n%20s: %s' % (testset, DATASETS[testset].get('description', ''))
+    return message
+
+
 def main():
     arg_parser = argparse.ArgumentParser(description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
                                          'Quick usage: score your detokenized output against WMT\'14 EN-DE:\n'
@@ -1535,9 +1544,7 @@ def main():
         sys.exit(1)
 
     if args.test_set is not None and args.test_set not in DATASETS:
-        logging.error('The available test sets are: ')
-        for testset in sorted(DATASETS.keys(), reverse=True):
-            logging.error('  %s: %s', testset, DATASETS[testset].get('description', ''))
+        logging.error('Unknown test set "%s"\n%s', args.test_set, get_a_list_of_testset_names())
         sys.exit(1)
 
     if args.test_set and (args.langpair is None or args.langpair not in DATASETS[args.test_set]):
@@ -1558,9 +1565,7 @@ def main():
 
     if args.test_set is None and len(args.refs) == 0:
         logging.error('I need either a predefined test set (-t) or a list of references')
-        logging.error('The available test sets are: ')
-        for testset in sorted(DATASETS.keys(), reverse=True):
-            logging.error('  %s: %s', testset, DATASETS[testset].get('description', ''))
+        logging.error(get_a_list_of_testset_names())
         sys.exit(1)
     elif args.test_set is not None and len(args.refs) > 0:
         logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
