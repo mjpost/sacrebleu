@@ -1189,7 +1189,7 @@ def compute_bleu(correct: List[int],
                  use_effective_order = False) -> BLEU:
     """Computes BLEU score from its sufficient statistics. Adds smoothing.
 
-    Smoothing methods (citing "A Systematic Comparison of Smoothing Techniques for Sentence-Level BLEU", 
+    Smoothing methods (citing "A Systematic Comparison of Smoothing Techniques for Sentence-Level BLEU",
     Boxing Chen and Colin Cherry, WMT 2014: http://aclweb.org/anthology/W14-3346)
 
     - exp: NIST smoothing method (Method 3)
@@ -1335,8 +1335,8 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     return compute_bleu(correct, total, sys_len, ref_len, smooth_method=smooth_method, smooth_value=smooth_value, use_effective_order=use_effective_order)
 
 
-def raw_corpus_bleu(sys_stream, 
-                    ref_streams, 
+def raw_corpus_bleu(sys_stream,
+                    ref_streams,
                     smooth_value=SMOOTH_VALUE_DEFAULT) -> BLEU:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
@@ -1453,9 +1453,10 @@ def sentence_chrf(hypothesis: str,
 
 
 def main():
-    arg_parser = argparse.ArgumentParser(description='sacreBLEU: Hassle-free computation of shareable BLEU scores.'
-                                         'Quick usage: score your detokenized output against WMT\'14 EN-DE:'
-                                         '    cat output.detok.de | ./sacreBLEU -t wmt14 -l en-de')
+    arg_parser = argparse.ArgumentParser(description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
+                                         'Quick usage: score your detokenized output against WMT\'14 EN-DE:\n'
+                                         '    cat output.detok.de | sacrebleu -t wmt14 -l en-de',
+                                         formatter_class=argparse.RawDescriptionHelpFormatter)
     arg_parser.add_argument('--test-set', '-t', type=str, default=None,
                             choices=DATASETS.keys(),
                             help='the test set to use')
