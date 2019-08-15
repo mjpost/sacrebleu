@@ -1553,11 +1553,19 @@ def main():
         logging.error('Unknown test set "%s"\n%s', args.test_set, get_a_list_of_testset_names())
         sys.exit(1)
 
-    if args.test_set and (args.langpair is None or args.langpair not in DATASETS[args.test_set]):
-        if args.langpair is None:
-            logging.error('I need a language pair (-l).')
-        elif args.langpair not in DATASETS[args.test_set]:
-            logging.error('No such language pair "%s"', args.langpair)
+    if args.test_set is None:
+        if len(args.refs) == 0:
+            logging.error('I need either a predefined test set (-t) or a list of references')
+            logging.error(get_a_list_of_testset_names())
+            sys.exit(1)
+    elif len(args.refs) > 0:
+        logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
+        sys.exit(1)
+    elif args.langpair is None:
+        logging.error('I need a language pair (-l).')
+        sys.exit(1)
+    elif args.langpair not in DATASETS[args.test_set]:
+        logging.error('No such language pair "%s"', args.langpair)
         logging.error('Available language pairs for test set "%s": %s', args.test_set,
                       ', '.join(filter(lambda x: '-' in x, DATASETS[args.test_set].keys())))
         sys.exit(1)
@@ -1568,14 +1576,6 @@ def main():
             sys.exit(1)
         print_test_set(args.test_set, args.langpair, args.echo)
         sys.exit(0)
-
-    if args.test_set is None and len(args.refs) == 0:
-        logging.error('I need either a predefined test set (-t) or a list of references')
-        logging.error(get_a_list_of_testset_names())
-        sys.exit(1)
-    elif args.test_set is not None and len(args.refs) > 0:
-        logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
-        sys.exit(1)
 
     if args.test_set is not None and args.tokenize == 'none':
         logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
