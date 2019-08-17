@@ -911,7 +911,8 @@ def bleu_signature(args, numrefs):
         'case': 'c',
         'tok': 'tok',
         'numrefs': '#',
-        'version': 'v'
+        'version': 'v',
+        'origlang': 'o',
     }
 
     signature = {'tok': args.tokenize,
@@ -925,6 +926,9 @@ def bleu_signature(args, numrefs):
 
     if args.langpair is not None:
         signature['lang'] = args.langpair
+
+    if args.origlang is not None:
+        signature['origlang'] = args.origlang
 
     sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, signature[x]) for x in sorted(signature.keys())])
 
@@ -946,7 +950,8 @@ def chrf_signature(args, numrefs):
         'space': 's',
         'case': 'c',
         'numrefs': '#',
-        'version': 'v'
+        'version': 'v',
+        'origlang': 'o',
     }
 
     signature = {'tok': args.tokenize,
@@ -961,6 +966,9 @@ def chrf_signature(args, numrefs):
 
     if args.langpair is not None:
         signature['lang'] = args.langpair
+
+    if args.origlang is not None:
+        signature['origlang'] = args.origlang
 
     sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, signature[x]) for x in sorted(signature.keys())])
 
@@ -1461,6 +1469,31 @@ def get_a_list_of_testset_names():
     return message
 
 
+def _filter_subset(systems, args):
+    """Filter out sentences with a given origlang according to the raw SGM files."""
+    indices_to_keep = []
+    for test_set in args.test_set.split(','):
+        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][args.langpair][0])
+        if not rawfile.endswith('.sgm'):
+            raise Exception('--origlang supports only *.sgm files, not %s', rawfile)
+        number_sentences_included = 0
+        with smart_open(rawfile) as fin:
+            include_doc = False
+            for line in fin:
+                if line.startswith('<doc '):
+                    doc_origlang = re.sub(r'.* origlang="([^"]+)".*\n', '\\1', line)
+                    if args.origlang.startswith('non-'):
+                        include_doc = doc_origlang != args.origlang[4:]
+                    else:
+                        include_doc = doc_origlang == args.origlang
+                if line.startswith('<seg '):
+                    indices_to_keep.append(include_doc)
+                    number_sentences_included += 1 if include_doc else 0
+        if number_sentences_included == 0:
+            logging.warning("Test set %s contains no sentence with origlang=%s", test_set, args.origlang)
+    return [[sentence for sentence,keep in zip(sys, indices_to_keep) if keep] for sys in systems]
+
+
 def main():
     arg_parser = argparse.ArgumentParser(description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
                                          'Quick usage: score your detokenized output against WMT\'14 EN-DE:\n'
@@ -1479,6 +1512,8 @@ def main():
                             help='tokenization method to use')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes)')
+    arg_parser.add_argument('--origlang', '-ol', dest='origlang', default=None,
+                            help='use subset of sentences with a given original language (2-char ISO639-1 codes), "non-" prefix means negation')
     arg_parser.add_argument('--download', type=str, default=None,
                             help='download a test set and quit')
     arg_parser.add_argument('--echo', choices=['src', 'ref', 'both'], type=str, default=None,
@@ -1629,6 +1664,13 @@ def main():
                             refs[refno].append(split)
                 else:
                     refs[refno].append(line)
+
+    # Filter sentences according to a given origlang
+    if args.origlang is not None:
+        if args.test_set is None or args.langpair is None:
+            logging.error('Filtering for --origlang needs a test (-t) and a language pair (-l).')
+            sys.exit(1)
+        system, *refs = _filter_subset([system, *refs], args)
 
     try:
         if 'bleu' in args.metrics:

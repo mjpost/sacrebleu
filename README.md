@@ -50,6 +50,16 @@ Use `--short` for a shorter hash if you like.
 
     BLEU+case.mixed+lang.de-en+test.wmt17 = 32.97 66.1/40.2/26.6/18.1 (BP = 0.980 ratio = 0.980 hyp_len = 63134 ref_len = 64399)
 
+If you are interested in the translationese effect, you can evaluate BLEU on a subset of sentences
+with a given original language (identified based on the origlang tag in the raw SGM files).
+E.g. to evaluate only against originally German sentences translated to English use:
+
+    sacrebleu -t wmt13 -l de-en --origlang=de < my-wmt13-output.txt
+
+and to evaluate against the complement (in this case origlang en, fr, cs, ru, de) use:
+
+    sacrebleu -t wmt13 -l de-en --origlang=non-de < my-wmt13-output.txt
+
 # MOTIVATION
 
 Comparing BLEU scores is harder than it should be.
