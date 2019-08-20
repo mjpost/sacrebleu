@@ -1062,7 +1062,7 @@ def process_to_text(rawfile, txtfile, field: int=None):
                     print(line.rstrip().split('\t')[field], file=fout)
 
 
-def print_test_set(test_set, langpair, side):
+def print_test_set(test_set, langpair, side, origlang=None):
     """Prints to STDOUT the specified side of the specified test set
     :param test_set: the test set to print
     :param langpair: the language pair
@@ -1076,6 +1076,7 @@ def print_test_set(test_set, langpair, side):
         files.pop(0)
 
     streams = [smart_open(file) for file in files]
+    streams = _filter_subset(streams, test_set, langpair, origlang)
     for lines in zip(*streams):
         print('\t'.join(map(lambda x: x.rstrip(), lines)))
 
@@ -1471,6 +1472,11 @@ def get_a_list_of_testset_names():
 
 def _filter_subset(systems, test_sets, langpair, origlang):
     """Filter out sentences with a given origlang according to the raw SGM files."""
+    if origlang is None:
+        return systems
+    if test_sets is None or langpair is None:
+        raise ValueError('Filtering for --origlang needs a test (-t) and a language pair (-l).')
+
     indices_to_keep = []
     for test_set in test_sets.split(','):
         rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
@@ -1614,7 +1620,7 @@ def main():
             logging.warning("--echo requires a test set (--t) and a language pair (-l)")
             sys.exit(1)
         for test_set in args.test_set.split(','):
-            print_test_set(test_set, args.langpair, args.echo)
+            print_test_set(test_set, args.langpair, args.echo, args.origlang)
         sys.exit(0)
 
     if args.test_set is not None and args.tokenize == 'none':
@@ -1666,11 +1672,7 @@ def main():
                     refs[refno].append(line)
 
     # Filter sentences according to a given origlang
-    if args.origlang is not None:
-        if args.test_set is None or args.langpair is None:
-            logging.error('Filtering for --origlang needs a test (-t) and a language pair (-l).')
-            sys.exit(1)
-        system, *refs = _filter_subset([system, *refs], args.test_set, args.langpair, args.origlang)
+    system, *refs = _filter_subset([system, *refs], args.test_set, args.langpair, args.origlang)
 
     try:
         if 'bleu' in args.metrics:
