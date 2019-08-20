@@ -1469,11 +1469,11 @@ def get_a_list_of_testset_names():
     return message
 
 
-def _filter_subset(systems, args):
+def _filter_subset(systems, test_sets, langpair, origlang):
     """Filter out sentences with a given origlang according to the raw SGM files."""
     indices_to_keep = []
-    for test_set in args.test_set.split(','):
-        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][args.langpair][0])
+    for test_set in test_sets.split(','):
+        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
         if not rawfile.endswith('.sgm'):
             raise Exception('--origlang supports only *.sgm files, not %s', rawfile)
         number_sentences_included = 0
@@ -1482,15 +1482,15 @@ def _filter_subset(systems, args):
             for line in fin:
                 if line.startswith('<doc '):
                     doc_origlang = re.sub(r'.* origlang="([^"]+)".*\n', '\\1', line)
-                    if args.origlang.startswith('non-'):
-                        include_doc = doc_origlang != args.origlang[4:]
+                    if origlang.startswith('non-'):
+                        include_doc = doc_origlang != origlang[4:]
                     else:
-                        include_doc = doc_origlang == args.origlang
+                        include_doc = doc_origlang == origlang
                 if line.startswith('<seg '):
                     indices_to_keep.append(include_doc)
                     number_sentences_included += 1 if include_doc else 0
         if number_sentences_included == 0:
-            logging.warning("Test set %s contains no sentence with origlang=%s", test_set, args.origlang)
+            logging.warning("Test set %s contains no sentence with origlang=%s", test_set, origlang)
     return [[sentence for sentence,keep in zip(sys, indices_to_keep) if keep] for sys in systems]
 
 
@@ -1670,7 +1670,7 @@ def main():
         if args.test_set is None or args.langpair is None:
             logging.error('Filtering for --origlang needs a test (-t) and a language pair (-l).')
             sys.exit(1)
-        system, *refs = _filter_subset([system, *refs], args)
+        system, *refs = _filter_subset([system, *refs], args.test_set, args.langpair, args.origlang)
 
     try:
         if 'bleu' in args.metrics:
