@@ -1090,10 +1090,7 @@ def download_test_set(test_set, langpair=None):
     """
 
     outdir = os.path.join(SACREBLEU_DIR, test_set)
-    with portalocker.Lock(outdir + '.lock', 'w', timeout=60):
-        if not os.path.exists(outdir):
-            logging.info('Creating %s', outdir)
-            os.makedirs(outdir)
+    os.makedirs(outdir, exist_ok=True)
 
     expected_checksums = DATASETS[test_set].get('md5', [None] * len(DATASETS[test_set]))
     for dataset, expected_md5 in zip(DATASETS[test_set]['data'], expected_checksums):
