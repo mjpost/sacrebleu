@@ -1470,6 +1470,20 @@ def get_a_list_of_testset_names():
     return message
 
 
+def _available_origlangs(test_sets, langpair):
+    """Return a list of origlang values in according to the raw SGM files."""
+    origlangs = set()
+    for test_set in test_sets.split(','):
+        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
+        if rawfile.endswith('.sgm'):
+            with smart_open(rawfile) as fin:
+                for line in fin:
+                    if line.startswith('<doc '):
+                        doc_origlang = re.sub(r'.* origlang="([^"]+)".*\n', '\\1', line)
+                        origlangs.add(doc_origlang)
+    return sorted(list(origlangs))
+
+
 def _filter_subset(systems, test_sets, langpair, origlang):
     """Filter out sentences with a given origlang according to the raw SGM files."""
     if origlang is None:
@@ -1519,7 +1533,7 @@ def main():
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes)')
     arg_parser.add_argument('--origlang', '-ol', dest='origlang', default=None,
-                            help='use subset of sentences with a given original language (2-char ISO639-1 codes), "non-" prefix means negation')
+                            help='use a subset of sentences with a given original language (2-char ISO639-1 codes), "non-" prefix means negation')
     arg_parser.add_argument('--download', type=str, default=None,
                             help='download a test set and quit')
     arg_parser.add_argument('--echo', choices=['src', 'ref', 'both'], type=str, default=None,
@@ -1554,6 +1568,8 @@ def main():
                             help='dump the bibtex citation and quit.')
     arg_parser.add_argument('--width', '-w', type=int, default=1,
                             help='floating point width (default: %(default)s)')
+    arg_parser.add_argument('--verbose', '-v', default=False, action='store_true',
+                            help='print extra information (split test sets based on origlang)')
     arg_parser.add_argument('-V', '--version', action='version',
                             version='%(prog)s {}'.format(VERSION))
     args = arg_parser.parse_args()
@@ -1654,10 +1670,10 @@ def main():
 
 
     inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding) if args.input == '-' else smart_open(args.input, encoding=args.encoding)
-    system = inputfh.readlines()
+    full_system = inputfh.readlines()
 
     # Read references
-    refs = [[] for x in range(max(len(concat_ref_files[0]), args.num_refs))]
+    full_refs = [[] for x in range(max(len(concat_ref_files[0]), args.num_refs))]
     for ref_files in concat_ref_files:
         for refno, ref_file in enumerate(ref_files):
             for lineno, line in enumerate(smart_open(ref_file, encoding=args.encoding), 1):
@@ -1667,12 +1683,12 @@ def main():
                         logging.error('FATAL: line {}: expected {} fields, but found {}.'.format(lineno, args.num_refs, len(splits)))
                         sys.exit(17)
                         for refno, split in enumerate(splits):
-                            refs[refno].append(split)
+                            full_refs[refno].append(split)
                 else:
-                    refs[refno].append(line)
+                    full_refs[refno].append(line)
 
     # Filter sentences according to a given origlang
-    system, *refs = _filter_subset([system, *refs], args.test_set, args.langpair, args.origlang)
+    system, *refs = _filter_subset([full_system, *full_refs], args.test_set, args.langpair, args.origlang)
 
     try:
         if 'bleu' in args.metrics:
@@ -1707,6 +1723,16 @@ def main():
                 version_str = chrf_signature(args, len(refs))
                 print('chrF{0:d}+{1} = {2:.{3}f}'.format(args.chrf_beta, version_str, chrf, width))
 
+    if args.verbose:
+        sents_digits = len(str(len(full_system)))
+        for origlang in _available_origlangs(args.test_set, args.langpair):
+            system, *refs = _filter_subset([full_system, *full_refs], args.test_set, args.langpair, origlang)
+            if 'bleu' in args.metrics:
+                bleu = corpus_bleu(system, refs, smooth_method=args.smooth, smooth_value=args.smooth_value, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+                print('origlang={0} : N={1:{2}} BLEU={3:{4}.{5}f}'.format(origlang, len(system), sents_digits, bleu.score, width+4, width))
+            if 'chrf' in args.metrics:
+                chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
+                print('origlang={0} : N={1:{2}} chrF={3:{4}.{5}f}'.format(origlang, len(system), sents_digits, chrf, width+4, width))
 
 if __name__ == '__main__':
     main()
