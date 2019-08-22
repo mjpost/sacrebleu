@@ -1790,9 +1790,12 @@ def main():
 
     if args.verbose:
         sents_digits = len(str(len(full_system)))
-        for origlang in _available_origlangs(args.test_set, args.langpair):
+        origlangs = args.origlang if args.origlang else _available_origlangs(args.test_set, args.langpair)
+        for origlang in origlangs:
             subsets = [None]
-            if any(t in SUBSETS for t in args.test_set.split(',')):
+            if args.subset is not None:
+                subsets += [args.subset]
+            elif all(t in SUBSETS for t in args.test_set.split(',')):
                 subsets += COUNTRIES + DOMAINS
             for subset in subsets:
                 system, *refs = _filter_subset([full_system, *full_refs], args.test_set, args.langpair, origlang, subset)
