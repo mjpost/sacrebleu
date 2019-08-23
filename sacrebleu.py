@@ -1275,7 +1275,8 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 force=False,
                 lowercase=False,
                 tokenize=DEFAULT_TOKENIZER,
-                use_effective_order=False) -> BLEU:
+                use_effective_order=False,
+                update_from=None) -> BLEU:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param sys_stream: The system stream (a sequence of segments)
@@ -1285,6 +1286,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     :param force: Ignore data that looks already tokenized
     :param lowercase: Lowercase the data
     :param tokenize: The tokenizer to use
+    :param update_from: a BLEU object to update from
     :return: a BLEU object containing everything you'd want
     """
 
@@ -1294,11 +1296,16 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     if isinstance(ref_streams, str):
         ref_streams = [[ref_streams]]
 
-    sys_len = 0
-    ref_len = 0
-
-    correct = [0 for n in range(NGRAM_ORDER)]
-    total = [0 for n in range(NGRAM_ORDER)]
+    if update_from is not None:
+        sys_len = update_from.sys_len
+        ref_len = update_from.ref_len
+        correct = update_from.counts
+        total = update_from.totals
+    else:
+        sys_len = 0
+        ref_len = 0
+        correct = [0 for n in range(NGRAM_ORDER)]
+        total = [0 for n in range(NGRAM_ORDER)]
 
     # look for already-tokenized sentences
     tokenized_count = 0
