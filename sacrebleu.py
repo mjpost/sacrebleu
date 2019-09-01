@@ -121,6 +121,7 @@ DATASETS = {
     },
     'wmt19': {
         'data': ['http://data.statmt.org/wmt19/translation-task/test.tgz'],
+        'description': 'Official evaluation data.',
         'md5': ['84de7162d158e28403103b01aeefc39a'],
         'cs-de': ['sgm/newstest2019-csde-src.cs.sgm', 'sgm/newstest2019-csde-ref.de.sgm'],
         'de-cs': ['sgm/newstest2019-decs-src.de.sgm', 'sgm/newstest2019-decs-ref.cs.sgm'],
@@ -1189,7 +1190,7 @@ def compute_bleu(correct: List[int],
                  use_effective_order = False) -> BLEU:
     """Computes BLEU score from its sufficient statistics. Adds smoothing.
 
-    Smoothing methods (citing "A Systematic Comparison of Smoothing Techniques for Sentence-Level BLEU", 
+    Smoothing methods (citing "A Systematic Comparison of Smoothing Techniques for Sentence-Level BLEU",
     Boxing Chen and Colin Cherry, WMT 2014: http://aclweb.org/anthology/W14-3346)
 
     - exp: NIST smoothing method (Method 3)
@@ -1335,8 +1336,8 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     return compute_bleu(correct, total, sys_len, ref_len, smooth_method=smooth_method, smooth_value=smooth_value, use_effective_order=use_effective_order)
 
 
-def raw_corpus_bleu(sys_stream, 
-                    ref_streams, 
+def raw_corpus_bleu(sys_stream,
+                    ref_streams,
                     smooth_value=SMOOTH_VALUE_DEFAULT) -> BLEU:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
@@ -1452,13 +1453,22 @@ def sentence_chrf(hypothesis: str,
     return _chrf(avg_precision, avg_recall, beta=beta)
 
 
+def get_a_list_of_testset_names():
+    """Return a string with a formatted list of available test sets plus their descriptions. """
+    message = 'The available test sets are:'
+    for testset in sorted(DATASETS.keys(), reverse=True):
+        message += '\n%20s: %s' % (testset, DATASETS[testset].get('description', ''))
+    return message
+
+
 def main():
-    arg_parser = argparse.ArgumentParser(description='sacreBLEU: Hassle-free computation of shareable BLEU scores.'
-                                         'Quick usage: score your detokenized output against WMT\'14 EN-DE:'
-                                         '    cat output.detok.de | ./sacreBLEU -t wmt14 -l en-de')
+    arg_parser = argparse.ArgumentParser(description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
+                                         'Quick usage: score your detokenized output against WMT\'14 EN-DE:\n'
+                                         '    cat output.detok.de | sacrebleu -t wmt14 -l en-de',
+                                         #epilog = 'Available test sets: ' + ','.join(sorted(DATASETS.keys(), reverse=True)),
+                                         formatter_class=argparse.RawDescriptionHelpFormatter)
     arg_parser.add_argument('--test-set', '-t', type=str, default=None,
-                            choices=DATASETS.keys(),
-                            help='the test set to use')
+                            help='the test set to use (see also --list)')
     arg_parser.add_argument('-lc', action='store_true', default=False,
                             help='use case-insensitive BLEU (default: actual case)')
     arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'add-n', 'none'], default='exp',
@@ -1497,6 +1507,8 @@ def main():
                             help='suppress informative output')
     arg_parser.add_argument('--encoding', '-e', type=str, default='utf-8',
                             help='open text files with specified encoding (default: %(default)s)')
+    arg_parser.add_argument('--list', default=False, action='store_true',
+                            help='print a list of all available test sets.')
     arg_parser.add_argument('--citation', '--cite', default=False, action='store_true',
                             help='dump the bibtex citation and quit.')
     arg_parser.add_argument('--width', '-w', type=int, default=1,
@@ -1514,6 +1526,10 @@ def main():
 
     if args.download:
         download_test_set(args.download, args.langpair)
+        sys.exit(0)
+
+    if args.list:
+        print(get_a_list_of_testset_names())
         sys.exit(0)
 
     if args.citation:
@@ -1534,16 +1550,22 @@ def main():
         sys.exit(1)
 
     if args.test_set is not None and args.test_set not in DATASETS:
-        logging.error('The available test sets are: ')
-        for testset in sorted(DATASETS.keys(), reverse=True):
-            logging.error('  %s: %s', testset, DATASETS[testset].get('description', ''))
+        logging.error('Unknown test set "%s"\n%s', args.test_set, get_a_list_of_testset_names())
         sys.exit(1)
 
-    if args.test_set and (args.langpair is None or args.langpair not in DATASETS[args.test_set]):
-        if args.langpair is None:
-            logging.error('I need a language pair (-l).')
-        elif args.langpair not in DATASETS[args.test_set]:
-            logging.error('No such language pair "%s"', args.langpair)
+    if args.test_set is None:
+        if len(args.refs) == 0:
+            logging.error('I need either a predefined test set (-t) or a list of references')
+            logging.error(get_a_list_of_testset_names())
+            sys.exit(1)
+    elif len(args.refs) > 0:
+        logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
+        sys.exit(1)
+    elif args.langpair is None:
+        logging.error('I need a language pair (-l).')
+        sys.exit(1)
+    elif args.langpair not in DATASETS[args.test_set]:
+        logging.error('No such language pair "%s"', args.langpair)
         logging.error('Available language pairs for test set "%s": %s', args.test_set,
                       ', '.join(filter(lambda x: '-' in x, DATASETS[args.test_set].keys())))
         sys.exit(1)
@@ -1554,16 +1576,6 @@ def main():
             sys.exit(1)
         print_test_set(args.test_set, args.langpair, args.echo)
         sys.exit(0)
-
-    if args.test_set is None and len(args.refs) == 0:
-        logging.error('I need either a predefined test set (-t) or a list of references')
-        logging.error('The available test sets are: ')
-        for testset in sorted(DATASETS.keys(), reverse=True):
-            logging.error('  %s: %s', testset, DATASETS[testset].get('description', ''))
-        sys.exit(1)
-    elif args.test_set is not None and len(args.refs) > 0:
-        logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
-        sys.exit(1)
 
     if args.test_set is not None and args.tokenize == 'none':
         logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
