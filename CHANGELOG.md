@@ -1,6 +1,16 @@
 # VERSION HISTORY
 
-- 1.3.7 (in progress)
+- 1.4.0 (in progress)
+   - All improvements below due to Martin Popel
+   - Added evaluation on multiple test sets (e.g., `-t wmt17,wmt18`).
+     Works as long as they all have the same language pair.
+   - Minor changes
+     - Improved display of `sacrebleu -h`
+     - Added `sacrebleu --list`
+     - Code refactoring
+     - Documentation updates
+
+- 1.3.7 (2019-07-12)
    - Lazy loading of regexes cuts import time from ~1s to nearly nothing (thanks, @louismartin!)
    - Added a simple (non-atomic) lock on downloading
    - Can now read multiple refs from a single tab-delimited file.
