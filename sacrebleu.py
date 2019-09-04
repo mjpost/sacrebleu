@@ -1599,8 +1599,6 @@ def main():
 
     # concat_ref_files is a list of list of reference filenames, for example:
     # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
-    # Note that concatenation is possible only for internal test sets,
-    # which do not currently support multiple references, so the example is hypothetical.
     if args.test_set is None:
         concat_ref_files = [args.refs]
     else:
