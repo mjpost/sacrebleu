@@ -1468,7 +1468,7 @@ def main():
                                          #epilog = 'Available test sets: ' + ','.join(sorted(DATASETS.keys(), reverse=True)),
                                          formatter_class=argparse.RawDescriptionHelpFormatter)
     arg_parser.add_argument('--test-set', '-t', type=str, default=None,
-                            help='the test set to use (see also --list)')
+                            help='the test set to use (see also --list) or a comma-separated list of test sets to be concatenated')
     arg_parser.add_argument('-lc', action='store_true', default=False,
                             help='use case-insensitive BLEU (default: actual case)')
     arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'add-n', 'none'], default='exp',
@@ -1536,11 +1536,11 @@ def main():
         if not args.test_set:
             logging.error('I need a test set (-t).')
             sys.exit(1)
-        elif 'citation' not in DATASETS[args.test_set]:
-            logging.error('No citation found for %s', args.test_set)
-            sys.exit(1)
-
-        print(DATASETS[args.test_set]['citation'])
+        for test_set in args.test_set.split(','):
+            if 'citation' not in DATASETS[test_set]:
+                logging.error('No citation found for %s', test_set)
+            else:
+                print(DATASETS[test_set]['citation'])
         sys.exit(0)
 
     if args.num_refs != 1 and (args.test_set is not None or len(args.refs) > 1):
@@ -1549,9 +1549,11 @@ def main():
         logging.error('and you cannot then provide multiple reference files.')
         sys.exit(1)
 
-    if args.test_set is not None and args.test_set not in DATASETS:
-        logging.error('Unknown test set "%s"\n%s', args.test_set, get_a_list_of_testset_names())
-        sys.exit(1)
+    if args.test_set is not None:
+        for test_set in args.test_set.split(','):
+            if test_set not in DATASETS:
+                logging.error('Unknown test set "%s"\n%s', test_set, get_a_list_of_testset_names())
+                sys.exit(1)
 
     if args.test_set is None:
         if len(args.refs) == 0:
@@ -1564,17 +1566,20 @@ def main():
     elif args.langpair is None:
         logging.error('I need a language pair (-l).')
         sys.exit(1)
-    elif args.langpair not in DATASETS[args.test_set]:
-        logging.error('No such language pair "%s"', args.langpair)
-        logging.error('Available language pairs for test set "%s": %s', args.test_set,
-                      ', '.join(filter(lambda x: '-' in x, DATASETS[args.test_set].keys())))
-        sys.exit(1)
+    else:
+        for test_set in args.test_set.split(','):
+            if args.langpair not in DATASETS[test_set]:
+                logging.error('No such language pair "%s"', args.langpair)
+                logging.error('Available language pairs for test set "%s": %s', test_set,
+                      ', '.join(x for x in DATASETS[test_set].keys() if '-' in x))
+                sys.exit(1)
 
     if args.echo:
         if args.langpair is None or args.test_set is None:
             logging.warning("--echo requires a test set (--t) and a language pair (-l)")
             sys.exit(1)
-        print_test_set(args.test_set, args.langpair, args.echo)
+        for test_set in args.test_set.split(','):
+            print_test_set(test_set, args.langpair, args.echo)
         sys.exit(0)
 
     if args.test_set is not None and args.tokenize == 'none':
@@ -1592,30 +1597,36 @@ def main():
     if args.langpair is not None and args.langpair.split('-')[1] == 'zh' and 'bleu' in args.metrics and args.tokenize != 'zh':
         logging.warning('You should also pass "--tok zh" when scoring Chinese...')
 
-    if args.test_set:
-        _, *ref_files = download_test_set(args.test_set, args.langpair)
-        if len(ref_files) == 0:
-            print('No references found for test set {}/{}.'.format(args.test_set, args.langpair))
-            sys.exit(1)
+    # concat_ref_files is a list of list of reference filenames, for example:
+    # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
+    if args.test_set is None:
+        concat_ref_files = [args.refs]
     else:
-        ref_files = args.refs
+        concat_ref_files = []
+        for test_set in args.test_set.split(','):
+            _, *ref_files = download_test_set(test_set, args.langpair)
+            if len(ref_files) == 0:
+                logging.warning('No references found for test set {}/{}.'.format(test_set, args.langpair))
+            concat_ref_files.append(ref_files)
+
 
     inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding) if args.input == '-' else smart_open(args.input, encoding=args.encoding)
     system = inputfh.readlines()
 
     # Read references
-    refs = [[] for x in range(max(len(ref_files), args.num_refs))]
-    for refno, ref_file in enumerate(ref_files):
-        for lineno, line in enumerate(smart_open(ref_file, encoding=args.encoding), 1):
-            if args.num_refs != 1:
-                splits = line.rstrip().split(sep='\t', maxsplit=args.num_refs-1)
-                if len(splits) != args.num_refs:
-                    logging.error('FATAL: line {}: expected {} fields, but found {}.'.format(lineno, args.num_refs, len(splits)))
-                    sys.exit(17)
-                for refno, split in enumerate(splits):
-                    refs[refno].append(split)
-            else:
-                refs[refno].append(line)
+    refs = [[] for x in range(max(len(concat_ref_files[0]), args.num_refs))]
+    for ref_files in concat_ref_files:
+        for refno, ref_file in enumerate(ref_files):
+            for lineno, line in enumerate(smart_open(ref_file, encoding=args.encoding), 1):
+                if args.num_refs != 1:
+                    splits = line.rstrip().split(sep='\t', maxsplit=args.num_refs-1)
+                    if len(splits) != args.num_refs:
+                        logging.error('FATAL: line {}: expected {} fields, but found {}.'.format(lineno, args.num_refs, len(splits)))
+                        sys.exit(17)
+                        for refno, split in enumerate(splits):
+                            refs[refno].append(split)
+                else:
+                    refs[refno].append(line)
 
     try:
         if 'bleu' in args.metrics:
