@@ -1,6 +1,18 @@
 # VERSION HISTORY
 
-- 1.3.7 (in progress)
+- 1.4.0 (in progress)
+   - All improvements below due to Martin Popel
+   - Added evaluation on multiple test sets (e.g., `-t wmt17,wmt18`).
+     Works as long as they all have the same language pair.
+   - Added `sacrebleu --origlang` (both for evaluation on a subset and for `--echo`)
+   - Minor changes
+     - Improved display of `sacrebleu -h`
+     - Added `sacrebleu --list`
+     - Code refactoring
+     - Documentation and tests updates
+     - Fixed a race condition bug (`os.makedirs(outdir, exist_ok=True)` instead of `if os.path.exists`)
+
+- 1.3.7 (2019-07-12)
    - Lazy loading of regexes cuts import time from ~1s to nearly nothing (thanks, @louismartin!)
    - Added a simple (non-atomic) lock on downloading
    - Can now read multiple refs from a single tab-delimited file.
