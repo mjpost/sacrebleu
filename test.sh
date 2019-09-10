@@ -41,10 +41,10 @@ limit_test=${1:-}
 declare -A EXPECTED
 EXPECTED['./sacrebleu.py -t wmt16,wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -w 4 -t wmt16/B,wmt17/B -l en-fi']=53.7432
 EXPECTED['./sacrebleu.py -t wmt16,wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -w 4 -t wmt16/B,wmt17/B -l en-fi --origlang=en']=18.9054
-EXPECTED['./sacrebleu.py -t wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -t wmt17/B -l en-fi --verbose']="55.6
+EXPECTED['./sacrebleu.py -t wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -t wmt17/B -l en-fi --detail']="55.6
 origlang=en                     : sentences=1502 BLEU= 21.4
 origlang=fi                     : sentences=1500 BLEU=100.0"
-EXPECTED['./sacrebleu.py -t wmt18,wmt19 -l en-de --echo=src | ./sacrebleu.py -t wmt18,wmt19 -l en-de -b --verbose']="3.6
+EXPECTED['./sacrebleu.py -t wmt18,wmt19 -l en-de --echo=src | ./sacrebleu.py -t wmt18,wmt19 -l en-de -b --detail']="3.6
 origlang=de                     : sentences=1498 BLEU=  3.6
 origlang=en                     : sentences=3497 BLEU=  3.5
 origlang=en           country=EU: sentences= 265 BLEU=  2.5
