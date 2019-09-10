@@ -36,13 +36,24 @@ limit_test=${1:-}
 [[ -d $SACREBLEU/wmt17 ]] && rm -f $SACREBLEU/wmt17/{en-*,*-en*}
 ./sacrebleu.py --echo src -t wmt17 -l cs-en > /dev/null
 
-# Test concatenation of multiple test sets, --echo, -w and a pipeline with two sacrebleu processes
-expected=53.7432
-obtained=`./sacrebleu.py -t wmt16,wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -w 4 -t wmt16/B,wmt17/B -l en-fi`
-if [[ $obtained != $expected ]]; then
-    echo -e "Concat test-set test failed:\n expected = $expected\n obtained = $obtained"
-    exit 1
-fi
+# Test concatenation of multiple test sets, --echo, -w, --origlang and a pipeline with two sacrebleu processes
+declare -A EXPECTED
+EXPECTED['./sacrebleu.py -t wmt16,wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -w 4 -t wmt16/B,wmt17/B -l en-fi']=53.7432
+EXPECTED['./sacrebleu.py -t wmt16,wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -w 4 -t wmt16/B,wmt17/B -l en-fi --origlang=en']=18.9054
+EXPECTED['./sacrebleu.py -t wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -t wmt17/B -l en-fi --detail']="55.6
+origlang=en : N=1502 BLEU= 21.4
+origlang=fi : N=1500 BLEU=100.0"
+
+for command in "${!EXPECTED[@]}"; do
+  echo Testing $command
+  obtained=`eval $command`
+  expected=${EXPECTED[$command]}
+  if [[ $obtained != $expected ]]; then
+      echo -e "\nFAILED:\n expected = $expected\n obtained = $obtained"
+      exit 1
+  fi
+  echo PASS
+done
 
 # Test loading via file instead of STDIN
 ./sacrebleu.py -t wmt17 -l en-de --echo ref > .wmt17.en-de.de.tmp
@@ -110,9 +121,9 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
     done
 done
 
-score1=$( echo "Hello! How are you doing today?" | ../sacrebleu.py -w 2 -b <(echo "Hello! How are you  doing today?") )
+score1=$( echo "Hello! How are you doing today?" | ../sacrebleu.py -w 2 -b <(printf "Hello! How are you \r doing today?") )
 score2=$( echo "Hello! How are you doing today?" | ../sacrebleu.py -w 2 -b <(echo "Hello! How are you doing today?") )
-if [[ $score1 != $score2 ]]; then 
+if [[ $score1 != $score2 ]]; then
   echo "Control character in reference test failed"
   exit 1
 fi

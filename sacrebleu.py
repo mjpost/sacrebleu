@@ -911,7 +911,8 @@ def bleu_signature(args, numrefs):
         'case': 'c',
         'tok': 'tok',
         'numrefs': '#',
-        'version': 'v'
+        'version': 'v',
+        'origlang': 'o',
     }
 
     signature = {'tok': args.tokenize,
@@ -925,6 +926,9 @@ def bleu_signature(args, numrefs):
 
     if args.langpair is not None:
         signature['lang'] = args.langpair
+
+    if args.origlang is not None:
+        signature['origlang'] = args.origlang
 
     sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, signature[x]) for x in sorted(signature.keys())])
 
@@ -946,7 +950,8 @@ def chrf_signature(args, numrefs):
         'space': 's',
         'case': 'c',
         'numrefs': '#',
-        'version': 'v'
+        'version': 'v',
+        'origlang': 'o',
     }
 
     signature = {'tok': args.tokenize,
@@ -961,6 +966,9 @@ def chrf_signature(args, numrefs):
 
     if args.langpair is not None:
         signature['lang'] = args.langpair
+
+    if args.origlang is not None:
+        signature['origlang'] = args.origlang
 
     sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, signature[x]) for x in sorted(signature.keys())])
 
@@ -1054,7 +1062,7 @@ def process_to_text(rawfile, txtfile, field: int=None):
                     print(line.rstrip().split('\t')[field], file=fout)
 
 
-def print_test_set(test_set, langpair, side):
+def print_test_set(test_set, langpair, side, origlang=None):
     """Prints to STDOUT the specified side of the specified test set
     :param test_set: the test set to print
     :param langpair: the language pair
@@ -1068,6 +1076,7 @@ def print_test_set(test_set, langpair, side):
         files.pop(0)
 
     streams = [smart_open(file) for file in files]
+    streams = _filter_subset(streams, test_set, langpair, origlang)
     for lines in zip(*streams):
         print('\t'.join(map(lambda x: x.rstrip(), lines)))
 
@@ -1081,9 +1090,7 @@ def download_test_set(test_set, langpair=None):
     """
 
     outdir = os.path.join(SACREBLEU_DIR, test_set)
-    if not os.path.exists(outdir):
-        logging.info('Creating %s', outdir)
-        os.makedirs(outdir)
+    os.makedirs(outdir, exist_ok=True)
 
     expected_checksums = DATASETS[test_set].get('md5', [None] * len(DATASETS[test_set]))
     for dataset, expected_md5 in zip(DATASETS[test_set]['data'], expected_checksums):
@@ -1091,7 +1098,7 @@ def download_test_set(test_set, langpair=None):
         rawdir = os.path.join(outdir, 'raw')
 
         lockfile = '{}.lock'.format(tarball)
-        with portalocker.Lock(lockfile, 'w', timeout=60) as out:
+        with portalocker.Lock(lockfile, 'w', timeout=60):
             if not os.path.exists(tarball) or os.path.getsize(tarball) == 0:
                 logging.info("Downloading %s to %s", dataset, tarball)
                 try:
@@ -1461,6 +1468,50 @@ def get_a_list_of_testset_names():
     return message
 
 
+def _available_origlangs(test_sets, langpair):
+    """Return a list of origlang values in according to the raw SGM files."""
+    origlangs = set()
+    for test_set in test_sets.split(','):
+        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
+        if rawfile.endswith('.sgm'):
+            with smart_open(rawfile) as fin:
+                for line in fin:
+                    if line.startswith('<doc '):
+                        doc_origlang = re.sub(r'.* origlang="([^"]+)".*\n', '\\1', line)
+                        origlangs.add(doc_origlang)
+    return sorted(list(origlangs))
+
+
+def _filter_subset(systems, test_sets, langpair, origlang):
+    """Filter out sentences with a given origlang according to the raw SGM files."""
+    if origlang is None:
+        return systems
+    if test_sets is None or langpair is None:
+        raise ValueError('Filtering for --origlang needs a test (-t) and a language pair (-l).')
+
+    indices_to_keep = []
+    for test_set in test_sets.split(','):
+        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
+        if not rawfile.endswith('.sgm'):
+            raise Exception('--origlang supports only *.sgm files, not %s', rawfile)
+        number_sentences_included = 0
+        with smart_open(rawfile) as fin:
+            include_doc = False
+            for line in fin:
+                if line.startswith('<doc '):
+                    doc_origlang = re.sub(r'.* origlang="([^"]+)".*\n', '\\1', line)
+                    if origlang.startswith('non-'):
+                        include_doc = doc_origlang != origlang[4:]
+                    else:
+                        include_doc = doc_origlang == origlang
+                if line.startswith('<seg '):
+                    indices_to_keep.append(include_doc)
+                    number_sentences_included += 1 if include_doc else 0
+        if number_sentences_included == 0:
+            logging.warning("Test set %s contains no sentence with origlang=%s", test_set, origlang)
+    return [[sentence for sentence,keep in zip(sys, indices_to_keep) if keep] for sys in systems]
+
+
 def main():
     arg_parser = argparse.ArgumentParser(description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
                                          'Quick usage: score your detokenized output against WMT\'14 EN-DE:\n'
@@ -1479,6 +1530,8 @@ def main():
                             help='tokenization method to use')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes)')
+    arg_parser.add_argument('--origlang', '-ol', dest='origlang', default=None,
+                            help='use a subset of sentences with a given original language (2-char ISO639-1 codes), "non-" prefix means negation')
     arg_parser.add_argument('--download', type=str, default=None,
                             help='download a test set and quit')
     arg_parser.add_argument('--echo', choices=['src', 'ref', 'both'], type=str, default=None,
@@ -1513,6 +1566,8 @@ def main():
                             help='dump the bibtex citation and quit.')
     arg_parser.add_argument('--width', '-w', type=int, default=1,
                             help='floating point width (default: %(default)s)')
+    arg_parser.add_argument('--detail', '-d', default=False, action='store_true',
+                            help='print extra information (split test sets based on origlang)')
     arg_parser.add_argument('-V', '--version', action='version',
                             version='%(prog)s {}'.format(VERSION))
     args = arg_parser.parse_args()
@@ -1579,7 +1634,7 @@ def main():
             logging.warning("--echo requires a test set (--t) and a language pair (-l)")
             sys.exit(1)
         for test_set in args.test_set.split(','):
-            print_test_set(test_set, args.langpair, args.echo)
+            print_test_set(test_set, args.langpair, args.echo, args.origlang)
         sys.exit(0)
 
     if args.test_set is not None and args.tokenize == 'none':
@@ -1611,10 +1666,10 @@ def main():
 
 
     inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding) if args.input == '-' else smart_open(args.input, encoding=args.encoding)
-    system = inputfh.readlines()
+    full_system = inputfh.readlines()
 
     # Read references
-    refs = [[] for x in range(max(len(concat_ref_files[0]), args.num_refs))]
+    full_refs = [[] for x in range(max(len(concat_ref_files[0]), args.num_refs))]
     for ref_files in concat_ref_files:
         for refno, ref_file in enumerate(ref_files):
             for lineno, line in enumerate(smart_open(ref_file, encoding=args.encoding), 1):
@@ -1624,9 +1679,12 @@ def main():
                         logging.error('FATAL: line {}: expected {} fields, but found {}.'.format(lineno, args.num_refs, len(splits)))
                         sys.exit(17)
                         for refno, split in enumerate(splits):
-                            refs[refno].append(split)
+                            full_refs[refno].append(split)
                 else:
-                    refs[refno].append(line)
+                    full_refs[refno].append(line)
+
+    # Filter sentences according to a given origlang
+    system, *refs = _filter_subset([full_system, *full_refs], args.test_set, args.langpair, args.origlang)
 
     try:
         if 'bleu' in args.metrics:
@@ -1661,6 +1719,16 @@ def main():
                 version_str = chrf_signature(args, len(refs))
                 print('chrF{0:d}+{1} = {2:.{3}f}'.format(args.chrf_beta, version_str, chrf, width))
 
+    if args.detail:
+        sents_digits = len(str(len(full_system)))
+        for origlang in _available_origlangs(args.test_set, args.langpair):
+            system, *refs = _filter_subset([full_system, *full_refs], args.test_set, args.langpair, origlang)
+            if 'bleu' in args.metrics:
+                bleu = corpus_bleu(system, refs, smooth_method=args.smooth, smooth_value=args.smooth_value, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+                print('origlang={0} : N={1:{2}} BLEU={3:{4}.{5}f}'.format(origlang, len(system), sents_digits, bleu.score, width+4, width))
+            if 'chrf' in args.metrics:
+                chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
+                print('origlang={0} : N={1:{2}} chrF={3:{4}.{5}f}'.format(origlang, len(system), sents_digits, chrf, width+4, width))
 
 if __name__ == '__main__':
     main()
