@@ -4,7 +4,8 @@
    - All improvements below due to Martin Popel
    - Added evaluation on multiple test sets (e.g., `-t wmt17,wmt18`).
      Works as long as they all have the same language pair.
-   - Added `sacrebleu --origlang` (both for evaluation on a subset and for `--echo`)
+   - Added `sacrebleu --origlang` (both for evaluation on a subset and for `--echo`).
+   - Added `sacrebleu --detail` for breakdown by subsets of the test set.
    - Minor changes
      - Improved display of `sacrebleu -h`
      - Added `sacrebleu --list`

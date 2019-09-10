@@ -1566,7 +1566,7 @@ def main():
                             help='dump the bibtex citation and quit.')
     arg_parser.add_argument('--width', '-w', type=int, default=1,
                             help='floating point width (default: %(default)s)')
-    arg_parser.add_argument('--verbose', '-v', default=False, action='store_true',
+    arg_parser.add_argument('--detail', '-d', default=False, action='store_true',
                             help='print extra information (split test sets based on origlang)')
     arg_parser.add_argument('-V', '--version', action='version',
                             version='%(prog)s {}'.format(VERSION))
@@ -1719,7 +1719,7 @@ def main():
                 version_str = chrf_signature(args, len(refs))
                 print('chrF{0:d}+{1} = {2:.{3}f}'.format(args.chrf_beta, version_str, chrf, width))
 
-    if args.verbose:
+    if args.detail:
         sents_digits = len(str(len(full_system)))
         for origlang in _available_origlangs(args.test_set, args.langpair):
             system, *refs = _filter_subset([full_system, *full_refs], args.test_set, args.langpair, origlang)
