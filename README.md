@@ -52,13 +52,16 @@ Use `--short` for a shorter hash if you like.
 
 If you are interested in the translationese effect, you can evaluate BLEU on a subset of sentences
 with a given original language (identified based on the origlang tag in the raw SGM files).
-E.g. to evaluate only against originally German sentences translated to English use:
+E.g., to evaluate only against originally German sentences translated to English use:
 
     sacrebleu -t wmt13 -l de-en --origlang=de < my-wmt13-output.txt
 
 and to evaluate against the complement (in this case origlang en, fr, cs, ru, de) use:
 
     sacrebleu -t wmt13 -l de-en --origlang=non-de < my-wmt13-output.txt
+
+*Please note* that the evaluator will return a BLEU score only on the requested subset,
+but it expects that you pass through the entire translated test set.
 
 # MOTIVATION
 
