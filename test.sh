@@ -36,13 +36,28 @@ limit_test=${1:-}
 [[ -d $SACREBLEU/wmt17 ]] && rm -f $SACREBLEU/wmt17/{en-*,*-en*}
 ./sacrebleu.py --echo src -t wmt17 -l cs-en > /dev/null
 
-# Test concatenation of multiple test sets, --echo, -w, --origlang and a pipeline with two sacrebleu processes
+# Test concatenation of multiple test sets, --echo, -w, --origlang, --verbose
+# and a pipeline with two sacrebleu processes
 declare -A EXPECTED
 EXPECTED['./sacrebleu.py -t wmt16,wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -w 4 -t wmt16/B,wmt17/B -l en-fi']=53.7432
 EXPECTED['./sacrebleu.py -t wmt16,wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -w 4 -t wmt16/B,wmt17/B -l en-fi --origlang=en']=18.9054
 EXPECTED['./sacrebleu.py -t wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -t wmt17/B -l en-fi --detail']="55.6
-origlang=en : N=1502 BLEU= 21.4
-origlang=fi : N=1500 BLEU=100.0"
+origlang=en                     : sentences=1502 BLEU= 21.4
+origlang=fi                     : sentences=1500 BLEU=100.0"
+EXPECTED['./sacrebleu.py -t wmt18,wmt19 -l en-de --echo=src | ./sacrebleu.py -t wmt18,wmt19 -l en-de -b --detail']="3.6
+origlang=de                     : sentences=1498 BLEU=  3.6
+origlang=en                     : sentences=3497 BLEU=  3.5
+origlang=en           country=EU: sentences= 265 BLEU=  2.5
+origlang=en           country=GB: sentences= 913 BLEU=  3.1
+origlang=en        country=OTHER: sentences= 801 BLEU=  2.5
+origlang=en           country=US: sentences=1518 BLEU=  4.2
+origlang=en      domain=business: sentences= 241 BLEU=  3.4
+origlang=en         domain=crime: sentences= 570 BLEU=  3.6
+origlang=en domain=entertainment: sentences= 322 BLEU=  5.1
+origlang=en      domain=politics: sentences= 959 BLEU=  3.0
+origlang=en       domain=scitech: sentences= 211 BLEU=  3.1
+origlang=en         domain=sport: sentences= 534 BLEU=  3.6
+origlang=en         domain=world: sentences= 660 BLEU=  3.1"
 
 for command in "${!EXPECTED[@]}"; do
   echo Testing $command
