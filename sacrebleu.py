@@ -40,7 +40,7 @@ from collections import Counter, namedtuple
 from itertools import zip_longest
 from typing import List, Iterable, Tuple, Union
 
-VERSION = '1.4.0'
+VERSION = '1.4.1'
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -1301,7 +1301,7 @@ def compute_bleu(correct: List[int],
 
 
 def sentence_bleu(hypothesis: str,
-                  reference: str,
+                  references: List[str],
                   smooth_method: str = 'floor',
                   smooth_value: float = SMOOTH_VALUE_DEFAULT,
                   use_effective_order: bool = True):
@@ -1317,11 +1317,11 @@ def sentence_bleu(hypothesis: str,
     :param use_effective_order: Account for references that are shorter than the largest n-gram.
     :return: Returns a single BLEU score as a float.
     """
-    bleu = corpus_bleu(hypothesis, reference,
+    bleu = corpus_bleu(hypothesis, references,
                        smooth_method=smooth_method,
                        smooth_value=smooth_value,
                        use_effective_order=use_effective_order)
-    return bleu.score
+    return bleu
 
 
 def corpus_bleu(sys_stream: Union[str, Iterable[str]],
@@ -1578,7 +1578,9 @@ def main():
     arg_parser.add_argument('--test-set', '-t', type=str, default=None,
                             help='the test set to use (see also --list) or a comma-separated list of test sets to be concatenated')
     arg_parser.add_argument('-lc', action='store_true', default=False,
-                            help='use case-insensitive BLEU (default: actual case)')
+                            help='Use case-insensitive BLEU (default: actual case)')
+    arg_parser.add_argument('--sentence-level', '-sl', action='store_true',
+                            help='Output metric on each sentence.')
     arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'add-n', 'none'], default='exp',
                             help='smoothing method: exponential decay (default), floor (increment zero counts), add-k (increment num/denom by k for n>1), or none')
     arg_parser.add_argument('--smooth-value', '-sv', type=float, default=SMOOTH_VALUE_DEFAULT,
@@ -1645,6 +1647,10 @@ def main():
     if args.list:
         print(get_a_list_of_testset_names())
         sys.exit(0)
+
+    if args.sentence_level and len(args.metrics) > 1:
+        logging.error('Only one metric can be used with Sentence-level reporting.')
+        sys.exit(1)
 
     if args.citation:
         if not args.test_set:
@@ -1753,11 +1759,39 @@ def main():
         logging.error(message)
         exit(1)
 
+    # Handle sentence level and quit
+    if args.sentence_level:
+        for output, *references in zip(system, *refs):
+            results = []
+            for metric in args.metrics:
+                if metric == 'bleu':
+                    bleu = sentence_bleu(output,
+                                         [references],
+                                         smooth_method=args.smooth,
+                                         smooth_value=args.smooth_value)
+                    results.append(bleu)
+                if metric == 'chrf':
+                    chrf = sentence_chrf(output,
+                                         references[0],
+                                         args.chrf_order,
+                                         args.chrf_beta,
+                                         remove_whitespace=not args.chrf_whitespace)
+                    results.append(chrf)
+
+            display_metric(args.metrics, results, len(refs), args)
+
+        sys.exit(0)
+
+    # Else, handle system level
+    results = []
     try:
-        if 'bleu' in args.metrics:
-            bleu = corpus_bleu(system, refs, smooth_method=args.smooth, smooth_value=args.smooth_value, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
-        if 'chrf' in args.metrics:
-            chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
+        for metric in args.metrics:
+            if metric == 'bleu':
+                bleu = corpus_bleu(system, refs, smooth_method=args.smooth, smooth_value=args.smooth_value, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+                results.append(bleu)
+            elif metric == 'chrf':
+                chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
+                results.append(chrf)
     except EOFError:
         logging.error('The input and reference stream(s) were of different lengths.')
         if args.test_set is not None:
@@ -1770,23 +1804,10 @@ def main():
                           args.test_set)
         sys.exit(1)
 
-    width = args.width
-    for metric in args.metrics:
-        if metric == 'bleu':
-            if args.score_only:
-                print('{0:.{1}f}'.format(bleu.score, width))
-            else:
-                version_str = bleu_signature(args, len(refs))
-                print(bleu.format(width).replace('BLEU', 'BLEU+' + version_str))
-
-        elif metric == 'chrf':
-            if args.score_only:
-                print('{0:.{1}f}'.format(chrf, width))
-            else:
-                version_str = chrf_signature(args, len(refs))
-                print('chrF{0:d}+{1} = {2:.{3}f}'.format(args.chrf_beta, version_str, chrf, width))
+    display_metric(args.metrics, results, len(refs), args)
 
     if args.detail:
+        width = args.width
         sents_digits = len(str(len(full_system)))
         origlangs = args.origlang if args.origlang else _available_origlangs(args.test_set, args.langpair)
         for origlang in origlangs:
@@ -1811,6 +1832,27 @@ def main():
                 if 'chrf' in args.metrics:
                     chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
                     print('origlang={} {}: sentences={:{}} chrF={:{}.{}f}'.format(origlang, subset_str, len(system), sents_digits, chrf, width+4, width))
+
+
+def display_metric(metrics_to_print, results, num_refs, args):
+    """
+    Badly in need of refactoring.
+    """
+    for metric, result in zip(metrics_to_print, results):
+        if metric == 'bleu':
+            if args.score_only:
+                print('{0:.{1}f}'.format(result.score, args.width))
+            else:
+                version_str = bleu_signature(args, num_refs)
+                print(result.format(args.width).replace('BLEU', 'BLEU+' + version_str))
+
+        elif metric == 'chrf':
+            if args.score_only:
+                print('{0:.{1}f}'.format(result, args.width))
+            else:
+                version_str = chrf_signature(args, num_refs)
+                print('chrF{0:d}+{1} = {2:.{3}f}'.format(args.chrf_beta, version_str, result, args.width))
+
 
 if __name__ == '__main__':
     main()

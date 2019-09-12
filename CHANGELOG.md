@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.4.1 (2019-09-11)
+   - Added sentence-level scoring via -sl (--sentence-level)
+
 - 1.4.0 (2019-09-10)
    - Many thanks to Martin Popel for all the changes below!
    - Added evaluation on concatenated test sets (e.g., `-t wmt17,wmt18`).
