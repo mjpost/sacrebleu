@@ -39,11 +39,11 @@ To install:
 
 2. Create the dist
 
-   python3 setup.py sdist
+   python3 setup.py sdist bdist_wheel
 
 3. Push
 
-   twine upload dist/sacrebleu-1.3.0.tar.gz
+   twine upload dist/*
 """
 
 # Always prefer setuptools over distutils
