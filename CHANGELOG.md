@@ -1,11 +1,14 @@
 # VERSION HISTORY
 
-- 1.4.0 (in progress)
-   - All improvements below due to Martin Popel
-   - Added evaluation on multiple test sets (e.g., `-t wmt17,wmt18`).
+- 1.4.0 (2019-09-10)
+   - Many thanks to Martin Popel for all the changes below!
+   - Added evaluation on concatenated test sets (e.g., `-t wmt17,wmt18`).
      Works as long as they all have the same language pair.
    - Added `sacrebleu --origlang` (both for evaluation on a subset and for `--echo`).
-   - Added `sacrebleu --detail` for breakdown by subsets of the test set.
+     Note that while echoing prints just the subset, evaluation expects the complete
+     test set (and just skips the irrelevant parts).
+   - Added `sacrebleu --detail` for breakdown by domain-specific subsets of the test sets.
+     (Available for WMT19).
    - Minor changes
      - Improved display of `sacrebleu -h`
      - Added `sacrebleu --list`
