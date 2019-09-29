@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.4.2 (not released yet)
+  - Tokenization variant omitted from the chrF signature (it is relevant only for BLEU).
+
 - 1.4.1 (2019-09-11)
    - Added sentence-level scoring via -sl (--sentence-level)
 
