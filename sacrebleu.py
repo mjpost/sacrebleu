@@ -998,8 +998,7 @@ def chrf_signature(args, numrefs):
         'subset': 'S',
     }
 
-    signature = {'tok': args.tokenize,
-                 'version': VERSION,
+    signature = {'version': VERSION,
                  'space': args.chrf_whitespace,
                  'numchars': args.chrf_order,
                  'numrefs': numrefs,
