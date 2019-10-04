@@ -1765,7 +1765,7 @@ def main():
             for metric in args.metrics:
                 if metric == 'bleu':
                     bleu = sentence_bleu(output,
-                                         [references],
+                                         [[x] for x in references],
                                          smooth_method=args.smooth,
                                          smooth_value=args.smooth_value)
                     results.append(bleu)
