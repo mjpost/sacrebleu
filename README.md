@@ -63,6 +63,18 @@ and to evaluate against the complement (in this case origlang en, fr, cs, ru, de
 *Please note* that the evaluator will return a BLEU score only on the requested subset,
 but it expects that you pass through the entire translated test set.
 
+## Using SacreBLEU from Python
+
+For evaluation, it may be usefull to compute BLEU inside a script. This is how you can do it:
+
+```python
+import sacrebleu
+ref_t = [['this is a translation of sentence 1', 'reference translation of sentence 2'],
+          ['another reference translation for sentence 1', 'another reference trranslation of sentence 2']]
+pred_t = ['this is an example translation of sentence 1', 'this is translation of 2']
+sacrebleu.corpus_bleu(pred_t, ref_t)
+```
+
 # MOTIVATION
 
 Comparing BLEU scores is harder than it should be.
