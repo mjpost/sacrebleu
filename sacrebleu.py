@@ -1218,7 +1218,31 @@ def download_test_set(test_set, langpair=None):
     return found
 
 
-class BLEU(namedtuple('BaseBLEU', 'score, counts, totals, precisions, bp, sys_len, ref_len')):
+class Result:
+    def __init__(self, score: float):
+        self.score = score
+
+    def __str__(self):
+        return self.format()
+
+
+class BLEU(Result):
+    def __init__(self,
+                 score: float,
+                 counts,
+                 totals,
+                 precisions,
+                 bp,
+                 sys_len,
+                 ref_len):
+        super().__init__(score)
+
+        self.counts = counts
+        self.totals = totals
+        self.precisions = precisions
+        self.bp = bp
+        self.sys_len = sys_len
+        self.ref_len = ref_len
 
     def format(self, width=2):
         precisions = "/".join(["{:.1f}".format(p) for p in self.precisions])
@@ -1231,8 +1255,13 @@ class BLEU(namedtuple('BaseBLEU', 'score, counts, totals, precisions, bp, sys_le
             sys_len=self.sys_len,
             ref_len=self.ref_len)
 
-    def __str__(self):
-        return self.format()
+
+class CHRF(Result):
+    def __init__(self, score: float):
+        super().__init__(score)
+
+    def format(self, width=2):
+        return '{score:.{width}f}'.format(score=self.score, width=width)
 
 
 def compute_bleu(correct: List[int],
@@ -1294,16 +1323,16 @@ def compute_bleu(correct: List[int],
     if sys_len < ref_len:
         brevity_penalty = math.exp(1 - ref_len / sys_len) if sys_len > 0 else 0.0
 
-    bleu = brevity_penalty * math.exp(sum(map(my_log, precisions[:effective_order])) / effective_order)
+    score = brevity_penalty * math.exp(sum(map(my_log, precisions[:effective_order])) / effective_order)
 
-    return BLEU._make([bleu, correct, total, precisions, brevity_penalty, sys_len, ref_len])
+    return BLEU(score, correct, total, precisions, brevity_penalty, sys_len, ref_len)
 
 
 def sentence_bleu(hypothesis: str,
                   references: List[str],
                   smooth_method: str = 'floor',
                   smooth_value: float = SMOOTH_VALUE_DEFAULT,
-                  use_effective_order: bool = True):
+                  use_effective_order: bool = True) -> BLEU:
     """
     Computes BLEU on a single sentence pair.
 
@@ -1471,7 +1500,7 @@ def corpus_chrf(hypotheses: Iterable[str],
                 references: Iterable[str],
                 order: int = CHRF_ORDER,
                 beta: float = CHRF_BETA,
-                remove_whitespace: bool = True) -> float:
+                remove_whitespace: bool = True) -> CHRF:
     """
     Computes Chrf on a corpus.
 
@@ -1484,14 +1513,14 @@ def corpus_chrf(hypotheses: Iterable[str],
     """
     corpus_statistics = get_corpus_statistics(hypotheses, references, order=order, remove_whitespace=remove_whitespace)
     avg_precision, avg_recall = _avg_precision_and_recall(corpus_statistics, order)
-    return _chrf(avg_precision, avg_recall, beta=beta)
+    return CHRF(_chrf(avg_precision, avg_recall, beta=beta))
 
 
 def sentence_chrf(hypothesis: str,
                   reference: str,
                   order: int = CHRF_ORDER,
                   beta: float = CHRF_BETA,
-                  remove_whitespace: bool = True) -> float:
+                  remove_whitespace: bool = True) -> CHRF:
     """
     Computes ChrF on a single sentence pair.
 
@@ -1504,7 +1533,7 @@ def sentence_chrf(hypothesis: str,
     """
     statistics = get_sentence_statistics(hypothesis, reference, order=order, remove_whitespace=remove_whitespace)
     avg_precision, avg_recall = _avg_precision_and_recall(statistics, order)
-    return _chrf(avg_precision, avg_recall, beta=beta)
+    return CHRF(_chrf(avg_precision, avg_recall, beta=beta))
 
 
 def get_a_list_of_testset_names():
@@ -1830,12 +1859,14 @@ def main():
                     print('origlang={} {}: sentences={:{}} BLEU={:{}.{}f}'.format(origlang, subset_str, len(system), sents_digits, bleu.score, width+4, width))
                 if 'chrf' in args.metrics:
                     chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
-                    print('origlang={} {}: sentences={:{}} chrF={:{}.{}f}'.format(origlang, subset_str, len(system), sents_digits, chrf, width+4, width))
+                    print('origlang={} {}: sentences={:{}} chrF={:{}.{}f}'.format(origlang, subset_str, len(system), sents_digits, chrf.score, width+4, width))
 
 
 def display_metric(metrics_to_print, results, num_refs, args):
     """
     Badly in need of refactoring.
+    One idea is to put all of this in the BLEU and CHRF classes, and then define
+    a Result::signature() function.
     """
     for metric, result in zip(metrics_to_print, results):
         if metric == 'bleu':
@@ -1847,10 +1878,10 @@ def display_metric(metrics_to_print, results, num_refs, args):
 
         elif metric == 'chrf':
             if args.score_only:
-                print('{0:.{1}f}'.format(result, args.width))
+                print('{0:.{1}f}'.format(result.score, args.width))
             else:
                 version_str = chrf_signature(args, num_refs)
-                print('chrF{0:d}+{1} = {2:.{3}f}'.format(args.chrf_beta, version_str, result, args.width))
+                print('chrF{0:d}+{1} = {2:.{3}f}'.format(args.chrf_beta, version_str, result.score, args.width))
 
 
 if __name__ == '__main__':
