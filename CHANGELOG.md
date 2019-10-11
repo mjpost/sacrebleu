@@ -1,7 +1,10 @@
 # VERSION HISTORY
 
-- 1.4.2 (not released yet)
-  - Tokenization variant omitted from the chrF signature (it is relevant only for BLEU).
+- 1.4.2 (2019-10-11)
+  - Tokenization variant omitted from the chrF signature; it is relevant only for BLEU (thanks to Martin Popel)
+  - Bugfix: call to sentence_bleu (thanks to Rachel Bawden)
+  - Documentation example for Python API (thanks to Vlad Lyalin)
+  - Calls to corpus_chrf and sentence_chrf now return a an object instead of a float (use result.score)
 
 - 1.4.1 (2019-09-11)
    - Added sentence-level scoring via -sl (--sentence-level)
