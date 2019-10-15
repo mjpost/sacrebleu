@@ -1297,8 +1297,8 @@ def compute_bleu(correct: List[int],
     effective_order = NGRAM_ORDER
     for n in range(NGRAM_ORDER):
         if smooth_method == 'add-k' and n > 0:
-            correct[n] += smooth_value
-            total[n] += smooth_value
+            correct[n] += 1
+            total[n] += 1
         if total[n] == 0:
             break
 
