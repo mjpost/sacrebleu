@@ -65,7 +65,7 @@ but it expects that you pass through the entire translated test set.
 
 ## Using SacreBLEU from Python
 
-For evaluation, it may be usefull to compute BLEU inside a script. This is how you can do it:
+For evaluation, it may be useful to compute BLEU inside a script. This is how you can do it:
 
 ```python
 import sacrebleu
