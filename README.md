@@ -69,10 +69,11 @@ For evaluation, it may be useful to compute BLEU inside a script. This is how yo
 
 ```python
 import sacrebleu
-ref_t = [['this is a translation of sentence 1', 'reference translation of sentence 2'],
-          ['another reference translation for sentence 1', 'another reference trranslation of sentence 2']]
-pred_t = ['this is an example translation of sentence 1', 'this is translation of 2']
-sacrebleu.corpus_bleu(pred_t, ref_t)
+refs = [['The dog bit the man.', 'It was not unexpected.', 'He deserved it.'],
+        ['The dog had bit the man.', 'No one was surprised.', 'The man asked for it.']]
+sys = ['The dog bit the man.', 'Not surprising.', 'His just deserts.']
+bleu = sacrebleu.corpus_bleu(sys, refs)
+print(bleu.score)
 ```
 
 # MOTIVATION
