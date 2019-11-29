@@ -13,3 +13,4 @@ python:
 
 script:
   - ./test.sh
+  - pytest
