@@ -1753,11 +1753,10 @@ def main():
     # Internal tokenizer settings. Set to 'zh' for Chinese  DEFAULT_TOKENIZER (
     if args.tokenize is None:
         # set default
-        if args.langpair is not None:
-            if args.langpair.split('-')[1] == 'zh':
-                args.tokenize = 'zh'
-            if args.langpair.split('-')[1] == 'ja':
-                args.tokenize = 'ja-mecab'
+        if args.langpair is not None and args.langpair.split('-')[1] == 'zh':
+            args.tokenize = 'zh'
+        elif args.langpair is not None and args.langpair.split('-')[1] == 'ja':
+            args.tokenize = 'ja-mecab'
         else:
             args.tokenize = DEFAULT_TOKENIZER
 
