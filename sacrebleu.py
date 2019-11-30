@@ -903,10 +903,26 @@ def tokenize_zh(sentence):
 
     return sentence
 
+
+def tokenize_ja_mecab(line):
+    import MeCab
+    """
+    Tokenizes an Japanese input line using MeCab morphological analyzer.
+
+    :param line: a segment to tokenize
+    :return: the tokenized line
+    """
+    tagger = MeCab.Tagger("-Owakati")
+    line = line.strip()
+    sentence = tagger.parse(line).strip()
+    return sentence
+
+
 TOKENIZERS = {
     '13a': tokenize_13a,
     'intl': tokenize_v14_international,
     'zh': tokenize_zh,
+    'ja-mecab': tokenize_ja_mecab,
     'none': lambda x: x,
 }
 DEFAULT_TOKENIZER = '13a'
@@ -1737,13 +1753,19 @@ def main():
     # Internal tokenizer settings. Set to 'zh' for Chinese  DEFAULT_TOKENIZER (
     if args.tokenize is None:
         # set default
-        if args.langpair is not None and args.langpair.split('-')[1] == 'zh':
-            args.tokenize = 'zh'
+        if args.langpair is not None:
+            if args.langpair.split('-')[1] == 'zh':
+                args.tokenize = 'zh'
+            if args.langpair.split('-')[1] == 'ja':
+                args.tokenize = 'ja-mecab'
         else:
             args.tokenize = DEFAULT_TOKENIZER
 
-    if args.langpair is not None and args.langpair.split('-')[1] == 'zh' and 'bleu' in args.metrics and args.tokenize != 'zh':
-        logging.warning('You should also pass "--tok zh" when scoring Chinese...')
+    if args.langpair is not None and 'bleu' in args.metrics:
+        if args.langpair.split('-')[1] == 'zh' and args.tokenize != 'zh':
+            logging.warning('You should also pass "--tok zh" when scoring Chinese...')
+        if args.langpair.split('-')[1] == 'ja' and not args.tokenize.startswith('ja-'):
+            logging.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
 
     # concat_ref_files is a list of list of reference filenames, for example:
     # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
