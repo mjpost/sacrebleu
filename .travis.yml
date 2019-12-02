@@ -5,6 +5,10 @@ before_install:
   - pip install -r requirements.txt
   - sudo apt-get -y update
 
+install:
+  - pip install pytest-cov
+  - pip install .
+
 language: python
 python:
   - "3.5"
@@ -13,3 +17,4 @@ python:
 
 script:
   - ./test.sh
+  - pytest
