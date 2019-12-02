@@ -1,5 +1,9 @@
 # VERSION HISTORY
 
+- 1.4.3 (2019-12-02)
+  - Bugfix: handling of result object for CHRF
+  - Improved API example
+
 - 1.4.2 (2019-10-11)
   - Tokenization variant omitted from the chrF signature; it is relevant only for BLEU (thanks to Martin Popel)
   - Bugfix: call to sentence_bleu (thanks to Rachel Bawden)
