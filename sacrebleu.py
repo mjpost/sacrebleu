@@ -1536,7 +1536,12 @@ def sentence_chrf(hypothesis: str,
     return CHRF(_chrf(avg_precision, avg_recall, beta=beta))
 
 
-def get_a_list_of_testset_names():
+def get_langpairs_for_testset(testset: str) -> List:
+    """Return a list of language pairs for a given test set."""
+    return list(filter(lambda x: re.match('\w\w\-\w\w', x), DATASETS.get(testset, {}).keys()))
+
+
+def get_a_list_of_testset_names() -> str:
     """Return a string with a formatted list of available test sets plus their descriptions. """
     message = 'The available test sets are:'
     for testset in sorted(DATASETS.keys(), reverse=True):
@@ -1673,7 +1678,10 @@ def main():
         sys.exit(0)
 
     if args.list:
-        print(get_a_list_of_testset_names())
+        if args.test_set:
+            print(' '.join(get_langpairs_for_testset(args.test_set)))
+        else:
+            print(get_a_list_of_testset_names())
         sys.exit(0)
 
     if args.sentence_level and len(args.metrics) > 1:
