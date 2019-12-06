@@ -485,6 +485,12 @@ DATASETS = {
         'de-en': ['de-en/IWSLT17.TED.tst2017.de-en.de.xml', 'en-de/IWSLT17.TED.tst2017.en-de.en.xml'],
         'en-zh': ['en-zh/IWSLT17.TED.tst2017.en-zh.en.xml', 'zh-en/IWSLT17.TED.tst2017.zh-en.zh.xml'],
         'zh-en': ['zh-en/IWSLT17.TED.tst2017.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2017.en-zh.en.xml'],
+        'en-ar': ['en-ar/IWSLT17.TED.tst2017.en-ar.en.xml', 'ar-en/IWSLT17.TED.tst2017.ar-en.ar.xml'],
+        'ar-en': ['ar-en/IWSLT17.TED.tst2017.ar-en.ar.xml', 'en-ar/IWSLT17.TED.tst2017.en-ar.en.xml'],
+        'en-ja': ['en-ja/IWSLT17.TED.tst2017.en-ja.en.xml', 'ja-en/IWSLT17.TED.tst2017.ja-en.ja.xml'],
+        'ja-en': ['ja-en/IWSLT17.TED.tst2017.ja-en.ja.xml', 'en-ja/IWSLT17.TED.tst2017.en-ja.en.xml'],
+        'en-ko': ['en-ko/IWSLT17.TED.tst2017.en-ko.en.xml', 'ko-en/IWSLT17.TED.tst2017.ko-en.ko.xml'],
+        'ko-en': ['ko-en/IWSLT17.TED.tst2017.ko-en.ko.xml', 'en-ko/IWSLT17.TED.tst2017.en-ko.en.xml'],
         },
     'iwslt17/tst2016': {
         'data': ['https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/fr/en-fr.tgz',
