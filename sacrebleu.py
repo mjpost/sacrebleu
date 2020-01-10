@@ -1181,13 +1181,12 @@ def download_test_set(test_set, langpair=None):
                 logging.info('Extracting %s', tarball)
                 if tarball.endswith('.tar.gz') or tarball.endswith('.tgz'):
                     import tarfile
-                    tar = tarfile.open(tarball)
-                    tar.extractall(path=rawdir)
+                    with tarfile.open(tarball) as tar:
+                        tar.extractall(path=rawdir)
                 elif tarball.endswith('.zip'):
                     import zipfile
-                    zipfile = zipfile.ZipFile(tarball, 'r')
-                    zipfile.extractall(path=rawdir)
-                    zipfile.close()
+                    with zipfile.ZipFile(tarball, 'r') as zipfile:
+                        zipfile.extractall(path=rawdir)
 
     found = []
 
