@@ -4,7 +4,9 @@
   - `--list` now returns a list of all language pairs for a task when combined with `-t`
     (e.g., `sacrebleu -t wmt19 --list`)
   - added missing languages for IWSLT17
-	
+	- Other improvements:
+    - Minor code improvements (Thomas Liao @tholiao)
+
 - 1.4.3 (2019-12-02)
   - Bugfix: handling of result object for CHRF
   - Improved API example
