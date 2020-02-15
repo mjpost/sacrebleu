@@ -1609,7 +1609,7 @@ def main():
                             help='Use case-insensitive BLEU (default: actual case)')
     arg_parser.add_argument('--sentence-level', '-sl', action='store_true',
                             help='Output metric on each sentence.')
-    arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'add-n', 'none'], default='exp',
+    arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'add-k', 'none'], default='exp',
                             help='smoothing method: exponential decay (default), floor (increment zero counts), add-k (increment num/denom by k for n>1), or none')
     arg_parser.add_argument('--smooth-value', '-sv', type=float, default=SMOOTH_VALUE_DEFAULT,
                             help='The value to pass to the smoothing technique, when relevant. Default: %(default)s.')
