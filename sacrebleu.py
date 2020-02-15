@@ -1730,6 +1730,9 @@ def main():
             print_test_set(test_set, args.langpair, args.echo, args.origlang, args.subset)
         sys.exit(0)
 
+    if args.smooth == 'add-k' and args.smooth_value == SMOOTH_VALUE_DEFAULT:
+        args.smooth_value = 1
+
     if args.test_set is not None and args.tokenize == 'none':
         logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
                         "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
