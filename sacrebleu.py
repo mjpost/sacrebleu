@@ -1295,24 +1295,24 @@ def compute_bleu(correct: List[int],
 
     smooth_mteval = 1.
     effective_order = NGRAM_ORDER
-    for n in range(NGRAM_ORDER):
-        if smooth_method == 'add-k' and n > 0:
-            correct[n] += 1
-            total[n] += 1
-        if total[n] == 0:
+    for n in range(1, NGRAM_ORDER):
+        if smooth_method == 'add-k' and n > 1:
+            correct[n-1] += 1
+            total[n-1] += 1
+        if total[n-1] == 0:
             break
 
         if use_effective_order:
-            effective_order = n + 1
+            effective_order = n
 
-        if correct[n] == 0:
+        if correct[n-1] == 0:
             if smooth_method == 'exp':
                 smooth_mteval *= 2
-                precisions[n] = 100. / (smooth_mteval * total[n])
+                precisions[n-1] = 100. / (smooth_mteval * total[n-1])
             elif smooth_method == 'floor':
-                precisions[n] = 100. * smooth_value / total[n]
+                precisions[n-1] = 100. * smooth_value / total[n-1]
         else:
-            precisions[n] = 100. * correct[n] / total[n]
+            precisions[n-1] = 100. * correct[n-1] / total[n-1]
 
     # If the system guesses no i-grams, 1 <= i <= NGRAM_ORDER, the BLEU score is 0 (technically undefined).
     # This is a problem for sentence-level BLEU or a corpus of short sentences, where systems will get no credit
