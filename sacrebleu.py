@@ -1290,6 +1290,8 @@ def compute_bleu(correct: List[int],
     :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of NGRAM_ORDER.
     :return: A BLEU object with the score (100-based) and other statistics.
     """
+    if smooth_method == 'add-k' and smooth_value == SMOOTH_VALUE_DEFAULT:
+        smooth_value = 1
 
     precisions = [0 for x in range(NGRAM_ORDER)]
 
@@ -1729,9 +1731,6 @@ def main():
         for test_set in args.test_set.split(','):
             print_test_set(test_set, args.langpair, args.echo, args.origlang, args.subset)
         sys.exit(0)
-
-    if args.smooth == 'add-k' and args.smooth_value == SMOOTH_VALUE_DEFAULT:
-        args.smooth_value = 1
 
     if args.test_set is not None and args.tokenize == 'none':
         logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
