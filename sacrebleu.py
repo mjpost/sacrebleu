@@ -71,7 +71,7 @@ CHRF_ORDER = 6
 CHRF_BETA = 2
 
 # The default floor value to use with `--smooth floor`
-SMOOTH_VALUE_DEFAULT = 0.0
+SMOOTH_VALUE_DEFAULT = {'floor': 0.0, 'add-k': 1}
 
 # This defines data locations.
 # At the top level are test sets.
@@ -1269,7 +1269,7 @@ def compute_bleu(correct: List[int],
                  sys_len: int,
                  ref_len: int,
                  smooth_method = 'none',
-                 smooth_value = SMOOTH_VALUE_DEFAULT,
+                 smooth_value = None,
                  use_effective_order = False) -> BLEU:
     """Computes BLEU score from its sufficient statistics. Adds smoothing.
 
@@ -1290,8 +1290,8 @@ def compute_bleu(correct: List[int],
     :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of NGRAM_ORDER.
     :return: A BLEU object with the score (100-based) and other statistics.
     """
-    if smooth_method == 'add-k' and smooth_value == SMOOTH_VALUE_DEFAULT:
-        smooth_value = 1
+    if smooth_method in SMOOTH_VALUE_DEFAULT and smooth_value is None:
+        smooth_value = SMOOTH_VALUE_DEFAULT[smooth_method]
 
     precisions = [0 for x in range(NGRAM_ORDER)]
 
@@ -1333,7 +1333,7 @@ def compute_bleu(correct: List[int],
 def sentence_bleu(hypothesis: str,
                   references: List[str],
                   smooth_method: str = 'floor',
-                  smooth_value: float = SMOOTH_VALUE_DEFAULT,
+                  smooth_value: float = None,
                   use_effective_order: bool = True) -> BLEU:
     """
     Computes BLEU on a single sentence pair.
@@ -1357,7 +1357,7 @@ def sentence_bleu(hypothesis: str,
 def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 ref_streams: Union[str, List[Iterable[str]]],
                 smooth_method='exp',
-                smooth_value=SMOOTH_VALUE_DEFAULT,
+                smooth_value=None,
                 force=False,
                 lowercase=False,
                 tokenize=DEFAULT_TOKENIZER,
@@ -1423,7 +1423,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
 
 def raw_corpus_bleu(sys_stream,
                     ref_streams,
-                    smooth_value=SMOOTH_VALUE_DEFAULT) -> BLEU:
+                    smooth_value=None) -> BLEU:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
     It uses no tokenization and 'floor' smoothing, with the floor default to 0 (no smoothing).
@@ -1613,8 +1613,8 @@ def main():
                             help='Output metric on each sentence.')
     arg_parser.add_argument('--smooth', '-s', choices=['exp', 'floor', 'add-k', 'none'], default='exp',
                             help='smoothing method: exponential decay (default), floor (increment zero counts), add-k (increment num/denom by k for n>1), or none')
-    arg_parser.add_argument('--smooth-value', '-sv', type=float, default=SMOOTH_VALUE_DEFAULT,
-                            help='The value to pass to the smoothing technique, when relevant. Default: %(default)s.')
+    arg_parser.add_argument('--smooth-value', '-sv', type=float, default=None,
+                            help='The value to pass to the smoothing technique, only used for floor and add-k. Default floor: {}, add-k: {}.'.format(SMOOTH_VALUE_DEFAULT['floor'], SMOOTH_VALUE_DEFAULT['add-k']))
     arg_parser.add_argument('--tokenize', '-tok', choices=TOKENIZERS.keys(), default=None,
                             help='tokenization method to use')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
