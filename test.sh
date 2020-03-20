@@ -28,23 +28,24 @@ if [[ $(echo $BASH_VERSION | cut -d. -f1) -lt 4 ]]; then
 fi
 
 export SACREBLEU=$(pwd)/.sacrebleu
+CMD="python3 -m sacrebleu"  # assuming PYTHONPATH=. as the default
 
 # Only run this test
 limit_test=${1:-}
 
 # TEST 1: download and process WMT17 data
 [[ -d $SACREBLEU/wmt17 ]] && rm -f $SACREBLEU/wmt17/{en-*,*-en*}
-./sacrebleu.py --echo src -t wmt17 -l cs-en > /dev/null
+${CMD} --echo src -t wmt17 -l cs-en > /dev/null
 
 # Test concatenation of multiple test sets, --echo, -w, --origlang, --verbose
 # and a pipeline with two sacrebleu processes
 declare -A EXPECTED
-EXPECTED['./sacrebleu.py -t wmt16,wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -w 4 -t wmt16/B,wmt17/B -l en-fi']=53.7432
-EXPECTED['./sacrebleu.py -t wmt16,wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -w 4 -t wmt16/B,wmt17/B -l en-fi --origlang=en']=18.9054
-EXPECTED['./sacrebleu.py -t wmt17 -l en-fi --echo ref | ./sacrebleu.py -b -t wmt17/B -l en-fi --detail']="55.6
+EXPECTED["${CMD} -t wmt16,wmt17 -l en-fi --echo ref | ${CMD} -b -w 4 -t wmt16/B,wmt17/B -l en-fi"]=53.7432
+EXPECTED["${CMD} -t wmt16,wmt17 -l en-fi --echo ref | ${CMD} -b -w 4 -t wmt16/B,wmt17/B -l en-fi --origlang=en"]=18.9054
+EXPECTED["${CMD} -t wmt17 -l en-fi --echo ref | ${CMD} -b -t wmt17/B -l en-fi --detail"]="55.6
 origlang=en                     : sentences=1502 BLEU= 21.4
 origlang=fi                     : sentences=1500 BLEU=100.0"
-EXPECTED['./sacrebleu.py -t wmt18,wmt19 -l en-de --echo=src | ./sacrebleu.py -t wmt18,wmt19 -l en-de -b --detail']="3.6
+EXPECTED["${CMD} -t wmt18,wmt19 -l en-de --echo=src | ${CMD} -t wmt18,wmt19 -l en-de -b --detail"]="3.6
 origlang=de                     : sentences=1498 BLEU=  3.6
 origlang=en                     : sentences=3497 BLEU=  3.5
 origlang=en           country=EU: sentences= 265 BLEU=  2.5
@@ -71,8 +72,8 @@ for command in "${!EXPECTED[@]}"; do
 done
 
 # Test loading via file instead of STDIN
-./sacrebleu.py -t wmt17 -l en-de --echo ref > .wmt17.en-de.de.tmp
-score=$(./sacrebleu.py -t wmt17 -l en-de -i .wmt17.en-de.de.tmp -b)
+${CMD} -t wmt17 -l en-de --echo ref > .wmt17.en-de.de.tmp
+score=$(${CMD} -t wmt17 -l en-de -i .wmt17.en-de.de.tmp -b)
 if [[ $score != '100.0' ]]; then
     echo "File test failed."
     exit 1
@@ -88,13 +89,13 @@ if [[ ! -d wmt17-submitted-data ]]; then
 fi
 
 # Test echoing of source, reference, and both
-../sacrebleu.py -t wmt17/ms -l zh-en --echo src > .tmp.echo
+${CMD} -t wmt17/ms -l zh-en --echo src > .tmp.echo
 diff .tmp.echo $SACREBLEU/wmt17/ms/zh-en.zh
 if [[ $? -ne 0 ]]; then
     echo "Source echo failed."
     exit 1
 fi
-../sacrebleu.py -t wmt17/ms -l zh-en --echo ref | cut -f3 > .tmp.echo
+${CMD} -t wmt17/ms -l zh-en --echo ref | cut -f3 > .tmp.echo
 diff .tmp.echo $SACREBLEU/wmt17/ms/zh-en.en.2
 if [[ $? -ne 0 ]]; then
     echo "Source echo failed."
@@ -122,7 +123,7 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
 
         # mteval=$($MOSES/scripts/generic/mteval-v13a.pl -c -s $src -r $ref -t $sgm 2> /dev/null | grep "BLEU score" | cut -d' ' -f9)
         # mteval=$(echo "print($bleu1 * 100)" | python)
-        score=$(cat $txt | ../sacrebleu.py -w 2 -t wmt17 -l $source-$target -b)
+        score=$(cat $txt | ${CMD} -w 2 -t wmt17 -l $source-$target -b)
 
         echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
 
@@ -136,8 +137,8 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
     done
 done
 
-score1=$( echo "Hello! How are you doing today?" | ../sacrebleu.py -w 2 -b <(printf "Hello! How are you \r doing today?") )
-score2=$( echo "Hello! How are you doing today?" | ../sacrebleu.py -w 2 -b <(echo "Hello! How are you doing today?") )
+score1=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b <(printf "Hello! How are you \r doing today?") )
+score2=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b <(echo "Hello! How are you doing today?") )
 if [[ $score1 != $score2 ]]; then
   echo "Control character in reference test failed"
   exit 1
