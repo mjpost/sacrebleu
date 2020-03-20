@@ -19,7 +19,7 @@ Install the Python module (Python 3 only)
     pip3 install sacrebleu
 
 This installs a shell script, `sacrebleu`.
-(You can also directly run the shell script `sacrebleu.py` in the source repository).
+(You can also run `python3 -m sacrebleu` ).
 
 Get a list of available test sets:
 
