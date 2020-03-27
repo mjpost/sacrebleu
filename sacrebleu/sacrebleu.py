@@ -33,6 +33,8 @@ import portalocker
 import re
 import sys
 import ssl
+import abc
+from pathlib import Path
 import urllib.request
 
 from collections import Counter
@@ -211,7 +213,7 @@ def extract_char_ngrams(s: str, n: int) -> Counter:
     return Counter([s[i:i + n] for i in range(len(s) - n + 1)])
 
 
-def ref_stats(output, refs):
+def ref_stats(output, refs, max_order=NGRAM_ORDER):
     ngrams = Counter()
     closest_diff = None
     closest_len = None
@@ -226,7 +228,7 @@ def ref_stats(output, refs):
             if reflen < closest_len:
                 closest_len = reflen
 
-        ngrams_ref = extract_ngrams(ref)
+        ngrams_ref = extract_ngrams(ref, max_order=max_order)
         for ngram in ngrams_ref.keys():
             ngrams[ngram] = max(ngrams[ngram], ngrams_ref[ngram])
 
@@ -389,6 +391,10 @@ class Result:
     def __str__(self):
         return self.format()
 
+    @abc.abstractmethod
+    def format(self) -> str:
+        raise NotImplementedError()
+
 
 class BLEU(Result):
     def __init__(self,
@@ -547,8 +553,8 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     sys_len = 0
     ref_len = 0
 
-    correct = [0 for n in range(NGRAM_ORDER)]
-    total = [0 for n in range(NGRAM_ORDER)]
+    correct = [0] * NGRAM_ORDER
+    total = [0] * NGRAM_ORDER
 
     # look for already-tokenized sentences
     tokenized_count = 0
@@ -918,9 +924,7 @@ def main():
                                          args.chrf_beta,
                                          remove_whitespace=not args.chrf_whitespace)
                     results.append(chrf)
-
             display_metric(args.metrics, results, len(refs), args)
-
         sys.exit(0)
 
     # Else, handle system level
@@ -928,8 +932,19 @@ def main():
     try:
         for metric in args.metrics:
             if metric == 'bleu':
-                bleu = corpus_bleu(system, refs, smooth_method=args.smooth, smooth_value=args.smooth_value, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+                bleu = corpus_bleu(system, refs, smooth_method=args.smooth,
+                                   smooth_value=args.smooth_value, force=args.force,
+                                   lowercase=args.lc, tokenize=args.tokenize)
                 results.append(bleu)
+            elif metric == 'rebleu':
+                from .rebleu import corpus_rebleu
+                score = corpus_rebleu(system, refs, smooth_value=args.smooth_value,
+                                      force=args.force, lowercase=args.lc,
+                                      max_order=args.rebleu_order,
+                                      tokenize=args.tokenize, average=args.average)
+                if args.report:
+                    score.write_report(args.report, args, len(refs))
+                results.append(score)
             elif metric == 'chrf':
                 chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
                 results.append(chrf)
@@ -982,17 +997,16 @@ def display_metric(metrics_to_print, results, num_refs, args):
     a Result::signature() function.
     """
     for metric, result in zip(metrics_to_print, results):
-        if metric == 'bleu':
-            if args.score_only:
-                print('{0:.{1}f}'.format(result.score, args.width))
-            else:
+        if args.score_only:
+            print('{0:.{1}f}'.format(result.score, args.width))
+        else:
+            if metric == 'bleu':
                 version_str = bleu_signature(args, num_refs)
                 print(result.format(args.width).replace('BLEU', 'BLEU+' + version_str))
-
-        elif metric == 'chrf':
-            if args.score_only:
-                print('{0:.{1}f}'.format(result.score, args.width))
-            else:
+            elif metric == 'rebleu':
+                version_str = result.signature(args, num_refs)
+                print(result.format(args.width).replace('ReBLEU', 'ReBLEU+' + version_str))
+            elif metric == 'chrf':
                 version_str = chrf_signature(args, num_refs)
                 print('chrF{0:d}+{1} = {2:.{3}f}'.format(args.chrf_beta, version_str, result.score, args.width))
 
@@ -1034,7 +1048,7 @@ def parse_args():
                             help='Split the reference stream on tabs, and expect this many references. Default: %(default)s.')
     arg_parser.add_argument('refs', nargs='*', default=[],
                             help='optional list of references (for backwards-compatibility with older scripts)')
-    arg_parser.add_argument('--metrics', '-m', choices=['bleu', 'chrf'], nargs='+',
+    arg_parser.add_argument('--metrics', '-m', choices=['bleu', 'chrf', 'rebleu'], nargs='+',
                             default=['bleu'],
                             help='metrics to compute (default: bleu)')
     arg_parser.add_argument('--chrf-order', type=int, default=CHRF_ORDER,
@@ -1061,6 +1075,18 @@ def parse_args():
                             help='floating point width (default: %(default)s)')
     arg_parser.add_argument('--detail', '-d', default=False, action='store_true',
                             help='print extra information (split test sets based on origlang)')
+    arg_parser.add_argument('--average', '-a', default='macro',
+                            choices=['macro', 'micro', 'micro_log', 'micro_sqrt'],
+                            help='''Averaging for '--metric=rebleu'.  
+    - 'macro' weights each n-gram type as with the weight (i.e equal importance).
+    - 'mciro' weights each n-gram type based on reference frequencies.
+    - 'mciro_log' weights each n-gram type based on logarithm of reference frequencies.
+    - 'mciro_sqrt' weights each n-gram type based on square root of reference frequencies.
+    - both micro amd micro_log reacts to the choice of --smooth_value which is 'e' by default.''')
+    arg_parser.add_argument('--rebleu-order', '-ro', type=int, default=NGRAM_ORDER,
+                            help='rebleu maximum ngram order (default: %(default)s)')
+    arg_parser.add_argument('--report', '-rp', type=Path,
+                            help='Write detailed report for ngram performance')
     arg_parser.add_argument('-V', '--version', action='version',
                             version='%(prog)s {}'.format(VERSION))
     args = arg_parser.parse_args()
