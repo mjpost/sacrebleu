@@ -41,19 +41,19 @@ class ClassMeasure(NamedResult):
     def precision(self) -> float:
         assert 0 <= self.correct <= self.preds
         # Note: zero correct while zero are predicted is perfect precision
-        return self.correct / self.preds if self.preds > 0 else 1
+        return (self.correct / self.preds) if self.preds > 0 else 1
 
     @property
     def recall(self) -> float:
         assert 0 <= self.correct <= self.refs
         # Note: zero correct while zero reference is perfect recall
-        return self.correct / self.refs if self.refs > 0 else 1
+        return (self.correct / self.refs) if self.refs > 0 else 1
 
     @property
     def f1(self) -> float:
         denr = self.precision + self.recall
         # Note: either zero precision or zero recall leads to zero f1
-        return 2 * self.precision * self.recall / denr if denr > 0 else 0
+        return (2 * self.precision * self.recall / denr) if denr > 0 else 0
 
     def measure(self, measure_name=None):
         measure_name = measure_name or self.measure_name
@@ -65,6 +65,9 @@ class ClassMeasure(NamedResult):
 
 
 class MultiClassMeasure(NamedResult):
+    """
+    Refer to https://datascience.stackexchange.com/a/24051/16531 for micro vs macro
+    """
 
     def __init__(self, name, measures: List[ClassMeasure], average='macro', smooth_value=0):
         self.smooth_value = smooth_value
@@ -89,29 +92,46 @@ class MultiClassMeasure(NamedResult):
         self.avg_f1 = avgs['f1']
         self.avg_precision = avgs['precision']
         self.avg_recall = avgs['recall']
+        self.accuracy = sum(m.correct for m in measures) / sum(m.preds for m in measures)
         super().__init__(name=name, score=self.avg_f1)
 
     def get_score(self, name):
-        return dict(f1=self.avg_f1, precision=self.avg_precision, recall=self.avg_recall)[name]
+        return dict(f1=self.avg_f1, precision=self.avg_precision,
+                    recall=self.avg_recall, accuracy=self.accuracy)[name]
+
+    def __str__(self):
+        return f'MultiClassMesure[{self.name}, ' \
+            f'P/R/F1/Acc={self.avg_precision:g}/{self.avg_recall:g}/{self.avg_f1:g}/{self.accuracy}]'
 
 
 class ReBLEU(NamedResult):
     def __init__(self, name, measures: List[MultiClassMeasure], len_ratio: float, percent=True):
         self.measures = measures
-        self.precision = self.harmonic_mean(measures, 'precision')
-        self.recall = self.harmonic_mean(measures, 'recall')
-        self.f1 = self.harmonic_mean(measures, 'f1')
+        mean = self._geometric_mean
+        self.precision = mean([m.avg_precision for m in measures])
+        self.recall = mean([m.avg_recall for m in measures])
+        self.f1 = mean([m.avg_f1 for m in measures])
+        self.accuracy = mean([m.accuracy for m in measures])
 
         super().__init__(name=name, score=self.f1)
         self.percent = percent
         self.len_ratio = len_ratio
 
-    def harmonic_mean(self, measures, name):
-        scores = [m.get_score(name) for m in measures]
+    @staticmethod
+    def _harmonic_mean(scores):
         if any(s == 0 for s in scores):
             score = 0  # if any one of scores is zero => harmonic mean is zero
         else:
             score = len(scores) / sum(1 / s for s in scores)
+        return score
+
+    @staticmethod
+    def _geometric_mean(scores):
+        #  math.exp( sum( map( my_log, precisions[:effective_order])  )  / effective_order)
+        if any(s == 0 for s in scores):
+            score = 0  # if any one of scores is zero => geometric mean is zero
+        else:
+            score = math.exp(sum(math.log(score) for score in scores) / len(scores))
         return score
 
     def format(self, width=4) -> str:
@@ -119,8 +139,9 @@ class ReBLEU(NamedResult):
         result = f'ReBLEU'
         for name, avg in [('f1', self.f1),
                           ('precision', self.precision),
-                          ('recall', self.recall)]:
-            result += f' {name} {scaler * avg:.{width}f} '
+                          ('recall', self.recall),
+                          ('accuracy', self.accuracy)]:
+            result += f' {name.title()} {scaler * avg:.{width}f} '
             scores = [scaler * m.get_score(name) for m in self.measures]
             result += '/'.join(f'{score:.{width}f}' for score in scores)
 
@@ -138,11 +159,13 @@ class ReBLEU(NamedResult):
         for m in self.measures:
             class_stats.update(m.measures)
 
-        # sort by ascending of ngram, descending of ref_freq
+        # sort by ascending of ngram, descending of ref_freq, descending of hyp_freq
         class_stats: List[ClassMeasure] = sorted(class_stats, reverse=False,
-                                                 key=lambda s: (len(s.name.split()), -s.refs))
+                                                 key=lambda s: (len(s.name.split()),
+                                                                -s.refs, -s.preds))
         delim = '\t'
         ljust = 15
+
         def format_class_stat(stat: ClassMeasure):
             row = [stat.name.ljust(ljust)]
             row += [str(x) for x in [len(stat.name.split()), stat.refs, stat.preds, stat.correct]]
@@ -158,7 +181,6 @@ class ReBLEU(NamedResult):
             out.write(delim.join(header) + '\n')
             for cs in class_stats:
                 out.write(format_class_stat(cs) + '\n')
-
 
     def signature(self, args, numrefs):
         """
@@ -203,7 +225,6 @@ class ReBLEU(NamedResult):
 
         sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, signature[x]) for x in
                            sorted(signature.keys())])
-
         return sigstr
 
 
@@ -288,13 +309,14 @@ def corpus_rebleu(sys_stream: Union[str, Iterable[str]],
 
     # average measure across multiple classes per group
     group_measures = []
-    for order, order_measures in gram_measure_groups.items():
+    gram_measure_groups = sorted(gram_measure_groups.items(), key=lambda x: x[0])
+    for order, order_measures in gram_measure_groups:
         group_measures.append(MultiClassMeasure(name=f'{order}-gram', measures=order_measures,
                                                 average=average, smooth_value=smooth_value))
 
     # Harmonic mean
     assert len(group_measures) == max_order
     len_ratio = sys_len / ref_len
-    harm_mean = ReBLEU(measures=group_measures, name=f'HarmonicMean of {max_order}-grams',
+    harm_mean = ReBLEU(measures=group_measures, name=f'ReBLEU',
                        len_ratio=len_ratio)
     return harm_mean
