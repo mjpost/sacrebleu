@@ -909,10 +909,44 @@ def tokenize_zh(sentence):
 
     return sentence
 
+
+class TokenizeMeCab:
+    def __init__(self):
+        import MeCab
+        self.tagger = MeCab.Tagger("-Owakati")
+        # make sure the dictionary is IPA.
+        d = self.tagger.dictionary_info()
+        assert d.size == 392126, "Please make sure to use IPA dictionary for MeCab"
+        assert d.next is None
+
+    def tokenize(self, line):
+        """
+        Tokenizes an Japanese input line using MeCab morphological analyzer.
+
+        :param line: a segment to tokenize
+        :return: the tokenized line
+        """
+        line = line.strip()
+        sentence = self.tagger.parse(line).strip()
+        return sentence
+
+
+    def signature(self):
+        """
+        Returns the MeCab parameters.
+
+        :return: signature string
+        """
+        signature = self.tagger.version() + "-IPA"
+
+        return signature
+
+
 TOKENIZERS = {
     '13a': tokenize_13a,
     'intl': tokenize_v14_international,
     'zh': tokenize_zh,
+    'ja-mecab': TokenizeMeCab().tokenize,
     'none': lambda x: x,
 }
 DEFAULT_TOKENIZER = '13a'
@@ -967,6 +1001,10 @@ def bleu_signature(args, numrefs):
                  'smooth': args.smooth,
                  'numrefs': numrefs,
                  'case': 'lc' if args.lc else 'mixed'}
+
+    # For the Japanese tokenizer, add a dictionary type and its version to the signature.
+    if args.tokenize == "ja-mecab":
+        signature['tok'] += "-" + TokenizeMeCab().signature()
 
     if args.test_set is not None:
         signature['test'] = args.test_set
@@ -1754,11 +1792,16 @@ def main():
         # set default
         if args.langpair is not None and args.langpair.split('-')[1] == 'zh':
             args.tokenize = 'zh'
+        elif args.langpair is not None and args.langpair.split('-')[1] == 'ja':
+            args.tokenize = 'ja-mecab'
         else:
             args.tokenize = DEFAULT_TOKENIZER
 
-    if args.langpair is not None and args.langpair.split('-')[1] == 'zh' and 'bleu' in args.metrics and args.tokenize != 'zh':
-        logging.warning('You should also pass "--tok zh" when scoring Chinese...')
+    if args.langpair is not None and 'bleu' in args.metrics:
+        if args.langpair.split('-')[1] == 'zh' and args.tokenize != 'zh':
+            logging.warning('You should also pass "--tok zh" when scoring Chinese...')
+        if args.langpair.split('-')[1] == 'ja' and not args.tokenize.startswith('ja-'):
+            logging.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
 
     # concat_ref_files is a list of list of reference filenames, for example:
     # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
