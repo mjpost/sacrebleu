@@ -1,5 +1,9 @@
 # VERSION HISTORY
 
+- 1.4.5 (2020-03-28)
+  - Added Japanese MeCab tokenize (`-tok ja-mecab`) (thanks to Makoto Morishita @MorinoseiMorizo)
+  - Added wmt20/dev test sets (thanks to Martin Popel @martinpopel)
+
 - 1.4.4 (2020-03-10)
   - Smoothing changes (Sebastian Nickels @sn1c)
     - Fixed bug that only applied smoothing to n-grams for n > 2
