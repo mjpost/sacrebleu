@@ -38,7 +38,7 @@ import urllib.request
 from collections import Counter
 from itertools import zip_longest
 from typing import List, Iterable, Tuple, Union
-from .tokenizer import TOKENIZERS
+from .tokenizer import TOKENIZERS, TokenizeMeCab
 from .dataset import DATASETS, DOMAINS, COUNTRIES, SUBSETS
 from . import __version__ as VERSION
 
@@ -126,6 +126,10 @@ def bleu_signature(args, numrefs):
                  'smooth': args.smooth,
                  'numrefs': numrefs,
                  'case': 'lc' if args.lc else 'mixed'}
+
+    # For the Japanese tokenizer, add a dictionary type and its version to the signature.
+    if args.tokenize == "ja-mecab":
+        signature['tok'] += "-" + TokenizeMeCab().signature()
 
     if args.test_set is not None:
         signature['test'] = args.test_set
@@ -852,11 +856,16 @@ def main():
         # set default
         if args.langpair is not None and args.langpair.split('-')[1] == 'zh':
             args.tokenize = 'zh'
+        elif args.langpair is not None and args.langpair.split('-')[1] == 'ja':
+            args.tokenize = 'ja-mecab'
         else:
             args.tokenize = DEFAULT_TOKENIZER
 
-    if args.langpair is not None and args.langpair.split('-')[1] == 'zh' and 'bleu' in args.metrics and args.tokenize != 'zh':
-        logging.warning('You should also pass "--tok zh" when scoring Chinese...')
+    if args.langpair is not None and 'bleu' in args.metrics:
+        if args.langpair.split('-')[1] == 'zh' and args.tokenize != 'zh':
+            logging.warning('You should also pass "--tok zh" when scoring Chinese...')
+        if args.langpair.split('-')[1] == 'ja' and not args.tokenize.startswith('ja-'):
+            logging.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
 
     # concat_ref_files is a list of list of reference filenames, for example:
     # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]

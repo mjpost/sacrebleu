@@ -1,11 +1,17 @@
 # VERSION HISTORY
 
-- 1.4.4 (????-??-??)
+- 1.4.5 (2020-03-28)
+  - Added Japanese MeCab tokenize (`-tok ja-mecab`) (thanks to Makoto Morishita @MorinoseiMorizo)
+  - Added wmt20/dev test sets (thanks to Martin Popel @martinpopel)
+
+- 1.4.4 (2020-03-10)
+  - Smoothing changes (Sebastian Nickels @sn1c)
+    - Fixed bug that only applied smoothing to n-grams for n > 2
+    - Added default smoothing values for methods "floor" (0) and "add-k" (1)
   - `--list` now returns a list of all language pairs for a task when combined with `-t`
     (e.g., `sacrebleu -t wmt19 --list`)
   - added missing languages for IWSLT17
-	- Other improvements:
-    - Minor code improvements (Thomas Liao @tholiao)
+  - Minor code improvements (Thomas Liao @tholiao)
 
 - 1.4.3 (2019-12-02)
   - Bugfix: handling of result object for CHRF
