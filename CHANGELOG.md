@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.4.6 (2020-03-28)
+  - Large internal reorganization as a module (thanks to Thamme Gowda @thammegowda)
+
 - 1.4.5 (2020-03-28)
   - Added Japanese MeCab tokenize (`-tok ja-mecab`) (thanks to Makoto Morishita @MorinoseiMorizo)
   - Added wmt20/dev test sets (thanks to Martin Popel @martinpopel)
