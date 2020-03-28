@@ -48,13 +48,7 @@ To install:
 
 # Always prefer setuptools over distutils
 from setuptools import setup
-import re
-import os
-
-def get_version():
-    VERSION_RE = re.compile(r'''VERSION\s+=\s+['"]([0-9.]+)['"]''')
-    with open(os.path.join(os.path.dirname(__file__), 'sacrebleu.py'), encoding='utf-8') as fin:
-        return VERSION_RE.search(fin.read()).group(1)
+import sacrebleu
 
 setup(
     name = 'sacrebleu',
@@ -62,9 +56,9 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version = get_version(),
+    version = sacrebleu.__version__,
 
-    description = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores',
+    description = sacrebleu.__description__,
     long_description = 'SacreBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.',
 
     # The project's main homepage.
@@ -105,7 +99,9 @@ setup(
     keywords = ['machine translation, evaluation, NLP, natural language processing, computational linguistics'],
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment this:
-    py_modules = ["sacrebleu"],
+    #py_modules = ["sacrebleu"],
+    packages = ["sacrebleu"],
+
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
@@ -124,7 +120,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'sacrebleu = sacrebleu:main',
+            'sacrebleu = sacrebleu.sacrebleu:main',
         ],
     },
 )
