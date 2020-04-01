@@ -2,7 +2,7 @@
 #
 # Author: Thamme Gowda [tg (at) isi (dot) edu] 
 # Created: 2020-03-22
-from typing import Union, Iterable, List, Set
+from typing import Union, Iterable, List, Set, Dict, Tuple
 from itertools import zip_longest
 import logging as log
 import math
@@ -167,8 +167,9 @@ class ReBLEU(NamedResult):
         ljust = 15
 
         def format_class_stat(stat: ClassMeasure):
-            row = [stat.name.ljust(ljust)]
-            row += [str(x) for x in [len(stat.name.split()), stat.refs, stat.preds, stat.correct]]
+            assert isinstance(stat.name, list)
+            row = [" ".join(stat.name).ljust(ljust)]
+            row += [str(x) for x in [len(stat.name), stat.refs, stat.preds, stat.correct]]
             row += [f'{x * scaler:.{width}f}' for x in [stat.f1, stat.precision, stat.recall]]
             return delim.join(row)
 
@@ -228,6 +229,34 @@ class ReBLEU(NamedResult):
         return sigstr
 
 
+def _prepare_lines(sys_stream, ref_streams, lowercase, tokenize, force):
+    # Add some robustness to the input arguments
+    if isinstance(sys_stream, str):
+        sys_stream = [sys_stream]
+    if isinstance(ref_streams, str):
+        ref_streams = [[ref_streams]]
+    tokenized_count = 0  # look for already-tokenized sentences
+    fhs = [sys_stream] + ref_streams
+    for lines in zip_longest(*fhs):
+        if None in lines:
+            raise EOFError("Source and reference streams have different lengths!")
+
+        if lowercase:
+            lines = [x.lower() for x in lines]
+
+        if not (force or tokenize == 'none') and lines[0].rstrip().endswith(' .'):
+            tokenized_count += 1
+
+            if tokenized_count == 100:
+                log.warning("That's 100 lines that end in a tokenized period (' .')")
+                log.warning(
+                    "It looks like you forgot to detokenize your test data, which may hurt your score.")
+                log.warning(
+                    "If you insist your data is detokenized, or don't care, you can suppress this message with '--force'.")
+        lines = [TOKENIZERS[tokenize](x.rstrip()) for x in lines]
+        yield lines
+
+
 def corpus_rebleu(sys_stream: Union[str, Iterable[str]],
                   ref_streams: Union[str, List[Iterable[str]]],
                   smooth_value=None,
@@ -249,42 +278,43 @@ def corpus_rebleu(sys_stream: Union[str, Iterable[str]],
     if smooth_value is None:
         smooth_value = DEF_SMOOTH_VAL
     assert smooth_value >= 0
-    assert 1 <= max_order
 
-    # Add some robustness to the input arguments
-    if isinstance(sys_stream, str):
-        sys_stream = [sys_stream]
-    if isinstance(ref_streams, str):
-        ref_streams = [[ref_streams]]
+    lines = _prepare_lines(sys_stream, ref_streams, lowercase, tokenize, force)
+    gram_stats, ref_len, sys_len = n_gram_performance(lines, max_order)
 
-    sys_len = 0
-    ref_len = 0
+    gram_measure_groups = defaultdict(list)
+    for name, measure in gram_stats.items():
+        assert name == measure.name
+        measure.name = name.split() # convert to list
+        gram_measure_groups[len(measure.name)].append(measure)
 
-    # look for already-tokenized sentences
-    tokenized_count = 0
+    # average measure across multiple classes per group
+    group_measures = []
+    gram_measure_groups = sorted(gram_measure_groups.items(), key=lambda x: x[0])
+    for order, order_measures in gram_measure_groups:
+        group_measures.append(MultiClassMeasure(name=f'{order}-gram', measures=order_measures,
+                                                average=average, smooth_value=smooth_value))
+
+    # Harmonic mean
+    assert len(group_measures) == max_order
+    len_ratio = sys_len / ref_len
+    harm_mean = ReBLEU(measures=group_measures, name=f'ReBLEU', len_ratio=len_ratio)
+    return harm_mean
+
+
+def n_gram_performance(lines: Iterable[List[str]], max_order: int) \
+        -> Tuple[Dict[str, ClassMeasure], int, int]:
+    """
+    Gets n-gram performance by comparing system output against 1 or more references
+    :param lines:  iterator of [output, ref1 ...] where output and ref1,... are tokenized lines
+    :param max_order: maximum n_grams order
+    :return: gram_performance, ref_len, sys_len
+    """
+    assert max_order >= 1
+    sys_len, ref_len = 0, 0
     gram_stats = {}
-
-    fhs = [sys_stream] + ref_streams
-    for lines in zip_longest(*fhs):
-        if None in lines:
-            raise EOFError("Source and reference streams have different lengths!")
-
-        if lowercase:
-            lines = [x.lower() for x in lines]
-
-        if not (force or tokenize == 'none') and lines[0].rstrip().endswith(' .'):
-            tokenized_count += 1
-
-            if tokenized_count == 100:
-                log.warning("That's 100 lines that end in a tokenized period (' .')")
-                log.warning(
-                    "It looks like you forgot to detokenize your test data, which may hurt your score.")
-                log.warning(
-                    "If you insist your data is detokenized, or don't care, you can suppress this message with '--force'.")
-
-        output, *refs = [TOKENIZERS[tokenize](x.rstrip()) for x in lines]
+    for output, *refs in lines:
         ref_ngrams, closest_diff, closest_len = ref_stats(output, refs, max_order=max_order)
-
         sys_len += len(output.split())
         ref_len += closest_len
 
@@ -301,22 +331,4 @@ def corpus_rebleu(sys_stream: Union[str, Iterable[str]],
                 gram_stats[ngram] = ClassMeasure(name=ngram)
             gram_stats[ngram].refs += ref_ngrams[ngram]
             # .cand and .match are zero by default
-
-    gram_measure_groups = defaultdict(list)
-    for name, measure in gram_stats.items():
-        assert name == measure.name
-        gram_measure_groups[len(name.split())].append(measure)
-
-    # average measure across multiple classes per group
-    group_measures = []
-    gram_measure_groups = sorted(gram_measure_groups.items(), key=lambda x: x[0])
-    for order, order_measures in gram_measure_groups:
-        group_measures.append(MultiClassMeasure(name=f'{order}-gram', measures=order_measures,
-                                                average=average, smooth_value=smooth_value))
-
-    # Harmonic mean
-    assert len(group_measures) == max_order
-    len_ratio = sys_len / ref_len
-    harm_mean = ReBLEU(measures=group_measures, name=f'ReBLEU',
-                       len_ratio=len_ratio)
-    return harm_mean
+    return gram_stats, ref_len, sys_len
