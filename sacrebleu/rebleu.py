@@ -22,9 +22,50 @@ class NamedResult(Result):
     def format(self, width=4) -> str:
         return f'{self.name} {self.score:.{width}f}'
 
-    def signature(self, *args, **kwargs) -> str:
-        log.warning('signature() not implemented')
-        return ''
+    def signature(self, args, numrefs):
+        """
+        Builds a signature that uniquely identifies the scoring parameters used.
+        :param args: the arguments passed into the script
+        :return: the signature
+        """
+
+        # Abbreviations for the signature
+        abbr = {
+            'test': 't',
+            'lang': 'l',
+            'smoothval': 'sv',
+            'case': 'c',
+            'tok': 'tok',
+            'numrefs': '#',
+            'version': 'v',
+            'origlang': 'o',
+            'subset': 'S',
+            'average': 'a',
+            'ngram': 'ng'
+        }
+
+        signature = {'tok': args.tokenize,
+                     'version': VERSION,
+                     'smoothval': args.smooth_value if args.smooth_value is not None else DEF_SMOOTH_VAL,
+                     'numrefs': numrefs,
+                     'average': args.average,
+                     'ngram': args.rebleu_order,
+                     'case': 'lc' if args.lc else 'mixed'}
+
+        if args.test_set is not None:
+            signature['test'] = args.test_set
+
+        if args.langpair is not None:
+            signature['lang'] = args.langpair
+
+        if args.origlang is not None:
+            signature['origlang'] = args.origlang
+        if args.subset is not None:
+            signature['subset'] = args.subset
+
+        sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, signature[x]) for x in
+                           sorted(signature.keys())])
+        return sigstr
 
 
 class ClassMeasure(NamedResult):
@@ -63,14 +104,26 @@ class ClassMeasure(NamedResult):
         return f'ClassMesure[{self.name}, pred/cor/ref={self.preds}/{self.correct}/{self.refs} ' \
             f'P/R/F1={self.precision:g}/{self.recall:g}/{self.f1:g}]'
 
+    def order(self):
+        """
+        Gets the n-gram order
+        Use this only for n-gram classes
+        """
+        assert isinstance(self.name, tuple)
+        return len(self.name)
+
 
 class MultiClassMeasure(NamedResult):
     """
     Refer to https://datascience.stackexchange.com/a/24051/16531 for micro vs macro
     """
 
-    def __init__(self, name, measures: List[ClassMeasure], average='macro', smooth_value=0):
+    def __init__(self, name, measures: List[ClassMeasure], average='macro',
+                 smooth_value=0, measure_names=('f1', 'precision', 'recall', 'accuracy'),
+                 summary='f1', percent=True):
         self.smooth_value = smooth_value
+        assert summary in measure_names
+        self.percent = percent
 
         def my_log(x):
             assert x > 0, f'{x} > 0 ?'
@@ -81,44 +134,35 @@ class MultiClassMeasure(NamedResult):
                      'micro_log': lambda m: my_log(smooth_value + m.refs),
                      'macro': lambda m: 1,
                      }
+
         assert average in avg_types
+        weight_func = avg_types[average]
         self.measures = measures
-        avgs = {}
-        for measure_name in ['f1', 'precision', 'recall']:
-            wt_scores = [(m.measure(measure_name=measure_name), avg_types[average](m))
-                         for m in measures]
-            norm = sum(w for score, w in wt_scores)
-            avgs[measure_name] = sum(score * w for score, w in wt_scores) / norm
-        self.avg_f1 = avgs['f1']
-        self.avg_precision = avgs['precision']
-        self.avg_recall = avgs['recall']
-        self.accuracy = sum(m.correct for m in measures) / sum(m.preds for m in measures)
-        super().__init__(name=name, score=self.avg_f1)
+        self.avgs = {}
+        for measure_name in measure_names:
+            if measure_name == 'accuracy':
+                self.avgs['accuracy'] = sum(m.correct for m in measures) \
+                                        / sum(m.preds for m in measures)
+            else:
+                wt_scores = [(m.measure(measure_name=measure_name), weight_func(m))
+                             for m in measures]
+                norm = sum(w for score, w in wt_scores)
+                self.avgs[measure_name] = sum(score * w for score, w in wt_scores) / norm
+
+        super().__init__(name=name, score=self.avgs[summary])
 
     def get_score(self, name):
-        return dict(f1=self.avg_f1, precision=self.avg_precision,
-                    recall=self.avg_recall, accuracy=self.accuracy)[name]
+        return self.avgs[name]
 
     def __str__(self):
-        return f'MultiClassMesure[{self.name}, ' \
-            f'P/R/F1/Acc={self.avg_precision:g}/{self.avg_recall:g}/{self.avg_f1:g}/{self.accuracy}]'
+        scaler, width = (100, 2) if self.percent else (1, 4)
+        line = '/'.join(n[:2].title() + f'={v * scaler:.{width}f}' for n, v in self.avgs.items())
+        return f'MultiClassMeasure[{self.name}, {line}]'
 
-
-class ReBLEU(NamedResult):
-    def __init__(self, name, measures: List[MultiClassMeasure], len_ratio: float, percent=True):
-        self.measures = measures
-        mean = self._geometric_mean
-        self.precision = mean([m.avg_precision for m in measures])
-        self.recall = mean([m.avg_recall for m in measures])
-        self.f1 = mean([m.avg_f1 for m in measures])
-        self.accuracy = mean([m.accuracy for m in measures])
-
-        super().__init__(name=name, score=self.f1)
-        self.percent = percent
-        self.len_ratio = len_ratio
+class Mean:
 
     @staticmethod
-    def _harmonic_mean(scores):
+    def harmonic(scores):
         if any(s == 0 for s in scores):
             score = 0  # if any one of scores is zero => harmonic mean is zero
         else:
@@ -126,13 +170,35 @@ class ReBLEU(NamedResult):
         return score
 
     @staticmethod
-    def _geometric_mean(scores):
+    def geometric(scores):
         #  math.exp( sum( map( my_log, precisions[:effective_order])  )  / effective_order)
         if any(s == 0 for s in scores):
             score = 0  # if any one of scores is zero => geometric mean is zero
         else:
             score = math.exp(sum(math.log(score) for score in scores) / len(scores))
         return score
+
+    @staticmethod
+    def arithmetic(scores, wts=None):
+        if wts:
+            assert len(scores) == len(wts)
+            return sum(s * w for s,w in zip(scores, wts)) / sum(wts)
+        else:
+            return sum(scores) / len(scores)
+
+
+class ReBLEU(NamedResult):
+    def __init__(self, name, measures: List[MultiClassMeasure], len_ratio: float, percent=True):
+        self.measures = measures
+        mean = Mean.geometric
+        self.precision = mean([m.get_score('precision') for m in measures])
+        self.recall = mean([m.get_score('recall') for m in measures])
+        self.f1 = mean([m.get_score('f1') for m in measures])
+        self.accuracy = mean([m.get_score('accuracy') for m in measures])
+
+        super().__init__(name=name, score=self.f1)
+        self.percent = percent
+        self.len_ratio = len_ratio
 
     def format(self, width=4) -> str:
         scaler = 100 if self.percent else 1
@@ -183,51 +249,39 @@ class ReBLEU(NamedResult):
             for cs in class_stats:
                 out.write(format_class_stat(cs) + '\n')
 
-    def signature(self, args, numrefs):
-        """
-        Builds a signature that uniquely identifies the scoring parameters used.
-        :param args: the arguments passed into the script
-        :return: the signature
-        """
 
-        # Abbreviations for the signature
-        abbr = {
-            'test': 't',
-            'lang': 'l',
-            'smoothval': 'sv',
-            'case': 'c',
-            'tok': 'tok',
-            'numrefs': '#',
-            'version': 'v',
-            'origlang': 'o',
-            'subset': 'S',
-            'average': 'a',
-            'ngram': 'ng'
-        }
+class NGramGroup(NamedResult):
+    """NGramGroup N-grams based on unigrams """
 
-        signature = {'tok': args.tokenize,
-                     'version': VERSION,
-                     'smoothval': args.smooth_value if args.smooth_value is not None else DEF_SMOOTH_VAL,
-                     'numrefs': numrefs,
-                     'average': args.average,
-                     'ngram': args.rebleu_order,
-                     'case': 'lc' if args.lc else 'mixed'}
+    def __init__(self, name, max_order):
+        self.name = name
+        self.groups: List[List[ClassMeasure]] = [[] for _ in range(max_order)]
 
-        if args.test_set is not None:
-            signature['test'] = args.test_set
+    def add(self, stat: ClassMeasure):
+        assert self.name in stat.name
+        self.groups[stat.order() - 1].append(stat)
 
-        if args.langpair is not None:
-            signature['lang'] = args.langpair
+    def measure(self, measure_name='f1') -> float:
+        if len(self.groups[0]) != 1:
+            log.warning(f"{self.name} expected 1 but found {len(self.groups[0])} unigram types")
+        assert len(self.groups[0]) == 1  # exactly one unigram
+        groups = [g for g in self.groups if g]  # ignore empty groups
+        g_scores = [[cm.measure(measure_name) for cm in g] for g in groups]
 
-        if args.origlang is not None:
-            signature['origlang'] = args.origlang
-        if args.subset is not None:
-            signature['subset'] = args.subset
+        # arithmetic mean within groups
+        intra_means = [Mean.arithmetic(g) for g in g_scores]
+        # geometric mean across groups
+        cross_mean = Mean.geometric(intra_means)
+        return cross_mean
 
-        sigstr = '+'.join(['{}.{}'.format(abbr[x] if args.short else x, signature[x]) for x in
-                           sorted(signature.keys())])
-        return sigstr
+    @property
+    def score(self) -> float:
+        return self.measure('f1')
 
+    @property
+    def refs(self) -> int:
+        # unigram ref count
+        return self.groups[0][0].refs
 
 def _prepare_lines(sys_stream, ref_streams, lowercase, tokenize, force):
     # Add some robustness to the input arguments
@@ -264,7 +318,7 @@ def corpus_rebleu(sys_stream: Union[str, Iterable[str]],
                   lowercase=False,
                   tokenize=DEFAULT_TOKENIZER,
                   average='micro',
-                  max_order=NGRAM_ORDER, report=None) -> ReBLEU:
+                  max_order=NGRAM_ORDER) -> Union[MultiClassMeasure, ReBLEU]:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param sys_stream: The system stream (a sequence of segments)
@@ -282,6 +336,7 @@ def corpus_rebleu(sys_stream: Union[str, Iterable[str]],
     lines = _prepare_lines(sys_stream, ref_streams, lowercase, tokenize, force)
     gram_stats, ref_len, sys_len = n_gram_performance(lines, max_order)
 
+    """
     gram_measure_groups = defaultdict(list)
     for name, measure in gram_stats.items():
         assert name == measure.name
@@ -294,12 +349,27 @@ def corpus_rebleu(sys_stream: Union[str, Iterable[str]],
     for order, order_measures in gram_measure_groups:
         group_measures.append(MultiClassMeasure(name=f'{order}-gram', measures=order_measures,
                                                 average=average, smooth_value=smooth_value))
-
-    # Harmonic mean
     assert len(group_measures) == max_order
+    # ReBLEU
     len_ratio = sys_len / ref_len
-    harm_mean = ReBLEU(measures=group_measures, name=f'ReBLEU', len_ratio=len_ratio)
-    return harm_mean
+    rebleu = ReBLEU(measures=group_measures, name=f'ReBLEU', len_ratio=len_ratio)                                                
+    """
+
+    gram_stats = gram_stats.values()
+    for gs in gram_stats:
+        assert isinstance(gs.name, str)
+        gs.name = tuple(gs.name.split())  # convert space separated ngram string to tuple
+
+    unigrams = [gs.name[0] for gs in gram_stats if gs.order() == 1]
+    groups = {ug: NGramGroup(name=ug, max_order=max_order) for ug in unigrams}
+    for gram_stat in gram_stats:
+        for gram in gram_stat.name:
+            groups[gram].add(gram_stat)
+
+    groups = list(groups.values())
+    rebleu = MultiClassMeasure('ReBLEU', measures=groups, average=average,
+                               smooth_value=smooth_value, measure_names=['f1'])
+    return rebleu
 
 
 def n_gram_performance(lines: Iterable[List[str]], max_order: int) \
