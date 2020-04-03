@@ -261,13 +261,16 @@ class NGramGroup(NamedResult):
         assert self.name in stat.name
         self.groups[stat.order() - 1].append(stat)
 
-    def measure(self, measure_name='f1') -> float:
+    def measure(self, measure_name=None) -> float:
+        #raise Exception('Error')
         if len(self.groups[0]) != 1:
             log.warning(f"{self.name} expected 1 but found {len(self.groups[0])} unigram types")
         assert len(self.groups[0]) == 1  # exactly one unigram
         groups = [g for g in self.groups if g]  # ignore empty groups
-        g_scores = [[cm.measure(measure_name) for cm in g] for g in groups]
-
+        # Unigram F1
+        unigram_score = groups[0][0].measure('f1')
+        # higher grams precision
+        g_scores = [[unigram_score]] + [[cm.measure('precision') for cm in g] for g in groups[1:]]
         # arithmetic mean within groups
         intra_means = [Mean.arithmetic(g) for g in g_scores]
         # geometric mean across groups
@@ -368,7 +371,7 @@ def corpus_rebleu(sys_stream: Union[str, Iterable[str]],
 
     groups = list(groups.values())
     rebleu = MultiClassMeasure('ReBLEU', measures=groups, average=average,
-                               smooth_value=smooth_value, measure_names=['f1'])
+                               smooth_value=smooth_value, measure_names=['default'], summary='default' )
     return rebleu
 
 

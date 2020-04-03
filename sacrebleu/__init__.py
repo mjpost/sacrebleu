@@ -14,7 +14,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__version__ = '1.4.3'
+__version__ = '1.4.6'
 __description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores'
 
 from .sacrebleu import corpus_bleu, corpus_chrf, sentence_bleu, sentence_chrf, compute_bleu,\
@@ -23,3 +23,5 @@ from .sacrebleu import corpus_bleu, corpus_chrf, sentence_bleu, sentence_chrf, c
 # more imports for backward compatibility
 from .sacrebleu import  ref_stats, bleu_signature, extract_ngrams, extract_char_ngrams, \
     get_corpus_statistics, display_metric, get_sentence_statistics, download_test_set
+
+from .rebleu import corpus_rebleu
