@@ -159,6 +159,7 @@ class MultiClassMeasure(NamedResult):
         line = '/'.join(n[:2].title() + f'={v * scaler:.{width}f}' for n, v in self.avgs.items())
         return f'MultiClassMeasure[{self.name}, {line}]'
 
+
 class Mean:
 
     @staticmethod
@@ -187,7 +188,7 @@ class Mean:
             return sum(scores) / len(scores)
 
 
-class ReBLEU(NamedResult):
+class ReBLEU_Old(NamedResult):
     def __init__(self, name, measures: List[MultiClassMeasure], len_ratio: float, percent=True):
         self.measures = measures
         mean = Mean.geometric
@@ -250,6 +251,54 @@ class ReBLEU(NamedResult):
                 out.write(format_class_stat(cs) + '\n')
 
 
+class ReBLEU(NamedResult):
+    """
+    Refer to https://datascience.stackexchange.com/a/24051/16531 for micro vs macro
+    """
+
+    def __init__(self, measures: List[ClassMeasure], sys_len, ref_len, name='ReBLEU',
+                 average='macro', smooth_value=0, percent=True):
+        
+        assert sys_len >= 0 
+        assert ref_len > 0
+        self.smooth_value = smooth_value
+        self.percent = percent
+
+        def my_log(x):
+            assert x > 0, f'{x} > 0 ?'
+            return math.log(x)
+
+        avg_types = {'micro': lambda m: smooth_value + m.refs,
+                     'micro_sqrt': lambda m: math.sqrt(smooth_value + m.refs),
+                     'micro_log': lambda m: my_log(smooth_value + m.refs),
+                     'macro': lambda m: 1,
+                     }
+
+        assert average in avg_types
+        weight_func = avg_types[average]
+        self.measures = measures
+
+        wt_scores = [(m.measure(measure_name='precision'), weight_func(m))
+                         for m in measures]
+        norm = sum(w for score, w in wt_scores)
+        avg_score = sum(score * w for score, w in wt_scores) / norm
+        self.brevity_penalty = 1.0
+        """
+        if sys_len < ref_len:
+            self.brevity_penalty = math.exp(1 - ref_len / sys_len) if sys_len > 0 else 0.0           
+        """
+        self.rebleu = self.brevity_penalty * avg_score
+        self.sys_len, self.ref_len = sys_len, ref_len
+        super().__init__(name=name, score=self.rebleu)
+
+    def __str__(self):
+        scaler, width = (100, 2) if self.percent else (1, 4)
+        return f'{self.name} {scaler * self.score:.{width}f} ( BP = {self.brevity_penalty:.3f} ratio = {self.sys_len/self.ref_len:.3f}' \
+                              f' hyp_len = {self.sys_len} ref_len = {self.ref_len} )'
+    def format(self, width=2):
+        return str(self)
+
+
 class NGramGroup(NamedResult):
     """NGramGroup N-grams based on unigrams """
 
@@ -268,9 +317,10 @@ class NGramGroup(NamedResult):
         assert len(self.groups[0]) == 1  # exactly one unigram
         groups = [g for g in self.groups if g]  # ignore empty groups
         # Unigram F1
-        unigram_score = groups[0][0].measure('f1')
+        # unigram_score = groups[0][0].measure('f1')
+        meas_names = ['f1'] + ['precision'] * (len(groups) -1)                     
         # higher grams precision
-        g_scores = [[unigram_score]] + [[cm.measure('precision') for cm in g] for g in groups[1:]]
+        g_scores = [[cm.measure(m_name) for cm in g] for m_name, g in zip(meas_names, groups)]
         # arithmetic mean within groups
         intra_means = [Mean.arithmetic(g) for g in g_scores]
         # geometric mean across groups
@@ -370,8 +420,13 @@ def corpus_rebleu(sys_stream: Union[str, Iterable[str]],
             groups[gram].add(gram_stat)
 
     groups = list(groups.values())
+                              
+    """ 
     rebleu = MultiClassMeasure('ReBLEU', measures=groups, average=average,
                                smooth_value=smooth_value, measure_names=['default'], summary='default' )
+    """
+    rebleu = ReBLEU(measures=groups, average=average, smooth_value=smooth_value, sys_len=sys_len, ref_len=ref_len)
+
     return rebleu
 
 
