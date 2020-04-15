@@ -18,8 +18,8 @@ __version__ = '1.4.5'
 __description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores'
 
 from .sacrebleu import corpus_bleu, corpus_chrf, sentence_bleu, sentence_chrf, compute_bleu,\
-    raw_corpus_bleu, BLEU, CHRF, DATASETS, TOKENIZERS
-
+    raw_corpus_bleu, BLEU, CHRF, DATASETS, TOKENIZERS, SACREBLEU_DIR
+9baed3e
 # more imports for backward compatibility
 from .sacrebleu import  ref_stats, bleu_signature, extract_ngrams, extract_char_ngrams, \
     get_corpus_statistics, display_metric, get_sentence_statistics, download_test_set
