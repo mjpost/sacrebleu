@@ -248,7 +248,7 @@ def _clean(s):
 
 
 def process_to_text(rawfile, txtfile, field: int=None):
-    """Processes raw files to plain text files.
+    """Processes raw files to plain text files. Can handle SGML, XML, TSV files, and plain text.
     :param rawfile: the input file (possibly SGML)
     :param txtfile: the plaintext file
     :param field: For TSV files, which field to extract.
@@ -266,14 +266,14 @@ def process_to_text(rawfile, txtfile, field: int=None):
                 for line in fin:
                     if line.startswith('<seg '):
                         print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
-        elif rawfile.endswith('.txt'): # wmt17/ms
-            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                for line in fin:
-                    print(line.rstrip(), file=fout)
         elif rawfile.endswith('.tsv'): # MTNT
             with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
                 for line in fin:
                     print(line.rstrip().split('\t')[field], file=fout)
+        else: # default to plaint text
+            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
+                for line in fin:
+                    print(line.rstrip(), file=fout)
 
 
 def print_test_set(test_set, langpair, side, origlang=None, subset=None):
