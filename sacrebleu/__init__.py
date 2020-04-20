@@ -14,7 +14,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__version__ = '1.4.6'
+__version__ = '1.4.7'
 __description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores'
 
 from .sacrebleu import smart_open, corpus_bleu, corpus_chrf, sentence_bleu, sentence_chrf, compute_bleu,\

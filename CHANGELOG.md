@@ -1,5 +1,12 @@
 # VERSION HISTORY
 
+- 1.4.7 (2020-04-19)
+  - Added Google's extra wmt19/en-de refs (-t wmt19/google/{ar,arp,hqall,hqp,hqr,wmtp})
+    (Freitag, Grangier, & Caswell
+     BLEU might be Guilty but References are not Innocent
+     https://arxiv.org/abs/2004.06063)
+  - Restored SACREBLEU_DIR and smart_open to exports (thanks to Thomas Liao @tholiao)
+
 - 1.4.6 (2020-03-28)
   - Large internal reorganization as a module (thanks to Thamme Gowda @thammegowda)
 
