@@ -251,12 +251,55 @@ class ReBLEU_Old(NamedResult):
                 out.write(format_class_stat(cs) + '\n')
 
 
+class NGramGroup(NamedResult):
+    """NGramGroup N-grams based on unigrams """
+
+    def __init__(self, name, max_order):
+        self.name = name
+        self.groups: List[List[ClassMeasure]] = [[] for _ in range(max_order)]
+
+    def add(self, stat: ClassMeasure):
+        assert self.name in stat.name
+        self.groups[stat.order() - 1].append(stat)
+
+    def measure(self, measure_name=None) -> float:
+        #raise Exception('Error')
+        if len(self.groups[0]) != 1:
+            log.warning(f"{self.name} expected 1 but found {len(self.groups[0])} unigram types")
+        assert len(self.groups[0]) == 1  # exactly one unigram
+        groups = [g for g in self.groups if g]  # ignore empty groups
+        # Unigram F1
+        # unigram_score = groups[0][0].measure('f1')
+        meas_names = ['f1'] + ['precision'] * (len(groups) -1)
+        # higher grams precision
+        g_scores = [[cm.measure(m_name) for cm in g] for m_name, g in zip(meas_names, groups)]
+        # arithmetic mean within groups
+        intra_means = [Mean.arithmetic(g) for g in g_scores]
+        # geometric mean across groups
+        cross_mean = Mean.geometric(intra_means)
+        return cross_mean
+
+    @property
+    def score(self) -> float:
+        return self.measure('f1')
+
+    @property
+    def refs(self) -> int:
+        # unigram ref count
+        return self.groups[0][0].refs
+
+    @property
+    def head(self) -> ClassMeasure:
+        # head of the group wich is unigram
+        return self.groups[0][0]
+
+
 class ReBLEU(NamedResult):
     """
     Refer to https://datascience.stackexchange.com/a/24051/16531 for micro vs macro
     """
 
-    def __init__(self, measures: List[ClassMeasure], sys_len, ref_len, name='ReBLEU',
+    def __init__(self, measures: List[NGramGroup], sys_len, ref_len, name='ReBLEU',
                  average='macro', smooth_value=0, percent=True):
         
         assert sys_len >= 0 
@@ -287,54 +330,47 @@ class ReBLEU(NamedResult):
         if sys_len < ref_len:
             self.brevity_penalty = math.exp(1 - ref_len / sys_len) if sys_len > 0 else 0.0           
         """
-        self.rebleu = self.brevity_penalty * avg_score
+        self.rebleu = self.brevity_penalty * avg_score * (100 if percent else 1)
         self.sys_len, self.ref_len = sys_len, ref_len
-        super().__init__(name=name, score=self.rebleu)
+        super().__init__(name=name, score=self.rebleu )
 
     def __str__(self):
         scaler, width = (100, 2) if self.percent else (1, 4)
-        return f'{self.name} {scaler * self.score:.{width}f} ( BP = {self.brevity_penalty:.3f} ratio = {self.sys_len/self.ref_len:.3f}' \
+        return f'{self.name} {self.score:.{width}f} ( BP = {self.brevity_penalty:.3f} ratio = {self.sys_len/self.ref_len:.3f}' \
                               f' hyp_len = {self.sys_len} ref_len = {self.ref_len} )'
     def format(self, width=2):
         return str(self)
 
 
-class NGramGroup(NamedResult):
-    """NGramGroup N-grams based on unigrams """
+    def write_report(self, path, args, nrefs):
+        if isinstance(path, str):
+            path = Path(path)
+        scaler, width = 1, 4
+        if self.percent:
+            scaler, width = 100, 2
 
-    def __init__(self, name, max_order):
-        self.name = name
-        self.groups: List[List[ClassMeasure]] = [[] for _ in range(max_order)]
+        # sort by ascending of ngram, descending of ref_freq, descending of hyp_freq
+        class_stats: List[NGramGroup] = sorted(self.measures, reverse=True,
+                                               key=lambda s: (s.head.refs, s.head.preds))
+        delim = '\t'
+        ljust = 15
 
-    def add(self, stat: ClassMeasure):
-        assert self.name in stat.name
-        self.groups[stat.order() - 1].append(stat)
+        def format_class_stat(stat: NGramGroup):
+            row = [stat.name.ljust(ljust), f"{stat.score * scaler:.{width}f}"]
+            head: ClassMeasure = stat.head
+            row += [str(x) for x in [head.refs, head.preds, head.correct]]
+            row += [f'{x * scaler:.{width}f}' for x in [head.f1, head.precision, head.recall]]
+            return delim.join(row)
 
-    def measure(self, measure_name=None) -> float:
-        #raise Exception('Error')
-        if len(self.groups[0]) != 1:
-            log.warning(f"{self.name} expected 1 but found {len(self.groups[0])} unigram types")
-        assert len(self.groups[0]) == 1  # exactly one unigram
-        groups = [g for g in self.groups if g]  # ignore empty groups
-        # Unigram F1
-        # unigram_score = groups[0][0].measure('f1')
-        meas_names = ['f1'] + ['precision'] * (len(groups) -1)                     
-        # higher grams precision
-        g_scores = [[cm.measure(m_name) for cm in g] for m_name, g in zip(meas_names, groups)]
-        # arithmetic mean within groups
-        intra_means = [Mean.arithmetic(g) for g in g_scores]
-        # geometric mean across groups
-        cross_mean = Mean.geometric(intra_means)
-        return cross_mean
-
-    @property
-    def score(self) -> float:
-        return self.measure('f1')
-
-    @property
-    def refs(self) -> int:
-        # unigram ref count
-        return self.groups[0][0].refs
+        with path.open('w', encoding='utf-8', errors='ignore') as out:
+            header = ['Type'.ljust(ljust), 'Score', 'Refs', 'Preds', 'Match', 'F1', 'Precisn',
+                      'Recall']
+            out.write(self.format(width=width) + '\n')
+            out.write(self.signature(args, nrefs) + '\n')
+            out.write('\n----\n')
+            out.write(delim.join(header) + '\n')
+            for cs in class_stats:
+                out.write(format_class_stat(cs) + '\n')
 
 def _prepare_lines(sys_stream, ref_streams, lowercase, tokenize, force):
     # Add some robustness to the input arguments
