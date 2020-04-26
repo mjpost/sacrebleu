@@ -35,18 +35,29 @@ def test_api_get_reference(testset, langpair, sentno, source, reference):
         assert line == reference
 
 def test_api_get_available_testsets():
+    """
+    Loop over the datasets directly, and ensure the API function returns
+    the test sets found.
+    """
     available = sacrebleu.get_available_testsets()
     assert "wmt19" in available
     assert "wmt05" not in available
 
-    available = sacrebleu.get_available_testsets()
     for testset in sacrebleu.DATASETS.keys():
         assert testset in available
         assert "slashdot_" + testset not in available
 
 def test_api_get_langpairs_for_testset():
+    """
+    Loop over the datasets directly, and ensure the API function
+    returns each language pair in each test set.
+    """
     for testset in sacrebleu.DATASETS.keys():
         available = sacrebleu.get_langpairs_for_testset(testset)
-        for langpair in filter(lambda x: "-" in x, sacrebleu.DATASETS[testset].keys()):
-            assert langpair in available
+        for langpair in sacrebleu.DATASETS[testset].keys():
+            # skip non-language keys
+            if "-" not in langpair:
+                assert langpair not in available
+            else:
+                assert langpair in available
             assert "slashdot_" + langpair not in available
