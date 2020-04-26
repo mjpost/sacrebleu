@@ -8,6 +8,7 @@
     - get_langpairs_for_testset()
   - Some internal refactoring
   - Fixed descriptions of some WMT19/google test sets
+  - Added API test case (test/test_apy.py)
 
 - 1.4.7 (2020-04-19)
   - Added Google's extra wmt19/en-de refs (-t wmt19/google/{ar,arp,hqall,hqp,hqr,wmtp})
