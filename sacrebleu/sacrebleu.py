@@ -291,6 +291,8 @@ def print_test_set(test_set, langpair, side, origlang=None, subset=None):
         files = [get_source_file(test_set, langpair)]
     elif side == 'ref':
         files = get_reference_files(test_set, langpair)
+    elif side == "both":
+        files = [get_source_file(test_set, langpair)] + get_reference_files(test_set, langpair)
 
     streams = [smart_open(file) for file in files]
     streams = _filter_subset(streams, test_set, langpair, origlang, subset)
