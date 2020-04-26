@@ -14,12 +14,13 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__version__ = '1.4.7'
+__version__ = '1.4.8'
 __description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores'
 
 from .sacrebleu import smart_open, corpus_bleu, corpus_chrf, sentence_bleu, sentence_chrf, compute_bleu,\
-    raw_corpus_bleu, BLEU, CHRF, DATASETS, TOKENIZERS, SACREBLEU_DIR
+    raw_corpus_bleu, get_source_file, get_reference_files, get_available_testsets, get_langpairs_for_testset,\
+    BLEU, CHRF, DATASETS, TOKENIZERS, SACREBLEU_DIR
 
 # more imports for backward compatibility
-from .sacrebleu import  ref_stats, bleu_signature, extract_ngrams, extract_char_ngrams, \
+from .sacrebleu import ref_stats, bleu_signature, extract_ngrams, extract_char_ngrams, \
     get_corpus_statistics, display_metric, get_sentence_statistics, download_test_set

@@ -36,7 +36,7 @@ import ssl
 import urllib.request
 
 from collections import Counter
-from itertools import zip_longest
+from itertools import zip_longest, filterfalse
 from typing import List, Iterable, Tuple, Union
 from .tokenizer import TOKENIZERS, TokenizeMeCab
 from .dataset import DATASETS, DOMAINS, COUNTRIES, SUBSETS
@@ -249,6 +249,8 @@ def _clean(s):
 
 def process_to_text(rawfile, txtfile, field: int=None):
     """Processes raw files to plain text files. Can handle SGML, XML, TSV files, and plain text.
+    Called after downloading datasets.
+
     :param rawfile: the input file (possibly SGML)
     :param txtfile: the plaintext file
     :param field: For TSV files, which field to extract.
@@ -277,19 +279,18 @@ def process_to_text(rawfile, txtfile, field: int=None):
 
 
 def print_test_set(test_set, langpair, side, origlang=None, subset=None):
-    """Prints to STDOUT the specified side of the specified test set
+    """Prints to STDOUT the specified side of the specified test set.
+
     :param test_set: the test set to print
     :param langpair: the language pair
     :param side: 'src' for source, 'ref' for reference
     :param origlang: print only sentences with a given original language (2-char ISO639-1 code), "non-" prefix means negation
     :param subset: print only sentences whose document annotation matches a given regex
     """
-
-    files = download_test_set(test_set, langpair)
     if side == 'src':
-        files = [files[0]]
+        files = [get_source_file(test_set, langpair)]
     elif side == 'ref':
-        files.pop(0)
+        files = get_reference_files(test_set, langpair)
 
     streams = [smart_open(file) for file in files]
     streams = _filter_subset(streams, test_set, langpair, origlang, subset)
@@ -297,13 +298,73 @@ def print_test_set(test_set, langpair, side, origlang=None, subset=None):
         print('\t'.join(map(lambda x: x.rstrip(), lines)))
 
 
+def get_source_file(test_set, langpair):
+    """
+    Returns the source file for a given testset/langpair.
+    Downloads it first if it is not already local.
+
+    :param test_set: The test set (e.g., "wmt19")
+    :param langpair: The language pair (e.g., "de-en")
+    :return: the path to the requested source file
+    """
+    return get_files(test_set, langpair)[0]
+
+
+def get_reference_files(test_set, langpair):
+    """
+    Returns a list of one or more reference file paths for the given testset/langpair.
+    Downloads the references first if they are not already local.
+
+    :param test_set: The test set (e.g., "wmt19")
+    :param langpair: The language pair (e.g., "de-en")
+    :return: a list of one or more reference file paths
+    """
+    return get_files(test_set, langpair)[1:]
+
+
+def get_files(test_set, langpair):
+    """
+    Returns the path of the source file and all reference files for
+    the provided test set / language pair.
+    Downloads the references first if they are not already local.
+
+    :param test_set: The test set (e.g., "wmt19")
+    :param langpair: The language pair (e.g., "de-en")
+    :return: a list of the source file and all reference files
+    """
+
+    if not test_set in DATASETS:
+        raise Exception("No such test set {}".format(test_set))
+    if not langpair in DATASETS[test_set]:
+        raise Exception("No such language pair {}/{}".format(test_set, langpair))
+
+    cachedir = os.path.join(SACREBLEU_DIR, test_set)
+    source, target = langpair.split("-")
+
+    source_path = os.path.join(cachedir, "{}.{}".format(langpair, source))
+
+    num_refs = len(DATASETS[test_set][langpair]) - 1
+    if num_refs == 1:
+        reference_paths = [ os.path.join(cachedir, "{}.{}".format(langpair, target)) ]
+    else:
+        reference_paths = [ os.path.join(cachedir, "{}.{}.{}".format(langpair, target, num)) for num in range(num_refs) ]
+
+    if any(filterfalse(os.path.exists, [source_path] + reference_paths)):
+        download_test_set(test_set, langpair)
+
+    return [source_path] + reference_paths
+
+
 def download_test_set(test_set, langpair=None):
     """Downloads the specified test to the system location specified by the SACREBLEU environment variable.
 
     :param test_set: the test set to download
     :param langpair: the language pair (needed for some datasets)
-    :return: the set of processed files
+    :return: the set of processed file names
     """
+
+    if not test_set in DATASETS:
+        raise Exception("No such test set {}".format(test_set))
 
     outdir = os.path.join(SACREBLEU_DIR, test_set)
     os.makedirs(outdir, exist_ok=True)
@@ -351,13 +412,11 @@ def download_test_set(test_set, langpair=None):
                     with zipfile.ZipFile(tarball, 'r') as zipfile:
                         zipfile.extractall(path=rawdir)
 
-    found = []
+    file_paths = []
 
     # Process the files into plain text
-    languages = DATASETS[test_set].keys() if langpair is None else [langpair]
+    languages = get_langpairs_for_testset(test_set) if langpair is None else [langpair]
     for pair in languages:
-        if '-' not in pair:
-            continue
         src, tgt = pair.split('-')
         rawfile = DATASETS[test_set][pair][0]
         field = None  # used for TSV files
@@ -367,7 +426,7 @@ def download_test_set(test_set, langpair=None):
         rawpath = os.path.join(rawdir, rawfile)
         outpath = os.path.join(outdir, '{}.{}'.format(pair, src))
         process_to_text(rawpath, outpath, field=field)
-        found.append(outpath)
+        file_paths.append(outpath)
 
         refs = DATASETS[test_set][pair][1:]
         for i, ref in enumerate(refs):
@@ -381,9 +440,9 @@ def download_test_set(test_set, langpair=None):
             else:
                 outpath = os.path.join(outdir, '{}.{}'.format(pair, tgt))
             process_to_text(rawpath, outpath, field=field)
-            found.append(outpath)
+            file_paths.append(outpath)
 
-    return found
+    return file_paths
 
 
 class Result:
@@ -711,7 +770,7 @@ def get_langpairs_for_testset(testset: str) -> List:
     return list(filter(lambda x: re.match('\w\w\-\w\w', x), DATASETS.get(testset, {}).keys()))
 
 
-def get_a_list_of_testset_names() -> str:
+def get_available_testsets() -> str:
     """Return a string with a formatted list of available test sets plus their descriptions. """
     message = 'The available test sets are:'
     for testset in sorted(DATASETS.keys(), reverse=True):
@@ -790,7 +849,7 @@ def main():
         if args.test_set:
             print(' '.join(get_langpairs_for_testset(args.test_set)))
         else:
-            print(get_a_list_of_testset_names())
+            print(get_available_testsets())
         sys.exit(0)
 
     if args.sentence_level and len(args.metrics) > 1:
@@ -817,13 +876,13 @@ def main():
     if args.test_set is not None:
         for test_set in args.test_set.split(','):
             if test_set not in DATASETS:
-                logging.error('Unknown test set "%s"\n%s', test_set, get_a_list_of_testset_names())
+                logging.error('Unknown test set "%s"\n%s', test_set, get_available_testsets())
                 sys.exit(1)
 
     if args.test_set is None:
         if len(args.refs) == 0:
             logging.error('I need either a predefined test set (-t) or a list of references')
-            logging.error(get_a_list_of_testset_names())
+            logging.error(get_available_testsets())
             sys.exit(1)
     elif len(args.refs) > 0:
         logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
@@ -833,10 +892,11 @@ def main():
         sys.exit(1)
     else:
         for test_set in args.test_set.split(','):
-            if args.langpair not in DATASETS[test_set]:
+            langpairs = get_langpairs_for_testset(test_set)
+            if args.langpair not in langpairs:
                 logging.error('No such language pair "%s"', args.langpair)
                 logging.error('Available language pairs for test set "%s": %s', test_set,
-                      ', '.join(x for x in DATASETS[test_set].keys() if '-' in x))
+                              ', '.join(langpairs))
                 sys.exit(1)
 
     if args.echo:
@@ -874,7 +934,7 @@ def main():
     else:
         concat_ref_files = []
         for test_set in args.test_set.split(','):
-            _, *ref_files = download_test_set(test_set, args.langpair)
+            ref_files = get_reference_files(test_set, args.langpair)
             if len(ref_files) == 0:
                 logging.warning('No references found for test set {}/{}.'.format(test_set, args.langpair))
             concat_ref_files.append(ref_files)
