@@ -40,6 +40,7 @@ def test_api_get_available_testsets():
     the test sets found.
     """
     available = sacrebleu.get_available_testsets()
+    assert type(available) is list
     assert "wmt19" in available
     assert "wmt05" not in available
 
@@ -54,6 +55,7 @@ def test_api_get_langpairs_for_testset():
     """
     for testset in sacrebleu.DATASETS.keys():
         available = sacrebleu.get_langpairs_for_testset(testset)
+        assert type(available) is list
         for langpair in sacrebleu.DATASETS[testset].keys():
             # skip non-language keys
             if "-" not in langpair:

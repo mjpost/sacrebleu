@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.4.9 (2020-04-28)
+  - Changed get_availalbe_testsets to return a list
+
 - 1.4.8 (2020-04-26)
   - Added to API:
     - get_source_file()

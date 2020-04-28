@@ -772,12 +772,9 @@ def get_langpairs_for_testset(testset: str) -> List:
     return list(filter(lambda x: re.match('\w\w\-\w\w', x), DATASETS.get(testset, {}).keys()))
 
 
-def get_available_testsets() -> str:
-    """Return a string with a formatted list of available test sets plus their descriptions. """
-    message = 'The available test sets are:'
-    for testset in sorted(DATASETS.keys(), reverse=True):
-        message += '\n%20s: %s' % (testset, DATASETS[testset].get('description', ''))
-    return message
+def get_available_testsets() -> List:
+    """Return a list of available test sets."""
+    return sorted(DATASETS.keys(), reverse=True)
 
 
 def _available_origlangs(test_sets, langpair):
@@ -851,7 +848,9 @@ def main():
         if args.test_set:
             print(' '.join(get_langpairs_for_testset(args.test_set)))
         else:
-            print(get_available_testsets())
+            print('The available test sets are:')
+            for testset in get_available_testsets():
+                print('\n%20s: %s' % (testset, DATASETS[testset].get('description', '')))
         sys.exit(0)
 
     if args.sentence_level and len(args.metrics) > 1:
@@ -878,7 +877,9 @@ def main():
     if args.test_set is not None:
         for test_set in args.test_set.split(','):
             if test_set not in DATASETS:
-                logging.error('Unknown test set "%s"\n%s', test_set, get_available_testsets())
+                logging.error('Unknown test set "%s"\n', test_set)
+                for testset in get_available_testsets():
+                    logging.error("\n%20s: %s" % (testset, DATASETS[testset].get("description", "")))
                 sys.exit(1)
 
     if args.test_set is None:
