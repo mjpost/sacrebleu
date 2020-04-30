@@ -1,7 +1,10 @@
 # VERSION HISTORY
 
-- 1.4.9 (2020-04-28)
-  - Changed get_availalbe_testsets to return a list
+- 1.4.9 (2020-04-30)
+  - Changed `get_available_testsets()` to return a list
+  - Remove Japanese MeCab tokenizer from requirements.
+    (Must be installed manually to avoid Windows incompatibility).
+    Many thanks to Makoto Morishita (@MorinoseiMorizo).
 
 - 1.4.8 (2020-04-26)
   - Added to API:
@@ -24,7 +27,7 @@
   - Large internal reorganization as a module (thanks to Thamme Gowda @thammegowda)
 
 - 1.4.5 (2020-03-28)
-  - Added Japanese MeCab tokenize (`-tok ja-mecab`) (thanks to Makoto Morishita @MorinoseiMorizo)
+  - Added Japanese MeCab tokenizer (`-tok ja-mecab`) (thanks to Makoto Morishita @MorinoseiMorizo)
   - Added wmt20/dev test sets (thanks to Martin Popel @martinpopel)
 
 - 1.4.4 (2020-03-10)
