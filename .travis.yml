@@ -16,5 +16,5 @@ python:
   - "3.7"
 
 script:
+  - python3 -m pytest
   - ./test.sh
-  - pytest
