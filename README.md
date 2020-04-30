@@ -18,6 +18,10 @@ Install the Python module (Python 3 only)
 
     pip3 install sacrebleu
 
+Alternately, you can install from the source:
+
+    python3 setup.py install
+
 This installs a shell script, `sacrebleu`.
 (You can also run `python3 -m sacrebleu` ).
 
