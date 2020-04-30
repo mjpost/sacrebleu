@@ -298,8 +298,8 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
     done
 done
 
-TEST_JA_MECAB=true
-if "${TEST_JA_MECAB}"; then
+TEST_JA_MECAB=2
+if [[ ${TEST_JA_MECAB} -eq 1 ]]; then
     pip install mecab-python3
     for pair in en-ja; do
         source=$(echo $pair | cut -d- -f1)
@@ -311,7 +311,7 @@ if "${TEST_JA_MECAB}"; then
 
             sys=$(basename $txt .hyp.$target)
             ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
-            score=$(cat $txt | ${CMD}  -w 2 -l $source-$target -b $ref)
+            score=$(cat $txt | ${CMD} -w 2 -l $source-$target -b $ref)
 
             echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
 
