@@ -298,29 +298,33 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
     done
 done
 
-for pair in en-ja; do
-    source=$(echo $pair | cut -d- -f1)
-    target=$(echo $pair | cut -d- -f2)
-    for txt in en-ja-translation-example-master/*.hyp.$target; do
-        name=$(basename $txt .hyp.$target)
+TEST_JA_MECAB=true
+if "${TEST_JA_MECAB}"; then
+    pip install mecab-python3
+    for pair in en-ja; do
+        source=$(echo $pair | cut -d- -f1)
+        target=$(echo $pair | cut -d- -f2)
+        for txt in en-ja-translation-example-master/*.hyp.$target; do
+            name=$(basename $txt .hyp.$target)
 
-        if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
+            if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
 
-        sys=$(basename $txt .hyp.$target)
-        ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
-        score=$(cat $txt | ${CMD}  -w 2 -l $source-$target -b $ref)
+            sys=$(basename $txt .hyp.$target)
+            ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
+            score=$(cat $txt | ${CMD}  -w 2 -l $source-$target -b $ref)
 
-        echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
+            echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
 
-        if [[ $? -eq 1 ]]; then
-            echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
-            exit 1
-        fi
-        echo "Passed $source-$target $sys mteval-v13a.pl: ${MTEVAL[$name]} sacreBLEU: $score"
+            if [[ $? -eq 1 ]]; then
+                echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
+                exit 1
+            fi
+            echo "Passed $source-$target $sys mteval-v13a.pl: ${MTEVAL[$name]} sacreBLEU: $score"
 
-        let i++
+            let i++
+        done
     done
-done
+fi
 
 score1=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b <(printf "Hello! How are you \r doing today?") )
 score2=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b <(echo "Hello! How are you doing today?") )

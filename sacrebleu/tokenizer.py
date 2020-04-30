@@ -228,12 +228,7 @@ def tokenize_zh(sentence):
 
 class TokenizeMeCab:
     def __init__(self):
-        import MeCab
-        self.tagger = MeCab.Tagger("-Owakati")
-        # make sure the dictionary is IPA.
-        d = self.tagger.dictionary_info()
-        assert d.size == 392126, "Please make sure to use IPA dictionary for MeCab"
-        assert d.next is None
+        self.initialized = False
 
     def tokenize(self, line):
         """
@@ -242,6 +237,18 @@ class TokenizeMeCab:
         :param line: a segment to tokenize
         :return: the tokenized line
         """
+        if not self.initialized:
+            try:
+                import MeCab
+            except ImportError:
+                raise ImportError("Please install mecab-python3 for evaluating Japanese (pip install mecab-python3).")
+            self.tagger = MeCab.Tagger("-Owakati")
+            # make sure the dictionary is IPA.
+            d = self.tagger.dictionary_info()
+            assert d.size == 392126, "Please make sure to use IPA dictionary for MeCab"
+            assert d.next is None
+            self.initialized = True
+
         line = line.strip()
         sentence = self.tagger.parse(line).strip()
         return sentence
