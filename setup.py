@@ -47,8 +47,14 @@ To install:
 """
 
 # Always prefer setuptools over distutils
-from setuptools import setup
+import os
+import sys
+
+# Make sure it is *this* sacrebleu that gets imported
+sys.path = [os.path.dirname(sys.argv[0])] + sys.path
 import sacrebleu
+
+from setuptools import setup
 
 setup(
     name = 'sacrebleu',
