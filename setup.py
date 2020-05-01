@@ -46,15 +46,32 @@ To install:
    twine upload dist/*
 """
 
-# Always prefer setuptools over distutils
 import os
-import sys
+import re
 
-# Make sure it is *this* sacrebleu that gets imported
-sys.path = [os.path.dirname(sys.argv[0])] + sys.path
-import sacrebleu
-
+# Always prefer setuptools over distutils
 from setuptools import setup
+
+
+ROOT = os.path.dirname(__file__)
+
+
+def get_version():
+    """
+    Reads the version from sacrebleu's __init__.py file.
+    We can't import the module because required modules may not
+    yet be installed.
+    """
+    VERSION_RE = re.compile(r'''__version__ = ['"]([0-9.]+)['"]''')
+    init = open(os.path.join(ROOT, 'sacrebleu', '__init__.py')).read()
+    return VERSION_RE.search(init).group(1)
+
+
+def get_description():
+    DESCRIPTION_RE = re.compile(r'''__description__ = ['"](.*)['"]''')
+    init = open(os.path.join(ROOT, 'sacrebleu', '__init__.py')).read()
+    return DESCRIPTION_RE.search(init).group(1)
+
 
 setup(
     name = 'sacrebleu',
@@ -62,9 +79,10 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version = sacrebleu.__version__,
+    version = get_version(),
 
-    description = sacrebleu.__description__,
+    description = get_description(),
+
     long_description = 'SacreBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.',
 
     # The project's main homepage.
@@ -105,9 +123,7 @@ setup(
     keywords = ['machine translation, evaluation, NLP, natural language processing, computational linguistics'],
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment this:
-    #py_modules = ["sacrebleu"],
     packages = ["sacrebleu"],
-
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
