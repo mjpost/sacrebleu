@@ -35,7 +35,10 @@ import sys
 import ssl
 import urllib.request
 
-from collections import Counter
+from random import seed, randrange
+from statistics import mean, stdev, median
+from math import sqrt
+from collections import Counter, defaultdict
 from itertools import zip_longest, filterfalse
 from typing import List, Iterable, Tuple, Union
 from .tokenizer import TOKENIZERS, TokenizeMeCab
@@ -73,8 +76,9 @@ CHRF_BETA = 2
 # The default floor value to use with `--smooth floor`
 SMOOTH_VALUE_DEFAULT = {'floor': 0.0, 'add-k': 1}
 
-
 DEFAULT_TOKENIZER = '13a'
+
+seed(42)
 
 
 def smart_open(file, mode='rt', encoding='utf-8'):
@@ -590,7 +594,11 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 force=False,
                 lowercase=False,
                 tokenize=DEFAULT_TOKENIZER,
-                use_effective_order=False) -> BLEU:
+                use_effective_order=False,
+                bootstrap_trials=1,
+                paired_significance_test=False,
+                significance_value=None
+                ) -> BLEU:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param sys_stream: The system stream (a sequence of segments)
@@ -600,12 +608,14 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     :param force: Ignore data that looks already tokenized
     :param lowercase: Lowercase the data
     :param tokenize: The tokenizer to use
+    :param bootstrap_trials=1: number of trials for bootstrap resampling
     :return: a BLEU object containing everything you'd want
     """
 
     # Add some robustness to the input arguments
     if isinstance(sys_stream, str):
         sys_stream = [sys_stream]
+
     if isinstance(ref_streams, str):
         ref_streams = [[ref_streams]]
 
@@ -613,19 +623,42 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     ref_len = 0
 
     correct = [0 for n in range(NGRAM_ORDER)]
-    total = [0 for n in range(NGRAM_ORDER)]
+    total   = [0 for n in range(NGRAM_ORDER)]
 
     # look for already-tokenized sentences
-    tokenized_count = 0
+
+    segmentdata = defaultdict(list)
+
+    if paired_significance_test:
+        paired_sys_len = 0
+        paired_ref_len = 0
+        paired_segmentdata = defaultdict(list)
 
     fhs = [sys_stream] + ref_streams
-    for lines in zip_longest(*fhs):
+    
+    for sentno, lines in enumerate(zip_longest(*fhs)):       
+
         if None in lines:
             raise EOFError("Source and reference streams have different lengths!")
-
+        
+        if paired_significance_test:
+            
+            if len(lines[0].split('\t')) != 2:
+                logging.error('Seems that only one system file is provided as an input!')
+                sys.exit(1)
+            
+            sys1    = lines[0].split('\t')[0].strip()
+            sys2    = lines[0].split('\t')[1].strip()
+            ref     = lines[1].strip() # multiple refs?
+            lines        = (sys1, ref)
+            paired_lines = (sys2, ref)
+    
         if lowercase:
             lines = [x.lower() for x in lines]
-
+            if paired_significance_test:
+                paired_lines = [x.lower() for x in paired_lines]
+        
+        tokenized_count = 0
         if not (force or tokenize == 'none') and lines[0].rstrip().endswith(' .'):
             tokenized_count += 1
 
@@ -634,20 +667,160 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 logging.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
                 logging.warning('If you insist your data is detokenized, or don\'t care, you can suppress this message with \'--force\'.')
 
-        output, *refs = [TOKENIZERS[tokenize](x.rstrip()) for x in lines]
+        paired_tokenized_count = 0
+        if paired_significance_test:
+            if not (force or tokenize == 'none') and paired_lines[0].rstrip().endswith(' .'):
+                paired_tokenized_count += 1
 
+                if paired_tokenized_count == 100:
+                    logging.warning('That\'s 100 lines that end in a tokenized period (\'.\')')
+                    logging.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
+                    logging.warning('If you insist your data is detokenized, or don\'t care, you can suppress this message with \'--force\'.')
+                
+        output, *refs = [TOKENIZERS[tokenize](x.rstrip()) for x in lines]
+        if paired_significance_test:
+            paired_output, *paired_refs = [TOKENIZERS[tokenize](x.rstrip()) for x in paired_lines]
+        
         ref_ngrams, closest_diff, closest_len = ref_stats(output, refs)
+        if paired_significance_test:
+            paired_ref_ngrams, paired_closest_diff, paired_closest_len = ref_stats(paired_output, paired_refs)
 
         sys_len += len(output.split())
         ref_len += closest_len
-
+        if paired_significance_test:
+            paired_sys_len += len(paired_output.split())
+            paired_ref_len += paired_closest_len
+        
         sys_ngrams = extract_ngrams(output)
+        if paired_significance_test:
+            paired_sys_ngrams = extract_ngrams(paired_output)
+
+        sent_correct = [0 for n in range(NGRAM_ORDER)]
+        sent_total   = [0 for n in range(NGRAM_ORDER)]
+        if paired_significance_test:
+            paired_sent_correct = [0 for n in range(NGRAM_ORDER)]
+            paired_sent_total   = [0 for n in range(NGRAM_ORDER)]
+
         for ngram in sys_ngrams.keys():
             n = len(ngram.split())
-            correct[n-1] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
-            total[n-1] += sys_ngrams[ngram]
+            correct[n-1]     += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
+            total[n-1]       += sys_ngrams[ngram]
+            sent_correct[n-1] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
+            sent_total[n-1]   += sys_ngrams[ngram]
+        
+        if paired_significance_test:
+            for p_ngram in paired_sys_ngrams.keys():
+                n = len(p_ngram.split())
+                paired_sent_correct[n-1] += min(paired_sys_ngrams[p_ngram], paired_ref_ngrams.get(p_ngram, 0))
+                paired_sent_total[n-1]   += paired_sys_ngrams[p_ngram]
 
-    return compute_bleu(correct, total, sys_len, ref_len, smooth_method=smooth_method, smooth_value=smooth_value, use_effective_order=use_effective_order)
+        segmentdata[sentno] = [len(output.split()), closest_len, sent_total, sent_correct] 
+        if paired_significance_test:
+            paired_segmentdata[sentno] = [len(paired_output.split()), paired_closest_len, \
+                                          paired_sent_total, paired_sent_correct] 
+    
+    # standard sacreBLEU (evaluated on the full test-set)
+    orig_bleu = compute_bleu(correct, total, sys_len, ref_len, smooth_method=smooth_method, smooth_value=smooth_value, use_effective_order=use_effective_order)
+    
+    if bootstrap_trials > 1:
+        sents_len   = len(segmentdata.keys()) 
+        trial_runs  = []
+        if paired_significance_test:
+            paired_trial_runs = []
+        
+        for trial_run in range(bootstrap_trials):
+            
+            sys_len = 0
+            ref_len = 0
+            correct = [0 for n in range(NGRAM_ORDER)]
+            total   = [0 for n in range(NGRAM_ORDER)]
+
+            if paired_significance_test:
+                paired_sys_len = 0
+                paired_ref_len = 0
+                paired_correct = [0 for n in range(NGRAM_ORDER)]
+                paired_total   = [0 for n in range(NGRAM_ORDER)]
+           
+            # First trial run will always use normal test set. This results in
+            # desired behaviour for bootstrap_trials=1, i.e., a single run.
+            if trial_run == 0:
+                input_data = segmentdata.keys()
+            # Subsequent trial runs will draw with replacement from keys set.
+            else: 
+                input_data = (randrange(0, sents_len-1) for _ in range(sents_len))
+                
+            for sentno in input_data:
+                output_len     = segmentdata[sentno][0]
+                closest_len    = segmentdata[sentno][1]
+                sent_total     = segmentdata[sentno][2]
+                sent_correct   = segmentdata[sentno][3]
+                sys_len        += output_len
+                ref_len        += closest_len
+                if paired_significance_test:
+                    paired_output_len     = paired_segmentdata[sentno][0]
+                    paired_closest_len    = paired_segmentdata[sentno][1]
+                    paired_sent_total     = paired_segmentdata[sentno][2]
+                    paired_sent_correct   = paired_segmentdata[sentno][3]
+                    paired_sys_len        += paired_output_len
+                    paired_ref_len        += paired_closest_len
+
+                for n in range(NGRAM_ORDER):
+                    total[n]   += sent_total[n]
+                    correct[n] += sent_correct[n]
+                    if paired_significance_test:
+                        paired_total[n]   += paired_sent_total[n]
+                        paired_correct[n] += paired_sent_correct[n]
+            
+            trial_bleu = compute_bleu(correct, total, sys_len, ref_len, smooth_method=smooth_method, smooth_value=smooth_value, use_effective_order=use_effective_order)
+            trial_runs.append(float(str(trial_bleu).split('=')[1].strip().split(' ')[0])) # only the bleu score
+            if paired_significance_test:
+                paired_trial_bleu = compute_bleu(paired_correct, paired_total, paired_sys_len, paired_ref_len, smooth_method=smooth_method, smooth_value=smooth_value, use_effective_order=use_effective_order)
+                paired_trial_runs.append(float(str(paired_trial_bleu).split('=')[1].strip().split(' ')[0])) 
+                
+        z     = 1.96 
+        sqrtn = sqrt(bootstrap_trials)
+
+        if significance_value != 0.05:
+            try:
+                import scipy.stats
+                z = scipy.stats.norm.ppf(1-significance_value/2)
+
+            except Exception:
+                print("scipy stats package not available")
+                print("using 0.05 as alpha")
+            
+        xbar  = round(mean(trial_runs), 4)
+        med   = round(median(trial_runs), 4)
+        s     = stdev(trial_runs)
+        ci    = round(z * s / sqrtn, 4)
+        if paired_significance_test:
+            paired_xbar = round(mean(paired_trial_runs), 4)
+            paired_med  = round(median(paired_trial_runs), 4)
+            paired_s    = stdev(paired_trial_runs)
+            paired_ci   = round(z * paired_s / sqrtn, 4)
+
+        print("Confidence Interval of sacreBLEU for System1 with alpha {} : {} +- {} (median {})".format(significance_value, xbar, ci, med))
+        if paired_significance_test:
+            print("Confidence Interval of sacreBLEU for System2 with alpha {} : {} +- {} (median {})".format(significance_value, paired_xbar, paired_ci, paired_med))
+
+        if paired_significance_test:
+            sys1_win = 0
+            sys2_win = 0
+            tie      = 0
+            for i in range(bootstrap_trials):
+                if trial_runs[i] > paired_trial_runs[i]:
+                    sys1_win += 1
+                elif trial_runs[i] == paired_trial_runs[i]:
+                    tie +=1
+                else:
+                    sys2_win += 1    
+            sys1_win /= bootstrap_trials ; sys2_win /= bootstrap_trials
+            if sys2_win > sys1_win:
+                print("System2 is superior with p-value {}".format(round(1-sys2_win, 3)))
+            else:
+                print("System1 is superior with p-value {}".format(round(1-sys1_win, 3)))
+            
+    return orig_bleu
 
 
 def raw_corpus_bleu(sys_stream,
@@ -834,7 +1007,7 @@ def main():
     args = parse_args()
 
     # Explicitly set the encoding
-    sys.stdin = open(sys.stdin.fileno(), mode='r', encoding='utf-8', buffering=True, newline="\n")
+    sys.stdin  = open(sys.stdin.fileno(), mode='r', encoding='utf-8', buffering=True, newline="\n")
     sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=True)
 
     if not args.quiet:
@@ -943,7 +1116,7 @@ def main():
             concat_ref_files.append(ref_files)
 
 
-    inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding) if args.input == '-' else smart_open(args.input, encoding=args.encoding)
+    inputfh     = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding) if args.input == '-' else smart_open(args.input, encoding=args.encoding)
     full_system = inputfh.readlines()
 
     # Read references
@@ -962,7 +1135,9 @@ def main():
                     full_refs[refno].append(line)
 
     # Filter sentences according to a given origlang
+
     system, *refs = _filter_subset([full_system, *full_refs], args.test_set, args.langpair, args.origlang, args.subset)
+
     if len(system) == 0:
         message = 'Test set %s contains no sentence' % args.test_set
         if args.origlang is not None or args.subset is not None:
@@ -1000,8 +1175,12 @@ def main():
     try:
         for metric in args.metrics:
             if metric == 'bleu':
-                bleu = corpus_bleu(system, refs, smooth_method=args.smooth, smooth_value=args.smooth_value, force=args.force, lowercase=args.lc, tokenize=args.tokenize)
+                bleu = corpus_bleu(sys_stream=system, ref_streams=refs, smooth_method=args.smooth, smooth_value=args.smooth_value, force=args.force, lowercase=args.lc, tokenize=args.tokenize,\
+                                   bootstrap_trials=args.bootstrap_trials, paired_significance_test=args.paired_significance_test, significance_value=args.significance_value)         
+                if args.paired_significance_test:
+                    sys.exit(1)
                 results.append(bleu)
+
             elif metric == 'chrf':
                 chrf = corpus_chrf(system, refs[0], beta=args.chrf_beta, order=args.chrf_order, remove_whitespace=not args.chrf_whitespace)
                 results.append(chrf)
@@ -1133,6 +1312,15 @@ def parse_args():
                             help='floating point width (default: %(default)s)')
     arg_parser.add_argument('--detail', '-d', default=False, action='store_true',
                             help='print extra information (split test sets based on origlang)')
+    arg_parser.add_argument('--bootstrap-trials', '-bt', type=int, default=1,
+                            help='bootstrap resampling to compute confidence interval, \
+                                  should be larger than 1 when "paired-significance-test" is used')
+    arg_parser.add_argument('--paired-significance-test', '-ps', action='store_true',
+                            help='conduct significance test of two systems based on bootstrap resampling \
+                                  two systems must be simulatenously provided \
+                                  e.g. paste sys1.txt sys2.txt | sacrebleu ...')
+    arg_parser.add_argument('--significance-value', type=float, default=0.05,
+                            help='alpha (significance value) for calculating CI')
     arg_parser.add_argument('-V', '--version', action='version',
                             version='%(prog)s {}'.format(VERSION))
     args = arg_parser.parse_args()
