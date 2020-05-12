@@ -1,5 +1,5 @@
 # VERSION HISTORY
-- 1.5.0 (2020-05-11)
+- 1.4.10 (2020-05-11)
   - Now only lists the external [typing](https://pypi.org/project/typing/)
 module as a dependency for Python <= 3.4, as it was integrated in the standard
 library in Python 3.5 (Erwan de Lépinau @ErwanDL).
