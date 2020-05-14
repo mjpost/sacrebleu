@@ -769,7 +769,7 @@ def sentence_chrf(hypothesis: str,
 
 def get_langpairs_for_testset(testset: str) -> List:
     """Return a list of language pairs for a given test set."""
-    return list(filter(lambda x: re.match('\w\w\-\w\w', x), DATASETS.get(testset, {}).keys()))
+    return list(filter(lambda x: re.match(r'\w\w\-\w\w', x), DATASETS.get(testset, {}).keys()))
 
 
 def get_available_testsets() -> List:
