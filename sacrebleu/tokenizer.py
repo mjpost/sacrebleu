@@ -230,13 +230,7 @@ class TokenizeMeCab:
     def __init__(self):
         self.initialized = False
 
-    def tokenize(self, line):
-        """
-        Tokenizes an Japanese input line using MeCab morphological analyzer.
-
-        :param line: a segment to tokenize
-        :return: the tokenized line
-        """
+    def load(self):
         if not self.initialized:
             try:
                 import MeCab
@@ -249,10 +243,17 @@ class TokenizeMeCab:
             assert d.next is None
             self.initialized = True
 
+    def tokenize(self, line):
+        """
+        Tokenizes an Japanese input line using MeCab morphological analyzer.
+
+        :param line: a segment to tokenize
+        :return: the tokenized line
+        """
+        self.load()
         line = line.strip()
         sentence = self.tagger.parse(line).strip()
         return sentence
-
 
     def signature(self):
         """
@@ -260,6 +261,7 @@ class TokenizeMeCab:
 
         :return: signature string
         """
+        self.load()
         signature = self.tagger.version() + "-IPA"
 
         return signature
