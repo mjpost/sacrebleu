@@ -6,6 +6,7 @@
   - Now only lists the external [typing](https://pypi.org/project/typing/)
     module as a dependency for Python <= 3.4, as it was integrated in the standard
     library in Python 3.5 (thanks to Erwan de Lépinau @ErwanDL).
+  - Added LICENSE to pypi (thanks to Mark Harfouche @hmaarrfk)
 
 - 1.4.9 (2020-04-30)
   - Changed `get_available_testsets()` to return a list
