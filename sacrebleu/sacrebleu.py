@@ -215,14 +215,14 @@ def extract_char_ngrams(s: str, n: int) -> Counter:
     return Counter([s[i:i + n] for i in range(len(s) - n + 1)])
 
 
-def ref_stats(output, refs):
+def ref_stats(refs, output_len):
     ngrams = Counter()
     closest_diff = None
     closest_len = None
     for ref in refs:
         tokens = ref.split()
         reflen = len(tokens)
-        diff = abs(len(output.split()) - reflen)
+        diff = abs(output_len - reflen)
         if closest_diff is None or diff < closest_diff:
             closest_diff = diff
             closest_len = reflen
@@ -636,9 +636,10 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
 
         output, *refs = [TOKENIZERS[tokenize](x.rstrip()) for x in lines]
 
-        ref_ngrams, closest_diff, closest_len = ref_stats(output, refs)
+        output_len = len(output.split())
+        ref_ngrams, closest_diff, closest_len = ref_stats(refs, output_len)
 
-        sys_len += len(output.split())
+        sys_len += output_len
         ref_len += closest_len
 
         sys_ngrams = extract_ngrams(output)
