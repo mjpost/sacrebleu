@@ -659,7 +659,10 @@ def raw_corpus_bleu(sys_stream,
     :param sys_stream: the system stream (a sequence of segments)
     :param ref_streams: a list of one or more reference streams (each a sequence of segments)
     """
-    return corpus_bleu(sys_stream, ref_streams, smooth_method='floor', smooth_value=smooth_value, force=True, tokenize='none', use_effective_order=True)
+    return corpus_bleu(
+        sys_stream, ref_streams, smooth_method='floor',
+        smooth_value=smooth_value, force=True,
+        tokenize=TOKENIZERS['none'](), use_effective_order=True)
 
 
 def delete_whitespace(text: str) -> str:
