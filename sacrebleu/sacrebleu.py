@@ -335,9 +335,9 @@ def get_files(test_set, langpair):
     :return: a list of the source file and all reference files
     """
 
-    if not test_set in DATASETS:
+    if test_set not in DATASETS:
         raise Exception("No such test set {}".format(test_set))
-    if not langpair in DATASETS[test_set]:
+    if langpair not in DATASETS[test_set]:
         raise Exception("No such language pair {}/{}".format(test_set, langpair))
 
     cachedir = os.path.join(SACREBLEU_DIR, test_set)
@@ -347,9 +347,9 @@ def get_files(test_set, langpair):
 
     num_refs = len(DATASETS[test_set][langpair]) - 1
     if num_refs == 1:
-        reference_paths = [ os.path.join(cachedir, "{}.{}".format(langpair, target)) ]
+        reference_paths = [os.path.join(cachedir, "{}.{}".format(langpair, target))]
     else:
-        reference_paths = [ os.path.join(cachedir, "{}.{}.{}".format(langpair, target, num)) for num in range(num_refs) ]
+        reference_paths = [os.path.join(cachedir, "{}.{}.{}".format(langpair, target, num)) for num in range(num_refs)]
 
     if any(filterfalse(os.path.exists, [source_path] + reference_paths)):
         download_test_set(test_set, langpair)
@@ -365,7 +365,7 @@ def download_test_set(test_set, langpair=None):
     :return: the set of processed file names
     """
 
-    if not test_set in DATASETS:
+    if test_set not in DATASETS:
         raise Exception("No such test set {}".format(test_set))
 
     outdir = os.path.join(SACREBLEU_DIR, test_set)
@@ -385,8 +385,8 @@ def download_test_set(test_set, langpair=None):
                         out.write(f.read())
                 except ssl.SSLError:
                     logging.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
-                                'you may need to run the "Install Certificates.command" file located in the '
-                                '"Python 3" folder, often found under /Applications')
+                                    'you may need to run the "Install Certificates.command" file located in the '
+                                    '"Python 3" folder, often found under /Applications')
                     sys.exit(1)
 
                 # Check md5sum
@@ -828,7 +828,7 @@ def _filter_subset(systems, test_sets, langpair, origlang, subset=None):
                 if line.startswith('<seg '):
                     indices_to_keep.append(include_doc)
                     number_sentences_included += 1 if include_doc else 0
-    return [[sentence for sentence,keep in zip(sys, indices_to_keep) if keep] for sys in systems]
+    return [[sentence for sentence, keep in zip(sys, indices_to_keep) if keep] for sys in systems]
 
 
 def main():
@@ -942,7 +942,6 @@ def main():
             if len(ref_files) == 0:
                 logging.warning('No references found for test set {}/{}.'.format(test_set, args.langpair))
             concat_ref_files.append(ref_files)
-
 
     inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding) if args.input == '-' else smart_open(args.input, encoding=args.encoding)
     full_system = inputfh.readlines()
