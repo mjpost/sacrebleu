@@ -40,21 +40,22 @@ class Tokenizer13a(NoneTokenizer):
         line = line.replace('&lt;', '<')
         line = line.replace('&gt;', '>')
 
-        # language-dependent part (assuming Western languages):
         line = " {} ".format(line)
-        line = re.sub(r'([\{-\~\[-\` -\&\(-\+\:-\@\/])', ' \\1 ', line)
+
+        # language-dependent part (assuming Western languages):
+        line = re.sub(r'([\{-\~\[-\` -\&\(-\+\:-\@\/])', r' \1 ', line)
 
         # tokenize period and comma unless preceded by a digit
-        line = re.sub(r'([^0-9])([\.,])', '\\1 \\2 ', line)
-        # tokenize period and comma unless followed by a digit
-        line = re.sub(r'([\.,])([^0-9])', ' \\1 \\2', line)
-        # tokenize dash when preceded by a digit
-        line = re.sub(r'([0-9])(-)', '\\1 \\2 ', line)
-        # one space only between words
-        line = re.sub(r'\s+', ' ', line)
-        # no leading space
-        line = re.sub(r'^\s+', '', line)
-        # no trailing space
-        line = re.sub(r'\s+$', '', line)
+        line = re.sub(r'([^0-9])([\.,])', r'\1 \2 ', line)
 
-        return line
+        # tokenize period and comma unless followed by a digit
+        line = re.sub(r'([\.,])([^0-9])', r' \1 \2', line)
+
+        # tokenize dash when preceded by a digit
+        line = re.sub(r'([0-9])(-)', r'\1 \2 ', line)
+
+        # one space only between words
+        line = re.sub(r'\s+', r' ', line)
+
+        # no leading or trailing spaces
+        return line.strip()
