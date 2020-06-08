@@ -624,7 +624,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
         if lowercase:
             lines = [x.lower() for x in lines]
 
-        if not (force or tokenize == 'none') and lines[0].rstrip().endswith(' .'):
+        if not (force or tokenize.signature() == 'none') and lines[0].rstrip().endswith(' .'):
             tokenized_count += 1
 
             if tokenized_count == 100:
