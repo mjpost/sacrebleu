@@ -13,15 +13,18 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-import re
 
 from .tokenizer_none import NoneTokenizer
+from .tokenizer_re import TokenizerRegexp
 
 
 class Tokenizer13a(NoneTokenizer):
 
     def signature(self):
         return '13a'
+
+    def __init__(self):
+        self._post_tokenizer = TokenizerRegexp()
 
     def __call__(self, line):
         """Tokenizes an input line using a relatively minimal tokenization
@@ -41,21 +44,4 @@ class Tokenizer13a(NoneTokenizer):
         line = line.replace('&gt;', '>')
 
         line = " {} ".format(line)
-
-        # language-dependent part (assuming Western languages):
-        line = re.sub(r'([\{-\~\[-\` -\&\(-\+\:-\@\/])', r' \1 ', line)
-
-        # tokenize period and comma unless preceded by a digit
-        line = re.sub(r'([^0-9])([\.,])', r'\1 \2 ', line)
-
-        # tokenize period and comma unless followed by a digit
-        line = re.sub(r'([\.,])([^0-9])', r' \1 \2', line)
-
-        # tokenize dash when preceded by a digit
-        line = re.sub(r'([0-9])(-)', r'\1 \2 ', line)
-
-        # one space only between words
-        line = re.sub(r'\s+', r' ', line)
-
-        # no leading or trailing spaces
-        return line.strip()
+        return self._post_tokenizer(line)

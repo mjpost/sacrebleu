@@ -38,9 +38,9 @@
 
 # Author: Shujian Huang huangsj@nju.edu.cn
 
-import re
 
 from .tokenizer_none import NoneTokenizer
+from .tokenizer_re import TokenizerRegexp
 
 _UCODE_RANGES = [
     (u'\u3400', u'\u4db5'),  # CJK Unified Ideographs Extension A, release 3.0
@@ -74,6 +74,9 @@ class TokenizerZh(NoneTokenizer):
     def signature(self):
         return 'zh'
 
+    def __init__(self):
+        self._post_tokenizer = TokenizerRegexp()
+
     @staticmethod
     def _is_chinese_char(uchar):
         """
@@ -88,7 +91,7 @@ class TokenizerZh(NoneTokenizer):
     def __call__(self, line):
         """The tokenization of Chinese text in this script contains two
         steps: separate each Chinese characters (by utf-8 encoding); tokenize
-        the non Chinese part (following the mteval script).
+        the non Chinese part (following the `13a` i.e. mteval tokenizer).
 
         Author: Shujian Huang huangsj@nju.edu.cn
 
@@ -111,20 +114,4 @@ class TokenizerZh(NoneTokenizer):
                 line_in_chars += char
         line = line_in_chars
 
-        # tokenize punctuation
-        line = re.sub(r'([\{-\~\[-\` -\&\(-\+\:-\@\/])', r' \1 ', line)
-
-        # tokenize period and comma unless preceded by a digit
-        line = re.sub(r'([^0-9])([\.,])', r'\1 \2 ', line)
-
-        # tokenize period and comma unless followed by a digit
-        line = re.sub(r'([\.,])([^0-9])', r' \1 \2', line)
-
-        # tokenize dash when preceded by a digit
-        line = re.sub(r'([0-9])(-)', r'\1 \2 ', line)
-
-        # one space only between words
-        line = re.sub(r'\s+', r' ', line)
-
-        # no leading or trailing spaces
-        return line.strip()
+        return self._post_tokenizer(line)
