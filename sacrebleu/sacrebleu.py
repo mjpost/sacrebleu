@@ -38,7 +38,7 @@ import urllib.request
 from collections import Counter
 from itertools import zip_longest, filterfalse
 from typing import List, Iterable, Tuple, Union
-from .tokenizer import TOKENIZERS, TokenizeMeCab
+from .tokenizers import TOKENIZERS
 from .dataset import DATASETS, DOMAINS, COUNTRIES, SUBSETS
 from . import __version__ as VERSION
 
@@ -121,15 +121,11 @@ def bleu_signature(args, numrefs):
         'subset': 'S',
     }
 
-    signature = {'tok': args.tokenize,
+    signature = {'tok': args.tokenize.signature(),
                  'version': VERSION,
                  'smooth': args.smooth,
                  'numrefs': numrefs,
                  'case': 'lc' if args.lc else 'mixed'}
-
-    # For the Japanese tokenizer, add a dictionary type and its version to the signature.
-    if args.tokenize == "ja-mecab":
-        signature['tok'] += "-" + TokenizeMeCab().signature()
 
     if args.test_set is not None:
         signature['test'] = args.test_set
@@ -139,6 +135,7 @@ def bleu_signature(args, numrefs):
 
     if args.origlang is not None:
         signature['origlang'] = args.origlang
+
     if args.subset is not None:
         signature['subset'] = args.subset
 
@@ -181,6 +178,7 @@ def chrf_signature(args, numrefs):
 
     if args.origlang is not None:
         signature['origlang'] = args.origlang
+
     if args.subset is not None:
         signature['subset'] = args.subset
 
@@ -589,7 +587,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 smooth_value=None,
                 force=False,
                 lowercase=False,
-                tokenize=DEFAULT_TOKENIZER,
+                tokenize=TOKENIZERS[DEFAULT_TOKENIZER](),
                 use_effective_order=False) -> BLEU:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
@@ -599,7 +597,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     :param smooth_value: For 'floor' smoothing, the floor to use
     :param force: Ignore data that looks already tokenized
     :param lowercase: Lowercase the data
-    :param tokenize: The tokenizer to use
+    :param tokenize: The tokenizer instance to use
     :return: a BLEU object containing everything you'd want
     """
 
@@ -634,7 +632,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 logging.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
                 logging.warning('If you insist your data is detokenized, or don\'t care, you can suppress this message with \'--force\'.')
 
-        output, *refs = [TOKENIZERS[tokenize](x.rstrip()) for x in lines]
+        output, *refs = [tokenize(x.rstrip()) for x in lines]
 
         output_len = len(output.split())
         ref_ngrams, closest_diff, closest_len = ref_stats(refs, output_len)
@@ -915,7 +913,7 @@ def main():
         logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
                         "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
 
-    # Internal tokenizer settings. Set to 'zh' for Chinese  DEFAULT_TOKENIZER (
+    # Internal tokenizer settings
     if args.tokenize is None:
         # set default
         if args.langpair is not None and args.langpair.split('-')[1] == 'zh':
@@ -930,6 +928,9 @@ def main():
             logging.warning('You should also pass "--tok zh" when scoring Chinese...')
         if args.langpair.split('-')[1] == 'ja' and not args.tokenize.startswith('ja-'):
             logging.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
+
+    # Set args.tokenize to actual Tokenizer() instance
+    args.tokenize = TOKENIZERS[args.tokenize]()
 
     # concat_ref_files is a list of list of reference filenames, for example:
     # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
