@@ -19,7 +19,9 @@ __description__ = 'Hassle-free computation of shareable, comparable, and reprodu
 
 from .sacrebleu import smart_open, corpus_bleu, corpus_chrf, sentence_bleu, sentence_chrf, compute_bleu,\
     raw_corpus_bleu, get_source_file, get_reference_files, get_available_testsets, get_langpairs_for_testset,\
-    BLEU, CHRF, DATASETS, TOKENIZERS, SACREBLEU_DIR
+    BLEU, CHRF, DATASETS, SACREBLEU_DIR
+
+from .tokenizers import TOKENIZERS
 
 # more imports for backward compatibility
 from .sacrebleu import ref_stats, bleu_signature, extract_ngrams, extract_char_ngrams, \
