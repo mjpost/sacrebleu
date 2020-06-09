@@ -121,7 +121,7 @@ def bleu_signature(args, numrefs):
         'subset': 'S',
     }
 
-    signature = {'tok': args.tokenize.signature(),
+    signature = {'tok': TOKENIZERS[args.tokenize]().signature(),
                  'version': VERSION,
                  'smooth': args.smooth,
                  'numrefs': numrefs,
@@ -587,7 +587,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 smooth_value=None,
                 force=False,
                 lowercase=False,
-                tokenize=TOKENIZERS[DEFAULT_TOKENIZER](),
+                tokenize=DEFAULT_TOKENIZER,
                 use_effective_order=False) -> BLEU:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
@@ -597,9 +597,11 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     :param smooth_value: For 'floor' smoothing, the floor to use
     :param force: Ignore data that looks already tokenized
     :param lowercase: Lowercase the data
-    :param tokenize: The tokenizer instance to use
+    :param tokenize: The tokenizer to use
     :return: a BLEU object containing everything you'd want
     """
+
+    tokenizer = TOKENIZERS[tokenize]()
 
     # Add some robustness to the input arguments
     if isinstance(sys_stream, str):
@@ -624,7 +626,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
         if lowercase:
             lines = [x.lower() for x in lines]
 
-        if not (force or tokenize.signature() == 'none') and lines[0].rstrip().endswith(' .'):
+        if not (force or tokenizer.signature() == 'none') and lines[0].rstrip().endswith(' .'):
             tokenized_count += 1
 
             if tokenized_count == 100:
@@ -632,7 +634,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 logging.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
                 logging.warning('If you insist your data is detokenized, or don\'t care, you can suppress this message with \'--force\'.')
 
-        output, *refs = [tokenize(x.rstrip()) for x in lines]
+        output, *refs = [tokenizer(x.rstrip()) for x in lines]
 
         output_len = len(output.split())
         ref_ngrams, closest_diff, closest_len = ref_stats(refs, output_len)
@@ -662,7 +664,7 @@ def raw_corpus_bleu(sys_stream,
     return corpus_bleu(
         sys_stream, ref_streams, smooth_method='floor',
         smooth_value=smooth_value, force=True,
-        tokenize=TOKENIZERS['none'](), use_effective_order=True)
+        tokenize='none', use_effective_order=True)
 
 
 def delete_whitespace(text: str) -> str:
@@ -931,9 +933,6 @@ def main():
             logging.warning('You should also pass "--tok zh" when scoring Chinese...')
         if args.langpair.split('-')[1] == 'ja' and not args.tokenize.startswith('ja-'):
             logging.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
-
-    # Set args.tokenize to actual Tokenizer() instance
-    args.tokenize = TOKENIZERS[args.tokenize]()
 
     # concat_ref_files is a list of list of reference filenames, for example:
     # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
