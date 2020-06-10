@@ -20,6 +20,9 @@ from .tokenizer_zh import TokenizerZh
 from .tokenizer_ja_mecab import TokenizerJaMecab
 
 
+DEFAULT_TOKENIZER = '13a'
+
+
 TOKENIZERS = {
     'none': NoneTokenizer,
     '13a': Tokenizer13a,
