@@ -268,8 +268,10 @@ class BLEU:
         """
 
         # Add some robustness to the input arguments
+        # NOTE: Are these correct?
         if isinstance(sys_stream, str):
             sys_stream = [sys_stream]
+
         if isinstance(ref_streams, str):
             ref_streams = [[ref_streams]]
 
