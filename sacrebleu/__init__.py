@@ -17,12 +17,141 @@
 __version__ = '1.4.10'
 __description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores'
 
-from .sacrebleu import smart_open, corpus_bleu, corpus_chrf, sentence_bleu, sentence_chrf, compute_bleu,\
-    raw_corpus_bleu, get_source_file, get_reference_files, get_available_testsets, get_langpairs_for_testset,\
-    BLEU, CHRF, DATASETS, SACREBLEU_DIR
+from argparse import Namespace
+from typing import Union, Iterable, List
 
-from .tokenizers import TOKENIZERS
+from .utils import smart_open, SACREBLEU_DIR, download_test_set
+from .utils import get_source_file, get_reference_files
+from .utils import get_available_testsets, get_langpairs_for_testset
+from .dataset import DATASETS
+from .tokenizers import TOKENIZERS, DEFAULT_TOKENIZER
+from .metrics import BLEU, CHRF, BLEUScore, CHRFScore
 
-# more imports for backward compatibility
-from .sacrebleu import ref_stats, bleu_signature, extract_ngrams, extract_char_ngrams, \
-    get_corpus_statistics, display_metric, get_sentence_statistics, download_test_set
+
+######################################################################
+# Backward compatibility functions for old style API access (< 1.4.11)
+######################################################################
+extract_ngrams = BLEU.extract_ngrams
+extract_char_ngrams = CHRF.extract_char_ngrams
+ref_stats = BLEU.reference_stats
+compute_bleu = BLEU.compute_bleu
+
+
+def corpus_bleu(sys_stream: Union[str, Iterable[str]],
+                ref_streams: Union[str, List[Iterable[str]]],
+                smooth_method='exp',
+                smooth_value=None,
+                force=False,
+                lowercase=False,
+                tokenize=DEFAULT_TOKENIZER,
+                use_effective_order=False) -> BLEU:
+    """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
+
+    :param sys_stream: The system stream (a sequence of segments)
+    :param ref_streams: A list of one or more reference streams (each a sequence of segments)
+    :param smooth_method: The smoothing method to use
+    :param smooth_value: For 'floor' smoothing, the floor to use
+    :param force: Ignore data that looks already tokenized
+    :param lowercase: Lowercase the data
+    :param tokenize: The tokenizer to use
+    :return: a `BLEUScore` object
+    """
+    # FIXME: argparse args use smooth instead of smooth_method
+    args = Namespace(
+        smooth=smooth_method, smooth_value=smooth_value, force=force,
+        # FIXME: num_refs issue
+        lc=lowercase, tokenize=tokenize, num_refs=len(ref_streams))
+
+    metric = BLEU(args)
+    return metric.corpus_score(
+        sys_stream, ref_streams, use_effective_order=use_effective_order)
+
+
+def raw_corpus_bleu(sys_stream,
+                    ref_streams,
+                    smooth_value=None) -> BLEUScore:
+    """Convenience function that wraps corpus_bleu().
+    This is convenient if you're using sacrebleu as a library, say for scoring on dev.
+    It uses no tokenization and 'floor' smoothing, with the floor default to 0 (no smoothing).
+
+    :param sys_stream: the system stream (a sequence of segments)
+    :param ref_streams: a list of one or more reference streams (each a sequence of segments)
+    :return: Returns a `BLEUScore` object.
+    """
+    return corpus_bleu(
+        sys_stream, ref_streams, smooth_method='floor',
+        smooth_value=smooth_value, force=True, tokenize='none',
+        use_effective_order=True)
+
+
+def sentence_bleu(hypothesis: str,
+                  references: List[str],
+                  smooth_method: str = 'floor',
+                  smooth_value: float = None,
+                  use_effective_order: bool = True) -> BLEUScore:
+    """
+    Computes BLEU on a single sentence pair.
+
+    Disclaimer: computing BLEU on the sentence level is not its intended use,
+    BLEU is a corpus-level metric.
+
+    :param hypothesis: Hypothesis string.
+    :param reference: Reference string.
+    :param smooth_method: The smoothing method to use
+    :param smooth_value: For 'floor' smoothing, the floor value to use.
+    :param use_effective_order: Account for references that are shorter than the largest n-gram.
+    :return: Returns a `BLEUScore` object.
+    """
+    # FIXME: argparse args use smooth instead of smooth_method
+    args = Namespace(
+        smooth=smooth_method, smooth_value=smooth_value, force=False,
+        # FIXME: num_refs issue
+        lc=False, tokenize=DEFAULT_TOKENIZER, num_refs=len(references))
+
+    metric = BLEU(args)
+    return metric.sentence_score(
+        hypothesis, references, use_effective_order=use_effective_order)
+
+
+def corpus_chrf(hypotheses: Iterable[str],
+                references: Iterable[str],
+                order: int = CHRF.ORDER,
+                beta: float = CHRF.BETA,
+                remove_whitespace: bool = True) -> CHRFScore:
+    """
+    Computes ChrF on a corpus.
+
+    :param hypotheses: Stream of hypotheses.
+    :param references: Stream of references
+    :param order: Maximum n-gram order.
+    :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
+    :param remove_whitespace: Whether to delete all whitespace from hypothesis and reference strings.
+    :return: A `CHRFScore` object.
+    """
+    args = Namespace(
+        chrf_order=order, chrf_beta=beta,
+        chrf_whitespace=not remove_whitespace, num_refs=1)
+    metric = CHRF(args)
+    return metric.corpus_score(hypotheses, references)
+
+
+def sentence_chrf(hypothesis: str,
+                  reference: str,
+                  order: int = CHRF.ORDER,
+                  beta: float = CHRF.BETA,
+                  remove_whitespace: bool = True) -> CHRFScore:
+    """
+    Computes ChrF on a single sentence pair.
+
+    :param hypothesis: Hypothesis string.
+    :param reference: Reference string.
+    :param order: Maximum n-gram order.
+    :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
+    :param remove_whitespace: Whether to delete whitespaces from hypothesis and reference strings.
+    :return: A `CHRFScore` object.
+    """
+    args = Namespace(
+        chrf_order=order, chrf_beta=beta,
+        chrf_whitespace=not remove_whitespace, num_refs=1)
+    metric = CHRF(args)
+    return metric.sentence_score(hypothesis, reference)
