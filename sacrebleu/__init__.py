@@ -58,8 +58,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     """
     args = Namespace(
         smooth_method=smooth_method, smooth_value=smooth_value, force=force,
-        # FIXME: num_refs issue
-        lc=lowercase, tokenize=tokenize, num_refs=len(ref_streams))
+        short=False, lc=lowercase, tokenize=tokenize)
 
     metric = BLEU(args)
     return metric.corpus_score(
@@ -103,8 +102,7 @@ def sentence_bleu(hypothesis: str,
     """
     args = Namespace(
         smooth_method=smooth_method, smooth_value=smooth_value, force=False,
-        # FIXME: num_refs issue
-        lc=False, tokenize=DEFAULT_TOKENIZER, num_refs=len(references))
+        short=False, lc=False, tokenize=DEFAULT_TOKENIZER)
 
     metric = BLEU(args)
     return metric.sentence_score(
@@ -120,15 +118,14 @@ def corpus_chrf(hypotheses: Iterable[str],
     Computes ChrF on a corpus.
 
     :param hypotheses: Stream of hypotheses.
-    :param references: Stream of references
+    :param references: Stream of references.
     :param order: Maximum n-gram order.
     :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
     :param remove_whitespace: Whether to delete all whitespace from hypothesis and reference strings.
     :return: A `CHRFScore` object.
     """
     args = Namespace(
-        chrf_order=order, chrf_beta=beta,
-        chrf_whitespace=not remove_whitespace, num_refs=1)
+        chrf_order=order, chrf_beta=beta, chrf_whitespace=not remove_whitespace, short=False)
     metric = CHRF(args)
     return metric.corpus_score(hypotheses, references)
 
@@ -149,7 +146,6 @@ def sentence_chrf(hypothesis: str,
     :return: A `CHRFScore` object.
     """
     args = Namespace(
-        chrf_order=order, chrf_beta=beta,
-        chrf_whitespace=not remove_whitespace, num_refs=1)
+        chrf_order=order, chrf_beta=beta, chrf_whitespace=not remove_whitespace, short=False)
     metric = CHRF(args)
     return metric.sentence_score(hypothesis, reference)
