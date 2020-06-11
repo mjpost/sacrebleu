@@ -116,6 +116,20 @@ export LC_ALL=C
 
 declare -i i=0
 
+echo '-----------------------'
+echo 'Control character tests'
+echo '-----------------------'
+score1=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b <(printf "Hello! How are you \r doing today?") )
+score2=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b <(echo "Hello! How are you doing today?") )
+if [[ $score1 != $score2 ]]; then
+  echo "Control character in reference test failed"
+  exit 1
+fi
+let i++
+echo "Passed control character in reference test"
+
+
+
 echo '-----------------------------------------'
 echo 'Multi-reference regression tests for BLEU'
 echo '-----------------------------------------'
@@ -148,18 +162,6 @@ for command in "${!EXPECTED[@]}"; do
   fi
   echo PASS
 done
-
-#########################
-# Control character tests
-#########################
-score1=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b <(printf "Hello! How are you \r doing today?") )
-score2=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b <(echo "Hello! How are you doing today?") )
-if [[ $score1 != $score2 ]]; then
-  echo "Control character in reference test failed"
-  exit 1
-fi
-let i++
-echo "Passed control character in reference test"
 
 #######################################################
 # Pre-computed chrF scores from official implementation
