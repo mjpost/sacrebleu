@@ -252,6 +252,9 @@ def main():
                 else:
                     full_refs[refno].append(line)
 
+    # Decide on the number of final references, override the argument
+    args.num_refs = len(full_refs)
+
     # Read hypotheses stream
     if args.input == '-':
         inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding)
@@ -262,6 +265,7 @@ def main():
     # Filter sentences according to a given origlang
     system, *refs = filter_subset(
         [full_system, *full_refs], args.test_set, args.langpair, args.origlang, args.subset)
+
     if len(system) == 0:
         message = 'Test set %s contains no sentence' % args.test_set
         if args.origlang is not None or args.subset is not None:
