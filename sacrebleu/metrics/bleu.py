@@ -86,7 +86,7 @@ class BLEU:
     def __init__(self, args):
         # extract relevant arguments
         self.name = 'bleu'
-        self.smooth_method = args.smooth
+        self.smooth_method = args.smooth_method
         self.smooth_value = args.smooth_value
         # NOTE: this is an issue here and there
         self.num_refs = args.num_refs

@@ -90,7 +90,7 @@ def parse_args():
 
     # BLEU-related arguments
     arg_parser.add_argument('-lc', action='store_true', default=False, help='Use case-insensitive BLEU (default: False)')
-    arg_parser.add_argument('--smooth', '-s', choices=METRICS['bleu'].SMOOTH_DEFAULTS.keys(), default='exp',
+    arg_parser.add_argument('--smooth-method', '-s', choices=METRICS['bleu'].SMOOTH_DEFAULTS.keys(), default='exp',
                             help='smoothing method: exponential decay (default), floor (increment zero counts), add-k (increment num/denom by k for n>1), or none')
     arg_parser.add_argument('--smooth-value', '-sv', type=float, default=None,
                             help='The value to pass to the smoothing technique, only used for floor and add-k. Default floor: {}, add-k: {}.'.format(

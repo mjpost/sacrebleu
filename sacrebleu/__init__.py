@@ -56,9 +56,8 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     :param tokenize: The tokenizer to use
     :return: a `BLEUScore` object
     """
-    # FIXME: argparse args use smooth instead of smooth_method
     args = Namespace(
-        smooth=smooth_method, smooth_value=smooth_value, force=force,
+        smooth_method=smooth_method, smooth_value=smooth_value, force=force,
         # FIXME: num_refs issue
         lc=lowercase, tokenize=tokenize, num_refs=len(ref_streams))
 
@@ -102,9 +101,8 @@ def sentence_bleu(hypothesis: str,
     :param use_effective_order: Account for references that are shorter than the largest n-gram.
     :return: Returns a `BLEUScore` object.
     """
-    # FIXME: argparse args use smooth instead of smooth_method
     args = Namespace(
-        smooth=smooth_method, smooth_value=smooth_value, force=False,
+        smooth_method=smooth_method, smooth_value=smooth_value, force=False,
         # FIXME: num_refs issue
         lc=False, tokenize=DEFAULT_TOKENIZER, num_refs=len(references))
 

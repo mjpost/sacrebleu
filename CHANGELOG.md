@@ -9,6 +9,7 @@
   - Simplified checking of Chinese characters (fixes #5)
   - Fixed --detail failing when no test sets are provided
   - Fixed multi-reference BLEU failing when tab-delimited reference stream is used
+  - Renamed `--smooth` to `--smooth-method` for consistency
   - Added score regression tests for chrF using reference chrF++ implementation
 
 - 1.4.10 (2020-05-30)
