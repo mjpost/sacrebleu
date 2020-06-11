@@ -116,6 +116,39 @@ export LC_ALL=C
 
 declare -i i=0
 
+echo '-----------------------------------------'
+echo 'Multi-reference regression tests for BLEU'
+echo '-----------------------------------------'
+
+path="wmt17-submitted-data/txt/system-outputs/newstest2017/cs-en"
+ref1="${path}/newstest2017.online-A.0.cs-en"
+ref2="${path}/newstest2017.online-B.0.cs-en"
+sys="${path}/newstest2017.PJATK.4760.cs-en"
+
+# Single REF files
+unset EXPECTED
+declare -A EXPECTED
+EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref1"]=36.8799
+EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref2"]=33.6736
+# multiple REF files
+EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref1 $ref2"]=44.6732
+# multiple REF files with tab-delimited stream
+EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys --num-refs 2 <(paste $ref1 $ref2)"]=44.6732
+# Check signature correctness
+EXPECTED["${CMD} -l cs-en -i $sys $ref1 $ref2 | sed -r 's#.*numrefs\.([0-9]).*#\1#'"]=2
+EXPECTED["${CMD} -l cs-en -i $sys --num-refs 2 <(paste $ref1 $ref2) | sed -r 's#.*numrefs\.([0-9]).*#\1#'"]=2
+
+for command in "${!EXPECTED[@]}"; do
+  echo Testing $command
+  obtained=`eval $command`
+  expected=${EXPECTED[$command]}
+  if [[ $obtained != $expected ]]; then
+      echo -e "\nFAILED:\n expected = $expected\n obtained = $obtained"
+      exit 1
+  fi
+  echo PASS
+done
+
 #########################
 # Control character tests
 #########################
@@ -541,7 +574,6 @@ if [[ ${TEST_JA_MECAB} -eq 1 ]]; then
         done
     done
 fi
-
 
 echo "Passed $i tests."
 exit 0
