@@ -4,7 +4,7 @@
   - Fixed bug in signature with mecab tokenizer
   - Cleaned up deprecation warnings (thanks to Karthikeyan Singaravelan @tirkarthi)
   - Now only lists the external [typing](https://pypi.org/project/typing/)
-    module as a dependency for Python <= 3.4, as it was integrated in the standard
+    module as a dependency for Python `<= 3.4`, as it was integrated in the standard
     library in Python 3.5 (thanks to Erwan de Lépinau @ErwanDL).
   - Added LICENSE to pypi (thanks to Mark Harfouche @hmaarrfk)
 
