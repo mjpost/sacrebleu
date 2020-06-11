@@ -73,12 +73,15 @@ for command in "${!EXPECTED[@]}"; do
 done
 
 # Test loading via file instead of STDIN
+echo "Testing loading via file instead of STDIN"
 ${CMD} -t wmt17 -l en-de --echo ref > .wmt17.en-de.de.tmp
 score=$(${CMD} -t wmt17 -l en-de -i .wmt17.en-de.de.tmp -b)
+rm .wmt17.en-de.de.tmp
 if [[ $score != '100.0' ]]; then
     echo "File test failed."
     exit 1
 fi
+echo PASS
 
 [[ ! -d data ]] && mkdir data
 cd data
@@ -111,7 +114,9 @@ fi
 
 export LC_ALL=C
 
-# Pre-computed results from Moses' mteval-v13a.pl
+################################################################
+# Pre-computed results from Moses' mteval-v13a.pl for BLEU tests
+################################################################
 declare -A MTEVAL=( ["newstest2017.PJATK.4760.cs-en.sgm"]=23.15
                     ["newstest2017.online-A.0.cs-en.sgm"]=25.12
                     ["newstest2017.online-B.0.cs-en.sgm"]=27.45
