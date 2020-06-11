@@ -101,7 +101,7 @@ class CHRF:
         sig_pairs = []
         for name in sorted(signature.keys()):
             key = self.ABBR[name] if self.short else name
-            sig_pairs.append('{}.{}'.format(key, signature[key]))
+            sig_pairs.append('{}.{}'.format(key, signature[name]))
 
         self.signature = '+'.join(sig_pairs)
 
