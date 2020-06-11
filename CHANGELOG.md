@@ -1,5 +1,16 @@
 # VERSION HISTORY
 
+- 1.4.11 (2020-xx-xx)
+  - Refactored all tokenizers into respective classes (fixes #85)
+  - Removed lowercase option for ChrF which was not functional (#85)
+  - Refactored all metrics into respective classes. Scores are implemented as
+    different classes i.e. `BLEUScore` and `CHRFScore`
+  - Unified common regexp tokenization codes for tokenizers (fixes #27)
+  - Simplified checking of Chinese characters (fixes #5)
+  - Fixed --detail failing when no test sets are provided
+  - Fixed multi-reference BLEU failing when tab-delimited reference stream is used
+  - Added score regression tests for chrF using reference chrF++ implementation
+
 - 1.4.10 (2020-05-30)
   - Fixed bug in signature with mecab tokenizer
   - Cleaned up deprecation warnings (thanks to Karthikeyan Singaravelan @tirkarthi)
