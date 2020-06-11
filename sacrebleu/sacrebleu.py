@@ -290,7 +290,7 @@ def main():
                 _refs = references[0]
 
             score = metric.sentence_score(output, _refs)
-            print(score.format(args.width, args.score_only, metric.signature))
+            print(score.format(args.width, short=args.short, score_only=args.score_only))
 
         sys.exit(0)
 
@@ -316,7 +316,7 @@ def main():
                               args.test_set)
             sys.exit(1)
         else:
-            print(score.format(args.width, args.score_only, metric.signature))
+            print(score.format(args.width, short=args.short, score_only=args.score_only))
 
     if args.detail:
         width = args.width
