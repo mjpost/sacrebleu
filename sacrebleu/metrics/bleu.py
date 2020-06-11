@@ -22,13 +22,12 @@ from typing import List, Iterable, Union
 
 from ..tokenizers import TOKENIZERS
 from ..utils import my_log
-from .. import __version__ as VERSION
-from .base import BaseScore
+from .base import BaseScore, get_signature
 
 
 class BLEUScore(BaseScore):
     """A convenience class to represent BLEU scores."""
-    def __init__(self, score: float, counts, totals, precisions, bp, sys_len, ref_len):
+    def __init__(self, score, counts, totals, precisions, bp, sys_len, ref_len):
         super().__init__(score)
 
         self.prefix = 'BLEU'
@@ -40,13 +39,13 @@ class BLEUScore(BaseScore):
         self.precisions = precisions
         self.prec_str = "/".join(["{:.1f}".format(p) for p in self.precisions])
 
-    def format(self, width=2, score_only=False, signature=''):
+    def format(self, width=2, signed=True, short=False, score_only=False):
         if score_only:
             return '{0:.{1}f}'.format(self.score, width)
 
         prefix = self.prefix
-        if signature:
-            prefix += '+' + signature
+        if signed:
+            prefix += '+' + self.signature(short=short)
 
         s = '{pr} = {sc:.{w}f} {prec} (BP = {bp:.3f} ratio = {r:.3f} hyp_len = {sl:d} ref_len = {rl:d})'.format(
             pr=prefix,
@@ -70,58 +69,26 @@ class BLEU:
         'none': None,   # No value is required
     }
 
-    # Abbreviations for the signature
-    ABBR = {
-        'test': 't',
-        'lang': 'l',
-        'smooth': 's',
-        'case': 'c',
-        'tok': 'tok',
-        'numrefs': '#',
-        'version': 'v',
-        'origlang': 'o',
-        'subset': 'S',
-    }
-
     def __init__(self, args):
-        # extract relevant arguments
         self.name = 'bleu'
-        self.smooth_method = args.smooth_method
-        self.smooth_value = args.smooth_value
-        # NOTE: this is an issue here and there
-        self.num_refs = args.num_refs
         self.force = args.force
         self.lowercase = args.lc
-        self._tokenizer = TOKENIZERS[args.tokenize]()
-        self.short = False if 'short' not in args else args.short
+        self.smooth_value = args.smooth_value
+        self.smooth_method = args.smooth_method
+        self.tokenizer = TOKENIZERS[args.tokenize]()
 
-        # Base signature
-        signature = {
-            'tok': self._tokenizer.signature(),
-            'smooth': self.smooth_method,
-            'numrefs': self.num_refs,
-            'case': 'lc' if self.lowercase else 'mixed',
-            'version': VERSION,
+        # Sanity check
+        assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
+            "Unknown smooth_method '{}'".format(self.smooth_method)
+
+        # Specific signature data
+        # 'name': ('short_name', value)
+        sig_dict = {
+            'smooth': ('s', self.smooth_method),
+            'case': ('c', 'lc' if self.lowercase else 'mixed'),
+            'tok': ('tok', self.tokenizer.signature()),
         }
-
-        if 'test_set' in args and args.test_set is not None:
-            signature['test'] = args.test_set
-
-        if 'langpair' in args and args.langpair is not None:
-            signature['lang'] = args.langpair
-
-        if 'origlang' in args and args.origlang is not None:
-            signature['origlang'] = args.origlang
-
-        if 'subset' in args and args.subset is not None:
-            signature['subset'] = args.subset
-
-        sig_pairs = []
-        for name in sorted(signature.keys()):
-            key = self.ABBR[name] if self.short else name
-            sig_pairs.append('{}.{}'.format(key, signature[name]))
-
-        self.signature = '+'.join(sig_pairs)
+        self.__signature = get_signature(args, sig_dict)
 
     @staticmethod
     def extract_ngrams(line, min_order=1, max_order=NGRAM_ORDER) -> Counter:
@@ -300,7 +267,7 @@ class BLEU:
             if self.lowercase:
                 lines = [x.lower() for x in lines]
 
-            if not (self.force or self._tokenizer.signature() == 'none') and lines[0].rstrip().endswith(' .'):
+            if not (self.force or self.tokenizer.signature() == 'none') and lines[0].rstrip().endswith(' .'):
                 tokenized_count += 1
 
                 if tokenized_count == 100:
@@ -308,7 +275,7 @@ class BLEU:
                     logging.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
                     logging.warning('If you insist your data is detokenized, or don\'t care, you can suppress this message with \'--force\'.')
 
-            output, *refs = [self._tokenizer(x.rstrip()) for x in lines]
+            output, *refs = [self.tokenizer(x.rstrip()) for x in lines]
 
             output_len = len(output.split())
             ref_ngrams, closest_diff, closest_len = BLEU.reference_stats(refs, output_len)
@@ -322,7 +289,12 @@ class BLEU:
                 correct[n-1] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
                 total[n-1] += sys_ngrams[ngram]
 
-        return self.compute_bleu(
+        # Get BLEUScore object
+        score = self.compute_bleu(
             correct, total, sys_len, ref_len,
             smooth_method=self.smooth_method, smooth_value=self.smooth_value,
             use_effective_order=use_effective_order)
+
+        # Inject number of references
+        score.set_signature(dict(numrefs=('#', len(ref_streams)), **self.__signature))
+        return score
