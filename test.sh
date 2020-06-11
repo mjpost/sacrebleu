@@ -161,6 +161,7 @@ for command in "${!EXPECTED[@]}"; do
       exit 1
   fi
   echo PASS
+  let i++
 done
 
 #######################################################
