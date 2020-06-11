@@ -15,29 +15,27 @@
 
 import re
 from collections import Counter
-from typing import List, Iterable, Tuple
+from typing import List, Iterable
 
-from .base import BaseScore
-from .. import __version__ as VERSION
+from .base import BaseScore, get_signature
 
 
 class CHRFScore(BaseScore):
-    def __init__(self, score: float, beta, order):
+    def __init__(self, score, beta, order):
         super().__init__(score)
 
-        # FIXME: beta is included in the prefix but neither beta nor order
-        # is in the actual signature in version <= 1.4.10
         self.beta = beta
+        # NOTE: order is not in the signature
         self.order = order
         self.prefix = 'chrF{0:d}'.format(self.beta)
 
-    def format(self, width=2, score_only=False, signature=''):
+    def format(self, width=2, signed=True, short=False, score_only=False):
         if score_only:
             return '{0:.{1}f}'.format(self.score, width)
 
         prefix = self.prefix
-        if signature:
-            prefix += '+' + signature
+        if signed:
+            prefix += '+' + self.signature(short=short)
 
         return '{pr} = {sc:.{w}f}'.format(pr=prefix, sc=self.score, w=width)
 
@@ -49,61 +47,24 @@ class CHRF:
     # default to 2 (per http://www.aclweb.org/anthology/W16-2341)
     BETA = 2
 
-    # Abbreviations for the signature
-    ABBR = {
-        'test': 't',
-        'lang': 'l',
-        'numchars': 'n',
-        'space': 's',
-        'numrefs': '#',
-        'version': 'v',
-        'origlang': 'o',
-        'subset': 'S',
-    }
-
     def __init__(self, args):
-        # extract relevant arguments
         self.name = 'chrf'
-        # NOTE: Does chrF support multi refs? The main() function seems to
-        # always pass the first ref.
-        self.num_refs = args.num_refs
-
         self.include_whitespace = args.chrf_whitespace
         self.order = args.chrf_order
         self.beta = args.chrf_beta
-        self.short = False if 'short' not in args else args.short
 
         if self.include_whitespace:
             self._preprocess = lambda x: x
         else:
             self._preprocess = lambda x: re.sub(r'\s+', '', x).strip()
 
-        # Base signature
-        signature = {
-            'version': VERSION,
-            'space': self.include_whitespace,
-            'numchars': self.order,
-            'numrefs': self.num_refs,
+        # Specific signature data
+        # 'name': ('short_name', value)
+        sig_dict = {
+            'numchars': ('n', self.order),
+            'space': ('s', str(self.include_whitespace).lower())
         }
-
-        if 'test_set' in args and args.test_set is not None:
-            signature['test'] = args.test_set
-
-        if 'langpair' in args and args.langpair is not None:
-            signature['lang'] = args.langpair
-
-        if 'origlang' in args and args.origlang is not None:
-            signature['origlang'] = args.origlang
-
-        if 'subset' in args and args.subset is not None:
-            signature['subset'] = args.subset
-
-        sig_pairs = []
-        for name in sorted(signature.keys()):
-            key = self.ABBR[name] if self.short else name
-            sig_pairs.append('{}.{}'.format(key, signature[name]))
-
-        self.signature = '+'.join(sig_pairs)
+        self.__signature = get_signature(args, sig_dict)
 
     @staticmethod
     def extract_char_ngrams(s: str, n: int) -> Counter:
@@ -113,10 +74,15 @@ class CHRF:
         return Counter([s[i:i + n] for i in range(len(s) - n + 1)])
 
     @staticmethod
-    def avg_precision_and_recall(statistics: List[float], order: int) -> Tuple[float, float]:
+    def compute_chrf(statistics: List[float],
+                     order: int,
+                     beta: float) -> CHRFScore:
+
+        score = 0.0
         avg_recall = 0.0
         avg_precision = 0.0
         effective_order = 0
+
         for i in range(order):
             hypotheses_ngrams = statistics[3 * i + 0]
             references_ngrams = statistics[3 * i + 1]
@@ -125,19 +91,21 @@ class CHRF:
                 avg_precision += common_ngrams / hypotheses_ngrams
                 avg_recall += common_ngrams / references_ngrams
                 effective_order += 1
-        if effective_order == 0:
-            return 0.0, 0.0
-        avg_precision /= effective_order
-        avg_recall /= effective_order
-        return avg_precision, avg_recall
 
-    @staticmethod
-    def compute_chrf(avg_precision, avg_recall, beta: int = BETA) -> float:
+        if effective_order == 0:
+            avg_precision, avg_recall = 0.0, 0.0
+        else:
+            avg_precision /= effective_order
+            avg_recall /= effective_order
+
         if avg_precision + avg_recall == 0:
-            return 0.0
-        beta_square = beta ** 2
-        score = (1 + beta_square) * (avg_precision * avg_recall)
-        return score / ((beta_square * avg_precision) + avg_recall)
+            score = 0.0
+        else:
+            beta_square = beta ** 2
+            score = (1 + beta_square) * (avg_precision * avg_recall)
+            score /= ((beta_square * avg_precision) + avg_recall)
+
+        return CHRFScore(score, beta, order)
 
     def get_sentence_statistics(self, hypothesis: str, reference: str) -> List[float]:
         hypothesis = self._preprocess(hypothesis)
@@ -171,9 +139,9 @@ class CHRF:
         :return: Chrf score.
         """
         stats = self.get_corpus_statistics(hypotheses, references)
-        avg_precision, avg_recall = self.avg_precision_and_recall(stats, self.order)
-        score = self.compute_chrf(avg_precision, avg_recall, beta=self.beta)
-        return CHRFScore(score, self.beta, self.order)
+        score = self.compute_chrf(stats, self.order, self.beta)
+        score.set_signature(dict(numrefs=('#', 1), **self.__signature))
+        return score
 
     def sentence_score(self, hypothesis: str, reference: str) -> CHRFScore:
         """
@@ -184,6 +152,6 @@ class CHRF:
         :return: Chrf score.
         """
         stats = self.get_sentence_statistics(hypothesis, reference)
-        avg_precision, avg_recall = self.avg_precision_and_recall(stats, self.order)
-        score = self.compute_chrf(avg_precision, avg_recall, beta=self.beta)
-        return CHRFScore(score, self.beta, self.order)
+        score = self.compute_chrf(stats, self.order, self.beta)
+        score.set_signature(dict(numrefs=('#', 1), **self.__signature))
+        return score
