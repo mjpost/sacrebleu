@@ -63,8 +63,12 @@ class BLEUScore(BaseScore):
 class BLEU:
     NGRAM_ORDER = 4
 
-    # The default floor value to use with `--smooth floor`
-    SMOOTH_VALUE_DEFAULT = {'floor': 0.0, 'add-k': 1}
+    SMOOTH_DEFAULTS = {
+        'floor': 0.0,
+        'add-k': 1,
+        'exp': None,    # No value is required
+        'none': None,   # No value is required
+    }
 
     # Abbreviations for the signature
     ABBR = {
@@ -191,12 +195,16 @@ class BLEU:
         :param sys_len: The cumulative system length
         :param ref_len: The cumulative reference length
         :param smooth: The smoothing method to use
-        :param smooth_value: The smoothing value added, if smooth method 'floor' is used
+        :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
         :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of NGRAM_ORDER.
         :return: A BLEU object with the score (100-based) and other statistics.
         """
-        if smooth_method in BLEU.SMOOTH_VALUE_DEFAULT and smooth_value is None:
-            smooth_value = BLEU.SMOOTH_VALUE_DEFAULT[smooth_method]
+        assert smooth_method in BLEU.SMOOTH_DEFAULTS.keys(), \
+            "Unknown smooth_method '{}'".format(smooth_method)
+
+        # Fetch the default value for floor and add-k
+        if smooth_value is None:
+            smooth_value = BLEU.SMOOTH_DEFAULTS[smooth_method]
 
         precisions = [0 for x in range(BLEU.NGRAM_ORDER)]
 
