@@ -1,10 +1,26 @@
 # VERSION HISTORY
 
+- 1.4.11 (2020-xx-xx)
+  - Added Multi30k multimodal MT test set metadata
+  - Refactored all tokenizers into respective classes (fixes #85)
+  - Refactored all metrics into respective classes
+  - Moved utility functions into `utils.py`
+  - Implemented signatures using `BLEUSignature` and `CHRFSignature` classes
+  - Simplified checking of Chinese characters (fixes #5)
+  - Unified common regexp tokenization codes for tokenizers (fixes #27)
+  - Fixed --detail failing when no test sets are provided
+  - Fixed multi-reference BLEU failing when tab-delimited reference stream is used
+  - Removed lowercase option for ChrF which was not functional (#85)
+  - Simplified ChrF and used the same I/O logic as BLEU to allow for future
+    multi-reference reading
+  - Added score regression tests for chrF using reference chrF++ implementation
+  - Added multi-reference & tokenizer & signature tests
+
 - 1.4.10 (2020-05-30)
   - Fixed bug in signature with mecab tokenizer
   - Cleaned up deprecation warnings (thanks to Karthikeyan Singaravelan @tirkarthi)
   - Now only lists the external [typing](https://pypi.org/project/typing/)
-    module as a dependency for Python <= 3.4, as it was integrated in the standard
+    module as a dependency for Python `<= 3.4`, as it was integrated in the standard
     library in Python 3.5 (thanks to Erwan de Lépinau @ErwanDL).
   - Added LICENSE to pypi (thanks to Mark Harfouche @hmaarrfk)
 
