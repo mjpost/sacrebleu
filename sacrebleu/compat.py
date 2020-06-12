@@ -97,7 +97,7 @@ def sentence_bleu(hypothesis: str,
 
 
 def corpus_chrf(hypotheses: Iterable[str],
-                references: Iterable[str],
+                references: List[Iterable[str]],
                 order: int = CHRF.ORDER,
                 beta: float = CHRF.BETA,
                 remove_whitespace: bool = True) -> CHRFScore:
@@ -118,7 +118,7 @@ def corpus_chrf(hypotheses: Iterable[str],
 
 
 def sentence_chrf(hypothesis: str,
-                  reference: str,
+                  references: Iterable[str],
                   order: int = CHRF.ORDER,
                   beta: float = CHRF.BETA,
                   remove_whitespace: bool = True) -> CHRFScore:
@@ -126,7 +126,7 @@ def sentence_chrf(hypothesis: str,
     Computes ChrF on a single sentence pair.
 
     :param hypothesis: Hypothesis string.
-    :param reference: Reference string.
+    :param references: Reference string(s).
     :param order: Maximum n-gram order.
     :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
     :param remove_whitespace: Whether to delete whitespaces from hypothesis and reference strings.
@@ -135,4 +135,4 @@ def sentence_chrf(hypothesis: str,
     args = Namespace(
         chrf_order=order, chrf_beta=beta, chrf_whitespace=not remove_whitespace, short=False)
     metric = CHRF(args)
-    return metric.sentence_score(hypothesis, reference)
+    return metric.sentence_score(hypothesis, references)
