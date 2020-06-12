@@ -145,7 +145,7 @@ def main():
         else:
             print('The available test sets are:')
             for testset in get_available_testsets():
-                print('\n%20s: %s' % (testset, DATASETS[testset].get('description', '')))
+                print('%30s: %s' % (testset, DATASETS[testset].get('description', '').strip()))
         sys.exit(0)
 
     if args.sentence_level and len(args.metrics) > 1:
@@ -172,9 +172,8 @@ def main():
     if args.test_set is not None:
         for test_set in args.test_set.split(','):
             if test_set not in DATASETS:
-                logging.error('Unknown test set "%s"\n', test_set)
-                for testset in get_available_testsets():
-                    logging.error("\n%20s: %s" % (testset, DATASETS[testset].get("description", "")))
+                logging.error('Unknown test set "%s"', test_set)
+                logging.error('Please run with --list to see the available test sets.')
                 sys.exit(1)
 
     if args.test_set is None:
