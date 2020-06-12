@@ -35,6 +35,7 @@ CMD="python3 -m sacrebleu"
 limit_test=${1:-}
 
 SKIP_CHRF=${SKIP_CHRF:-}
+SKIP_MECAB=${SKIP_MECAB:-}
 
 # TEST 1: download and process WMT17 data
 [[ -d $SACREBLEU/wmt17 ]] && rm -f $SACREBLEU/wmt17/{en-*,*-en*}
@@ -530,6 +531,35 @@ declare -A MTEVAL=( ["newstest2017.PJATK.4760.cs-en.sgm"]=23.15
                     ["kyoto-test"]=14.48
                   )
 
+if [[ ! -z $SKIP_MECAB ]]; then
+    pip install mecab-python3
+    for pair in en-ja; do
+        source=$(echo $pair | cut -d- -f1)
+        target=$(echo $pair | cut -d- -f2)
+        for txt in en-ja-translation-example-master/*.hyp.$target; do
+            name=$(basename $txt .hyp.$target)
+
+            if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
+
+            sys=$(basename $txt .hyp.$target)
+            ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
+            score=$(cat $txt | ${CMD} -w 2 -l $source-$target -b $ref)
+
+            echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
+
+            if [[ $? -eq 1 ]]; then
+                echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
+                exit 1
+            fi
+            echo "Passed $source-$target $sys mteval-v13a.pl: ${MTEVAL[$name]} sacreBLEU: $score"
+
+            let i++
+        done
+    done
+fi
+
+
+
 for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru-en tr-en zh-en; do
     source=$(echo $pair | cut -d- -f1)
     target=$(echo $pair | cut -d- -f2)
@@ -559,34 +589,6 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
     done
 done
 
-
-TEST_JA_MECAB=2
-if [[ ${TEST_JA_MECAB} -eq 1 ]]; then
-    pip install mecab-python3
-    for pair in en-ja; do
-        source=$(echo $pair | cut -d- -f1)
-        target=$(echo $pair | cut -d- -f2)
-        for txt in en-ja-translation-example-master/*.hyp.$target; do
-            name=$(basename $txt .hyp.$target)
-
-            if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
-
-            sys=$(basename $txt .hyp.$target)
-            ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
-            score=$(cat $txt | ${CMD} -w 2 -l $source-$target -b $ref)
-
-            echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
-
-            if [[ $? -eq 1 ]]; then
-                echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
-                exit 1
-            fi
-            echo "Passed $source-$target $sys mteval-v13a.pl: ${MTEVAL[$name]} sacreBLEU: $score"
-
-            let i++
-        done
-    done
-fi
 
 echo "Passed $i tests."
 exit 0

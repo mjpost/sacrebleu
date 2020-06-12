@@ -38,7 +38,7 @@ import urllib.request
 from collections import Counter
 from itertools import zip_longest, filterfalse
 from typing import List, Iterable, Tuple, Union
-from .tokenizer import TOKENIZERS, TokenizeMeCab
+from .tokenizers import TOKENIZERS, DEFAULT_TOKENIZER
 from .dataset import DATASETS, DOMAINS, COUNTRIES, SUBSETS
 from . import __version__ as VERSION
 
@@ -72,9 +72,6 @@ CHRF_BETA = 2
 
 # The default floor value to use with `--smooth floor`
 SMOOTH_VALUE_DEFAULT = {'floor': 0.0, 'add-k': 1}
-
-
-DEFAULT_TOKENIZER = '13a'
 
 
 def smart_open(file, mode='rt', encoding='utf-8'):
@@ -121,15 +118,11 @@ def bleu_signature(args, numrefs):
         'subset': 'S',
     }
 
-    signature = {'tok': args.tokenize,
+    signature = {'tok': TOKENIZERS[args.tokenize]().signature(),
                  'version': VERSION,
                  'smooth': args.smooth,
                  'numrefs': numrefs,
                  'case': 'lc' if args.lc else 'mixed'}
-
-    # For the Japanese tokenizer, add a dictionary type and its version to the signature.
-    if args.tokenize == "ja-mecab":
-        signature['tok'] += "-" + TokenizeMeCab().signature()
 
     if args.test_set is not None:
         signature['test'] = args.test_set
@@ -618,6 +611,9 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     # look for already-tokenized sentences
     tokenized_count = 0
 
+    # Create tokenizer instance
+    tokenizer = TOKENIZERS[tokenize]()
+
     fhs = [sys_stream] + ref_streams
     for lines in zip_longest(*fhs):
         if None in lines:
@@ -626,7 +622,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
         if lowercase:
             lines = [x.lower() for x in lines]
 
-        if not (force or tokenize == 'none') and lines[0].rstrip().endswith(' .'):
+        if not (force or tokenizer.signature() == 'none') and lines[0].rstrip().endswith(' .'):
             tokenized_count += 1
 
             if tokenized_count == 100:
@@ -634,7 +630,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 logging.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
                 logging.warning('If you insist your data is detokenized, or don\'t care, you can suppress this message with \'--force\'.')
 
-        output, *refs = [TOKENIZERS[tokenize](x.rstrip()) for x in lines]
+        output, *refs = [tokenizer(x.rstrip()) for x in lines]
 
         ref_ngrams, closest_diff, closest_len = ref_stats(output, refs)
 
@@ -914,7 +910,7 @@ def main():
         logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
                         "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
 
-    # Internal tokenizer settings. Set to 'zh' for Chinese  DEFAULT_TOKENIZER (
+    # Internal tokenizer settings
     if args.tokenize is None:
         # set default
         if args.langpair is not None and args.langpair.split('-')[1] == 'zh':
@@ -1089,7 +1085,7 @@ def parse_args():
                             help='The value to pass to the smoothing technique, only used for floor and add-k. Default floor: {}, add-k: {}.'.format(
                                 SMOOTH_VALUE_DEFAULT['floor'], SMOOTH_VALUE_DEFAULT['add-k']))
     arg_parser.add_argument('--tokenize', '-tok', choices=TOKENIZERS.keys(), default=None,
-                            help='tokenization method to use')
+                            help='Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `mecab` for Japanese and `mteval-v13a` otherwise.')
     arg_parser.add_argument('--language-pair', '-l', dest='langpair', default=None,
                             help='source-target language pair (2-char ISO639-1 codes)')
     arg_parser.add_argument('--origlang', '-ol', dest='origlang', default=None,
