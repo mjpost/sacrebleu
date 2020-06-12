@@ -34,6 +34,8 @@ CMD="python3 -m sacrebleu"
 # Only run this test
 limit_test=${1:-}
 
+SKIP_CHRF=${SKIP_CHRF:-}
+
 # TEST 1: download and process WMT17 data
 [[ -d $SACREBLEU/wmt17 ]] && rm -f $SACREBLEU/wmt17/{en-*,*-en*}
 ${CMD} --echo src -t wmt17 -l cs-en > /dev/null
@@ -168,9 +170,6 @@ done
 # Pre-computed chrF scores from official implementation
 # Cmd: chrF++.py -H hyp -R ref -nw 0
 #######################################################
-echo "-------------------"
-echo "Starting chrF tests"
-echo "-------------------"
 declare -A CHRF=( ["newstest2017.PJATK.4760.cs-en.sgm"]=52.5947
                   ["newstest2017.online-A.0.cs-en.sgm"]=53.3856
                   ["newstest2017.online-B.0.cs-en.sgm"]=54.4608
@@ -326,9 +325,14 @@ declare -A CHRF=( ["newstest2017.PJATK.4760.cs-en.sgm"]=52.5947
                   ["newstest2017.xmunmt.5160.zh-en.sgm"]=54.3314
                   )
 
+echo "-------------------"
+echo "Starting chrF tests"
+echo "-------------------"
+
 # Test only for different target languages as there is no tokenization
 # issue involved in chrF
 for pair in cs-en en-cs en-de en-fi en-lv en-ru en-tr en-zh; do
+    if [ ! -z $SKIP_CHRF ]; then continue; fi
     source=$(echo $pair | cut -d- -f1)
     target=$(echo $pair | cut -d- -f2)
     for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
