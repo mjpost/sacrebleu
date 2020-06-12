@@ -15,7 +15,8 @@
 
 import re
 from collections import Counter
-from typing import List, Iterable
+from itertools import zip_longest
+from typing import List, Iterable, Union
 
 from .base import BaseScore, Signature
 
@@ -116,7 +117,11 @@ class CHRF:
 
         return CHRFScore(score, beta, order)
 
-    def get_sentence_statistics(self, hypothesis: str, reference: str) -> List[float]:
+    def get_sentence_statistics(self, hypothesis: str,
+                                references: List[str]) -> List[float]:
+        # NOTE: multi-reference not supported yet
+        reference = references[0]
+
         hypothesis = self._preprocess(hypothesis)
         reference = self._preprocess(reference)
         statistics = [0] * (self.order * 3)
@@ -130,35 +135,46 @@ class CHRF:
             statistics[3 * i + 2] = sum(common_ngrams.values())
         return statistics
 
-    def get_corpus_statistics(self, hypotheses: Iterable[str],
-                              references: Iterable[str]) -> List[float]:
-        corpus_statistics = [0] * (self.order * 3)
-        for hypothesis, reference in zip(hypotheses, references):
-            statistics = self.get_sentence_statistics(hypothesis, reference)
-            for i in range(len(statistics)):
-                corpus_statistics[i] += statistics[i]
-        return corpus_statistics
-
-    def corpus_score(self, hypotheses: Iterable[str], references: Iterable[str]) -> CHRFScore:
-        """
-        Computes Chrf on a corpus.
-
-        :param hypotheses: Stream of hypotheses.
-        :param references: Stream of references
-        :return: Chrf score.
-        """
-        stats = self.get_corpus_statistics(hypotheses, references)
-        score = self.compute_chrf(stats, self.order, self.beta)
-        return score
-
-    def sentence_score(self, hypothesis: str, reference: str) -> CHRFScore:
+    def sentence_score(self, hypothesis: str, references: List[str]) -> CHRFScore:
         """
         Computes ChrF on a single sentence pair.
 
         :param hypothesis: Hypothesis string.
-        :param reference: Reference string.
+        :param references: Reference string(s).
         :return: Chrf score.
         """
-        stats = self.get_sentence_statistics(hypothesis, reference)
-        score = self.compute_chrf(stats, self.order, self.beta)
-        return score
+        stats = self.get_sentence_statistics(hypothesis, references)
+        return self.compute_chrf(stats, self.order, self.beta)
+
+    def corpus_score(self, sys_stream: Union[str, Iterable[str]],
+                     ref_streams: Union[str, List[Iterable[str]]]) -> CHRFScore:
+        """
+        Computes Chrf on a corpus.
+
+        :param hypotheses: Stream of hypotheses.
+        :param references: Stream of references.
+        :return: Chrf score.
+        """
+
+        # Add some robustness to the input arguments
+        if isinstance(sys_stream, str):
+            sys_stream = [sys_stream]
+
+        if isinstance(ref_streams, str):
+            ref_streams = [[ref_streams]]
+
+        corpus_statistics = [0] * (self.order * 3)
+
+        fhs = [sys_stream] + ref_streams
+        for lines in zip_longest(*fhs):
+            if None in lines:
+                raise EOFError("Source and reference streams have different lengths!")
+
+            # Unpack
+            hypothesis, *refs = lines
+
+            statistics = self.get_sentence_statistics(hypothesis, refs)
+            for i in range(len(statistics)):
+                corpus_statistics[i] += statistics[i]
+
+        return self.compute_chrf(corpus_statistics, self.order, self.beta)
