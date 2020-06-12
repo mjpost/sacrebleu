@@ -130,30 +130,36 @@ fi
 let i++
 echo "Passed control character in reference test"
 
-
-
-echo '-----------------------------------------'
-echo 'Multi-reference regression tests for BLEU'
-echo '-----------------------------------------'
-
+#####################################################################
+# Tests for single-ref BLEU, multi-ref BLEU, signature and tokenizers
+#####################################################################
 path="wmt17-submitted-data/txt/system-outputs/newstest2017/cs-en"
 ref1="${path}/newstest2017.online-A.0.cs-en"
 ref2="${path}/newstest2017.online-B.0.cs-en"
 sys="${path}/newstest2017.PJATK.4760.cs-en"
 
-# Single REF files
+echo '---------------------'
+echo 'BLEU regression tests'
+echo '---------------------'
 unset EXPECTED
 declare -A EXPECTED
+
+# Single ref, tokenizer variants, lowercase
 EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref1"]=36.8799
-EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref2"]=33.6736
+EXPECTED["${CMD} -lc -w 4 -b -l cs-en -i $sys $ref1"]=38.1492
+EXPECTED["${CMD} --tokenize 13a  -w 4 -b -l cs-en -i $sys $ref1"]=36.8799
+EXPECTED["${CMD} --tokenize none -w 4 -b -l cs-en -i $sys $ref1"]=34.0638
+EXPECTED["${CMD} --tokenize intl -w 4 -b -l cs-en -i $sys $ref1"]=37.3859
 # multiple REF files
 EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref1 $ref2"]=44.6732
-# multiple REF files with tab-delimited stream
+# multiple REFs with tab-delimited stream
 EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys --num-refs 2 <(paste $ref1 $ref2)"]=44.6732
 # Check signature correctness
 EXPECTED["${CMD} -l cs-en -i $sys $ref1 $ref2 | sed -r 's#.*numrefs\.([0-9]).*#\1#'"]=2
 EXPECTED["${CMD} -l cs-en -i $sys --num-refs 2 <(paste $ref1 $ref2) | sed -r 's#.*numrefs\.([0-9]).*#\1#'"]=2
 
+
+# Run the tests
 for command in "${!EXPECTED[@]}"; do
   echo Testing $command
   obtained=`eval $command`
