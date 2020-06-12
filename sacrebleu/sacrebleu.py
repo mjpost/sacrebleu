@@ -282,27 +282,15 @@ def main():
         # one metric in use for sentence-level
         metric = metrics[0]
         for output, *references in zip(system, *refs):
-            # FIXME: handle this in metrics
-            if metric.name == 'bleu':
-                _refs = [[x] for x in references]
-            elif metric.name == 'chrf':
-                _refs = references[0]
-
-            score = metric.sentence_score(output, _refs)
+            score = metric.sentence_score(output, references)
             print(score.format(args.width, args.score_only, metric.signature))
 
         sys.exit(0)
 
     # Else, handle system level
     for metric in metrics:
-        # FIXME: handle this in metrics
-        if metric.name == 'bleu':
-            _refs = refs
-        elif metric.name == 'chrf':
-            _refs = refs[0]
-
         try:
-            score = metric.corpus_score(system, _refs)
+            score = metric.corpus_score(system, refs)
         except EOFError:
             logging.error('The input and reference stream(s) were of different lengths.')
             if args.test_set is not None:
