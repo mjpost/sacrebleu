@@ -237,7 +237,7 @@ class BLEU:
         :param use_effective_order: Account for references that are shorter than the largest n-gram.
         :return: a `BLEUScore` object containing everything you'd want
         """
-        return self.corpus_score(hypothesis, references,
+        return self.corpus_score(hypothesis, [[ref] for ref in references],
                                  use_effective_order=use_effective_order)
 
     def corpus_score(self, sys_stream: Union[str, Iterable[str]],
