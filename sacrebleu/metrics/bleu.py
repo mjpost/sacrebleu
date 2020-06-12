@@ -40,7 +40,7 @@ class BLEUSignature(Signature):
             'smooth': self.args['smooth_method'],
             'case': 'lc' if self.args['lc'] else 'mixed',
             'tok': TOKENIZERS[self.args['tokenize']]().signature(),
-            'numrefs': self.args['num_refs'],
+            'numrefs': self.args.get('num_refs', '?'),
         })
 
 
