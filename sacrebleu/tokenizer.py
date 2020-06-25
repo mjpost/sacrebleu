@@ -273,4 +273,5 @@ TOKENIZERS = {
     'zh': tokenize_zh,
     'ja-mecab': TokenizeMeCab().tokenize,
     'none': lambda x: x,
+    'char-based':  lambda x: ' '.join((char for char in line)),
 }
