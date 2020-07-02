@@ -569,7 +569,6 @@ if [[ -z $SKIP_MECAB ]]; then
   echo "-----------------------"
   echo "Testing Mecab tokenizer"
   echo "-----------------------"
-    pip install mecab-python3
     pair="en-ja"
     source=$(echo $pair | cut -d- -f1)
     target=$(echo $pair | cut -d- -f2)

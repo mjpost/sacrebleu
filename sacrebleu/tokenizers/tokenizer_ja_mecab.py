@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from .tokenizer_none import NoneTokenizer
+import MeCab
 
-_INSTALL_MSG = "Please install mecab-python3 for evaluating Japanese (pip install mecab-python3)."
+from .tokenizer_none import NoneTokenizer
 
 
 class TokenizerJaMecab(NoneTokenizer):
     def __init__(self):
-        try:
-            import MeCab
-        except ImportError:
-            raise ImportError(_INSTALL_MSG)
-
         self.tagger = MeCab.Tagger("-Owakati")
 
-        # make sure the dictionary is IPA.
+        # make sure the dictionary is IPA
+        # sacreBLEU is only compatible with 0.996.5 for now
+        # Please see: https://github.com/mjpost/sacrebleu/issues/94
         d = self.tagger.dictionary_info()
         assert d.size == 392126, \
             "Please make sure to use IPA dictionary for MeCab"
