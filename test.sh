@@ -155,9 +155,11 @@ EXPECTED["${CMD} --tokenize intl -w 4 -b -l cs-en -i $sys $ref1"]=37.3859
 EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref1 $ref2"]=44.6732
 # multiple REFs with tab-delimited stream
 EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys --num-refs 2 <(paste $ref1 $ref2)"]=44.6732
-# Check signature correctness
-EXPECTED["${CMD} -l cs-en -i $sys $ref1 $ref2 | sed -r 's#.*numrefs\.([0-9]).*#\1#'"]=2
-EXPECTED["${CMD} -l cs-en -i $sys --num-refs 2 <(paste $ref1 $ref2) | sed -r 's#.*numrefs\.([0-9]).*#\1#'"]=2
+# Check signature correctness for multi-reference
+# separate files
+EXPECTED["${CMD} -l cs-en -i $sys $ref1 $ref2 | perl -pe 's/.*numrefs\.([0-9]).*/\1/'"]=2
+# tab delimited stream
+EXPECTED["${CMD} -l cs-en -i $sys --num-refs 2 <(paste $ref1 $ref2) | perl -pe 's/.*numrefs\.([0-9]).*/\1/'"]=2
 
 
 # Run the tests
