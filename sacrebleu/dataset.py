@@ -663,7 +663,7 @@ DATASETS = {
         'en-zh': ['en-zh/IWSLT17.TED.dev2010.en-zh.en.xml', 'zh-en/IWSLT17.TED.dev2010.zh-en.zh.xml'],
         'zh-en': ['zh-en/IWSLT17.TED.dev2010.zh-en.zh.xml', 'en-zh/IWSLT17.TED.dev2010.en-zh.en.xml'],
     },
-    'multi30k/test_2016_flickr': {
+    'multi30k/2016': {
         'data': ['https://github.com/multi30k/dataset/raw/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
         "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
         'description': '2016 flickr test set of Multi30k dataset',
@@ -672,7 +672,7 @@ DATASETS = {
         'en-de': ['test_2016_flickr.en', 'test_2016_flickr.de'],
         'en-cs': ['test_2016_flickr.en', 'test_2016_flickr.cs'],
     },
-    'multi30k/test_2017_flickr': {
+    'multi30k/2017': {
         'data': ['https://github.com/multi30k/dataset/raw/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
         "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
         'description': '2017 flickr test set of Multi30k dataset',
@@ -680,7 +680,7 @@ DATASETS = {
         'en-fr': ['test_2017_flickr.en', 'test_2017_flickr.fr'],
         'en-de': ['test_2017_flickr.en', 'test_2017_flickr.de'],
     },
-    'multi30k/test_2018_flickr': {
+    'multi30k/2018': {
         'data': ['https://github.com/multi30k/dataset/raw/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
         "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
         'description': '2018 flickr test set of Multi30k dataset. See https://competitions.codalab.org/competitions/19917 for evaluation.',
