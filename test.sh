@@ -334,42 +334,42 @@ declare -A CHRF=( ["newstest2017.PJATK.4760.cs-en.sgm"]=52.5947
                   ["newstest2017.xmunmt.5160.zh-en.sgm"]=54.3314
                   )
 
-echo "-------------------"
-echo "Starting chrF tests"
-echo "-------------------"
+if [ -z $SKIP_CHRF ]; then
+  echo "-------------------"
+  echo "Starting chrF tests"
+  echo "-------------------"
+  # Test only for different target languages as there is no tokenization
+  # issue involved in chrF
+  for pair in cs-en en-cs en-de en-fi en-lv en-ru en-tr en-zh; do
+      source=$(echo $pair | cut -d- -f1)
+      target=$(echo $pair | cut -d- -f2)
+      for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
+          name=$(basename $sgm)
 
-# Test only for different target languages as there is no tokenization
-# issue involved in chrF
-for pair in cs-en en-cs en-de en-fi en-lv en-ru en-tr en-zh; do
-    if [ ! -z $SKIP_CHRF ]; then continue; fi
-    source=$(echo $pair | cut -d- -f1)
-    target=$(echo $pair | cut -d- -f2)
-    for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
-        name=$(basename $sgm)
+          if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
 
-        if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
+          sys=$(basename $sgm .sgm | perl -pe 's/newstest2017\.//')
+          txt=$(dirname $sgm | perl -pe 's/sgm/txt/')/$(basename $sgm .sgm)
+          src=wmt17-submitted-data/sgm/sources/newstest2017-$source$target-src.$source.sgm
+          ref=wmt17-submitted-data/sgm/references/newstest2017-$source$target-ref.$target.sgm
 
-        sys=$(basename $sgm .sgm | perl -pe 's/newstest2017\.//')
-        txt=$(dirname $sgm | perl -pe 's/sgm/txt/')/$(basename $sgm .sgm)
-        src=wmt17-submitted-data/sgm/sources/newstest2017-$source$target-src.$source.sgm
-        ref=wmt17-submitted-data/sgm/references/newstest2017-$source$target-ref.$target.sgm
+          score=$(cat $txt | ${CMD} -w 4 -t wmt17 -l $source-$target -b --metrics chrf)
 
-        score=$(cat $txt | ${CMD} -w 4 -t wmt17 -l $source-$target -b --metrics chrf)
+          # rescale to 0-1
+          expected_score=`echo "print('{:.4f}'.format(${CHRF[$name]} / 100.0))" | python`
 
-        # rescale to 0-1
-        expected_score=`echo "print('{:.4f}'.format(${CHRF[$name]} / 100.0))" | python`
+          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 0.01 else 0)" | python
 
-        echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 0.01 else 0)" | python
+          if [[ $? -eq 1 ]]; then
+              echo "FAILED test $pair/$sys (wanted $expected_score got $score)"
+              exit 1
+          fi
+          echo "Passed $source-$target $sys chrF++.py: $expected_score sacreCHRF: $score"
 
-        if [[ $? -eq 1 ]]; then
-            echo "FAILED test $pair/$sys (wanted $expected_score got $score)"
-            exit 1
-        fi
-        echo "Passed $source-$target $sys chrF++.py: $expected_score sacreCHRF: $score"
-
-        let i++
-    done
-done
+          let i++
+      done
+  done
+fi
 
 ################################################################
 # Pre-computed results from Moses' mteval-v13a.pl for BLEU tests
@@ -533,35 +533,6 @@ declare -A MTEVAL=( ["newstest2017.PJATK.4760.cs-en.sgm"]=23.15
                     ["kyoto-test"]=14.48
                   )
 
-if [[ ! -z $SKIP_MECAB ]]; then
-    pip install mecab-python3
-    for pair in en-ja; do
-        source=$(echo $pair | cut -d- -f1)
-        target=$(echo $pair | cut -d- -f2)
-        for txt in en-ja-translation-example-master/*.hyp.$target; do
-            name=$(basename $txt .hyp.$target)
-
-            if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
-
-            sys=$(basename $txt .hyp.$target)
-            ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
-            score=$(cat $txt | ${CMD} -w 2 -l $source-$target -b $ref)
-
-            echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
-
-            if [[ $? -eq 1 ]]; then
-                echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
-                exit 1
-            fi
-            echo "Passed $source-$target $sys mteval-v13a.pl: ${MTEVAL[$name]} sacreBLEU: $score"
-
-            let i++
-        done
-    done
-fi
-
-
-
 for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru-en tr-en zh-en; do
     source=$(echo $pair | cut -d- -f1)
     target=$(echo $pair | cut -d- -f2)
@@ -591,7 +562,37 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
     done
 done
 
+#############
+# Mecab tests
+#############
+if [[ -z $SKIP_MECAB ]]; then
+  echo "-----------------------"
+  echo "Testing Mecab tokenizer"
+  echo "-----------------------"
+    pip install mecab-python3
+    pair="en-ja"
+    source=$(echo $pair | cut -d- -f1)
+    target=$(echo $pair | cut -d- -f2)
+    for txt in en-ja-translation-example-master/*.hyp.$target; do
+        name=$(basename $txt .hyp.$target)
+
+        if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
+
+        sys=$(basename $txt .hyp.$target)
+        ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
+        score=$(cat $txt | ${CMD} -w 2 -l $source-$target -b $ref)
+
+        echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
+
+        if [[ $? -eq 1 ]]; then
+            echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
+            exit 1
+        fi
+        echo "Passed $source-$target $sys mteval-v13a.pl: ${MTEVAL[$name]} sacreBLEU: $score"
+
+        let i++
+    done
+fi
 
 echo "Passed $i tests."
 exit 0
-
