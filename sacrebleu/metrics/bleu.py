@@ -22,7 +22,7 @@ class BLEUSignature(Signature):
             'numrefs': '#',
         })
 
-        self._sig.update({
+        self.info.update({
             'smooth': self.args['smooth_method'],
             'case': 'lc' if self.args['lc'] else 'mixed',
             'tok': TOKENIZERS[self.args['tokenize']]().signature(),

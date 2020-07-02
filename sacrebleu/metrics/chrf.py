@@ -17,7 +17,7 @@ class CHRFSignature(Signature):
             'space': 's',
         })
 
-        self._sig.update({
+        self.info.update({
             'space': str(self.args['chrf_whitespace']).lower(),
             'numchars': self.args['chrf_order'],
         })

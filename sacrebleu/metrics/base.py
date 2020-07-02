@@ -32,7 +32,7 @@ class Signature:
             'origlang': 'o',
         }
 
-        self._sig = {
+        self.info = {
             # None's will be ignored
             'version': __version__,
             'test': self.args.get('test_set', None),
@@ -44,8 +44,8 @@ class Signature:
     def __str__(self):
         """Returns a formatted signature string."""
         pairs = []
-        for name in sorted(self._sig.keys()):
-            value = self._sig[name]
+        for name in sorted(self.info.keys()):
+            value = self.info[name]
             if value is not None:
                 final_name = self._abbr[name] if self.short else name
                 pairs.append('{}.{}'.format(final_name, value))
