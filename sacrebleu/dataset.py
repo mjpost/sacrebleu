@@ -663,6 +663,31 @@ DATASETS = {
         'en-zh': ['en-zh/IWSLT17.TED.dev2010.en-zh.en.xml', 'zh-en/IWSLT17.TED.dev2010.zh-en.zh.xml'],
         'zh-en': ['zh-en/IWSLT17.TED.dev2010.zh-en.zh.xml', 'en-zh/IWSLT17.TED.dev2010.en-zh.en.xml'],
     },
+    'multi30k/2016': {
+        'data': ['https://github.com/multi30k/dataset/raw/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
+        "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
+        'description': '2016 flickr test set of Multi30k dataset',
+        'citation': '@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}',
+        'en-fr': ['test_2016_flickr.en', 'test_2016_flickr.fr'],
+        'en-de': ['test_2016_flickr.en', 'test_2016_flickr.de'],
+        'en-cs': ['test_2016_flickr.en', 'test_2016_flickr.cs'],
+    },
+    'multi30k/2017': {
+        'data': ['https://github.com/multi30k/dataset/raw/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
+        "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
+        'description': '2017 flickr test set of Multi30k dataset',
+        'citation': '@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}\n\n@InProceedings{elliott-etal-2017-findings,\n    title = "Findings of the Second Shared Task on Multimodal Machine Translation and Multilingual Image Description",\n    author = {Elliott, Desmond  and Frank, Stella  and Barrault, Lo{\\"\\i}c  and Bougares, Fethi  and Specia, Lucia},\n    booktitle = "Proceedings of the Second Conference on Machine Translation",\n    month = sep,\n    year = "2017",\n    address = "Copenhagen, Denmark",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W17-4718",\n    doi = "10.18653/v1/W17-4718",\n    pages = "215--233",\n}\n',
+        'en-fr': ['test_2017_flickr.en', 'test_2017_flickr.fr'],
+        'en-de': ['test_2017_flickr.en', 'test_2017_flickr.de'],
+    },
+    'multi30k/2018': {
+        'data': ['https://github.com/multi30k/dataset/raw/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
+        "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
+        'description': '2018 flickr test set of Multi30k dataset. See https://competitions.codalab.org/competitions/19917 for evaluation.',
+        'citation': '@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}\n\n@InProceedings{barrault-etal-2018-findings,\n    title = "Findings of the Third Shared Task on Multimodal Machine Translation",\n    author = {Barrault, Lo{\\"\\i}c  and Bougares, Fethi  and Specia, Lucia  and Lala, Chiraag  and Elliott, Desmond  and Frank, Stella},\n    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",\n    month = oct,\n    year = "2018",\n    address = "Belgium, Brussels",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W18-6402",\n    doi = "10.18653/v1/W18-6402",\n    pages = "304--323",\n}\n',
+        'en-fr': ['test_2018_flickr.en'],
+        'en-de': ['test_2018_flickr.en'],
+    },
 }
 
 # Detailed document metadata annotation in form DocumentID -> CountryCode - Domain - OptionalFinegrainedCountryCode
@@ -702,6 +727,6 @@ SUBSETS = {
         'bbc.381736=OTHER-politics-KP cbsnews.248394=US-politics nytimes.184822=US-world telegraph.405408=US-politics euronews-en.153799=OTHER-politics-SY '
         'euronews-en.153826=EU-sport cnn.304400=US-world'
 }
-SUBSETS = {k:{d.split('=')[0]:d.split('=')[1] for d in v.split()} for (k,v) in SUBSETS.items()}
+SUBSETS = {k: {d.split('=')[0]: d.split('=')[1] for d in v.split()} for (k, v) in SUBSETS.items()}
 COUNTRIES = sorted(list({v.split('-')[0] for v in SUBSETS['wmt19'].values()}))
 DOMAINS = sorted(list({v.split('-')[1] for v in SUBSETS['wmt19'].values()}))

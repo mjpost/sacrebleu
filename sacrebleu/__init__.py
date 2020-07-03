@@ -14,13 +14,22 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__version__ = '1.4.10'
+__version__ = '1.4.11'
 __description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores'
 
-from .sacrebleu import smart_open, corpus_bleu, corpus_chrf, sentence_bleu, sentence_chrf, compute_bleu,\
-    raw_corpus_bleu, get_source_file, get_reference_files, get_available_testsets, get_langpairs_for_testset,\
-    BLEU, CHRF, DATASETS, TOKENIZERS, SACREBLEU_DIR
 
-# more imports for backward compatibility
-from .sacrebleu import ref_stats, bleu_signature, extract_ngrams, extract_char_ngrams, \
-    get_corpus_statistics, display_metric, get_sentence_statistics, download_test_set
+from .utils import smart_open, SACREBLEU_DIR, download_test_set
+from .utils import get_source_file, get_reference_files
+from .utils import get_available_testsets, get_langpairs_for_testset
+from .dataset import DATASETS
+from .tokenizers import TOKENIZERS, DEFAULT_TOKENIZER
+from .metrics import BLEU, CHRF
+
+# Backward compatibility functions for old style API access (<= 1.4.10)
+from .compat import *
+
+# Other shorthands for backward-compatibility with <= 1.4.10
+extract_ngrams = BLEU.extract_ngrams
+extract_char_ngrams = CHRF.extract_char_ngrams
+ref_stats = BLEU.reference_stats
+compute_bleu = BLEU.compute_bleu
