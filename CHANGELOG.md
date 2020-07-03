@@ -1,6 +1,9 @@
 # VERSION HISTORY
 
-- 1.4.11 (2020-xx-xx)
+- 1.4.12 (2020-07-03)
+  - Bugfix in package declarations
+
+- 1.4.11 (2020-07-02)
   - Added Multi30k multimodal MT test set metadata
   - Refactored all tokenizers into respective classes (fixes #85)
   - Refactored all metrics into respective classes
