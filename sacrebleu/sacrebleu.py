@@ -25,7 +25,15 @@ See the [README.md] file for more information.
 import io
 import sys
 import logging
+import pathlib
 import argparse
+
+# Allows calling the script as a standalone utility
+# See: https://github.com/mjpost/sacrebleu/issues/86
+if __package__ is None and __name__ == '__main__':
+    parent = pathlib.Path(__file__).absolute().parents[1]
+    sys.path.insert(0, str(parent))
+    __package__ = 'sacrebleu'
 
 from .tokenizers import TOKENIZERS, DEFAULT_TOKENIZER
 from .dataset import DATASETS, DOMAINS, COUNTRIES, SUBSETS
