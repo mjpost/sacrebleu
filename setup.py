@@ -50,7 +50,7 @@ import os
 import re
 
 # Always prefer setuptools over distutils
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 ROOT = os.path.dirname(__file__)
@@ -123,7 +123,7 @@ setup(
     keywords = ['machine translation, evaluation, NLP, natural language processing, computational linguistics'],
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment this:
-    packages = ["sacrebleu"],
+    packages = find_packages(),
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
