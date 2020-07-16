@@ -122,8 +122,11 @@ setup(
     # What does your project relate to?
     keywords = ['machine translation, evaluation, NLP, natural language processing, computational linguistics'],
 
-    # Alternatively, if you want to distribute just a my_module.py, uncomment this:
+    # Which packages to deploy (currently sacrebleu, sacrebleu.matrics and sacrebleu.tokenizers)?
     packages = find_packages(),
+
+    # Mark sacrebleu (and recursively all its sub-packages) as supporting mypy type hints (see PEP 561).
+    package_data={"sacrebleu": ["py.typed"]},
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
