@@ -48,10 +48,6 @@ class TERScore(BaseScore):
     def format(self, width=2, score_only=False, signature=''):
         return str(self.score)
 
-    def __gt__(self, other):
-        if type(other) != TERScore:
-            raise TypeError()
-
 
 class TERSignature(Signature):
     def __init__(self, args):
