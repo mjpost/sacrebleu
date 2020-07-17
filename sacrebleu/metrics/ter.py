@@ -61,7 +61,7 @@ class TERSignature(Signature):
 
 class TER:
     def __init__(self, args):
-        self.tokenizer = TOKENIZERS[args.tokenize]()
+        self.tokenizer = TOKENIZERS['tercom']()
         self.signature = TERSignature(args)
 
     def corpus_score(self, sys_stream: Union[str, Iterable[str]],
