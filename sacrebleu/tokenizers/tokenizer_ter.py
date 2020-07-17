@@ -19,7 +19,7 @@ def _normalize_general_and_western(sent: str) -> str:
     sent = re.sub(r"&gt;", ">", sent)
 
     # language-dependent (Western) part
-    sent = f" {sent} "
+    sent = " {} ".format(sent)
 
     # tokenize punctuation
     sent = re.sub(r"([{-~[-` -&(-+:-@/])", r" \1 ", sent)

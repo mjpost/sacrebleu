@@ -62,6 +62,7 @@ class TERSignature(Signature):
 class TER:
     def __init__(self, args):
         self.tokenizer = TOKENIZERS[args.tokenize]()
+        self.signature = TERSignature(args)
 
     def corpus_score(self, sys_stream: Union[str, Iterable[str]],
                      ref_streams: Union[str, List[Iterable[str]]]) -> TERScore:
@@ -345,7 +346,7 @@ def trace_to_alignment(trace: str) -> Tuple[Dict, List, List]:
             align[pos_ref] = pos_hyp
             ref_err.append(1)
         else:
-            raise Exception(f"unknown operation '{op}'")
+            raise Exception("unknown operation '{}'".format(op))
 
     return align, ref_err, hyp_err
 
@@ -501,7 +502,7 @@ class BeamEditDistance:
             elif op == _OP_DEL:
                 i -= 1
             else:
-                raise Exception(f"unknown operation '{op}'")
+                raise Exception("unknown operation '{}'".format(op))
 
         return dist[-1][-1][0], dist[len(cache):], trace
 
