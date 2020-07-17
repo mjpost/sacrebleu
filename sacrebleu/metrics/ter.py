@@ -39,7 +39,7 @@ _OP_UNDEF = 'x'
 
 class TERScore(BaseScore):
     def __init__(self, num_edits, ref_length):
-        score = num_edits / ref_length
+        score = num_edits / ref_length if ref_length > 0 else 1
         super().__init__(score)
 
         self.num_edits = num_edits

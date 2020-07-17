@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from .bleu import BLEU
-from .chrf import CHRF
-from .ter import TER
+from .bleu import BLEU, BLEUScore
+from .chrf import CHRF, CHRFScore
+from .ter import TER, TERScore
 
 METRICS = {
     'bleu': BLEU,
