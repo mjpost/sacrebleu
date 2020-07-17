@@ -44,9 +44,14 @@ class TERScore(BaseScore):
 
         self.num_edits = num_edits
         self.ref_length = ref_length
+        self.prefix = 'TER'
 
     def format(self, width=2, score_only=False, signature=''):
-        return str(self.score)
+        if score_only:
+            return '{0:.{1}f}'.format(self.score, width)
+
+        prefix = "{}+{}".format(self.prefix, signature) if signature else self.prefix
+        return '{pr} = {sc:.{w}f}'.format(pr=prefix, sc=self.score, w=width)
 
 
 class TERSignature(Signature):
@@ -113,7 +118,7 @@ def translation_edit_rate(words_hyp: List[str], words_ref: List[str]) -> \
     if len(words_ref) == 0:
         trace = _OP_DEL * len(words_hyp)
         # special treatment of empty refs
-        return (len(words_hyp), 0)
+        return len(words_hyp), 0
 
     cached_ed = BeamEditDistance(words_ref)
     shifts = 0
@@ -136,7 +141,7 @@ def translation_edit_rate(words_hyp: List[str], words_ref: List[str]) -> \
     edit_distance, trace = cached_ed(input_words)
     total_edits = shifts + edit_distance
 
-    return (total_edits, len(words_ref))
+    return total_edits, len(words_ref)
 
 
 def _shift(words_h: List[str], words_r: List[str], cached_ed,

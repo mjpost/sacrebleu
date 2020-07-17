@@ -139,4 +139,10 @@ class TercomTokenizer(NoneTokenizer):
         return sent
     
     def signature(self):
-        return "ter"
+        return("-".join([
+            'ter',
+            'norm' if self._normalized else 'nonorm',
+            'nopunct' if self._no_punct else 'punct',
+            'asian' if self._asian_support else 'noasian',
+            'cased' if self._case_sensitive else 'uncased',
+        ]))
