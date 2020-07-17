@@ -671,7 +671,6 @@ if [ -z $SKIP_TER ]; then
 
           score=$(cat $txt | ${CMD} -w 3 -t wmt17 -l $source-$target -b --metrics ter)
 
-          # rescale to 0-1
           expected_score="${TER[$name]}"
 
           echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 0.01 else 0)" | python
