@@ -6,10 +6,10 @@ from argparse import Namespace
 EPSILON = 1e-3
 
 test_cases = [
-    (['aaaa bbbb cccc dddd'], ['aaaa bbbb cccc dddd'], 0),
-    (['dddd eeee ffff'], ['aaaa bbbb cccc'], 1),
-    ([''], [''], 1),
-    (['d e f g h a b c'], ['a b c d e f g h'], 1/8),
+    (['aaaa bbbb cccc dddd'], ['aaaa bbbb cccc dddd'], 0),  # perfect match
+    (['dddd eeee ffff'], ['aaaa bbbb cccc'], 1),  # no overlap
+    ([''], [''], 1),  # corner case, empty strings
+    (['d e f g h a b c'], ['a b c d e f g h'], 1/8),  # a single shift fixes MT
     (
         [
             'wählen Sie " Bild neu berechnen , " um beim Ändern der Bildgröße Pixel hinzuzufügen oder zu entfernen , damit das Bild ungefähr dieselbe Größe aufweist wie die andere Größe .',
@@ -25,7 +25,7 @@ test_cases = [
             'Sie können beispielsweise ein Dokument erstellen , das ein Auto enthalt , das sich über die Bühne bewegt .',
             'wählen Sie im Dialogfeld " Neu aus Vorlage " eine Vorlage aus und klicken Sie auf " Neu . "',
         ],
-        0.136
+        0.136  # realistic example from WMT dev data (2019)
     ),
 ]
 
