@@ -3,19 +3,25 @@ from typing import List, Tuple, Dict, Union, Iterable
 from itertools import zip_longest
 
 from ..tokenizers import TOKENIZERS
-from ..utils import my_log
 from .base import BaseScore, Signature
 
 # Translation edit rate (TER).
 #
-# Based partly on the PyTer package by Hiroyuki Tanaka (MIT license).
+# A near-exact reimplementation of the Tercom algorithm, produces identical
+# results on all "sane" outputs.
 #
-# https://github.com/aflc/pyter
+# The beam edit distance algorithm uses a slightly different approach (we stay
+# around the diagonal which is faster, at least in Python) so in some
+# (extreme) corner cases, the output could differ.
 #
-# Both the algorithm and the preprocessing try to mimic the original TER Java
-# implementation (Tercom):
+# Tercom original implementation:
 #
 # https://github.com/jhclark/tercom
+#
+# Caching in the edit distance is based partly on the PyTer package by Hiroyuki
+# Tanaka (MIT license).
+#
+# https://github.com/aflc/pyter
 
 _COST_INS = 1
 _COST_DEL = 1
