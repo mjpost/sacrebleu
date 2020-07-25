@@ -129,13 +129,13 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires = ['typing;python_version<"3.5"', 'portalocker', 'mecab-python3==0.996.5'],
+    install_requires = ['typing;python_version<"3.5"', 'portalocker'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-    extras_require = {},
+    extras_require = {'ja': ['mecab-python3>=1.0,<2.0', 'ipadic>=1.0,<2.0'] },
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
