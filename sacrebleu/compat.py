@@ -17,7 +17,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
                 force=False,
                 lowercase=False,
                 tokenize=DEFAULT_TOKENIZER,
-                use_effective_order=False) -> BLEU:
+                use_effective_order=False) -> BLEUScore:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
     :param sys_stream: The system stream (a sequence of segments)
