@@ -22,8 +22,6 @@ class TokenizerJaMecab(NoneTokenizer):
         self.tagger = MeCab.Tagger(ipadic.MECAB_ARGS + " -Owakati")
 
         # make sure the dictionary is IPA
-        # sacreBLEU is only compatible with 0.996.5 for now
-        # Please see: https://github.com/mjpost/sacrebleu/issues/94
         d = self.tagger.dictionary_info()
         assert d.size == 392126, \
             "Please make sure to use the IPA dictionary for MeCab"
