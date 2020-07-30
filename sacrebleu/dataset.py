@@ -22,6 +22,38 @@
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
 # The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 DATASETS = {
+    "wmt20": {
+        'data': ['http://data.statmt.org/wmt20/translation-task/test.tgz'],
+        'description': 'Official evaluation data for WMT20.',
+        'md5': ['3b1f777cfd2fb15ccf66e9bfdb2b1699'],
+        'cs-en': ['sgm/newstest2020-csen-src.cs.sgm', 'sgm/newstest2020-csen-ref.en.sgm'],
+        'de-en': ['sgm/newstest2020-deen-src.de.sgm', 'sgm/newstest2020-deen-ref.en.sgm'],
+        'de-fr': ['sgm/newstest2020-defr-src.de.sgm', 'sgm/newstest2020-defr-ref.fr.sgm'],
+        'en-cs': ['sgm/newstest2020-encs-src.en.sgm', 'sgm/newstest2020-encs-ref.cs.sgm'],
+        'en-de': ['sgm/newstest2020-ende-src.en.sgm', 'sgm/newstest2020-ende-ref.de.sgm'],
+        'en-iu': ['sgm/newstest2020-eniu-src.en.sgm', 'sgm/newstest2020-eniu-ref.iu.sgm'],
+        'en-ja': ['sgm/newstest2020-enja-src.en.sgm', 'sgm/newstest2020-enja-ref.ja.sgm'],
+        'en-km': ['sgm/newstest2020-enkm-src.en.sgm', 'sgm/newstest2020-enkm-ref.km.sgm'],
+        'en-pl': ['sgm/newstest2020-enpl-src.en.sgm', 'sgm/newstest2020-enpl-ref.pl.sgm'],
+        'en-ps': ['sgm/newstest2020-enps-src.en.sgm', 'sgm/newstest2020-enps-ref.ps.sgm'],
+        'en-ru': ['sgm/newstest2020-enru-src.en.sgm', 'sgm/newstest2020-enru-ref.ru.sgm'],
+        'en-ta': ['sgm/newstest2020-enta-src.en.sgm', 'sgm/newstest2020-enta-ref.ta.sgm'],
+        'en-zh': ['sgm/newstest2020-enzh-src.en.sgm', 'sgm/newstest2020-enzh-ref.zh.sgm'],
+        'fr-de': ['sgm/newstest2020-frde-src.fr.sgm', 'sgm/newstest2020-frde-ref.de.sgm'],
+        'iu-en': ['sgm/newstest2020-iuen-src.iu.sgm', 'sgm/newstest2020-iuen-ref.en.sgm'],
+        'ja-en': ['sgm/newstest2020-jaen-src.ja.sgm', 'sgm/newstest2020-jaen-ref.en.sgm'],
+        'km-en': ['sgm/newstest2020-kmen-src.km.sgm', 'sgm/newstest2020-kmen-ref.en.sgm'],
+        'pl-en': ['sgm/newstest2020-plen-src.pl.sgm', 'sgm/newstest2020-plen-ref.en.sgm'],
+        'ps-en': ['sgm/newstest2020-psen-src.ps.sgm', 'sgm/newstest2020-psen-ref.en.sgm'],
+        'ru-en': ['sgm/newstest2020-ruen-src.ru.sgm', 'sgm/newstest2020-ruen-ref.en.sgm'],
+        'ta-en': ['sgm/newstest2020-taen-src.ta.sgm', 'sgm/newstest2020-taen-ref.en.sgm'],
+        'zh-en': ['sgm/newstest2020-zhen-src.zh.sgm', 'sgm/newstest2020-zhen-ref.en.sgm'],
+        'de-en': ['sgm/newstestB2020-deen-src.de.sgm', 'sgm/newstestB2020-deen-ref.en.sgm'],
+        'en-de': ['sgm/newstestB2020-ende-src.en.sgm', 'sgm/newstestB2020-ende-ref.de.sgm'],
+        'en-zh': ['sgm/newstestB2020-enzh-src.en.sgm', 'sgm/newstestB2020-enzh-ref.zh.sgm'],
+        'ru-en': ['sgm/newstestB2020-ruen-src.ru.sgm', 'sgm/newstestB2020-ruen-ref.en.sgm'],
+        'zh-en': ['sgm/newstestB2020-zhen-src.zh.sgm', 'sgm/newstestB2020-zhen-ref.en.sgm'],
+    },
     'mtnt2019': {
         'data': ['http://www.cs.cmu.edu/~pmichel1/hosting/MTNT2019.tar.gz'],
         'description': 'Test set for the WMT 19 robustness shared task',
@@ -78,6 +110,31 @@ DATASETS = {
         'data': ['http://data.statmt.org/wmt19/translation-task/test.tgz'],
         'description': 'Official evaluation data.',
         'md5': ['84de7162d158e28403103b01aeefc39a'],
+        'citation': r"""@proceedings{ws-2019-machine,
+    title = "Proceedings of the Fourth Conference on Machine Translation (Volume 1: Research Papers)",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Fishel, Mark  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      Koehn, Philipp  and
+      Martins, Andr{\'e}  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Post, Matt  and
+      Turchi, Marco  and
+      Verspoor, Karin",
+    month = aug,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W19-5200",
+}""",
         'cs-de': ['sgm/newstest2019-csde-src.cs.sgm', 'sgm/newstest2019-csde-ref.de.sgm'],
         'de-cs': ['sgm/newstest2019-decs-src.de.sgm', 'sgm/newstest2019-decs-ref.cs.sgm'],
         'de-en': ['sgm/newstest2019-deen-src.de.sgm', 'sgm/newstest2019-deen-ref.en.sgm'],
