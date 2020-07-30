@@ -67,7 +67,7 @@ def sentence_bleu(hypothesis: str,
     BLEU is a corpus-level metric.
 
     :param hypothesis: Hypothesis string.
-    :param reference: Reference string.
+    :param references: List of reference strings.
     :param smooth_method: The smoothing method to use
     :param smooth_value: For 'floor' smoothing, the floor value to use.
     :param use_effective_order: Account for references that are shorter than the largest n-gram.
