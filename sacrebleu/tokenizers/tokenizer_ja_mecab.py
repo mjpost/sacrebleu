@@ -1,20 +1,31 @@
 # -*- coding: utf-8 -*-
-
-import MeCab
+try:
+    import MeCab
+    import ipadic
+except ModuleNotFoundError:
+    # Don't fail until the tokenizer is actually used
+    MeCab = None
 
 from .tokenizer_none import NoneTokenizer
 
+FAIL_MESSAGE = """
+Japanese tokenization requires extra dependencies, but you do not have them installed.
+Please install them like so.
+
+    pip install sacrebleu[ja]
+"""
 
 class TokenizerJaMecab(NoneTokenizer):
     def __init__(self):
-        self.tagger = MeCab.Tagger("-Owakati")
+        if MeCab is None:
+            raise RuntimeError(FAIL_MESSAGE)
+        self.tagger = MeCab.Tagger(ipadic.MECAB_ARGS + " -Owakati")
 
         # make sure the dictionary is IPA
-        # sacreBLEU is only compatible with 0.996.5 for now
-        # Please see: https://github.com/mjpost/sacrebleu/issues/94
         d = self.tagger.dictionary_info()
         assert d.size == 392126, \
-            "Please make sure to use IPA dictionary for MeCab"
+            "Please make sure to use the IPA dictionary for MeCab"
+        # This asserts that no user dictionary has been loaded
         assert d.next is None
 
     def __call__(self, line):
