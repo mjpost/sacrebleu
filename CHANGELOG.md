@@ -1,5 +1,8 @@
 # VERSION HISTORY
 
+- 1.4.13 (XXXX-XX-XX)
+  - Added WMT20 newstest test sets (#103)
+
 - 1.4.12 (2020-07-03)
   - Fix a deployment bug (#96)
 
