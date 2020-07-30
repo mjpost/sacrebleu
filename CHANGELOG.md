@@ -1,6 +1,6 @@
 # VERSION HISTORY
 
-- 1.4.13 (XXXX-XX-XX)
+- 1.4.13 (2020-07-30)
   - Added WMT20 newstest test sets (#103)
   - Make mecab3-python an extra dependency, adapt code to new mecab3-python
     This fixes the recent Windows installation issues as well (#104)
