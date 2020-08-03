@@ -1,5 +1,13 @@
 # VERSION HISTORY
 
+- 1.4.13 (2020-07-30)
+  - Added WMT20 newstest test sets (#103)
+  - Make mecab3-python an extra dependency, adapt code to new mecab3-python
+    This fixes the recent Windows installation issues as well (#104)
+    Japanese support should now be explicitly installed through sacrebleu[ja] package.
+  - Fix return type annotation of corpus_bleu()
+  - Improve sentence_score's documentation, do not allow single ref string (#98)
+
 - 1.4.12 (2020-07-03)
   - Fix a deployment bug (#96)
 

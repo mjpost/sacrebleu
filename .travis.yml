@@ -7,7 +7,7 @@ before_install:
 
 install:
   - pip install pytest-cov
-  - pip install .
+  - pip install .[ja]
 
 language: python
 python:
