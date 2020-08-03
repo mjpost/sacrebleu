@@ -208,6 +208,10 @@ def main():
         logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
                         "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
 
+    if 'ter' in args.metrics and args.tokenize is not None:
+        logging.warning("Your setting of --tokenize will be ignored when "
+                        "computing TER")
+
     # Internal tokenizer settings
     if args.tokenize is None:
         # set default
