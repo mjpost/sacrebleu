@@ -76,8 +76,9 @@ class TERScore(BaseScore):
 
 
 class TERSignature(Signature):
-    def __init__(self, args):
+    def __init__(self, args, tokenizer):
         super().__init__(args)
+        self.info.update({"tok": tokenizer.signature()})
 
 
 class TER:
@@ -86,7 +87,7 @@ class TER:
             tokenizer = TOKENIZERS['tercom']()
 
         self.tokenizer = tokenizer
-        self.signature = TERSignature(args)
+        self.signature = TERSignature(args, tokenizer)
 
     def corpus_score(self, sys_stream: Union[str, Iterable[str]],
                      ref_streams: Union[str, List[Iterable[str]]]) -> TERScore:
