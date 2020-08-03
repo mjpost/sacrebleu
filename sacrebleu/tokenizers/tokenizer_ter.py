@@ -125,6 +125,13 @@ class TercomTokenizer(NoneTokenizer):
                  no_punct: bool = False,
                  asian_support: bool = False,
                  case_sensitive: bool = False):
+        """Initialize the tokenizer.
+
+        :param normalized: Enable character normalization.
+        :param no_punct: Remove punctuation.
+        :param asian_support: Enable special treatment of Asian characters.
+        :param case_sensitive: Enable case sensitivity.
+        """
         self._normalized = normalized
         self._no_punct = no_punct
         self._asian_support = asian_support

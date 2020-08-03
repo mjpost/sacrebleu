@@ -3,8 +3,8 @@
 from typing import Union, Iterable, List
 from argparse import Namespace
 
-from .tokenizers import DEFAULT_TOKENIZER
-from .metrics import BLEU, CHRF, BLEUScore, CHRFScore
+from .tokenizers import DEFAULT_TOKENIZER, TOKENIZERS
+from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
 
 
 ######################################################################
@@ -121,4 +121,52 @@ def sentence_chrf(hypothesis: str,
     args = Namespace(
         chrf_order=order, chrf_beta=beta, chrf_whitespace=not remove_whitespace, short=False)
     metric = CHRF(args)
+    return metric.sentence_score(hypothesis, references)
+
+
+def corpus_ter(hypotheses: Iterable[str],
+               references: List[Iterable[str]],
+               normalized: bool = False,
+               no_punct: bool = False,
+               asian_support: bool = False,
+               case_sensitive: bool = False) -> TERScore:
+    """
+    Computes TER on a corpus.
+
+    :param hypotheses: Stream of hypotheses.
+    :param references: Stream of references.
+    :param normalized: Enable character normalization.
+    :param no_punct: Remove punctuation.
+    :param asian_support: Enable special treatment of Asian characters.
+    :param case_sensitive: Enable case sensitivity.
+    :return: A `TERScore` object.
+    """
+    tokenizer = TOKENIZERS['tercom'](
+        normalized=normalized, no_punct=no_punct,
+        asian_support=asian_support, case_sensitive=case_sensitive)
+    metric = TER(Namespace(), tokenizer)
+    return metric.corpus_score(hypotheses, references)
+
+
+def sentence_ter(hypothesis: str,
+                 references: Iterable[str],
+                 normalized: bool = False,
+                 no_punct: bool = False,
+                 asian_support: bool = False,
+                 case_sensitive: bool = False) -> TERScore:
+    """
+    Computes TER on a single sentence pair.
+
+    :param hypothesis: Hypothesis string.
+    :param references: Reference string(s).
+    :param normalized: Enable character normalization.
+    :param no_punct: Remove punctuation.
+    :param asian_support: Enable special treatment of Asian characters.
+    :param case_sensitive: Enable case sensitivity.
+    :return: A `TERScore` object.
+    """
+    tokenizer = TOKENIZERS['tercom'](
+        normalized=normalized, no_punct=no_punct,
+        asian_support=asian_support, case_sensitive=case_sensitive)
+    metric = TER(Namespace(), tokenizer)
     return metric.sentence_score(hypothesis, references)
