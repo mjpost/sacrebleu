@@ -36,6 +36,8 @@ from .utils import get_langpairs_for_testset, get_available_testsets
 from .utils import print_test_set, get_reference_files, download_test_set
 from . import __version__ as VERSION
 
+sacrelogger = logging.getLogger('sacrebleu')
+
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
     from signal import SIGPIPE
@@ -45,8 +47,7 @@ try:
     signal(SIGPIPE, SIG_DFL)
 
 except ImportError:
-    logging.warning('Could not import signal.SIGPIPE (this is expected on Windows machines)')
-
+    sacrelogger.warning('Could not import signal.SIGPIPE (this is expected on Windows machines)')
 
 def parse_args():
     arg_parser = argparse.ArgumentParser(
@@ -149,63 +150,63 @@ def main():
         sys.exit(0)
 
     if args.sentence_level and len(args.metrics) > 1:
-        logging.error('Only one metric can be used with Sentence-level reporting.')
+        sacrelogger.error('Only one metric can be used with Sentence-level reporting.')
         sys.exit(1)
 
     if args.citation:
         if not args.test_set:
-            logging.error('I need a test set (-t).')
+            sacrelogger.error('I need a test set (-t).')
             sys.exit(1)
         for test_set in args.test_set.split(','):
             if 'citation' not in DATASETS[test_set]:
-                logging.error('No citation found for %s', test_set)
+                sacrelogger.error('No citation found for %s', test_set)
             else:
                 print(DATASETS[test_set]['citation'])
         sys.exit(0)
 
     if args.num_refs != 1 and (args.test_set is not None or len(args.refs) > 1):
-        logging.error('The --num-refs argument allows you to provide any number of tab-delimited references in a single file.')
-        logging.error('You can only use it with externaly-provided references, however (i.e., not with `-t`),')
-        logging.error('and you cannot then provide multiple reference files.')
+        sacrelogger.error('The --num-refs argument allows you to provide any number of tab-delimited references in a single file.')
+        sacrelogger.error('You can only use it with externaly-provided references, however (i.e., not with `-t`),')
+        sacrelogger.error('and you cannot then provide multiple reference files.')
         sys.exit(1)
 
     if args.test_set is not None:
         for test_set in args.test_set.split(','):
             if test_set not in DATASETS:
-                logging.error('Unknown test set "%s"', test_set)
-                logging.error('Please run with --list to see the available test sets.')
+                sacrelogger.error('Unknown test set "%s"', test_set)
+                sacrelogger.error('Please run with --list to see the available test sets.')
                 sys.exit(1)
 
     if args.test_set is None:
         if len(args.refs) == 0:
-            logging.error('I need either a predefined test set (-t) or a list of references')
-            logging.error(get_available_testsets())
+            sacrelogger.error('I need either a predefined test set (-t) or a list of references')
+            sacrelogger.error(get_a_list_of_testset_names())
             sys.exit(1)
     elif len(args.refs) > 0:
-        logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
+        sacrelogger.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
         sys.exit(1)
     elif args.langpair is None:
-        logging.error('I need a language pair (-l).')
+        sacrelogger.error('I need a language pair (-l).')
         sys.exit(1)
     else:
         for test_set in args.test_set.split(','):
             langpairs = get_langpairs_for_testset(test_set)
             if args.langpair not in langpairs:
-                logging.error('No such language pair "%s"', args.langpair)
-                logging.error('Available language pairs for test set "%s": %s', test_set,
+                sacrelogger.error('No such language pair "%s"', args.langpair)
+                sacrelogger.error('Available language pairs for test set "%s": %s', test_set,
                               ', '.join(langpairs))
                 sys.exit(1)
 
     if args.echo:
         if args.langpair is None or args.test_set is None:
-            logging.warning("--echo requires a test set (--t) and a language pair (-l)")
+            sacrelogger.warning("--echo requires a test set (--t) and a language pair (-l)")
             sys.exit(1)
         for test_set in args.test_set.split(','):
             print_test_set(test_set, args.langpair, args.echo, args.origlang, args.subset)
         sys.exit(0)
 
     if args.test_set is not None and args.tokenize == 'none':
-        logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
+        sacrelogger.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
                         "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
 
     # Internal tokenizer settings
@@ -220,9 +221,9 @@ def main():
 
     if args.langpair is not None and 'bleu' in args.metrics:
         if args.langpair.split('-')[1] == 'zh' and args.tokenize != 'zh':
-            logging.warning('You should also pass "--tok zh" when scoring Chinese...')
+            logger.warning('You should also pass "--tok zh" when scoring Chinese...')
         if args.langpair.split('-')[1] == 'ja' and not args.tokenize.startswith('ja-'):
-            logging.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
+            logger.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
 
     # concat_ref_files is a list of list of reference filenames, for example:
     # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
@@ -233,7 +234,7 @@ def main():
         for test_set in args.test_set.split(','):
             ref_files = get_reference_files(test_set, args.langpair)
             if len(ref_files) == 0:
-                logging.warning('No references found for test set {}/{}.'.format(test_set, args.langpair))
+                sacrelogger.warning('No references found for test set {}/{}.'.format(test_set, args.langpair))
             concat_ref_files.append(ref_files)
 
     # Read references
@@ -244,7 +245,7 @@ def main():
                 if args.num_refs != 1:
                     splits = line.rstrip().split(sep='\t', maxsplit=args.num_refs-1)
                     if len(splits) != args.num_refs:
-                        logging.error('FATAL: line {}: expected {} fields, but found {}.'.format(lineno, args.num_refs, len(splits)))
+                        sacrelogger.error('FATAL: line {}: expected {} fields, but found {}.'.format(lineno, args.num_refs, len(splits)))
                         sys.exit(17)
                     for refno, split in enumerate(splits):
                         full_refs[refno].append(split)
@@ -271,7 +272,7 @@ def main():
             message += ' with'
             message += '' if args.origlang is None else ' origlang=' + args.origlang
             message += '' if args.subset is None else ' subset=' + args.subset
-        logging.error(message)
+        sacrelogger.error(message)
         sys.exit(1)
 
     # Create metric inventory, let each metric consume relevant args from argparse
@@ -292,9 +293,9 @@ def main():
         try:
             score = metric.corpus_score(system, refs)
         except EOFError:
-            logging.error('The input and reference stream(s) were of different lengths.')
+            sacrelogger.error('The input and reference stream(s) were of different lengths.')
             if args.test_set is not None:
-                logging.error('\nThis could be a problem with your system output or with sacreBLEU\'s reference database.\n'
+                sacrelogger('\nThis could be a problem with your system output or with sacreBLEU\'s reference database.\n'
                               'If the latter, you can clean out the references cache by typing:\n'
                               '\n'
                               '    rm -r %s/%s\n'

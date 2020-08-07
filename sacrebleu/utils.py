@@ -25,6 +25,7 @@ from .dataset import DATASETS, SUBSETS
 USERHOME = os.path.expanduser("~")
 SACREBLEU_DIR = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
+sacrelogger = logging.getLogger('sacrebleu')
 
 def smart_open(file, mode='rt', encoding='utf-8'):
     """Convenience function for reading compressed or plain text files.
@@ -68,7 +69,7 @@ def process_to_text(rawfile, txtfile, field: int = None):
         return re.sub(r'\s+', ' ', s.strip())
 
     if not os.path.exists(txtfile) or os.path.getsize(txtfile) == 0:
-        logging.info("Processing %s to %s", rawfile, txtfile)
+        sacrelogger.info("Processing %s to %s", rawfile, txtfile)
         if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
             with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
                 for line in fin:
@@ -193,12 +194,12 @@ def download_test_set(test_set, langpair=None):
         lockfile = '{}.lock'.format(tarball)
         with portalocker.Lock(lockfile, 'w', timeout=60):
             if not os.path.exists(tarball) or os.path.getsize(tarball) == 0:
-                logging.info("Downloading %s to %s", dataset, tarball)
+                sacrelogger.info("Downloading %s to %s", dataset, tarball)
                 try:
                     with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
                         out.write(f.read())
                 except ssl.SSLError:
-                    logging.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
+                    sacrelogger.addHandlerarning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
                                     'you may need to run the "Install Certificates.command" file located in the '
                                     '"Python 3" folder, often found under /Applications')
                     sys.exit(1)
@@ -210,15 +211,15 @@ def download_test_set(test_set, langpair=None):
                         for line in infile:
                             md5.update(line)
                     if md5.hexdigest() != expected_md5:
-                        logging.error('Fatal: MD5 sum of downloaded file was incorrect (got {}, expected {}).'.format(md5.hexdigest(), expected_md5))
-                        logging.error('Please manually delete "{}" and rerun the command.'.format(tarball))
-                        logging.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
+                        sacrelogger.error('Fatal: MD5 sum of downloaded file was incorrect (got {}, expected {}).'.format(md5.hexdigest(), expected_md5))
+                        sacrelogger.error('Please manually delete "{}" and rerun the command.'.format(tarball))
+                        sacrelogger.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
                         sys.exit(1)
                     else:
-                        logging.info('Checksum passed: {}'.format(md5.hexdigest()))
+                        sacrelogger.info('Checksum passed: {}'.format(md5.hexdigest()))
 
                 # Extract the tarball
-                logging.info('Extracting %s', tarball)
+                sacrelogger.info('Extracting %s', tarball)
                 if tarball.endswith('.tar.gz') or tarball.endswith('.tgz'):
                     import tarfile
                     with tarfile.open(tarball) as tar:
