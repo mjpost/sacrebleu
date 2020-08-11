@@ -2,7 +2,7 @@
 
 - 1.4.14 (in progress)
   - Added character-based tokenization ("-tok char").
-	  Thanks to Christian Federmann.
+    Thanks to Christian Federmann.
 
 - 1.4.13 (2020-07-30)
   - Added WMT20 newstest test sets (#103)
