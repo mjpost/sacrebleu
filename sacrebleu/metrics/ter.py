@@ -68,6 +68,11 @@ class TERScore(BaseScore):
         self.prefix = 'TER'
 
     def format(self, width=2, score_only=False, signature=''):
+        # the default width of 1 is too small for TER, it's reported with 3
+        # decimal places in matrix.statmt.org
+        if width == 1:
+            width = 3
+
         if score_only:
             return '{0:.{1}f}'.format(self.score, width)
 
