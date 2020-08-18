@@ -17,7 +17,7 @@ import math
 from typing import List, Tuple, Dict, Union, Iterable
 from itertools import zip_longest
 
-from ..tokenizers import TOKENIZERS
+from ..tokenizers.tokenizer_ter import TercomTokenizer
 from .base import BaseScore, Signature
 
 # Translation edit rate (TER).
@@ -76,18 +76,33 @@ class TERScore(BaseScore):
 
 
 class TERSignature(Signature):
-    def __init__(self, args, tokenizer):
+    def __init__(self, args):
         super().__init__(args)
+        tokenizer = TER.create_tokenizer(args)
         self.info.update({"tok": tokenizer.signature()})
 
 
 class TER:
-    def __init__(self, args, tokenizer=None):
-        if tokenizer is None:
-            tokenizer = TOKENIZERS['tercom']()
+    TOKENIZER_DEFAULTS = {
+        "normalized": False,
+        "no_punct": False,
+        "asian_support": False,
+        "case_sensitive": False,
+    }
 
-        self.tokenizer = tokenizer
-        self.signature = TERSignature(args, tokenizer)
+    @staticmethod
+    def create_tokenizer(args):
+        # hackish workaround for specifying tokenizer config
+        config = dict(TER.TOKENIZER_DEFAULTS)
+        args_vars = vars(args)
+        for k in config:
+            if k in args_vars:
+                config[k] = args_vars[k]
+        return TercomTokenizer(**config)
+
+    def __init__(self, args):
+        self.tokenizer = self.create_tokenizer(args)
+        self.signature = TERSignature(args)
 
     def corpus_score(self, sys_stream: Union[str, Iterable[str]],
                      ref_streams: Union[str, List[Iterable[str]]]) -> TERScore:

@@ -141,10 +141,10 @@ def corpus_ter(hypotheses: Iterable[str],
     :param case_sensitive: Enable case sensitivity.
     :return: A `TERScore` object.
     """
-    tokenizer = TOKENIZERS['tercom'](
+    args = Namespace(
         normalized=normalized, no_punct=no_punct,
         asian_support=asian_support, case_sensitive=case_sensitive)
-    metric = TER(Namespace(), tokenizer)
+    metric = TER(args)
     return metric.corpus_score(hypotheses, references)
 
 
@@ -165,8 +165,8 @@ def sentence_ter(hypothesis: str,
     :param case_sensitive: Enable case sensitivity.
     :return: A `TERScore` object.
     """
-    tokenizer = TOKENIZERS['tercom'](
+    args = Namespace(
         normalized=normalized, no_punct=no_punct,
         asian_support=asian_support, case_sensitive=case_sensitive)
-    metric = TER(Namespace(), tokenizer)
+    metric = TER(args)
     return metric.sentence_score(hypothesis, references)
