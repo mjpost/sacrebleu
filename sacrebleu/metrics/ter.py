@@ -132,12 +132,9 @@ class TER:
 def translation_edit_rate(words_hyp: List[str], words_ref: List[str]) -> Tuple[int, int]:
     """Calculate the translation edit rate.
 
-    Args:
-        words_hyp: Tokenized translation hypothesis.
-        words_ref: Tokenized reference translation.
-
-    Returns:
-        tuple (number of edits, length)
+    :param words_hyp: Tokenized translation hypothesis.
+    :param words_ref: Tokenized reference translation.
+    :return: tuple (number of edits, length)
     """
     if len(words_ref) == 0:
         trace = _OP_DEL * len(words_hyp)
@@ -179,16 +176,13 @@ def _shift(words_h: List[str], words_r: List[str], cached_ed,
     as possible the logic in Tercom, not always justifying the particular design
     choices.
 
-    Args:
-        words_h: Hypothesis.
-        words_r: Reference.
-        cached_ed: Cached edit distance.
-        checked_candidates: Number of shift candidates that were already
-            evaluated.
-
-    Returns:
-        (score, shifted_words, checked_candidates). Best shift and updated
-            number of evaluated shift candidates.
+    :param words_h: Hypothesis.
+    :param words_r: Reference.
+    :param cached_ed: Cached edit distance.
+    :param checked_candidates: Number of shift candidates that were already
+                               evaluated.
+    :return: (score, shifted_words, checked_candidates). Best shift and updated
+             number of evaluated shift candidates.
     """
     pre_score, inv_trace = cached_ed(words_h)
 
@@ -256,17 +250,14 @@ def _shift(words_h: List[str], words_r: List[str], cached_ed,
         return best_score, shifted_words, checked_candidates
 
 
-def _perform_shift(words: List[str], start: int, length: int, target: int):
+def _perform_shift(words: List[str], start: int, length: int, target: int) -> List[str]:
     """Perform a shift in `words` from `start` to `target`.
 
-    Args:
-        words: Words to shift.
-        start: Where from.
-        length: How many words.
-        target: Where to.
-
-    Returns:
-        List[str]. Shifted words.
+    :param words: Words to shift.
+    :param start: Where from.
+    :param length: How many words.
+    :param target: Where to.
+    :return: Shifted words.
     """
     if target < start:
         # shift before previous position
@@ -287,14 +278,11 @@ def _find_shifted_pairs(words_h: List[str], words_r: List[str]):
 
     Ignores sub-sequences starting at the same position.
 
-    Args:
-        words_h: First word list.
-        words_r: Second word list.
+    :param words_h: First word list.
+    :param words_r: Second word list.
+    :return: Yields tuples of (h_start, r_start, length) such that:
 
-    Returns:
-        Yields tuples of (h_start, r_start, length) such that:
-
-            words_h[h_start:h_start+length] = words_r[r_start:r_start+length]
+             words_h[h_start:h_start+length] = words_r[r_start:r_start+length]
     """
     for start_h in range(len(words_h)):
         for start_r in range(len(words_r)):
@@ -335,11 +323,8 @@ def _flip_trace(trace):
 def trace_to_alignment(trace: str) -> Tuple[Dict, List, List]:
     """Transform trace of edit operations into an alignment of the sequences.
 
-    Args:
-        trace: Trace of edit operations (' '=no change or 's'/'i'/'d').
-
-    Returns:
-        Alignment, error positions in reference, error positions in hypothesis.
+    :param trace: Trace of edit operations (' '=no change or 's'/'i'/'d').
+    :return: Alignment, error positions in reference, error positions in hypothesis.
     """
     pos_hyp = -1
     pos_ref = -1
@@ -418,11 +403,8 @@ class BeamEditDistance:
 
         Uses cache to skip some of the computation.
 
-        Args:
-            words_hyp: Words in translation hypothesis.
-
-        Returns:
-            Edit distance score.
+        :param words_hyp: Words in translation hypothesis.
+        :return: Edit distance score.
         """
 
         # skip initial words in the hypothesis for which we already know the
@@ -445,14 +427,13 @@ class BeamEditDistance:
         Can be initialized with the last cached row and a start position in
         the hypothesis that it corresponds to.
 
-        Args:
-            words_h: Words in translation hypothesis.
-            start_h: Position from which to start the calculation.
-                (This is zero if no cache match was found.)
-            cache: Precomputed rows corresponding to edit distance matrix
-                before `start_h`.
-        Returns:
-            Edit distance value, newly computed rows to update the cache, trace.
+        :param words_h: Words in translation hypothesis.
+        :param start_h: Position from which to start the calculation.
+                        (This is zero if no cache match was found.)
+        :param cache: Precomputed rows corresponding to edit distance matrix
+                      before `start_h`.
+        :return: Edit distance value, newly computed rows to update the
+                 cache, trace.
         """
 
         # initialize the rest of the matrix with infinite edit distances
@@ -536,9 +517,8 @@ class BeamEditDistance:
         was not in cache, the number of rows in `mat` may be shorter than
         hypothesis length. In that case, we skip over these initial words.
 
-        Args:
-            words_hyp: Hypothesis words.
-            mat: Edit distance matrix rows for each position.
+        :param words_hyp: Hypothesis words.
+        :param mat: Edit distance matrix rows for each position.
         """
         if self._cache_size >= _MAX_CACHE_SIZE:
             return
@@ -569,11 +549,8 @@ class BeamEditDistance:
 
         Returns a partially computed edit distance matrix.
 
-        Args:
-            words_hyp: Translation hypothesis.
-
-        Returns:
-            Tuple (start position, dist).
+        :param words_hyp: Translation hypothesis.
+        :return: Tuple (start position, dist).
         """
         node = self._cache
         start_position = 0
