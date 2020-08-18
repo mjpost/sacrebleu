@@ -125,13 +125,11 @@ class TER:
 
         return TERScore(total_edits, sum_ref_lengths)
 
-    def sentence_score(self, hypothesis: str, references: List[str]) \
-            -> TERScore:
+    def sentence_score(self, hypothesis: str, references: List[str]) -> TERScore:
         return self.corpus_score(hypothesis, [[ref] for ref in references])
 
 
-def translation_edit_rate(words_hyp: List[str], words_ref: List[str]) -> \
-        Tuple[int, int]:
+def translation_edit_rate(words_hyp: List[str], words_ref: List[str]) -> Tuple[int, int]:
     """Calculate the translation edit rate.
 
     Args:

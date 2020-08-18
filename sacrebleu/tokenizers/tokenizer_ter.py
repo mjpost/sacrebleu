@@ -115,10 +115,8 @@ class TercomTokenizer(NoneTokenizer):
 
     https://unicode-table.com/en/blocks/
     """
-    ASIAN_PUNCT = \
-        r"([\u3001\u3002\u3008-\u3011\u3014-\u301f\uff61-\uff65\u30fb])"
-    FULL_WIDTH_PUNCT = \
-        r"([\uff0e\uff0c\uff1f\uff1a\uff1b\uff01\uff02\uff08\uff09])"
+    ASIAN_PUNCT = r"([\u3001\u3002\u3008-\u3011\u3014-\u301f\uff61-\uff65\u30fb])"
+    FULL_WIDTH_PUNCT = r"([\uff0e\uff0c\uff1f\uff1a\uff1b\uff01\uff02\uff08\uff09])"
 
     def __init__(self,
                  normalized: bool = False,
