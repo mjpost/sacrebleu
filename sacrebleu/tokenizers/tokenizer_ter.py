@@ -159,7 +159,7 @@ class TercomTokenizer(NoneTokenizer):
                 sent = _remove_asian_punct(sent)
 
         return sent
-    
+
     def signature(self):
         return("-".join([
             'tercom',
