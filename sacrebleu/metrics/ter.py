@@ -45,7 +45,7 @@ _COST_SUB = 1
 # Tercom-inspired limits
 _MAX_SHIFT_SIZE = 10
 _MAX_SHIFT_DIST = 50
-_BEAM_WIDTH = 20
+_BEAM_WIDTH = 25
 
 # Our own limits
 _MAX_CACHE_SIZE = 10000
