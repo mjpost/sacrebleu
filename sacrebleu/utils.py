@@ -199,7 +199,7 @@ def download_test_set(test_set, langpair=None):
                     with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
                         out.write(f.read())
                 except ssl.SSLError:
-                    sacrelogger.addHandlerarning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
+                    sacrelogger.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
                                     'you may need to run the "Install Certificates.command" file located in the '
                                     '"Python 3" folder, often found under /Applications')
                     sys.exit(1)

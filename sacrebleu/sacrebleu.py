@@ -180,7 +180,7 @@ def main():
     if args.test_set is None:
         if len(args.refs) == 0:
             sacrelogger.error('I need either a predefined test set (-t) or a list of references')
-            sacrelogger.error(get_a_list_of_testset_names())
+            sacrelogger.error(get_available_testsets())
             sys.exit(1)
     elif len(args.refs) > 0:
         sacrelogger.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
@@ -221,9 +221,9 @@ def main():
 
     if args.langpair is not None and 'bleu' in args.metrics:
         if args.langpair.split('-')[1] == 'zh' and args.tokenize != 'zh':
-            logger.warning('You should also pass "--tok zh" when scoring Chinese...')
+            sacrelogger.warning('You should also pass "--tok zh" when scoring Chinese...')
         if args.langpair.split('-')[1] == 'ja' and not args.tokenize.startswith('ja-'):
-            logger.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
+            sacrelogger.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
 
     # concat_ref_files is a list of list of reference filenames, for example:
     # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
