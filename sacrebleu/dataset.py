@@ -22,6 +22,43 @@
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
 # The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 DATASETS = {
+    "wmt20/tworefs": {
+        'data': ['http://data.statmt.org/wmt20/translation-task/test.tgz'],
+        'description': 'WMT20 news test sets with two references',
+        'md5': ['3b1f777cfd2fb15ccf66e9bfdb2b1699'],
+        'de-en': ['sgm/newstest2020-deen-src.de.sgm', 'sgm/newstest2020-deen-ref.en.sgm', 'sgm/newstestB2020-deen-ref.en.sgm'],
+        'en-de': ['sgm/newstest2020-ende-src.en.sgm', 'sgm/newstest2020-ende-ref.de.sgm', 'sgm/newstestB2020-ende-ref.de.sgm'],
+        'en-zh': ['sgm/newstest2020-enzh-src.en.sgm', 'sgm/newstest2020-enzh-ref.zh.sgm', 'sgm/newstestB2020-enzh-ref.zh.sgm'],
+        'ru-en': ['sgm/newstest2020-ruen-src.ru.sgm', 'sgm/newstest2020-ruen-ref.en.sgm', 'sgm/newstestB2020-ruen-ref.en.sgm'],
+        'zh-en': ['sgm/newstest2020-zhen-src.zh.sgm', 'sgm/newstest2020-zhen-ref.en.sgm', 'sgm/newstestB2020-zhen-ref.en.sgm'],
+    },
+    "wmt20": {
+        'data': ['http://data.statmt.org/wmt20/translation-task/test.tgz'],
+        'description': 'Official evaluation data for WMT20',
+        'md5': ['3b1f777cfd2fb15ccf66e9bfdb2b1699'],
+        'cs-en': ['sgm/newstest2020-csen-src.cs.sgm', 'sgm/newstest2020-csen-ref.en.sgm'],
+        'de-en': ['sgm/newstest2020-deen-src.de.sgm', 'sgm/newstest2020-deen-ref.en.sgm'],
+        'de-fr': ['sgm/newstest2020-defr-src.de.sgm', 'sgm/newstest2020-defr-ref.fr.sgm'],
+        'en-cs': ['sgm/newstest2020-encs-src.en.sgm', 'sgm/newstest2020-encs-ref.cs.sgm'],
+        'en-de': ['sgm/newstest2020-ende-src.en.sgm', 'sgm/newstest2020-ende-ref.de.sgm'],
+        'en-iu': ['sgm/newstest2020-eniu-src.en.sgm', 'sgm/newstest2020-eniu-ref.iu.sgm'],
+        'en-ja': ['sgm/newstest2020-enja-src.en.sgm', 'sgm/newstest2020-enja-ref.ja.sgm'],
+        'en-km': ['sgm/newstest2020-enkm-src.en.sgm', 'sgm/newstest2020-enkm-ref.km.sgm'],
+        'en-pl': ['sgm/newstest2020-enpl-src.en.sgm', 'sgm/newstest2020-enpl-ref.pl.sgm'],
+        'en-ps': ['sgm/newstest2020-enps-src.en.sgm', 'sgm/newstest2020-enps-ref.ps.sgm'],
+        'en-ru': ['sgm/newstest2020-enru-src.en.sgm', 'sgm/newstest2020-enru-ref.ru.sgm'],
+        'en-ta': ['sgm/newstest2020-enta-src.en.sgm', 'sgm/newstest2020-enta-ref.ta.sgm'],
+        'en-zh': ['sgm/newstest2020-enzh-src.en.sgm', 'sgm/newstest2020-enzh-ref.zh.sgm'],
+        'fr-de': ['sgm/newstest2020-frde-src.fr.sgm', 'sgm/newstest2020-frde-ref.de.sgm'],
+        'iu-en': ['sgm/newstest2020-iuen-src.iu.sgm', 'sgm/newstest2020-iuen-ref.en.sgm'],
+        'ja-en': ['sgm/newstest2020-jaen-src.ja.sgm', 'sgm/newstest2020-jaen-ref.en.sgm'],
+        'km-en': ['sgm/newstest2020-kmen-src.km.sgm', 'sgm/newstest2020-kmen-ref.en.sgm'],
+        'pl-en': ['sgm/newstest2020-plen-src.pl.sgm', 'sgm/newstest2020-plen-ref.en.sgm'],
+        'ps-en': ['sgm/newstest2020-psen-src.ps.sgm', 'sgm/newstest2020-psen-ref.en.sgm'],
+        'ru-en': ['sgm/newstest2020-ruen-src.ru.sgm', 'sgm/newstest2020-ruen-ref.en.sgm'],
+        'ta-en': ['sgm/newstest2020-taen-src.ta.sgm', 'sgm/newstest2020-taen-ref.en.sgm'],
+        'zh-en': ['sgm/newstest2020-zhen-src.zh.sgm', 'sgm/newstest2020-zhen-ref.en.sgm'],
+    },
     'mtnt2019': {
         'data': ['http://www.cs.cmu.edu/~pmichel1/hosting/MTNT2019.tar.gz'],
         'description': 'Test set for the WMT 19 robustness shared task',
@@ -61,10 +98,48 @@ DATASETS = {
         'en-ja': ['1:MTNT/train/train.en-ja.tsv', '2:MTNT/train/train.en-ja.tsv'],
         'ja-en': ['1:MTNT/train/train.ja-en.tsv', '2:MTNT/train/train.ja-en.tsv'],
     },
+    'wmt20/dev': {
+        'data': ['http://data.statmt.org/wmt20/translation-task/dev.tgz'],
+        'description': 'Development data for tasks new to 2020.',
+        'md5': ['037f2b37aab74febbb1b2307dc2afb54'],
+        'iu-en': ['dev/newsdev2020-iuen-src.iu.sgm', 'dev/newsdev2020-iuen-ref.en.sgm'],
+        'en-iu': ['dev/newsdev2020-eniu-src.en.sgm', 'dev/newsdev2020-eniu-ref.iu.sgm'],
+        'ja-en': ['dev/newsdev2020-jaen-src.ja.sgm', 'dev/newsdev2020-jaen-ref.en.sgm'],
+        'en-ja': ['dev/newsdev2020-enja-src.en.sgm', 'dev/newsdev2020-enja-ref.ja.sgm'],
+        'pl-en': ['dev/newsdev2020-plen-src.pl.sgm', 'dev/newsdev2020-plen-ref.en.sgm'],
+        'en-pl': ['dev/newsdev2020-enpl-src.en.sgm', 'dev/newsdev2020-enpl-ref.pl.sgm'],
+        'ta-en': ['dev/newsdev2020-taen-src.ta.sgm', 'dev/newsdev2020-taen-ref.en.sgm'],
+        'en-ta': ['dev/newsdev2020-enta-src.en.sgm', 'dev/newsdev2020-enta-ref.ta.sgm'],
+    },
     'wmt19': {
         'data': ['http://data.statmt.org/wmt19/translation-task/test.tgz'],
         'description': 'Official evaluation data.',
         'md5': ['84de7162d158e28403103b01aeefc39a'],
+        'citation': r"""@proceedings{ws-2019-machine,
+    title = "Proceedings of the Fourth Conference on Machine Translation (Volume 1: Research Papers)",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Fishel, Mark  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      Koehn, Philipp  and
+      Martins, Andr{\'e}  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Post, Matt  and
+      Turchi, Marco  and
+      Verspoor, Karin",
+    month = aug,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W19-5200",
+}""",
         'cs-de': ['sgm/newstest2019-csde-src.cs.sgm', 'sgm/newstest2019-csde-ref.de.sgm'],
         'de-cs': ['sgm/newstest2019-decs-src.de.sgm', 'sgm/newstest2019-decs-ref.cs.sgm'],
         'de-en': ['sgm/newstest2019-deen-src.de.sgm', 'sgm/newstest2019-deen-ref.en.sgm'],
@@ -95,6 +170,54 @@ DATASETS = {
         'en-gu': ['dev/newsdev2019-engu-src.en.sgm', 'dev/newsdev2019-engu-ref.gu.sgm'],
         'kk-en': ['dev/newsdev2019-kken-src.kk.sgm', 'dev/newsdev2019-kken-ref.en.sgm'],
         'en-kk': ['dev/newsdev2019-enkk-src.en.sgm', 'dev/newsdev2019-enkk-ref.kk.sgm'],
+    },
+    "wmt19/google/ar": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-ar.ref"],
+        "description": "Additional high-quality reference for WMT19/en-de.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "d66d9e91548ced0ac476f2390e32e2de"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-ar.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
+    "wmt19/google/arp": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-arp.ref"],
+        "description": "Additional paraphrase of wmt19/google/ar.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "c70ea808cf2bff621ad7a8fddd4deca9"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-arp.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
+    "wmt19/google/wmtp": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-wmtp.ref"],
+        "description": "Additional paraphrase of the official WMT19 reference.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "587c660ee5fd44727f0db025b71c6a82"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-wmtp.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
+    "wmt19/google/hqr": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-hqr.ref"],
+        "description": "Best human selected-reference between wmt19 and wmt19/google/ar.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "d9221135f62d7152de041f5bfc8efaea"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-hqr.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
+    "wmt19/google/hqp": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-hqp.ref"],
+        "description": "Best human-selected reference between wmt19/google/arp and wmt19/google/wmtp.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "b7c3a07a59c8eccea5367e9ec5417a8a"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-hqp.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
+    "wmt19/google/hqall": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-hqall.ref"],
+        "description": "Best human-selected reference among original official reference and the Google reference and paraphrases.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "edecf10ced59e10b703a6fbcf1fa9dfa"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-hqall.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
     },
     'wmt18': {
         'data': ['http://data.statmt.org/wmt18/translation-task/test.tgz'],
@@ -602,6 +725,31 @@ DATASETS = {
         'en-zh': ['en-zh/IWSLT17.TED.dev2010.en-zh.en.xml', 'zh-en/IWSLT17.TED.dev2010.zh-en.zh.xml'],
         'zh-en': ['zh-en/IWSLT17.TED.dev2010.zh-en.zh.xml', 'en-zh/IWSLT17.TED.dev2010.en-zh.en.xml'],
     },
+    'multi30k/2016': {
+        'data': ['https://github.com/multi30k/dataset/raw/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
+        "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
+        'description': '2016 flickr test set of Multi30k dataset',
+        'citation': '@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}',
+        'en-fr': ['test_2016_flickr.en', 'test_2016_flickr.fr'],
+        'en-de': ['test_2016_flickr.en', 'test_2016_flickr.de'],
+        'en-cs': ['test_2016_flickr.en', 'test_2016_flickr.cs'],
+    },
+    'multi30k/2017': {
+        'data': ['https://github.com/multi30k/dataset/raw/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
+        "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
+        'description': '2017 flickr test set of Multi30k dataset',
+        'citation': '@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}\n\n@InProceedings{elliott-etal-2017-findings,\n    title = "Findings of the Second Shared Task on Multimodal Machine Translation and Multilingual Image Description",\n    author = {Elliott, Desmond  and Frank, Stella  and Barrault, Lo{\\"\\i}c  and Bougares, Fethi  and Specia, Lucia},\n    booktitle = "Proceedings of the Second Conference on Machine Translation",\n    month = sep,\n    year = "2017",\n    address = "Copenhagen, Denmark",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W17-4718",\n    doi = "10.18653/v1/W17-4718",\n    pages = "215--233",\n}\n',
+        'en-fr': ['test_2017_flickr.en', 'test_2017_flickr.fr'],
+        'en-de': ['test_2017_flickr.en', 'test_2017_flickr.de'],
+    },
+    'multi30k/2018': {
+        'data': ['https://github.com/multi30k/dataset/raw/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
+        "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
+        'description': '2018 flickr test set of Multi30k dataset. See https://competitions.codalab.org/competitions/19917 for evaluation.',
+        'citation': '@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}\n\n@InProceedings{barrault-etal-2018-findings,\n    title = "Findings of the Third Shared Task on Multimodal Machine Translation",\n    author = {Barrault, Lo{\\"\\i}c  and Bougares, Fethi  and Specia, Lucia  and Lala, Chiraag  and Elliott, Desmond  and Frank, Stella},\n    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",\n    month = oct,\n    year = "2018",\n    address = "Belgium, Brussels",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W18-6402",\n    doi = "10.18653/v1/W18-6402",\n    pages = "304--323",\n}\n',
+        'en-fr': ['test_2018_flickr.en'],
+        'en-de': ['test_2018_flickr.en'],
+    },
 }
 
 # Detailed document metadata annotation in form DocumentID -> CountryCode - Domain - OptionalFinegrainedCountryCode
@@ -641,6 +789,6 @@ SUBSETS = {
         'bbc.381736=OTHER-politics-KP cbsnews.248394=US-politics nytimes.184822=US-world telegraph.405408=US-politics euronews-en.153799=OTHER-politics-SY '
         'euronews-en.153826=EU-sport cnn.304400=US-world'
 }
-SUBSETS = {k:{d.split('=')[0]:d.split('=')[1] for d in v.split()} for (k,v) in SUBSETS.items()}
+SUBSETS = {k: {d.split('=')[0]: d.split('=')[1] for d in v.split()} for (k, v) in SUBSETS.items()}
 COUNTRIES = sorted(list({v.split('-')[0] for v in SUBSETS['wmt19'].values()}))
 DOMAINS = sorted(list({v.split('-')[1] for v in SUBSETS['wmt19'].values()}))

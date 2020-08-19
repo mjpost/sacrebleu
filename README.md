@@ -18,8 +18,17 @@ Install the Python module (Python 3 only)
 
     pip3 install sacrebleu
 
+In order to install Japanese tokenizer support through `mecab-python3`, you need to run the
+following command instead, to perform a full installation with dependencies:
+
+    pip3 install sacrebleu[ja]
+
+Alternately, you can install from the source:
+
+    python3 setup.py install
+
 This installs a shell script, `sacrebleu`.
-(You can also directly run the shell script `sacrebleu.py` in the source repository).
+(You can also run `python3 -m sacrebleu` ).
 
 Get a list of available test sets:
 
