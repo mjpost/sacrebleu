@@ -1,7 +1,72 @@
 # VERSION HISTORY
 
+- 1.4.14 (in progress)
+  - Added character-based tokenization ("-tok char").
+    Thanks to Christian Federmann.
+
+- 1.4.13 (2020-07-30)
+  - Added WMT20 newstest test sets (#103)
+  - Make mecab3-python an extra dependency, adapt code to new mecab3-python
+    This fixes the recent Windows installation issues as well (#104)
+    Japanese support should now be explicitly installed through sacrebleu[ja] package.
+  - Fix return type annotation of corpus_bleu()
+  - Improve sentence_score's documentation, do not allow single ref string (#98)
+
+- 1.4.12 (2020-07-03)
+  - Fix a deployment bug (#96)
+
+- 1.4.11 (2020-07-03)
+  - Added Multi30k multimodal MT test set metadata
+  - Refactored all tokenizers into respective classes (fixes #85)
+  - Refactored all metrics into respective classes
+  - Moved utility functions into `utils.py`
+  - Implemented signatures using `BLEUSignature` and `CHRFSignature` classes
+  - Simplified checking of Chinese characters (fixes #5)
+  - Unified common regexp tokenization codes for tokenizers (fixes #27)
+  - Fixed --detail failing when no test sets are provided
+  - Fixed multi-reference BLEU failing when tab-delimited reference stream is used
+  - Removed lowercase option for ChrF which was not functional (#85)
+  - Simplified ChrF and used the same I/O logic as BLEU to allow for future
+    multi-reference reading
+  - Added score regression tests for chrF using reference chrF++ implementation
+  - Added multi-reference & tokenizer & signature tests
+
+- 1.4.10 (2020-05-30)
+  - Fixed bug in signature with mecab tokenizer
+  - Cleaned up deprecation warnings (thanks to Karthikeyan Singaravelan @tirkarthi)
+  - Now only lists the external [typing](https://pypi.org/project/typing/)
+    module as a dependency for Python `<= 3.4`, as it was integrated in the standard
+    library in Python 3.5 (thanks to Erwan de Lépinau @ErwanDL).
+  - Added LICENSE to pypi (thanks to Mark Harfouche @hmaarrfk)
+
+- 1.4.9 (2020-04-30)
+  - Changed `get_available_testsets()` to return a list
+  - Remove Japanese MeCab tokenizer from requirements.
+    (Must be installed manually to avoid Windows incompatibility).
+    Many thanks to Makoto Morishita (@MorinoseiMorizo).
+
+- 1.4.8 (2020-04-26)
+  - Added to API:
+    - get_source_file()
+    - get_reference_files()
+    - get_available_testsets()
+    - get_langpairs_for_testset()
+  - Some internal refactoring
+  - Fixed descriptions of some WMT19/google test sets
+  - Added API test case (test/test_apy.py)
+
+- 1.4.7 (2020-04-19)
+  - Added Google's extra wmt19/en-de refs (-t wmt19/google/{ar,arp,hqall,hqp,hqr,wmtp})
+    (Freitag, Grangier, & Caswell
+     BLEU might be Guilty but References are not Innocent
+     https://arxiv.org/abs/2004.06063)
+  - Restored SACREBLEU_DIR and smart_open to exports (thanks to Thomas Liao @tholiao)
+
+- 1.4.6 (2020-03-28)
+  - Large internal reorganization as a module (thanks to Thamme Gowda @thammegowda)
+
 - 1.4.5 (2020-03-28)
-  - Added Japanese MeCab tokenize (`-tok ja-mecab`) (thanks to Makoto Morishita @MorinoseiMorizo)
+  - Added Japanese MeCab tokenizer (`-tok ja-mecab`) (thanks to Makoto Morishita @MorinoseiMorizo)
   - Added wmt20/dev test sets (thanks to Martin Popel @martinpopel)
 
 - 1.4.4 (2020-03-10)
