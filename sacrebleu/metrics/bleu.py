@@ -85,8 +85,8 @@ class BLEU:
         assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
             "Unknown smooth_method '{}'".format(self.smooth_method)
 
-    @staticmethod
-    def extract_ngrams(line, min_order=1, max_order=NGRAM_ORDER) -> Counter:
+    @classmethod
+    def extract_ngrams(cls, line, min_order=1, max_order=None) -> Counter:
         """Extracts all the ngrams (min_order <= n <= max_order) from a sequence of tokens.
 
         :param line: A segment containing a sequence of words.
@@ -94,7 +94,7 @@ class BLEU:
         :param max_order: Maximum n-gram length (default: NGRAM_ORDER).
         :return: a dictionary containing ngrams and counts
         """
-
+        max_order = max_order or cls.NGRAM_ORDER
         ngrams = Counter()
         tokens = line.split()
         for n in range(min_order, max_order + 1):
@@ -104,15 +104,16 @@ class BLEU:
 
         return ngrams
 
-    @staticmethod
-    def reference_stats(refs, output_len):
+    @classmethod
+    def reference_stats(cls, refs, output_len, max_order=None):
         """Extracts reference statistics for a given segment.
 
         :param refs: A list of segment tokens.
         :param output_len: Hypothesis length for this segment.
+        :param max_order: maximum order of n_grams, default is 4
         :return: a tuple of (ngrams, closest_diff, closest_len)
         """
-
+        max_order = max_order or cls.NGRAM_ORDER
         ngrams = Counter()
         closest_diff = None
         closest_len = None
@@ -128,7 +129,7 @@ class BLEU:
                 if reflen < closest_len:
                     closest_len = reflen
 
-            ngrams_ref = BLEU.extract_ngrams(ref)
+            ngrams_ref = BLEU.extract_ngrams(ref, max_order=max_order)
             for ngram in ngrams_ref.keys():
                 ngrams[ngram] = max(ngrams[ngram], ngrams_ref[ngram])
 

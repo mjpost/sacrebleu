@@ -100,12 +100,28 @@ def parse_args():
                             help='insist that your tokenized input is actually detokenized')
 
     # ChrF-related arguments
-    arg_parser.add_argument('--chrf-order', type=int, default=METRICS['chrf'].ORDER,
+    chrf_p = arg_parser.add_argument_group(title='CHRF args')
+    chrf_p.add_argument('--chrf-order', type=int, default=METRICS['chrf'].ORDER,
                             help='chrf character order (default: %(default)s)')
-    arg_parser.add_argument('--chrf-beta', type=int, default=METRICS['chrf'].BETA,
+    chrf_p.add_argument('--chrf-beta', type=int, default=METRICS['chrf'].BETA,
                             help='chrf BETA parameter (default: %(default)s)')
-    arg_parser.add_argument('--chrf-whitespace', action='store_true', default=False,
+    chrf_p.add_argument('--chrf-whitespace', action='store_true', default=False,
                             help='include whitespace in chrF calculation (default: %(default)s)')
+
+    # ReBLEU related args
+    rebleu_p = arg_parser.add_argument_group(title="ReBLEU Args")
+    rebleu_p.add_argument('-ro', '--rebleu-order', metavar='ORDER', type=int,
+                             default=METRICS['rebleu'].ORDER,
+                             help='ReBLEU ngram order (default: %(default)s)')
+    rebleu_p.add_argument('-ra', '--rebleu-average', metavar='average',
+                          choices=METRICS['rebleu'].AVG_TYPES, default='macro',
+                          help='ReBLEU ngram order (default: %(default)s)')
+
+    rebleu_p.add_argument('-rb', '--rebleu-beta', metavar='BETA', type=float,
+                             default=METRICS['rebleu'].BETA,
+                             help='ReBLEU BETA parameter (default: %(default)s)')
+    rebleu_p.add_argument('--report',  type=str, help='ReBLEU report file path. (optional)')
+
 
     # Reporting related arguments
     arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',

@@ -27,7 +27,6 @@ from .metrics import BLEU, CHRF
 
 # Backward compatibility functions for old style API access (<= 1.4.10)
 from .compat import *
-from .rebleu import corpus_rebleu
 
 # Other shorthands for backward-compatibility with <= 1.4.10
 extract_ngrams = BLEU.extract_ngrams
