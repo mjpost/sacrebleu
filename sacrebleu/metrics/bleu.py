@@ -10,6 +10,7 @@ from ..tokenizers import TOKENIZERS
 from ..utils import my_log
 from .base import BaseScore, Signature
 
+sacrelogger = logging.getLogger('sacrebleu')
 
 class BLEUSignature(Signature):
     def __init__(self, args):
@@ -267,9 +268,9 @@ class BLEU:
                 tokenized_count += 1
 
                 if tokenized_count == 100:
-                    logging.warning('That\'s 100 lines that end in a tokenized period (\'.\')')
-                    logging.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
-                    logging.warning('If you insist your data is detokenized, or don\'t care, you can suppress this message with \'--force\'.')
+                    sacrelogger.warning('That\'s 100 lines that end in a tokenized period (\'.\')')
+                    sacrelogger.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
+                    sacrelogger.warning('If you insist your data is detokenized, or don\'t care, you can suppress this message with \'--force\'.')
 
             output, *refs = [self.tokenizer(x.rstrip()) for x in lines]
 
