@@ -22,6 +22,23 @@
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
 # The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 DATASETS = {
+    "wmt20/robust/set1": {
+        "data": ["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        'description': "WMT20 robustness task, set 1",
+        "en-ja": ["robustness20-3-sets/robustness20-set1-enja.en", "robustness20-3-sets/robustness20-set1-enja.ja"],
+        "en-de": ["robustness20-3-sets/robustness20-set1-ende.en", "robustness20-3-sets/robustness20-set1-ende.de"],
+    },
+    "wmt20/robust/set2": {
+        "data": ["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        'description': "WMT20 robustness task, set 2",
+        "en-ja": ["robustness20-3-sets/robustness20-set2-enja.en", "robustness20-3-sets/robustness20-set2-enja.ja"],
+        "ja-en": ["robustness20-3-sets/robustness20-set2-jaen.ja", "robustness20-3-sets/robustness20-set2-jaen.en"],
+    },
+    "wmt20/robust/set3": {
+        "data": ["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        'description': "WMT20 robustness task, set 3",
+        "de-en": ["robustness20-3-sets/robustness20-set3-deen.de", "robustness20-3-sets/robustness20-set3-deen.en"],
+    },
     "wmt20/tworefs": {
         'data': ['http://data.statmt.org/wmt20/translation-task/test.tgz'],
         'description': 'WMT20 news test sets with two references',
