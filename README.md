@@ -28,7 +28,7 @@ Alternately, you can install from the source:
     python3 setup.py install
 
 This installs a shell script, `sacrebleu`.
-(You can also run `python3 -m sacrebleu` ).
+(You can also run `python3 -m sacrebleu`, so long as this root directory is in your `$PYTHONPATH`).
 
 Get a list of available test sets:
 
