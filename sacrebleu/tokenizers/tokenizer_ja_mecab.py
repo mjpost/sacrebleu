@@ -2,7 +2,7 @@
 try:
     import MeCab
     import ipadic
-except ModuleNotFoundError:
+except ImportError:
     # Don't fail until the tokenizer is actually used
     MeCab = None
 
