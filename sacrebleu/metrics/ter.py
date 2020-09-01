@@ -121,7 +121,7 @@ class TER:
         fhs = [sys_stream] + ref_streams
 
         total_edits = 0
-        sum_ref_lengths = 0
+        sum_ref_lengths = 0.0
 
         for lines in zip_longest(*fhs):
             if None in lines:
@@ -130,14 +130,15 @@ class TER:
 
             words_hyp = self.tokenizer(hypo).split()
 
-            best_num_edits = None
+            # `None` init made mypy unhappy. Make it relatively large at start
+            best_num_edits = int(1e16)
             ref_lengths = 0
 
             for ref in refs:
                 words_ref = self.tokenizer(ref).split()
                 num_edits, ref_len = translation_edit_rate(words_hyp, words_ref)
                 ref_lengths += ref_len
-                if best_num_edits is None or num_edits < best_num_edits:
+                if num_edits < best_num_edits:
                     best_num_edits = num_edits
 
             total_edits += best_num_edits
