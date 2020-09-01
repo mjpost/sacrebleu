@@ -45,6 +45,9 @@ class Mean:
 
 
 class NamedResult(BaseScore):
+
+    __slots__ = ('name',)
+
     def __init__(self, name, score):
         self.name = name
         super().__init__(score=score)
@@ -54,6 +57,8 @@ class NamedResult(BaseScore):
 
 
 class ClassMeasure(NamedResult):
+
+    __slots__ = 'preds', 'refs', 'correct', 'measure_name'
 
     def __init__(self, name, preds=0, refs=0, correct=0, measure='f1'):
         self.preds = preds
@@ -115,6 +120,8 @@ class MultiClassMeasure(NamedResult):
     Refer to https://datascience.stackexchange.com/a/24051/16531 for micro vs macro
     """
 
+    __slots__ =  'smooth_value', 'percent', 'measures', 'avgs'
+
     def __init__(self, name, measures: List[ClassMeasure], average='macro',
                  smooth_value=0, measure_names=('f1', 'precision', 'recall', 'accuracy'),
                  summary='f1', percent=True):
@@ -155,9 +162,10 @@ class MultiClassMeasure(NamedResult):
 
 class NGramGroup(NamedResult):
     """NGramGroup N-grams based on unigrams """
+    __slots__ =  ('groups', )
 
     def __init__(self, name, max_order):
-        self.name = name
+        super().__init__(name, float('-inf'))
         self.groups: List[List[ClassMeasure]] = [[] for _ in range(max_order)]
 
     def add(self, stat: ClassMeasure):
@@ -165,7 +173,7 @@ class NGramGroup(NamedResult):
         self.groups[stat.order() - 1].append(stat)
 
     def measure(self, measure_name=None) -> float:
-        # raise Exception('Error')
+        assert measure_name == 'default', 'custom measure not supported; please use default'
         if len(self.groups[0]) != 1:
             log.warning(f"{self.name} expected 1 but found {len(self.groups[0])} unigram types")
         assert len(self.groups[0]) == 1  # exactly one unigram
@@ -180,10 +188,6 @@ class NGramGroup(NamedResult):
         # geometric mean across groups
         cross_mean = Mean.geometric(intra_means)
         return cross_mean
-
-    @property
-    def score(self) -> float:
-        return self.measure('f1')
 
     @property
     def refs(self) -> int:
@@ -210,7 +214,7 @@ class ReBLEUScore(NamedResult):
         assert len(measures) == len(weights)
         self.measures = measures
         self.weights = weights
-        wt_scores = [(m.measure(measure_name='dontcare'), w) for m, w in zip(measures, weights)]
+        wt_scores = [(m.measure(measure_name='default'), w) for m, w in zip(measures, weights)]
         norm = sum(w for score, w in wt_scores)
         avg_score = sum(score * w for score, w in wt_scores) / norm
         self.brevity_penalty = 1.0

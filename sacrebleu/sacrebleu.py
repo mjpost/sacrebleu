@@ -54,6 +54,7 @@ def parse_args():
         description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
                     'Quick usage: score your detokenized output against WMT\'14 EN-DE:\n'
                     '    cat output.detok.de | sacrebleu -t wmt14 -l en-de',
+        epilog=f'\n\033[93m You are using v{VERSION} from {__file__}\033[0m',
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     arg_parser.add_argument('--citation', '--cite', default=False, action='store_true',
