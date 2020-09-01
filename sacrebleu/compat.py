@@ -104,7 +104,7 @@ def corpus_chrf(hypotheses: Iterable[str],
 
 
 def sentence_chrf(hypothesis: str,
-                  references: Iterable[str],
+                  references: List[str],
                   order: int = CHRF.ORDER,
                   beta: float = CHRF.BETA,
                   remove_whitespace: bool = True) -> CHRFScore:
@@ -149,7 +149,7 @@ def corpus_ter(hypotheses: Iterable[str],
 
 
 def sentence_ter(hypothesis: str,
-                 references: Iterable[str],
+                 references: List[str],
                  normalized: bool = False,
                  no_punct: bool = False,
                  asian_support: bool = False,
