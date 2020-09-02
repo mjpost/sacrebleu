@@ -558,8 +558,8 @@ class BeamEditDistance:
         # update cache with newly computed rows
         for word, row in zip(words_hyp[skip_num:], mat):
             if word not in node:
-                node[word] = (word, tuple(row))
-            self._cache_size += 1
+                node[word] = ({}, tuple(row))
+                self._cache_size += 1
             value = node[word]
             node = value[0]
 
