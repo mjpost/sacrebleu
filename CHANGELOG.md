@@ -4,6 +4,7 @@
   - Added character-based tokenization (`-tok char`).
     Thanks to Christian Federmann.
   - Added TER (`-m ter`). Thanks to Ales Tamchyna! (fixes #90)
+  - Allow calling the script as a standalone utility (fixes #86)
   - Added WMT20 robustness test sets:
     - wmt20/robust/set1
     - wmt20/robust/set2
