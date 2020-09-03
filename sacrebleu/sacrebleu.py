@@ -319,7 +319,7 @@ def main():
         except EOFError:
             sacrelogger.error('The input and reference stream(s) were of different lengths.')
             if args.test_set is not None:
-                sacrelogger('\nThis could be a problem with your system output or with sacreBLEU\'s reference database.\n'
+                sacrelogger.warning('\nThis could be a problem with your system output or with sacreBLEU\'s reference database.\n'
                               'If the latter, you can clean out the references cache by typing:\n'
                               '\n'
                               '    rm -r %s/%s\n'
