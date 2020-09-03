@@ -2,12 +2,14 @@
 
 from .bleu import BLEU, BLEUScore
 from .chrf import CHRF, CHRFScore
+from .ter import TER, TERScore
 import math
 from functools import partial
 
 METRICS = {
     'bleu': BLEU,
-    'chrf': CHRF
+    'chrf': CHRF,
+    'ter': TER,
 }
 
 
