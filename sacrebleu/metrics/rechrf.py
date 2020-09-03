@@ -8,6 +8,7 @@ from typing import List, Iterable, Dict, Union
 from itertools import zip_longest
 import collections as coll
 
+
 class ReCHRFSignature(CHRFSignature):
     def __init__(self, args):
         super().__init__(args)
@@ -24,12 +25,79 @@ class ReCHRFSignature(CHRFSignature):
 
 class ReCHRFScore(CHRFScore):
 
-    def __init__(self, prefix, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, prefix: str, signature, stats: List[Dict[str, ClassMeasure]], weight_func,
+                 beta, percent=True):
+        self.stats = stats
+        score = self.compute_chrf(stats, beta=beta, weight_func=weight_func)
+        super().__init__(score=score, beta=beta, order=len(stats))
         self.prefix = prefix
+        self.signature = signature
+        self.percent = percent
+
+    def format(self, width=None, score_only=False, signature=''):
+        signature = signature or str(self.signature)
+        scaler = 100 if self.percent else 1
+        if width is None:
+            width = 2 if self.percent else 4
+
+        score = self.score * scaler
+        if score_only:
+            return '{0:.{1}f}'.format(score, width)
+
+        prefix = "{}+{}".format(self.prefix, signature)
+        return '{pr} = {sc:.{w}f}'.format(pr=prefix, sc=score, w=width)
+
+    @staticmethod
+    def compute_chrf(statistics: List[Dict[str, ClassMeasure]], beta, weight_func) -> float:
+        group_scores = []
+        for group in statistics:
+            if len(group) == 0:
+                continue
+
+            measures = list(group.values())
+            # f measure withing a group
+            f_meas = [meas.f_measure(beta=beta) for meas in measures]
+            weights = [weight_func(meas.refs) for meas in measures]
+
+            intra_group_mean = mean.arithmetic(f_meas, wts=weights)
+            group_scores.append(intra_group_mean)
+        score = mean.geometric(group_scores)
+        return score
+
+    def write_report(self, path):
+        # grouped by n-gram length; sort by desending order of refs, prefs count
+        grouped_stats: List[List[ClassMeasure]] = [
+            sorted(group.values(), reverse=True, key=lambda cm: (cm.refs, cm.preds))
+            for group in self.stats]
+
+        delim = '\t'
+        ljust = 15
+        scaler, width = 1, 4
+        if self.percent:
+            scaler, width = 100, 2
+
+        def format_class_stat(cm: ClassMeasure):
+            row = [cm.name.ljust(ljust), f"{cm.measure() * scaler:.{width}f}"]
+            row += [str(x) for x in [cm.refs, cm.preds, cm.correct]]
+            row += [f'{cm.measure(measure_name=x) * scaler:.{width}f}'
+                    for x in 'f1 precision recall'.split()]
+            return delim.join(row)
+
+        with open(path, 'w', encoding='utf-8', errors='ignore') as out:
+
+            header = ['Type'.ljust(ljust), 'Score', 'Refs', 'Preds', 'Match', 'F1', 'Precisn',
+                      'Recall']
+            out.write(self.format(width=width) + '\n')
+            out.write(str() + '\n')
+            out.write('\n----\n')
+            out.write(delim.join(header) + '\n')
+            for i, group in enumerate(grouped_stats):
+                for cm in group:
+                    out.write(format_class_stat(cm) + '\n')
+                out.write("\n")  # blank line before another group
+
 
 class ReCHRF(CHRF):
-
     DEF_SMOOTH_VAL = 1
 
     def __init__(self, args, **override_args):
@@ -47,10 +115,9 @@ class ReCHRF(CHRF):
         assert args.smooth_method == 'add-k'
 
         assert args.average in AVG_TYPES, f'{args.average} is invalid; ' \
-                                                      f'Valid: {list(AVG_TYPES.keys())}'
+                                          f'Valid: {list(AVG_TYPES.keys())}'
         self.weight_func = AVG_TYPES[args.average]
         self.prefix = f"{self.name}[β={self.beta:g}]"
-
 
     def get_sentence_statistics(self, hypothesis: str,
                                 references: List[str]) -> List[Dict[str, ClassMeasure]]:
@@ -79,23 +146,12 @@ class ReCHRF(CHRF):
 
         return gram_stats
 
-    def compute_chrf(self, statistics: List[Dict[str, ClassMeasure]]) -> CHRFScore:
-        group_scores = []
-        for group in statistics:
-            if len(group) == 0:
-                continue
+    def compute_chrf(self, statistics: List[Dict[str, ClassMeasure]]) -> ReCHRFScore:
+        return ReCHRFScore(prefix=self.prefix, stats=statistics,
+                           beta=self.beta, signature=self.signature,
+                           weight_func=lambda freq: self.weight_func(freq + self.smooth_value))
 
-            measures = list(group.values())
-            # f measure withing a group
-            f_meas = [meas.f_measure(beta=self.beta) for meas in measures]
-            weights = [self.weight_func(meas.refs + self.smooth_value) for meas in measures]
-
-            intra_group_mean = mean.arithmetic(f_meas, wts=weights)
-            group_scores.append(intra_group_mean)
-        score = mean.geometric(group_scores)
-        return ReCHRFScore(prefix=self.prefix, score=score, beta=self.beta, order=self.order)
-
-    def sentence_score(self, hypothesis: str, references: List[str]) -> CHRFScore:
+    def sentence_score(self, hypothesis: str, references: List[str]) -> ReCHRFScore:
         """
         Computes ChrF on a single sentence pair.
 
@@ -106,9 +162,8 @@ class ReCHRF(CHRF):
         stats = self.get_sentence_statistics(hypothesis, references)
         return self.compute_chrf(stats)
 
-
     def corpus_score(self, sys_stream: Union[str, Iterable[str]],
-                     ref_streams: Union[str, List[Iterable[str]]]) -> CHRFScore:
+                     ref_streams: Union[str, List[Iterable[str]]]) -> ReCHRFScore:
         """
         Computes Chrf on a corpus.
 
@@ -124,7 +179,7 @@ class ReCHRF(CHRF):
         if isinstance(ref_streams, str):
             ref_streams = [[ref_streams]]
 
-        corpus_stats = [coll.defaultdict(lambda : [0, 0, 0]) for _ in range(self.order)]
+        corpus_stats = [coll.defaultdict(lambda: [0, 0, 0]) for _ in range(self.order)]
 
         fhs = [sys_stream] + ref_streams
         for lines in zip_longest(*fhs):
@@ -146,5 +201,5 @@ class ReCHRF(CHRF):
         for in_group, out_group in zip(corpus_stats, corpus_stats2):
             for name, (preds, refs, correct) in in_group.items():
                 assert correct <= preds and correct <= refs
-                out_group[name] = ClassMeasure(name, preds=preds, refs=refs,correct=correct)
+                out_group[name] = ClassMeasure(name, preds=preds, refs=refs, correct=correct)
         return self.compute_chrf(corpus_stats2)
