@@ -7,13 +7,11 @@ from itertools import zip_longest
 import logging as log
 import math
 from pathlib import Path
+from . import AVG_TYPES
 from .base import BaseScore
 from .bleu import BLEU, BLEUSignature
 
 
-def my_log(x):
-    assert x > 0, f'{x} > 0 ?'
-    return math.log(x)
 
 
 class Mean:
@@ -88,12 +86,12 @@ class ClassMeasure(NamedResult):
         return (1 + beta ** 2) * self.precision * self.recall / denr
 
     @property
-    def f1_measure(self) -> float:
+    def f1(self) -> float:
         return self.f_measure(beta=1)
 
     def measure(self, measure_name=None):
         measure_name = measure_name or self.measure_name
-        cache = dict(f1=self.f1_measure, precision=self.precision, recall=self.recall)
+        cache = dict(f1=self.f1, precision=self.precision, recall=self.recall)
         if measure_name in cache:
             return cache[measure_name]
         elif measure_name.startswith('f'):
@@ -102,10 +100,12 @@ class ClassMeasure(NamedResult):
         else:
             raise Exception(f'Unknown measure name : {measure_name}')
 
-    def __str__(self):
-        return f'ClassMesure[{self.name}, pred/cor/ref={self.preds}/{self.correct}/{self.refs} ' \
-               f'P/R/F1={self.precision:g}/{self.recall:g}/{self.f1_measure:g}]'
 
+    def __str__(self):
+        return f'ClassMeasure[{self.name}, pred/cor/ref={self.preds}/{self.correct}/{self.refs} ' \
+               f'P/R/F1={self.precision:g}/{self.recall:g}/{self.f1:g}]'
+
+    @property
     def order(self):
         """
         Gets the n-gram order
@@ -129,14 +129,7 @@ class MultiClassMeasure(NamedResult):
         assert summary in measure_names
         self.percent = percent
 
-        avg_types = {'micro': lambda m: smooth_value + m.refs,
-                     'micro_sqrt': lambda m: math.sqrt(smooth_value + m.refs),
-                     'micro_log': lambda m: my_log(smooth_value + m.refs),
-                     'macro': lambda m: 1,
-                     }
-
-        assert average in avg_types
-        weight_func = avg_types[average]
+        weight_func = AVG_TYPES[average]
         self.measures = measures
         self.avgs = {}
         for measure_name in measure_names:
@@ -144,7 +137,8 @@ class MultiClassMeasure(NamedResult):
                 self.avgs['accuracy'] = sum(m.correct for m in measures) \
                                         / sum(m.preds for m in measures)
             else:
-                wt_scores = [(m.measure(measure_name=measure_name), weight_func(m))
+                wt_scores = [(m.measure(measure_name=measure_name),
+                              weight_func(m.refs + smooth_value))
                              for m in measures]
                 norm = sum(w for score, w in wt_scores)
                 self.avgs[measure_name] = sum(score * w for score, w in wt_scores) / norm
@@ -162,25 +156,26 @@ class MultiClassMeasure(NamedResult):
 
 class NGramGroup(NamedResult):
     """NGramGroup N-grams based on unigrams """
-    __slots__ =  ('groups', )
+    __slots__ =  ('groups', 'beta')
 
-    def __init__(self, name, max_order):
+    def __init__(self, name, max_order, beta):
         super().__init__(name, float('-inf'))
         self.groups: List[List[ClassMeasure]] = [[] for _ in range(max_order)]
+        self.beta = beta
 
     def add(self, stat: ClassMeasure):
         assert self.name in stat.name
-        self.groups[stat.order() - 1].append(stat)
+        self.groups[stat.order - 1].append(stat)
 
     def measure(self, measure_name=None) -> float:
-        assert measure_name == 'default', 'custom measure not supported; please use default'
+        assert not measure_name or measure_name == 'default', 'custom measure not supported; please use default'
         if len(self.groups[0]) != 1:
             log.warning(f"{self.name} expected 1 but found {len(self.groups[0])} unigram types")
         assert len(self.groups[0]) == 1  # exactly one unigram
         groups = [g for g in self.groups if g]  # ignore empty groups
         # Unigram F1
         # unigram_score = groups[0][0].measure('f1')
-        meas_names = ['f1'] + ['precision'] * (len(groups) - 1)
+        meas_names = [f'f{self.beta}'] + ['precision'] * (len(groups) - 1)
         # higher grams precision
         g_scores = [[cm.measure(m_name) for cm in g] for m_name, g in zip(meas_names, groups)]
         # arithmetic mean within groups
@@ -188,6 +183,10 @@ class NGramGroup(NamedResult):
         # geometric mean across groups
         cross_mean = Mean.geometric(intra_means)
         return cross_mean
+
+    @property
+    def score(self):
+        return self.measure(measure_name='default')
 
     @property
     def refs(self) -> int:
@@ -205,15 +204,18 @@ class ReBLEUScore(NamedResult):
     Refer to https://datascience.stackexchange.com/a/24051/16531 for micro vs macro
     """
 
-    def __init__(self, measures: List[NGramGroup], weights, sys_len, ref_len, name='ReBLEU',
-                 percent=True):
+    def __init__(self,  measures: List[NGramGroup], weights, sys_len, ref_len, signature,
+                 name='ReBLEU', percent=True):
 
         assert sys_len >= 0
         assert ref_len > 0
         self.percent = percent
+        assert measures
         assert len(measures) == len(weights)
         self.measures = measures
         self.weights = weights
+        self.signature = signature
+        self.beta = measures[0].beta
         wt_scores = [(m.measure(measure_name='default'), w) for m, w in zip(measures, weights)]
         norm = sum(w for score, w in wt_scores)
         avg_score = sum(score * w for score, w in wt_scores) / norm
@@ -232,8 +234,9 @@ class ReBLEUScore(NamedResult):
     def format(self, width=2, score_only=False, signature=''):
         if score_only:
             return '{0:.{1}f}'.format(self.score, width)
-
-        prefix = "{}+{}".format(self.name, signature) if signature else self.name
+        signature = signature or str(self.signature)
+        name = self.name.strip() + f'[β={self.beta:g}]'
+        prefix = "{}+{}".format(name, signature) if signature else name
 
         s = ('{pr} {sc:.{width}f} ( BP = {bp:.3f} ratio = {r:.3f} hyp_len = {hl:d}'
              ' ref_len = {rl:d})').format(pr=prefix, sc=self.score, width=width,
@@ -241,7 +244,7 @@ class ReBLEUScore(NamedResult):
                                           hl=self.sys_len, rl=self.ref_len)
         return s
 
-    def write_report(self, path, args, nrefs):
+    def write_report(self, path):
         if isinstance(path, str):
             path = Path(path)
         scaler, width = 1, 4
@@ -255,17 +258,18 @@ class ReBLEUScore(NamedResult):
         ljust = 15
 
         def format_class_stat(stat: NGramGroup):
-            row = [stat.name.ljust(ljust), f"{stat.score * scaler:.{width}f}"]
+            row = [stat.name.ljust(ljust), f"{stat.measure() * scaler:.{width}f}"]
             head: ClassMeasure = stat.head
             row += [str(x) for x in [head.refs, head.preds, head.correct]]
-            row += [f'{x * scaler:.{width}f}' for x in [head.f1, head.precision, head.recall]]
+            row += [f'{head.measure(measure_name=x) * scaler:.{width}f}'
+                    for x in 'f1 precision recall'.split()]
             return delim.join(row)
 
         with path.open('w', encoding='utf-8', errors='ignore') as out:
             header = ['Type'.ljust(ljust), 'Score', 'Refs', 'Preds', 'Match', 'F1', 'Precisn',
                       'Recall']
             out.write(self.format(width=width) + '\n')
-            out.write(self.signature(args, nrefs) + '\n')
+            out.write(str() + '\n')
             out.write('\n----\n')
             out.write(delim.join(header) + '\n')
             for cs in class_stats:
@@ -306,11 +310,12 @@ class ReBLEUSignature(BLEUSignature):
 
         self._abbr.update({
             'average': 'a',
-            'ngram': 'ng'
+            'ngram': 'ng',
+            'beta': 'β',
         })
 
         self.info.update({
-            'average': args.rebleu_average,
+            'average': args.average,
             'ngram': args.rebleu_order,
             'smooth': '{meth}.{val}'.format(val=args.smooth_value, meth=args.smooth_method)
         })
@@ -320,14 +325,7 @@ class ReBLEUScorer(BLEU):
     ORDER: int = 4
     BETA: float = 1
     AVERAGE: str = 'macro'
-    AVREGAES: Set[str] = {'micro', 'macro'}
     DEF_SMOOTH_VAL = 1
-    AVG_TYPES = {
-        'micro': lambda f: f,
-        'micro_sqrt': lambda f: math.sqrt(f),
-        'micro_log': lambda f: my_log(f),
-        'macro': lambda _: 1,
-    }
 
     def __init__(self, args, **override_args):
 
@@ -338,18 +336,18 @@ class ReBLEUScorer(BLEU):
         args.smooth_value = args.smooth_value or self.DEF_SMOOTH_VAL
 
         super().__init__(args)
-        self.name = override_args.get('name', 'ReBLEU')  # overwite
+        self.name = override_args.get('name', 'ReBLEU')  # overwrite
         self.signature = ReBLEUSignature(args)
         self.max_order = args.rebleu_order
         self.smooth_value = args.smooth_value
+        self.beta = override_args.get('rebleu_beta', args.rebleu_beta)
 
-        assert args.rebleu_average in self.AVG_TYPES, f'{args.rebleu_average} is invalid; ' \
-                                                      f'Valid: {list(self.AVG_TYPES.keys())}'
-        self.weight_func = self.AVG_TYPES[args.rebleu_average]
+        assert args.average in AVG_TYPES, f'{args.average} is invalid; use:{list(AVG_TYPES.keys())}'
+        self.weight_func = AVG_TYPES[args.average]
 
     def corpus_score(self, sys_stream: Union[str, Iterable[str]],
                      ref_streams: Union[str, List[Iterable[str]]]) \
-            -> Union[MultiClassMeasure, ReBLEUScore]:
+            -> Union[ReBLEUScore]:
         """Produces ReBLEU scores along with its sufficient statistics from a source against one or more references.
 
         :param sys_stream: The system stream (a sequence of segments)
@@ -365,9 +363,9 @@ class ReBLEUScorer(BLEU):
             assert isinstance(gs.name, str)
             gs.name = tuple(gs.name.split())  # convert space separated ngram string to tuple
 
-        unigrams = [gs.name[0] for gs in gram_stats if gs.order() == 1]
-        groups: Dict[str, NGramGroup] = {ug: NGramGroup(name=ug, max_order=self.max_order)
-                                         for ug in unigrams}
+        unigrams = [gs.name[0] for gs in gram_stats if gs.order == 1]
+        groups: Dict[str, NGramGroup] = {ug: NGramGroup(name=ug, max_order=self.max_order,
+                                                        beta=self.beta) for ug in unigrams}
         for gram_stat in gram_stats:
             for gram in gram_stat.name:
                 groups[gram].add(gram_stat)
@@ -375,7 +373,7 @@ class ReBLEUScorer(BLEU):
         groups: List[NGramGroup] = list(groups.values())
         weights = [self.weight_func(g.refs + self.smooth_value) for g in groups]
         rebleu = ReBLEUScore(measures=groups, weights=weights, sys_len=sys_len, ref_len=ref_len,
-                             name=self.name)
+                             name=self.name, signature=self.signature)
         return rebleu
 
     @classmethod
