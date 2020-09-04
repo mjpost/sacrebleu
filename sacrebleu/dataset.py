@@ -755,7 +755,7 @@ DATASETS = {
 # Detailed document metadata annotation in form DocumentID -> CountryCode - Domain - OptionalFinegrainedCountryCode
 # While the annotation is subjective with many unclear cases, it may provide useful insights
 # when applied on large data (TODO: annotate all documents from recent WMT years, at least for origlang=en, consider renaming "world" to "other").
-SUBSETS = {
+_SUBSETS = {
     'wmt18': 'rt.com.68098=US-crime guardian.181611=US-politics bbc.310963=GB-sport washpost.116881=US-politics scotsman.104228=GB-sport timemagazine.75207=OTHER-world-ID '
         'euronews-en.117981=OTHER-crime-AE smh.com.au.242810=US-crime msnbc.53726=US-politics euronews-en.117983=US-politics msnbc.53894=US-crime theglobeandmail.com.62700=US-business '
         'bbc.310870=OTHER-world-AF reuters.196698=US-politics latimes.231739=US-sport thelocal.51929=OTHER-world-SE cbsnews.198694=US-politics reuters.196718=OTHER-sport-RU '
@@ -789,6 +789,6 @@ SUBSETS = {
         'bbc.381736=OTHER-politics-KP cbsnews.248394=US-politics nytimes.184822=US-world telegraph.405408=US-politics euronews-en.153799=OTHER-politics-SY '
         'euronews-en.153826=EU-sport cnn.304400=US-world'
 }
-SUBSETS = {k: {d.split('=')[0]: d.split('=')[1] for d in v.split()} for (k, v) in SUBSETS.items()}
+SUBSETS = {k: {d.split('=')[0]: d.split('=')[1] for d in v.split()} for (k, v) in _SUBSETS.items()}
 COUNTRIES = sorted(list({v.split('-')[0] for v in SUBSETS['wmt19'].values()}))
 DOMAINS = sorted(list({v.split('-')[1] for v in SUBSETS['wmt19'].values()}))
