@@ -71,7 +71,7 @@ class CHRF:
         return Counter([s[i:i + n] for i in range(len(s) - n + 1)])
 
     @staticmethod
-    def compute_chrf(statistics: List[float],
+    def compute_chrf(statistics: List[int],
                      order: int,
                      beta: float) -> CHRFScore:
 
@@ -105,7 +105,7 @@ class CHRF:
         return CHRFScore(score, beta, order)
 
     def get_sentence_statistics(self, hypothesis: str,
-                                references: List[str]) -> List[float]:
+                                references: List[str]) -> List[int]:
         # NOTE: multi-reference not supported yet
         reference = references[0]
 
