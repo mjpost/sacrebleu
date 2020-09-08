@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-from . import AVG_TYPES
-
-from .chrf import CHRF, CHRFScore, CHRFSignature
-from .rebleu import ClassMeasure, Mean as mean
-from typing import List, Iterable, Dict, Union
-from itertools import zip_longest
 import collections as coll
+from itertools import zip_longest
+from typing import List, Iterable, Dict, Union
+
+from . import AVG_TYPES
+from .base import ClassMeasure, Mean as mean
+from .chrf import CHRF, CHRFScore, CHRFSignature
+from argparse import Namespace
 
 
 class ReCHRFSignature(CHRFSignature):
@@ -101,7 +102,8 @@ class ReCHRF(CHRF):
     DEF_SMOOTH_VAL = 1
 
     def __init__(self, args, **override_args):
-
+        if isinstance(args, dict):
+            args = Namespace(**args)
         # overwrite args, they are used by signature
         override_args = override_args or {}
         for name, val in override_args.items():
