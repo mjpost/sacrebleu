@@ -145,7 +145,7 @@ class ReBLEUScorer(BLEU):
         args.smooth_value = args.smooth_value or self.DEF_SMOOTH_VAL
 
         super().__init__(args)
-        self.name = override_args.get('name', 'ReBLEU')  # overwrite
+        self.name = override_args.get('name', 'ReBLEU2')  # overwrite
         self.signature = ReBLEUSignature(args)
         self.max_order = args.rebleu_order
         self.smooth_value = args.smooth_value
@@ -185,7 +185,7 @@ class ReBLEUScorer(BLEU):
         measures = [list(g.values()) for g in groups]
 
         return ReBLEUScore(measures=measures, sys_len=sys_len, ref_len=ref_len,
-                           signature=self.signature, measure_name='f1',
+                           signature=self.signature, measure_name='f1', name=self.name,
                            weight_func=lambda x: self.weight_func(x + self.smooth_value))
 
     @classmethod
