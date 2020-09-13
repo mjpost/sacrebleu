@@ -15,7 +15,7 @@
 # permissions and limitations under the License.
 
 __version__ = '1.4.14'
-__description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU scores'
+__description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU, chrF, and TER scores'
 
 
 from .utils import smart_open, SACREBLEU_DIR, download_test_set

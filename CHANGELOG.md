@@ -1,15 +1,17 @@
 # VERSION HISTORY
 
-- 1.4.14 (in progress)
+- 1.4.15 (in progress)
+
+- 1.4.14 (2020-09-13)
   - Added character-based tokenization (`-tok char`).
     Thanks to Christian Federmann.
   - Added TER (`-m ter`). Thanks to Ales Tamchyna! (fixes #90)
   - Allow calling the script as a standalone utility (fixes #86)
   - Fix type annotation issues (fixes #100) and mark sacrebleu as supporting mypy
   - Added WMT20 robustness test sets:
-    - wmt20/robust/set1
-    - wmt20/robust/set2
-    - wmt20/robust/set3
+    - wmt20/robust/set1 (en-ja, en-de)
+    - wmt20/robust/set2 (en-ja, ja-en)
+    - wmt20/robust/set3 (de-en)
 
 - 1.4.13 (2020-07-30)
   - Added WMT20 newstest test sets (#103)
