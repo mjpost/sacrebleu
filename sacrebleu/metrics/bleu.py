@@ -96,7 +96,7 @@ class BLEU:
         :return: a dictionary containing ngrams and counts
         """
 
-        ngrams = Counter()
+        ngrams = Counter() # type: Counter
         tokens = line.split()
         for n in range(min_order, max_order + 1):
             for i in range(0, len(tokens) - n + 1):
@@ -169,7 +169,7 @@ class BLEU:
         if smooth_value is None:
             smooth_value = BLEU.SMOOTH_DEFAULTS[smooth_method]
 
-        precisions = [0 for x in range(BLEU.NGRAM_ORDER)]
+        precisions = [0.0 for x in range(BLEU.NGRAM_ORDER)]
 
         smooth_mteval = 1.
         effective_order = BLEU.NGRAM_ORDER

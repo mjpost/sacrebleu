@@ -50,6 +50,7 @@ _BEAM_WIDTH = 25
 # Our own limits
 _MAX_CACHE_SIZE = 10000
 _MAX_SHIFT_CANDIDATES = 1000
+_INT_INFINITY = int(1e16)
 
 _OP_INS = 'i'
 _OP_DEL = 'd'
@@ -121,7 +122,7 @@ class TER:
         fhs = [sys_stream] + ref_streams
 
         total_edits = 0
-        sum_ref_lengths = 0
+        sum_ref_lengths = 0.0
 
         for lines in zip_longest(*fhs):
             if None in lines:
@@ -130,14 +131,14 @@ class TER:
 
             words_hyp = self.tokenizer(hypo).split()
 
-            best_num_edits = None
+            best_num_edits = _INT_INFINITY
             ref_lengths = 0
 
             for ref in refs:
                 words_ref = self.tokenizer(ref).split()
                 num_edits, ref_len = translation_edit_rate(words_hyp, words_ref)
                 ref_lengths += ref_len
-                if best_num_edits is None or num_edits < best_num_edits:
+                if num_edits < best_num_edits:
                     best_num_edits = num_edits
 
             total_edits += best_num_edits
@@ -411,12 +412,12 @@ class BeamEditDistance:
         self._initial_row = [(i * _COST_INS, _OP_INS)
                              for i in range(len(self._words_ref) + 1)]
 
-        self._cache = {}
+        self._cache = {}  # type: Dict[str, Tuple]
         self._cache_size = 0
 
         # Precomputed empty matrix row. Contains infinities so that beam search
         # avoids using the uninitialized cells.
-        self._empty_row = [(math.inf, _OP_UNDEF)] * (len(self._words_ref) + 1)
+        self._empty_row = [(_INT_INFINITY, _OP_UNDEF)] * (len(self._words_ref) + 1)
 
     def __call__(self, words_hyp: List[str]) -> Tuple[int, str]:
         """Calculate edit distance between self._words_ref and the hypothesis.
@@ -441,7 +442,7 @@ class BeamEditDistance:
         return edit_distance, trace
 
     def _edit_distance(self, words_h: List[str], start_h: int,
-                       cache: List[List[Tuple]]) -> Tuple[int, List, str]:
+                       cache: List[List[Tuple[int, str]]]) -> Tuple[int, List, str]:
         """Actual edit distance calculation.
 
         Can be initialized with the last cached row and a start position in
@@ -506,9 +507,9 @@ class BeamEditDistance:
                         (dist[i][j - 1][0] + _COST_INS, _OP_INS),
                     )
 
-                    for op in ops:
-                        if dist[i][j][0] > op[0]:
-                            dist[i][j] = op
+                    for op_cost, op_name in ops:
+                        if dist[i][j][0] > op_cost:
+                            dist[i][j] = op_cost, op_name
 
         # get the trace
         trace = ""
@@ -557,11 +558,9 @@ class BeamEditDistance:
         # update cache with newly computed rows
         for word, row in zip(words_hyp[skip_num:], mat):
             if word not in node:
-                node[word] = [{}, None]
-            value = node[word]
-            if value[1] is None:
-                value[1] = tuple(row)
+                node[word] = ({}, tuple(row))
                 self._cache_size += 1
+            value = node[word]
             node = value[0]
 
     def _find_cache(self, words_hyp: List[str]) -> Tuple[int, List[List]]:

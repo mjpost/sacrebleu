@@ -3,7 +3,9 @@
 - 1.4.14 (in progress)
   - Added character-based tokenization (`-tok char`).
     Thanks to Christian Federmann.
-  - Added TER (`-m ter`). Thanks to Ales Tamchyna!
+  - Added TER (`-m ter`). Thanks to Ales Tamchyna! (fixes #90)
+  - Allow calling the script as a standalone utility (fixes #86)
+  - Fix type annotation issues (fixes #100) and mark sacrebleu as supporting mypy
   - Added WMT20 robustness test sets:
     - wmt20/robust/set1
     - wmt20/robust/set2
