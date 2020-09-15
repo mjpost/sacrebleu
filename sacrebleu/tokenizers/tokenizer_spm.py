@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import os
+import urllib.request
 
 from .tokenizer_none import NoneTokenizer
 
 class TokenizerSPM(NoneTokenizer):
     def signature(self):
         return 'spm'
-
-    def s3_get(self, bucket_name, s3_path, temp_file):
-        """Pull a file directly from S3."""
-        import boto3
-        s3_resource = boto3.resource("s3")
-        s3_resource.Bucket(bucket_name).download_fileobj(s3_path, temp_file)
 
     def __init__(self):
         try:
@@ -24,7 +19,8 @@ class TokenizerSPM(NoneTokenizer):
             )
         self.sp = spm.SentencePieceProcessor()
         if not os.path.exists('sacrebleu_tokenizer_spm.model'):
-            self.s3_get("fairusersglobal", "users/namangoyal/flores/spm_256000.model", open("sacrebleu_tokenizer_spm.model", 'wb'))
+            url = "https://dl.fbaipublicfiles.com/fairseq/models/flores/sacrebleu_tokenizer_spm.model"
+            urllib.request.urlretrieve(url, 'sacrebleu_tokenizer_spm.model')
         self.sp.Load("sacrebleu_tokenizer_spm.model")
 
     def __call__(self, line):
