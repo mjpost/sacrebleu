@@ -29,12 +29,14 @@ import argparse
 
 from .tokenizers import TOKENIZERS, DEFAULT_TOKENIZER
 from .dataset import DATASETS, DOMAINS, COUNTRIES, SUBSETS
-from .metrics import METRICS
+from .metrics import METRICS, AVG_TYPES
 
 from .utils import smart_open, filter_subset, get_available_origlangs, SACREBLEU_DIR
 from .utils import get_langpairs_for_testset, get_available_testsets
 from .utils import print_test_set, get_reference_files, download_test_set
 from . import __version__ as VERSION
+
+sacrelogger = logging.getLogger('sacrebleu')
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
@@ -45,14 +47,14 @@ try:
     signal(SIGPIPE, SIG_DFL)
 
 except ImportError:
-    logging.warning('Could not import signal.SIGPIPE (this is expected on Windows machines)')
-
+    sacrelogger.warning('Could not import signal.SIGPIPE (this is expected on Windows machines)')
 
 def parse_args():
     arg_parser = argparse.ArgumentParser(
         description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
                     'Quick usage: score your detokenized output against WMT\'14 EN-DE:\n'
                     '    cat output.detok.de | sacrebleu -t wmt14 -l en-de',
+        epilog=f'\n\033[93m You are using v{VERSION} from {__file__}\033[0m',
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     arg_parser.add_argument('--citation', '--cite', default=False, action='store_true',
@@ -84,7 +86,8 @@ def parse_args():
 
     # Metric selection
     arg_parser.add_argument('--metrics', '-m', choices=METRICS.keys(), nargs='+', default=['bleu'],
-                            help='metrics to compute (default: bleu)')
+                            metavar='METRIC',
+                            help=f'Metrics to compute. Known metrics: {list(METRICS)} (default: bleu)')
     arg_parser.add_argument('--sentence-level', '-sl', action='store_true', help='Output metric on each sentence.')
 
     # BLEU-related arguments
@@ -99,13 +102,31 @@ def parse_args():
     arg_parser.add_argument('--force', default=False, action='store_true',
                             help='insist that your tokenized input is actually detokenized')
 
+    arg_parser.add_argument('-a', '--average', metavar='average',
+                          choices=AVG_TYPES, default='macro',
+                          help='What weights to use for averaging (default: %(default)s)')
+
     # ChrF-related arguments
-    arg_parser.add_argument('--chrf-order', type=int, default=METRICS['chrf'].ORDER,
+    chrf_p = arg_parser.add_argument_group(title='CHRF args')
+    chrf_p.add_argument('--chrf-order', type=int, default=METRICS['chrf'].ORDER,
                             help='chrf character order (default: %(default)s)')
-    arg_parser.add_argument('--chrf-beta', type=int, default=METRICS['chrf'].BETA,
+    chrf_p.add_argument('--chrf-beta', type=int, default=METRICS['chrf'].BETA,
                             help='chrf BETA parameter (default: %(default)s)')
-    arg_parser.add_argument('--chrf-whitespace', action='store_true', default=False,
+    chrf_p.add_argument('--chrf-whitespace', action='store_true', default=False,
                             help='include whitespace in chrF calculation (default: %(default)s)')
+
+    # ReBLEU related args
+    rebleu_p = arg_parser.add_argument_group(title="ReBLEU Args")
+    rebleu_p.add_argument('-ro', '--rebleu-order', metavar='ORDER', type=int,
+                             default=METRICS['rebleu'].ORDER,
+                             help='ReBLEU ngram order (default: %(default)s)')
+
+
+    rebleu_p.add_argument('-rb', '--rebleu-beta', metavar='BETA', type=float,
+                             default=METRICS['rebleu'].BETA,
+                             help='BETA parameter that weights recall (default: %(default)s)')
+    rebleu_p.add_argument('--report',  type=str, help='ReBLEU report file path. (optional)')
+
 
     # Reporting related arguments
     arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',
@@ -149,64 +170,68 @@ def main():
         sys.exit(0)
 
     if args.sentence_level and len(args.metrics) > 1:
-        logging.error('Only one metric can be used with Sentence-level reporting.')
+        sacrelogger.error('Only one metric can be used with Sentence-level reporting.')
         sys.exit(1)
 
     if args.citation:
         if not args.test_set:
-            logging.error('I need a test set (-t).')
+            sacrelogger.error('I need a test set (-t).')
             sys.exit(1)
         for test_set in args.test_set.split(','):
             if 'citation' not in DATASETS[test_set]:
-                logging.error('No citation found for %s', test_set)
+                sacrelogger.error('No citation found for %s', test_set)
             else:
                 print(DATASETS[test_set]['citation'])
         sys.exit(0)
 
     if args.num_refs != 1 and (args.test_set is not None or len(args.refs) > 1):
-        logging.error('The --num-refs argument allows you to provide any number of tab-delimited references in a single file.')
-        logging.error('You can only use it with externaly-provided references, however (i.e., not with `-t`),')
-        logging.error('and you cannot then provide multiple reference files.')
+        sacrelogger.error('The --num-refs argument allows you to provide any number of tab-delimited references in a single file.')
+        sacrelogger.error('You can only use it with externaly-provided references, however (i.e., not with `-t`),')
+        sacrelogger.error('and you cannot then provide multiple reference files.')
         sys.exit(1)
 
     if args.test_set is not None:
         for test_set in args.test_set.split(','):
             if test_set not in DATASETS:
-                logging.error('Unknown test set "%s"', test_set)
-                logging.error('Please run with --list to see the available test sets.')
+                sacrelogger.error('Unknown test set "%s"', test_set)
+                sacrelogger.error('Please run with --list to see the available test sets.')
                 sys.exit(1)
 
     if args.test_set is None:
         if len(args.refs) == 0:
-            logging.error('I need either a predefined test set (-t) or a list of references')
-            logging.error(get_available_testsets())
+            sacrelogger.error('I need either a predefined test set (-t) or a list of references')
+            sacrelogger.error(get_available_testsets())
             sys.exit(1)
     elif len(args.refs) > 0:
-        logging.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
+        sacrelogger.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
         sys.exit(1)
     elif args.langpair is None:
-        logging.error('I need a language pair (-l).')
+        sacrelogger.error('I need a language pair (-l).')
         sys.exit(1)
     else:
         for test_set in args.test_set.split(','):
             langpairs = get_langpairs_for_testset(test_set)
             if args.langpair not in langpairs:
-                logging.error('No such language pair "%s"', args.langpair)
-                logging.error('Available language pairs for test set "%s": %s', test_set,
+                sacrelogger.error('No such language pair "%s"', args.langpair)
+                sacrelogger.error('Available language pairs for test set "%s": %s', test_set,
                               ', '.join(langpairs))
                 sys.exit(1)
 
     if args.echo:
         if args.langpair is None or args.test_set is None:
-            logging.warning("--echo requires a test set (--t) and a language pair (-l)")
+            sacrelogger.warning("--echo requires a test set (--t) and a language pair (-l)")
             sys.exit(1)
         for test_set in args.test_set.split(','):
             print_test_set(test_set, args.langpair, args.echo, args.origlang, args.subset)
         sys.exit(0)
 
     if args.test_set is not None and args.tokenize == 'none':
-        logging.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
+        sacrelogger.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
                         "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
+
+    if 'ter' in args.metrics and args.tokenize is not None:
+        logging.warning("Your setting of --tokenize will be ignored when "
+                        "computing TER")
 
     # Internal tokenizer settings
     if args.tokenize is None:
@@ -220,9 +245,9 @@ def main():
 
     if args.langpair is not None and 'bleu' in args.metrics:
         if args.langpair.split('-')[1] == 'zh' and args.tokenize != 'zh':
-            logging.warning('You should also pass "--tok zh" when scoring Chinese...')
+            sacrelogger.warning('You should also pass "--tok zh" when scoring Chinese...')
         if args.langpair.split('-')[1] == 'ja' and not args.tokenize.startswith('ja-'):
-            logging.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
+            sacrelogger.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
 
     # concat_ref_files is a list of list of reference filenames, for example:
     # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
@@ -233,7 +258,7 @@ def main():
         for test_set in args.test_set.split(','):
             ref_files = get_reference_files(test_set, args.langpair)
             if len(ref_files) == 0:
-                logging.warning('No references found for test set {}/{}.'.format(test_set, args.langpair))
+                sacrelogger.warning('No references found for test set {}/{}.'.format(test_set, args.langpair))
             concat_ref_files.append(ref_files)
 
     # Read references
@@ -244,7 +269,7 @@ def main():
                 if args.num_refs != 1:
                     splits = line.rstrip().split(sep='\t', maxsplit=args.num_refs-1)
                     if len(splits) != args.num_refs:
-                        logging.error('FATAL: line {}: expected {} fields, but found {}.'.format(lineno, args.num_refs, len(splits)))
+                        sacrelogger.error('FATAL: line {}: expected {} fields, but found {}.'.format(lineno, args.num_refs, len(splits)))
                         sys.exit(17)
                     for refno, split in enumerate(splits):
                         full_refs[refno].append(split)
@@ -271,7 +296,7 @@ def main():
             message += ' with'
             message += '' if args.origlang is None else ' origlang=' + args.origlang
             message += '' if args.subset is None else ' subset=' + args.subset
-        logging.error(message)
+        sacrelogger.error(message)
         sys.exit(1)
 
     # Create metric inventory, let each metric consume relevant args from argparse
@@ -288,13 +313,13 @@ def main():
         sys.exit(0)
 
     # Else, handle system level
-    for metric in metrics:
+    for metric_name, metric in zip(args.metrics, metrics):
         try:
             score = metric.corpus_score(system, refs)
         except EOFError:
-            logging.error('The input and reference stream(s) were of different lengths.')
+            sacrelogger.error('The input and reference stream(s) were of different lengths.')
             if args.test_set is not None:
-                logging.error('\nThis could be a problem with your system output or with sacreBLEU\'s reference database.\n'
+                sacrelogger.warning('\nThis could be a problem with your system output or with sacreBLEU\'s reference database.\n'
                               'If the latter, you can clean out the references cache by typing:\n'
                               '\n'
                               '    rm -r %s/%s\n'
@@ -304,6 +329,9 @@ def main():
             sys.exit(1)
         else:
             print(score.format(args.width, args.score_only, metric.signature))
+            if args.report and hasattr(score, 'write_report'):
+                score.write_report(args.report + '.' + metric_name)
+
 
     if args.detail:
         width = args.width

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
@@ -35,6 +35,7 @@ CMD="python3 -m sacrebleu"
 limit_test=${1:-}
 
 SKIP_CHRF=${SKIP_CHRF:-}
+SKIP_TER=${SKIP_TER:-}
 SKIP_MECAB=${SKIP_MECAB:-}
 
 # TEST 1: download and process WMT17 data
@@ -561,6 +562,129 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
         let i++
     done
 done
+
+#######################################################
+# Pre-computed TER scores from official implementation
+# Cmd: java -jar tercom.7.25.jar -r REF -h HYP | grep '^Total TER' | awk '{ printf "%.3f\n", $3 }'
+#######################################################
+declare -A TER=( ["newstest2017.online-A.0.cs-en.sgm"]=0.637
+                 ["newstest2017.online-B.0.cs-en.sgm"]=0.605
+                 ["newstest2017.PJATK.4760.cs-en.sgm"]=0.664
+                 ["newstest2017.uedin-nmt.4955.cs-en.sgm"]=0.584
+                 ["newstest2017.CU-Chimera.4886.en-cs.sgm"]=0.696
+                 ["newstest2017.limsi-factored-norm.4957.en-cs.sgm"]=0.696
+                 ["newstest2017.LIUM-FNMT.4852.en-cs.sgm"]=0.699
+                 ["newstest2017.LIUM-NMT.4947.en-cs.sgm"]=0.701
+                 ["newstest2017.online-A.0.en-cs.sgm"]=0.743
+                 ["newstest2017.online-B.0.en-cs.sgm"]=0.703
+                 ["newstest2017.PJATK.4761.en-cs.sgm"]=0.757
+                 ["newstest2017.uedin-nmt.4956.en-cs.sgm"]=0.667
+                 ["newstest2017.C-3MA.4959.en-de.sgm"]=0.669
+                 ["newstest2017.FBK.4870.en-de.sgm"]=0.636
+                 ["newstest2017.KIT.4950.en-de.sgm"]=0.641
+                 ["newstest2017.LIUM-NMT.4900.en-de.sgm"]=0.633
+                 ["newstest2017.LMU-nmt-reranked.4934.en-de.sgm"]=0.618
+                 ["newstest2017.LMU-nmt-single.4893.en-de.sgm"]=0.626
+                 ["newstest2017.online-A.0.en-de.sgm"]=0.690
+                 ["newstest2017.online-B.0.en-de.sgm"]=0.632
+                 ["newstest2017.online-F.0.en-de.sgm"]=0.756
+                 ["newstest2017.online-G.0.en-de.sgm"]=0.733
+                 ["newstest2017.PROMT-Rule-based.4735.en-de.sgm"]=0.752
+                 ["newstest2017.RWTH-nmt-ensemble.4921.en-de.sgm"]=0.628
+                 ["newstest2017.SYSTRAN.4847.en-de.sgm"]=0.611
+                 ["newstest2017.TALP-UPC.4834.en-de.sgm"]=0.685
+                 ["newstest2017.uedin-nmt.4722.en-de.sgm"]=0.612
+                 ["newstest2017.xmu.4910.en-de.sgm"]=0.622
+                 ["newstest2017.AaltoHnmtFlatcat.4798.en-fi.sgm"]=0.750
+                 ["newstest2017.AaltoHnmtMultitask.4873.en-fi.sgm"]=0.673
+                 ["newstest2017.apertium-unconstrained.4769.en-fi.sgm"]=1.246
+                 ["newstest2017.HY-AH.4797.en-fi.sgm"]=0.857
+                 ["newstest2017.HY-HNMT.4961.en-fi.sgm"]=0.676
+                 ["newstest2017.HY-SMT.4882.en-fi.sgm"]=0.754
+                 ["newstest2017.jhu-nmt-lattice-rescore.4903.en-fi.sgm"]=0.758
+                 ["newstest2017.jhu-pbmt.4968.en-fi.sgm"]=0.778
+                 ["newstest2017.online-A.0.en-fi.sgm"]=0.761
+                 ["newstest2017.online-B.0.en-fi.sgm"]=0.665
+                 ["newstest2017.online-G.0.en-fi.sgm"]=0.767
+                 ["newstest2017.TALP-UPC.4939.en-fi.sgm"]=0.806
+                 ["newstest2017.C-3MA.5069.en-lv.sgm"]=0.843
+                 ["newstest2017.HY-HNMT.5066.en-lv.sgm"]=0.786
+                 ["newstest2017.jhu-pbmt.4969.en-lv.sgm"]=0.815
+                 ["newstest2017.KIT.5062.en-lv.sgm"]=0.773
+                 ["newstest2017.limsi-factored-norm.5041.en-lv.sgm"]=0.780
+                 ["newstest2017.LIUM-FNMT.5043.en-lv.sgm"]=0.780
+                 ["newstest2017.LIUM-NMT.5042.en-lv.sgm"]=0.769
+                 ["newstest2017.online-A.0.en-lv.sgm"]=0.846
+                 ["newstest2017.online-B.0.en-lv.sgm"]=0.754
+                 ["newstest2017.PJATK.4744.en-lv.sgm"]=0.868
+                 ["newstest2017.tilde-c-nmt-smt-hybrid.5049.en-lv.sgm"]=0.731
+                 ["newstest2017.tilde-nc-nmt-smt-hybrid.5047.en-lv.sgm"]=0.721
+                 ["newstest2017.tilde-nc-smt.5044.en-lv.sgm"]=0.747
+                 ["newstest2017.uedin-nmt.5016.en-lv.sgm"]=0.772
+                 ["newstest2017.usfd-consensus-kit.5078.en-lv.sgm"]=0.950
+                 ["newstest2017.usfd-consensus-qt21.5077.en-lv.sgm"]=0.946
+                 ["newstest2017.afrl-mitll-backtrans.4907.en-ru.sgm"]=0.655
+                 ["newstest2017.jhu-pbmt.4986.en-ru.sgm"]=0.658
+                 ["newstest2017.online-A.0.en-ru.sgm"]=0.661
+                 ["newstest2017.online-B.0.en-ru.sgm"]=0.563
+                 ["newstest2017.online-F.0.en-ru.sgm"]=0.809
+                 ["newstest2017.online-G.0.en-ru.sgm"]=0.618
+                 ["newstest2017.PROMT-Rule-based.4736.en-ru.sgm"]=0.667
+                 ["newstest2017.uedin-nmt.4756.en-ru.sgm"]=0.614
+                 ["newstest2017.JAIST.4858.en-tr.sgm"]=0.875
+                 ["newstest2017.jhu-nmt-lattice-rescore.4904.en-tr.sgm"]=0.864
+                 ["newstest2017.jhu-pbmt.4970.en-tr.sgm"]=0.874
+                 ["newstest2017.LIUM-NMT.4953.en-tr.sgm"]=0.752
+                 ["newstest2017.online-A.0.en-tr.sgm"]=0.787
+                 ["newstest2017.online-B.0.en-tr.sgm"]=0.677
+                 ["newstest2017.uedin-nmt.4932.en-tr.sgm"]=0.747
+                 ["newstest2017.CASICT-DCU-NMT.5157.en-zh.sgm"]=0.999
+                 ["newstest2017.online-A.0.en-zh.sgm"]=2.936
+                 ["newstest2017.online-B.0.en-zh.sgm"]=1.092
+                 ["newstest2017.online-F.0.en-zh.sgm"]=1.114
+                 ["newstest2017.online-G.0.en-zh.sgm"]=1.158
+                 ["newstest2017.Oregon-State-University-S.5174.en-zh.sgm"]=5.622
+                 ["newstest2017.SogouKnowing-nmt.5131.en-zh.sgm"]=1.402
+                 ["newstest2017.uedin-nmt.5111.en-zh.sgm"]=1.334
+                 ["newstest2017.UU-HNMT.5134.en-zh.sgm"]=1.000
+                 ["newstest2017.xmunmt.5165.en-zh.sgm"]=1.366
+                  )
+
+if [ -z $SKIP_TER ]; then
+  echo "-------------------"
+  echo "Starting TER tests"
+  echo "-------------------"
+  for pair in cs-en en-cs en-de en-fi en-lv en-ru en-tr en-zh; do
+      source=$(echo $pair | cut -d- -f1)
+      target=$(echo $pair | cut -d- -f2)
+      for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
+          name=$(basename $sgm)
+
+          if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
+
+          if [[ ! -v "TER[$name]" ]]; then continue ; fi  # official Tercom fails for some outputs...
+
+          sys=$(basename $sgm .sgm | perl -pe 's/newstest2017\.//')
+          txt=$(dirname $sgm | perl -pe 's/sgm/txt/')/$(basename $sgm .sgm)
+          src=wmt17-submitted-data/sgm/sources/newstest2017-$source$target-src.$source.sgm
+          ref=wmt17-submitted-data/sgm/references/newstest2017-$source$target-ref.$target.sgm
+
+          score=$(cat $txt | ${CMD} -w 3 -t wmt17 -l $source-$target -b --metrics ter)
+
+          expected_score="${TER[$name]}"
+
+          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 0.01 else 0)" | python
+
+          if [[ $? -eq 1 ]]; then
+              echo "FAILED test $pair/$sys (wanted $expected_score got $score)"
+              exit 1
+          fi
+          echo "Passed $source-$target $sys tercom: $expected_score sacreTER: $score"
+
+          let i++
+      done
+  done
+fi
 
 #############
 # Mecab tests
