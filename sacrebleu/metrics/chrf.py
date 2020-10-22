@@ -130,6 +130,8 @@ class CHRF:
         :param references: Reference string(s).
         :return: Chrf score.
         """
+        assert not isinstance(references, str), \
+            "sentence_score needs a list of references, not a single string"
         stats = self.get_sentence_statistics(hypothesis, references)
         return self.compute_chrf(stats, self.order, self.beta)
 

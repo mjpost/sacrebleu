@@ -224,7 +224,8 @@ class BLEU:
         :param use_effective_order: Account for references that are shorter than the largest n-gram.
         :return: a `BLEUScore` object containing everything you'd want
         """
-        assert not isinstance(references, str), "sentence_score needs a list of references, not a single string"
+        assert not isinstance(references, str), \
+            "sentence_score needs a list of references, not a single string"
         return self.corpus_score(hypothesis, [[ref] for ref in references],
                                  use_effective_order=use_effective_order)
 
