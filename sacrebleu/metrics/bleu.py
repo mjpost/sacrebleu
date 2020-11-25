@@ -62,6 +62,9 @@ class BLEUScore(BaseScore):
             rl=self.ref_len)
         return s
 
+    def __repr__(self):
+        return self.format()
+
 
 class BLEU:
     NGRAM_ORDER = 4

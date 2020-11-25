@@ -80,6 +80,9 @@ class TERScore(BaseScore):
         prefix = "{}+{}".format(self.prefix, signature) if signature else self.prefix
         return '{pr} = {sc:.{w}f}'.format(pr=prefix, sc=self.score, w=width)
 
+    def __repr__(self):
+        return self.format()
+
 
 class TERSignature(Signature):
     def __init__(self, args):
