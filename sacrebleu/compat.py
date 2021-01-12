@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 from typing import Union, Iterable, List
 from argparse import Namespace
 
-from .tokenizers import DEFAULT_TOKENIZER, TOKENIZERS
+from .tokenizers import DEFAULT_TOKENIZER
 from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
 
 
@@ -47,6 +45,7 @@ def raw_corpus_bleu(sys_stream,
 
     :param sys_stream: the system stream (a sequence of segments)
     :param ref_streams: a list of one or more reference streams (each a sequence of segments)
+    :param smooth_value: The smoothing value for `floor`. The default here is 0.
     :return: Returns a `BLEUScore` object.
     """
     return corpus_bleu(
@@ -68,8 +67,8 @@ def sentence_bleu(hypothesis: str,
 
     :param hypothesis: Hypothesis string.
     :param references: List of reference strings.
-    :param smooth_method: The smoothing method to use
-    :param smooth_value: For 'floor' smoothing, the floor value to use.
+    :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
+    :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
     :param use_effective_order: Account for references that are shorter than the largest n-gram.
     :return: Returns a `BLEUScore` object.
     """
