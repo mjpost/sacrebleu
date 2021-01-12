@@ -1,6 +1,10 @@
 # VERSION HISTORY
 
 - 1.4.15 (in progress)
+  - Fix an assertion error in chrF (#121)
+  - Add missing `__repr__()` methods for BLEU and TER
+  - TER: Fix exception when `--short` is used (#131)
+  - Pin Mecab version to 1.0.3 for Python 3.5 support
 
 - 1.4.14 (2020-09-13)
   - Added character-based tokenization (`-tok char`).
