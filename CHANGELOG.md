@@ -9,6 +9,7 @@
   - [API Change]: `sacrebleu.sentence_bleu()` now uses the `exp` smoothing method
     similar to the CLI's --sentence-level behavior.
   - Add smoothing value to BLEU signature (#98)
+  - dataset: Fix IWSLT links (#128)
 
 - 1.4.14 (2020-09-13)
   - Added character-based tokenization (`-tok char`).
