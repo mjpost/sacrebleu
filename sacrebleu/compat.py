@@ -40,7 +40,7 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
 
 def raw_corpus_bleu(sys_stream,
                     ref_streams,
-                    smooth_value=None) -> BLEUScore:
+                    smooth_value=0) -> BLEUScore:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
     It uses no tokenization and 'floor' smoothing, with the floor default to 0 (no smoothing).
