@@ -56,7 +56,7 @@ def raw_corpus_bleu(sys_stream,
 
 def sentence_bleu(hypothesis: str,
                   references: List[str],
-                  smooth_method: str = 'floor',
+                  smooth_method: str = 'exp',
                   smooth_value: float = None,
                   use_effective_order: bool = True) -> BLEUScore:
     """
