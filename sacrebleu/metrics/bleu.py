@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import math
 import logging
 from collections import Counter
@@ -12,6 +10,7 @@ from .base import BaseScore, Signature
 
 sacrelogger = logging.getLogger('sacrebleu')
 
+
 class BLEUSignature(Signature):
     def __init__(self, args):
         super().__init__(args)
@@ -23,8 +22,22 @@ class BLEUSignature(Signature):
             'numrefs': '#',
         })
 
+        # Construct a combined string for smoothing method and value
+        smooth_str = self.args['smooth_method']
+        smooth_def = BLEU.SMOOTH_DEFAULTS[smooth_str]
+
+        # If the method requires a parameter, add it within brackets
+        if smooth_def is not None:
+            # the following can be None if the user wants to use the default
+            smooth_val = self.args['smooth_value']
+
+            if smooth_val is None:
+                smooth_val = smooth_def
+
+            smooth_str += '[{:.2f}]'.format(smooth_val)
+
         self.info.update({
-            'smooth': self.args['smooth_method'],
+            'smooth': smooth_str,
             'case': 'lc' if self.args['lc'] else 'mixed',
             'tok': TOKENIZERS[self.args['tokenize']]().signature(),
             'numrefs': self.args.get('num_refs', '?'),
@@ -103,7 +116,7 @@ class BLEU:
         :return: a dictionary containing ngrams and counts
         """
 
-        ngrams = Counter() # type: Counter
+        ngrams = Counter()  # type: Counter
         tokens = line.split()
         for n in range(min_order, max_order + 1):
             for i in range(0, len(tokens) - n + 1):
