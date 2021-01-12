@@ -22,8 +22,8 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
 
     :param sys_stream: The system stream (a sequence of segments)
     :param ref_streams: A list of one or more reference streams (each a sequence of segments)
-    :param smooth_method: The smoothing method to use
-    :param smooth_value: For 'floor' smoothing, the floor to use
+    :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
+    :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
     :param force: Ignore data that looks already tokenized
     :param lowercase: Lowercase the data
     :param tokenize: The tokenizer to use

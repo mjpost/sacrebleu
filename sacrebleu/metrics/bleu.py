@@ -160,7 +160,7 @@ class BLEU:
         :param total: List of counts of total ngrams, 1 <= n <= NGRAM_ORDER
         :param sys_len: The cumulative system length
         :param ref_len: The cumulative reference length
-        :param smooth: The smoothing method to use
+        :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
         :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
         :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of NGRAM_ORDER.
         :return: A BLEU object with the score (100-based) and other statistics.
