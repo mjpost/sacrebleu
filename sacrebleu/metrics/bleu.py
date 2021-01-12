@@ -3,7 +3,6 @@
 import math
 import logging
 from collections import Counter
-from itertools import zip_longest
 from typing import List, Iterable, Union
 
 from ..tokenizers import TOKENIZERS
@@ -256,10 +255,18 @@ class BLEU:
         # look for already-tokenized sentences
         tokenized_count = 0
 
+        # sanity checks
+        if any(len(ref_stream) != len(sys_stream) for ref_stream in ref_streams):
+            raise EOFError("System and reference streams have different lengths!")
+        if any(line is None for line in sys_stream):
+            raise EOFError("Undefined line in system stream!")
+
         fhs = [sys_stream] + ref_streams
-        for lines in zip_longest(*fhs):
-            if None in lines:
-                raise EOFError("Source and reference streams have different lengths!")
+        for lines in zip(*fhs):
+            # remove undefined references (i.e. we have fewer references for this particular sentence)
+            lines = [x for x in lines if x is not None]
+            if len(lines) < 2:  # we need at least system + 1 defined reference
+                raise EOFError("No valid references for a sentence!")
 
             if self.lc:
                 lines = [x.lower() for x in lines]
