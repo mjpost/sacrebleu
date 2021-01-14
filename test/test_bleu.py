@@ -82,12 +82,12 @@ def test_offset(hypothesis, reference, expected_with_offset, expected_without_of
     score_without_offset = sacrebleu.raw_corpus_bleu(hypothesis, reference, 0.0).score / 100
     assert abs(expected_without_offset - score_without_offset) < EPSILON
 
-    # the default argument value is 0, test the same without passing it
-    score_without_offset = sacrebleu.raw_corpus_bleu(hypothesis, reference).score / 100
-    assert abs(expected_without_offset - score_without_offset) < EPSILON
-
     # let it use BLEU's internal default of 0.1 through passing `None`
     score_with_offset = sacrebleu.raw_corpus_bleu(hypothesis, reference, None).score / 100
+    assert abs(expected_with_offset - score_with_offset) < EPSILON
+
+    # let it use BLEU's internal default of 0.1
+    score_with_offset = sacrebleu.raw_corpus_bleu(hypothesis, reference).score / 100
     assert abs(expected_with_offset - score_with_offset) < EPSILON
 
 @pytest.mark.parametrize("statistics, offset, expected_score", test_case_degenerate_stats)
