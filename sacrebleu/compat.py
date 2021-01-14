@@ -38,14 +38,14 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
 
 def raw_corpus_bleu(sys_stream,
                     ref_streams,
-                    smooth_value=0) -> BLEUScore:
+                    smooth_value=BLEU.SMOOTH_DEFAULTS['floor']) -> BLEUScore:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
-    It uses no tokenization and 'floor' smoothing, with the floor default to 0 (no smoothing).
+    It uses no tokenization and 'floor' smoothing, with the floor default to 0.1.
 
     :param sys_stream: the system stream (a sequence of segments)
     :param ref_streams: a list of one or more reference streams (each a sequence of segments)
-    :param smooth_value: The smoothing value for `floor`. The default here is 0.
+    :param smooth_value: The smoothing value for `floor`. If not given, the default of 0.1 is used.
     :return: Returns a `BLEUScore` object.
     """
     return corpus_bleu(
