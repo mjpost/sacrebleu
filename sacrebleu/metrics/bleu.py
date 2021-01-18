@@ -278,11 +278,10 @@ class BLEU:
         if any(line is None for line in sys_stream):
             raise EOFError("Undefined line in system stream!")
 
-        fhs = [sys_stream] + ref_streams
-        for lines in zip(*fhs):
+        for output, *refs in zip(sys_stream, *ref_streams):
             # remove undefined/empty references (i.e. we have fewer references for this particular sentence)
             # but keep empty hypothesis (it's always defined thanks to the sanity check above)
-            lines = [lines[0]] + [x for x in lines[1:] if x is not None and x != ""]
+            lines = [output] + [x for x in refs if x is not None and x != ""]
             if len(lines) < 2:  # we need at least hypothesis + 1 defined & non-empty reference
                 raise EOFError("No valid references for a sentence!")
 
