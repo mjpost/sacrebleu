@@ -1,6 +1,16 @@
 # VERSION HISTORY
 
-- 1.4.15 (in progress)
+- 1.5.0 (2021-01-15)
+  - Fix an assertion error in chrF (#121)
+  - Add missing `__repr__()` methods for BLEU and TER
+  - TER: Fix exception when `--short` is used (#131)
+  - Pin Mecab version to 1.0.3 for Python 3.5 support
+  - [API Change]: Default value for `floor` smoothing is now 0.1 instead of 0.
+  - [API Change]: `sacrebleu.sentence_bleu()` now uses the `exp` smoothing method,
+    exactly the same as the CLI's --sentence-level behavior. This was mainly done
+    to make two methods behave the same.
+  - Add smoothing value to BLEU signature (#98)
+  - dataset: Fix IWSLT links (#128)
 
 - 1.4.14 (2020-09-13)
   - Added character-based tokenization (`-tok char`).
