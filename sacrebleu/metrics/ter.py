@@ -84,8 +84,13 @@ class TERScore(BaseScore):
 class TERSignature(Signature):
     def __init__(self, args):
         super().__init__(args)
-        tokenizer = TER.create_tokenizer(args)
-        self.info.update({"tok": tokenizer.signature()})
+        self._abbr.update({
+            'tok': 't',
+        })
+
+        self.info.update({
+            'tok': TER.create_tokenizer(args).signature(),
+        })
 
 
 class TER:
@@ -583,4 +588,3 @@ class BeamEditDistance:
                 break
 
         return start_position, dist
-

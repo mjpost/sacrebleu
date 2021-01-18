@@ -57,6 +57,7 @@ try:
 except ImportError:
     sacrelogger.warning('Could not import signal.SIGPIPE (this is expected on Windows machines)')
 
+
 def parse_args():
     arg_parser = argparse.ArgumentParser(
         description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
@@ -202,7 +203,7 @@ def main():
             if args.langpair not in langpairs:
                 sacrelogger.error('No such language pair "%s"', args.langpair)
                 sacrelogger.error('Available language pairs for test set "%s": %s', test_set,
-                              ', '.join(langpairs))
+                                  ', '.join(langpairs))
                 sys.exit(1)
 
     if args.echo:
@@ -215,7 +216,7 @@ def main():
 
     if args.test_set is not None and args.tokenize == 'none':
         sacrelogger.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
-                        "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
+                            "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
 
     if 'ter' in args.metrics and args.tokenize is not None:
         logging.warning("Your setting of --tokenize will be ignored when "
@@ -307,13 +308,13 @@ def main():
         except EOFError:
             sacrelogger.error('The input and reference stream(s) were of different lengths.')
             if args.test_set is not None:
-                sacrelogger('\nThis could be a problem with your system output or with sacreBLEU\'s reference database.\n'
-                              'If the latter, you can clean out the references cache by typing:\n'
-                              '\n'
-                              '    rm -r %s/%s\n'
-                              '\n'
-                              'They will be downloaded automatically again the next time you run sacreBLEU.', SACREBLEU_DIR,
-                              args.test_set)
+                sacrelogger.error('\nThis could be a problem with your system output or with sacreBLEU\'s reference database.\n'
+                                  'If the latter, you can clean out the references cache by typing:\n'
+                                  '\n'
+                                  '    rm -r %s/%s\n'
+                                  '\n'
+                                  'They will be downloaded automatically again the next time you run sacreBLEU.', SACREBLEU_DIR,
+                                  args.test_set)
             sys.exit(1)
         else:
             print(score.format(args.width, args.score_only, metric.signature))

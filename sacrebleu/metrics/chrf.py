@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import re
 from collections import Counter
 from itertools import zip_longest
@@ -39,9 +37,6 @@ class CHRFScore(BaseScore):
 
         prefix = "{}+{}".format(self.prefix, signature) if signature else self.prefix
         return '{pr} = {sc:.{w}f}'.format(pr=prefix, sc=self.score, w=width)
-
-    def __repr__(self):
-        return self.format()
 
 
 class CHRF:
