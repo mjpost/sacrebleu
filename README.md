@@ -12,6 +12,8 @@ Why use this version of BLEU?
 - It produces the same values as official script (`mteval-v13a.pl`) used by WMT
 - It outputs the BLEU score without the comma, so you don't have to remove it with `sed` (Looking at you, `multi-bleu.perl`)
 
+The official version is hosted at <https://github.com/mjpost/sacrebleu>.
+
 # QUICK START
 
 Install the Python module (Python 3 only)
@@ -111,7 +113,7 @@ SacreBLEU is licensed under the Apache 2.0 License.
 
 This was all Rico Sennrich's idea.
 Originally written by Matt Post.
-The official version can be found at <https://github.com/mjpost/sacrebleu>.
+New features and ongoing support provided by Martin Popel (@martinpopel) and Ozan Caglayan (@ozancaglayan).
 
 If you use SacreBLEU, please cite the following:
 

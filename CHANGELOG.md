@@ -11,7 +11,8 @@
     to make two methods behave the same.
   - Add smoothing value to BLEU signature (#98)
   - dataset: Fix IWSLT links (#128)
-  - Allow variable number of references for BLEU (only via API) (#130)
+  - Allow variable number of references for BLEU (only via API) (#130).
+    Thanks to Ondrej Dusek (@tuetschek)
 
 - 1.4.14 (2020-09-13)
   - Added character-based tokenization (`-tok char`).
