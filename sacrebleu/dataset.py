@@ -24,7 +24,8 @@
 DATASETS = {
     "mtedx/valid": {
         "data": ['https://raw.githubusercontent.com/esalesky/mtedx-eval/main/valid.tar.gz'],
-        "description": 'mTEDx evaluation data, valid',
+        "description": 'mTEDx evaluation data, valid: http://openslr.org/100',
+        "citation": "@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
         "md5": ['866e44c55657c6c485ef96a244c0fe07'],
         "el-en": ['valid/mtedx-valid-elen.el','valid/mtedx-valid-elen.en'],
         "es-en": ['valid/mtedx-valid-esen.es','valid/mtedx-valid-esen.en'],
@@ -42,7 +43,8 @@ DATASETS = {
     },
     "mtedx/test": {
         "data": ['https://raw.githubusercontent.com/esalesky/mtedx-eval/main/test.tar.gz'],
-        "description": 'mTEDx evaluation data, test',
+        "description": 'mTEDx evaluation data, test: http://openslr.org/100',
+        "citation": "@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
         "md5": ['ac79c5a5ab1b615eecd6dfbc163c0588'],
         "el-en": ['test/mtedx-test-elen.el','test/mtedx-test-elen.en'],
         "es-en": ['test/mtedx-test-esen.es','test/mtedx-test-esen.en'],
