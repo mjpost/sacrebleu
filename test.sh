@@ -347,6 +347,7 @@ if [ -z $SKIP_CHRF ]; then
       for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
           name=$(basename $sgm)
 
+          if [[ ! -v CHRF[$name] ]]; then continue; fi
           if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
 
           sys=$(basename $sgm .sgm | perl -pe 's/newstest2017\.//')
@@ -540,6 +541,7 @@ for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru
     for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
         name=$(basename $sgm)
 
+        if [[ ! -v MTEVAL[$name] ]]; then continue; fi
         if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
 
         sys=$(basename $sgm .sgm | perl -pe 's/newstest2017\.//')
