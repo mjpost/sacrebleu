@@ -1,5 +1,11 @@
 # VERSION HISTORY
 
+- 2.0.0 (2021-XX-XX)
+  - Refactor API: Allow each metric to have named arguments, drop the Namespace hack
+  - sacreBLEU: Group metric-specific arguments in `--help` output
+  - `compat.sentence_bleu:` Allow passing tokenizer and lowercasing argument
+    instead of forcing them to internal defaults.
+
 - 1.5.0 (2021-01-15)
   - Fix an assertion error in chrF (#121)
   - Add missing `__repr__()` methods for BLEU and TER
