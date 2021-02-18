@@ -17,15 +17,14 @@ class BaseScore:
 class Signature:
     """A convenience class to represent sacreBLEU reproducibility signatures.
 
-    :param args: The resulting `Namespace` returned from `parse_args()`.
-    Argument-value pairs from command-line would then be directly added
-    to the signature.
+    Args:
+        args: key-value dictionary passed from the actual metric instance.
     """
-    def __init__(self, args):
+    def __init__(self, args: dict):
         # Copy the dictionary
-        self.args = dict(args.__dict__)
-        self.short = self.args.get('short', False)
+        self.args = dict(args)
 
+        # Global items that are shared across all metrics
         self._abbr = {
             'version': 'v',
             'test': 't',
@@ -34,8 +33,9 @@ class Signature:
             'origlang': 'o',
         }
 
+        # Global items that are shared across all metrics
+        # None's will be ignored
         self.info = {
-            # None's will be ignored
             'version': __version__,
             'test': self.args.get('test_set', None),
             'lang': self.args.get('langpair', None),
@@ -43,16 +43,23 @@ class Signature:
             'subset': self.args.get('subset', None),
         }
 
-    def __str__(self):
-        """Returns a formatted signature string."""
+    def get(self, short: bool = False):
+        """Returns a string representation of the signature.
+
+        Args:
+            short: If True, shortened signature is produced.
+        """
         pairs = []
         for name in sorted(self.info.keys()):
             value = self.info[name]
             if value is not None:
-                final_name = self._abbr[name] if self.short else name
+                final_name = self._abbr[name] if short else name
                 pairs.append('{}.{}'.format(final_name, value))
 
         return '+'.join(pairs)
 
+    def __str__(self):
+        return self.get()
+
     def __repr__(self):
-        return self.__str__()
+        return self.get()

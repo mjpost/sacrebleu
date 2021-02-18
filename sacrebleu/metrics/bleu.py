@@ -1,7 +1,7 @@
 import math
 import logging
 from collections import Counter
-from typing import List, Iterable, Union
+from typing import List, Iterable, Union, Optional
 
 from ..tokenizers import TOKENIZERS
 from ..utils import my_log
@@ -12,7 +12,7 @@ sacrelogger = logging.getLogger('sacrebleu')
 
 
 class BLEUSignature(Signature):
-    def __init__(self, args):
+    def __init__(self, args: dict):
         super().__init__(args)
 
         self._abbr.update({
@@ -39,7 +39,7 @@ class BLEUSignature(Signature):
         self.info.update({
             'smooth': smooth_str,
             'case': 'lc' if self.args['lc'] else 'mixed',
-            'tok': TOKENIZERS[self.args['tokenize']]().signature(),
+            'tok': self.args['tokenizer_signature'],
             'numrefs': self.args.get('num_refs', '?'),
         })
 
@@ -76,8 +76,21 @@ class BLEUScore(BaseScore):
         return s
 
 
+# The default for the maximum n-gram order when computing precisions
+MAX_NGRAM_ORDER = 4
+
+
 class BLEU:
-    NGRAM_ORDER = 4
+    """Computes the BLEU metric given hypotheses and references.
+
+    Args:
+        lowercase: If True, lowercased BLEU is computed.
+        force:
+        tokenize:
+        smooth_method:
+        smooth_value:
+        max_ngram_order:
+    """
 
     SMOOTH_DEFAULTS = {
         # The defaults for `floor` and `add-k` are obtained from the following paper
@@ -90,21 +103,29 @@ class BLEU:
         'exp': None,    # No value is required
     }
 
-    def __init__(self, args):
+    def __init__(self, lc: bool = False,
+                 force: bool = False,
+                 tokenize: str = '13a', smooth_method: str = 'exp',
+                 smooth_value: Optional[float] = None,
+                 max_ngram_order: int = MAX_NGRAM_ORDER):
         self.name = 'bleu'
-        self.force = args.force
-        self.lc = args.lc
-        self.smooth_value = args.smooth_value
-        self.smooth_method = args.smooth_method
-        self.tokenizer = TOKENIZERS[args.tokenize]()
-        self.signature = BLEUSignature(args)
+        self.force = force
+        self.lc = lc
+        self.smooth_value = smooth_value
+        self.smooth_method = smooth_method
+        self.max_ngram_order = max_ngram_order
+        self.tokenizer = TOKENIZERS[tokenize]()
 
         # Sanity check
         assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
             "Unknown smooth_method '{}'".format(self.smooth_method)
 
+        # Build the signature
+        self.tokenizer_signature = self.tokenizer.signature()
+        self.signature = BLEUSignature(self.__dict__)
+
     @staticmethod
-    def reference_stats(refs, output_len):
+    def reference_stats(refs, output_len, max_ngram_order=MAX_NGRAM_ORDER):
         """Extracts reference statistics for a given segment.
 
         :param refs: A list of segment tokens.
@@ -127,7 +148,7 @@ class BLEU:
                 if reflen < closest_len:
                     closest_len = reflen
 
-            ngrams_ref = extract_word_ngrams(ref, 1, BLEU.NGRAM_ORDER)
+            ngrams_ref = extract_word_ngrams(ref, 1, max_ngram_order)
             for ngram in ngrams_ref.keys():
                 ngrams[ngram] = max(ngrams[ngram], ngrams_ref[ngram])
 
@@ -140,7 +161,8 @@ class BLEU:
                      ref_len: int,
                      smooth_method: str = 'none',
                      smooth_value=None,
-                     use_effective_order=False) -> BLEUScore:
+                     use_effective_order: bool = False,
+                     max_ngram_order: int = MAX_NGRAM_ORDER) -> BLEUScore:
         """Computes BLEU score from its sufficient statistics. Adds smoothing.
 
         Smoothing methods (citing "A Systematic Comparison of Smoothing Techniques for Sentence-Level BLEU",
@@ -151,13 +173,14 @@ class BLEU:
         - add-k: Method 2 (Generalizing Lin and Och, 2004)
         - exp: Method 3 (NIST smoothing method i.e. in use with mteval-v13a.pl)
 
-        :param correct: List of counts of correct ngrams, 1 <= n <= NGRAM_ORDER
-        :param total: List of counts of total ngrams, 1 <= n <= NGRAM_ORDER
+        :param correct: List of counts of correct ngrams, 1 <= n <= max_ngram_order
+        :param total: List of counts of total ngrams, 1 <= n <= max_ngram_order
         :param sys_len: The cumulative system length
         :param ref_len: The cumulative reference length
         :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
         :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
-        :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of NGRAM_ORDER.
+        :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of max_ngram_order.
+        :param max_ngram_order: If given, it overrides the maximum n-gram order (default: 4) when computing precisions.
         :return: A BLEU object with the score (100-based) and other statistics.
         """
         assert smooth_method in BLEU.SMOOTH_DEFAULTS.keys(), \
@@ -167,11 +190,11 @@ class BLEU:
         if smooth_value is None:
             smooth_value = BLEU.SMOOTH_DEFAULTS[smooth_method]
 
-        precisions = [0.0 for x in range(BLEU.NGRAM_ORDER)]
+        precisions = [0.0 for x in range(max_ngram_order)]
 
         smooth_mteval = 1.
-        effective_order = BLEU.NGRAM_ORDER
-        for n in range(1, BLEU.NGRAM_ORDER + 1):
+        effective_order = max_ngram_order
+        for n in range(1, max_ngram_order + 1):
             if smooth_method == 'add-k' and n > 1:
                 correct[n-1] += smooth_value
                 total[n-1] += smooth_value
@@ -190,11 +213,11 @@ class BLEU:
             else:
                 precisions[n-1] = 100. * correct[n-1] / total[n-1]
 
-        # If the system guesses no i-grams, 1 <= i <= NGRAM_ORDER, the BLEU
+        # If the system guesses no i-grams, 1 <= i <= max_ngram_order, the BLEU
         # score is 0 (technically undefined). This is a problem for sentence
         # level BLEU or a corpus of short sentences, where systems will get
-        # no credit if sentence lengths fall under the NGRAM_ORDER threshold.
-        # This fix scales NGRAM_ORDER to the observed maximum order.
+        # no credit if sentence lengths fall under the max_ngram_order threshold.
+        # This fix scales max_ngram_order to the observed maximum order.
         # It is only available through the API and off by default
 
         if sys_len < ref_len:
@@ -248,8 +271,8 @@ class BLEU:
         sys_len = 0
         ref_len = 0
 
-        correct = [0 for n in range(self.NGRAM_ORDER)]
-        total = [0 for n in range(self.NGRAM_ORDER)]
+        correct = [0 for n in range(self.max_ngram_order)]
+        total = [0 for n in range(self.max_ngram_order)]
 
         # look for already-tokenized sentences
         tokenized_count = 0
@@ -286,7 +309,7 @@ class BLEU:
             sys_len += output_len
             ref_len += closest_len
 
-            sys_ngrams = extract_word_ngrams(output, 1, BLEU.NGRAM_ORDER)
+            sys_ngrams = extract_word_ngrams(output, 1, self.max_ngram_order)
             for ngram in sys_ngrams.keys():
                 n = len(ngram.split())
                 correct[n-1] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))

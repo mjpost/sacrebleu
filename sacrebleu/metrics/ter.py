@@ -89,31 +89,29 @@ class TERSignature(Signature):
         })
 
         self.info.update({
-            'tok': TER.create_tokenizer(args).signature(),
+            'tok': self.args['tokenizer_signature'],
         })
 
 
 class TER:
-    TOKENIZER_DEFAULTS = {
-        "normalized": False,
-        "no_punct": False,
-        "asian_support": False,
-        "case_sensitive": False,
-    }
+    def __init__(self, normalized: bool = False,
+                 no_punct: bool = False,
+                 asian_support: bool = False,
+                 case_sensitive: bool = False):
+        self.name = 'ter'
+        self.normalized = normalized
+        self.no_punct = no_punct
+        self.asian_support = asian_support
+        self.case_sensitive = case_sensitive
 
-    @staticmethod
-    def create_tokenizer(args):
-        # hackish workaround for specifying tokenizer config
-        config = dict(TER.TOKENIZER_DEFAULTS)
-        args_vars = vars(args)
-        for k in config:
-            if k in args_vars:
-                config[k] = args_vars[k]
-        return TercomTokenizer(**config)
-
-    def __init__(self, args):
-        self.tokenizer = self.create_tokenizer(args)
-        self.signature = TERSignature(args)
+        self.tokenizer = TercomTokenizer(
+            normalized=self.normalized,
+            no_punct=self.no_punct,
+            asian_support=self.asian_support,
+            case_sensitive=self.case_sensitive,
+        )
+        self.tokenizer_signature = self.tokenizer.signature()
+        self.signature = TERSignature(self.__dict__)
 
     def corpus_score(self, sys_stream: Union[str, Iterable[str]],
                      ref_streams: Union[str, List[Iterable[str]]]) -> TERScore:

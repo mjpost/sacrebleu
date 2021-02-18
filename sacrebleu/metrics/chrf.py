@@ -16,8 +16,8 @@ class CHRFSignature(Signature):
         })
 
         self.info.update({
-            'space': str(self.args['chrf_whitespace']).lower(),
-            'numchars': self.args['chrf_order'],
+            'space': str(self.args['whitespace']).lower(),
+            'numchars': self.args['order'],
         })
 
 
@@ -40,20 +40,30 @@ class CHRFScore(BaseScore):
 
 
 class CHRF:
+    """Computes the chrF metric given hypotheses and references.
+
+    Args:
+        whitespace: If True, includes the whitespace character in chrF computation.
+        order: chrF character order
+        beta: chrF Beta parameter
+    """
+
     # Default values for CHRF
     ORDER = 6
 
     # default to 2 (per http://www.aclweb.org/anthology/W16-2341)
     BETA = 2
 
-    def __init__(self, args):
+    def __init__(self, whitespace: bool = False,
+                 order: int = ORDER,
+                 beta: float = BETA):
         self.name = 'chrf'
-        self.include_whitespace = args.chrf_whitespace
-        self.order = args.chrf_order
-        self.beta = args.chrf_beta
-        self.signature = CHRFSignature(args)
+        self.whitespace = whitespace
+        self.order = order
+        self.beta = beta
+        self.signature = CHRFSignature(self.__dict__)
 
-        if self.include_whitespace:
+        if self.whitespace:
             self._preprocess = lambda x: x
         else:
             self._preprocess = lambda x: re.sub(r'\s+', '', x).strip()
