@@ -1,8 +1,6 @@
 import pytest
 import sacrebleu
 
-from argparse import Namespace
-
 EPSILON = 1e-3
 
 test_cases = [
@@ -32,7 +30,6 @@ test_cases = [
 
 @pytest.mark.parametrize("hypotheses, references, expected_score", test_cases)
 def test_ter(hypotheses, references, expected_score):
-    args = Namespace(tokenize=sacrebleu.DEFAULT_TOKENIZER)
-    metric = sacrebleu.metrics.TER(args)
+    metric = sacrebleu.metrics.TER()
     score = metric.corpus_score(hypotheses, [references]).score
     assert abs(score - expected_score) < EPSILON
