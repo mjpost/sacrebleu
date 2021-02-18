@@ -1,6 +1,7 @@
-import re
 from itertools import zip_longest
 from typing import List, Iterable, Union
+
+from ..tokenizers import BaseTokenizer, TokenizerChrf
 
 from .base import BaseScore, Signature
 from .helpers import extract_char_ngrams
@@ -13,10 +14,12 @@ class CHRFSignature(Signature):
         self._abbr.update({
             'numchars': 'n',
             'space': 's',
+            'case': 'c',
         })
 
         self.info.update({
             'space': str(self.args['whitespace']).lower(),
+            'case': 'lc' if self.args['lowercase'] else 'mixed',
             'numchars': self.args['order'],
         })
 
@@ -46,6 +49,7 @@ class CHRF:
         whitespace: If True, includes the whitespace character in chrF computation.
         order: chrF character order
         beta: chrF Beta parameter
+        lowercase: Lowercase sentences prior computation
         num_refs: Number of references (not functional for chrF as of now)
     """
 
@@ -58,18 +62,20 @@ class CHRF:
     def __init__(self, whitespace: bool = False,
                  order: int = ORDER,
                  beta: float = BETA,
+                 lowercase: bool = False,
                  num_refs: int = 1):
         self.name = 'chrf'
-        self.whitespace = whitespace
-        self.order = order
         self.beta = beta
-        self.signature = CHRFSignature(self.__dict__)
+        self.order = order
         self.num_refs = num_refs
+        self.lowercase = lowercase
+        self.whitespace = whitespace
+        self.signature = CHRFSignature(self.__dict__)
 
         if self.whitespace:
-            self._preprocess = lambda x: x
+            self.tokenizer = BaseTokenizer()
         else:
-            self._preprocess = lambda x: re.sub(r'\s+', '', x).strip()
+            self.tokenizer = TokenizerChrf()
 
     @staticmethod
     def compute_chrf(statistics: List[int],
@@ -110,8 +116,8 @@ class CHRF:
         # NOTE: multi-reference not supported yet
         reference = references[0]
 
-        hypothesis = self._preprocess(hypothesis)
-        reference = self._preprocess(reference)
+        hypothesis = self.tokenizer(hypothesis)
+        reference = self.tokenizer(reference)
         statistics = [0] * (self.order * 3)
         for i in range(self.order):
             n = i + 1
