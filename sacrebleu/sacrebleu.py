@@ -235,21 +235,26 @@ def main():
         logging.warning("Your setting of --tokenize will be ignored when "
                         "computing TER")
 
-    # Internal tokenizer settings
+    # Parse languages for convenience
+    src_lang, trg_lang = '', ''
+    if args.langpair:
+        src_lang, trg_lang = args.langpair.split('-')
+
+    # Default tokenizer assignment (only affects BLEU as of now)
     if args.bleu_tokenize is None:
         # set default
-        if args.langpair is not None and args.langpair.split('-')[1] == 'zh':
+        if trg_lang == 'zh':
             args.bleu_tokenize = 'zh'
-        elif args.langpair is not None and args.langpair.split('-')[1] == 'ja':
+        elif trg_lang == 'ja':
             args.bleu_tokenize = 'ja-mecab'
         else:
             args.bleu_tokenize = DEFAULT_TOKENIZER
 
     if args.langpair is not None and 'bleu' in args.metrics:
-        if args.langpair.split('-')[1] == 'zh' and args.bleu_tokenize != 'zh':
-            sacrelogger.warning('You should also pass "--tok zh" when scoring Chinese...')
-        if args.langpair.split('-')[1] == 'ja' and not args.bleu_tokenize.startswith('ja-'):
-            sacrelogger.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
+        if trg_lang == 'zh' and args.bleu_tokenize != 'zh':
+            sacrelogger.warning('You should pass "--tok zh" when scoring Chinese.')
+        if trg_lang == 'ja' and not args.bleu_tokenize.startswith('ja-'):
+            sacrelogger.warning('You should pass "--tok ja-mecab" when scoring Japanese.')
 
     # concat_ref_files is a list of list of reference filenames, for example:
     # concat_ref_files = [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
