@@ -15,6 +15,7 @@ Please install them like so.
     pip install sacrebleu[ja]
 """
 
+
 class TokenizerJaMecab(NoneTokenizer):
     def __init__(self):
         if MeCab is None:

@@ -21,7 +21,7 @@ It also knows all the standard test sets and handles downloading, processing, an
 
 See the [README.md] file for more information.
 """
-from  .sacrebleu import main
+from .sacrebleu import main
 
 if __name__ == '__main__':
     main()
