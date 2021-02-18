@@ -42,6 +42,7 @@ from .metrics import METRICS
 from .utils import smart_open, filter_subset, get_available_origlangs, SACREBLEU_DIR
 from .utils import get_langpairs_for_testset, get_available_testsets
 from .utils import print_test_set, get_reference_files, download_test_set
+from .utils import args_to_dict
 from . import __version__ as VERSION
 
 sacrelogger = logging.getLogger('sacrebleu')
@@ -81,6 +82,8 @@ def parse_args():
                             help='download a test set and quit')
     arg_parser.add_argument('--echo', choices=['src', 'ref', 'both'], type=str, default=None,
                             help='output the source (src), reference (ref), or both (both, pasted) to STDOUT and quit')
+    arg_parser.add_argument('-V', '--version', action='version',
+                            version='%(prog)s {}'.format(VERSION))
 
     # I/O related arguments
     arg_parser.add_argument('--input', '-i', type=str, default='-',
@@ -95,42 +98,52 @@ def parse_args():
     # Metric selection
     arg_parser.add_argument('--metrics', '-m', choices=METRICS.keys(), nargs='+', default=['bleu'],
                             help='metrics to compute (default: bleu)')
-    arg_parser.add_argument('--sentence-level', '-sl', action='store_true', help='Output metric on each sentence.')
+    arg_parser.add_argument('--sentence-level', '-sl', action='store_true', help='Compute the metric for each sentence.')
 
     # BLEU-related arguments
-    arg_parser.add_argument('-lc', action='store_true', default=False, help='Use case-insensitive BLEU (default: False)')
-    arg_parser.add_argument('--smooth-method', '-s', choices=METRICS['bleu'].SMOOTH_DEFAULTS.keys(), default='exp',
-                            help='smoothing method: exponential decay (default), floor (increment zero counts), add-k (increment num/denom by k for n>1), or none')
-    arg_parser.add_argument('--smooth-value', '-sv', type=float, default=None,
-                            help='The value to pass to the smoothing technique, only used for floor and add-k. Default floor: {}, add-k: {}.'.format(
-                                METRICS['bleu'].SMOOTH_DEFAULTS['floor'], METRICS['bleu'].SMOOTH_DEFAULTS['add-k']))
-    arg_parser.add_argument('--tokenize', '-tok', choices=TOKENIZERS.keys(), default=None,
-                            help='Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `mecab` for Japanese and `mteval-v13a` otherwise.')
-    arg_parser.add_argument('--force', default=False, action='store_true',
-                            help='insist that your tokenized input is actually detokenized')
+    # since sacreBLEU had only support for BLEU initially, the argument names
+    # are not prefixed with 'bleu' as in chrF arguments for example.
+    # Let's do that manually here through dest= options, as otherwise
+    # things will get quite hard to maintain when other metrics are added.
+    bleu_args = arg_parser.add_argument_group('BLEU related arguments')
+    bleu_args.add_argument('-lc', action='store_true', default=False,
+                           dest='bleu_lc', help='Use case-insensitive BLEU (default: False)')
+    bleu_args.add_argument('--smooth-method', '-s', choices=METRICS['bleu'].SMOOTH_DEFAULTS.keys(), default='exp',
+                           dest='bleu_smooth_method',
+                           help='smoothing method: exponential decay (default), floor (increment zero counts), add-k (increment num/denom by k for n>1), or none')
+    bleu_args.add_argument('--smooth-value', '-sv', type=float, default=None,
+                           dest='bleu_smooth_value',
+                           help='The smoothing value. Only valid for floor and add-k. (Defaults: floor: {}, add-k: {})'.format(
+                               METRICS['bleu'].SMOOTH_DEFAULTS['floor'], METRICS['bleu'].SMOOTH_DEFAULTS['add-k']))
+    bleu_args.add_argument('--tokenize', '-tok', choices=TOKENIZERS.keys(), default=None,
+                           dest='bleu_tokenize',
+                           help='Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `mecab` for Japanese and `v13a` (mteval) otherwise.')
+    bleu_args.add_argument('--force', default=False, action='store_true',
+                           dest='bleu_force',
+                           help='insist that your tokenized input is actually detokenized')
 
     # ChrF-related arguments
-    arg_parser.add_argument('--chrf-order', type=int, default=METRICS['chrf'].ORDER,
-                            help='chrf character order (default: %(default)s)')
-    arg_parser.add_argument('--chrf-beta', type=int, default=METRICS['chrf'].BETA,
-                            help='chrf BETA parameter (default: %(default)s)')
-    arg_parser.add_argument('--chrf-whitespace', action='store_true', default=False,
-                            help='include whitespace in chrF calculation (default: %(default)s)')
+    chrf_args = arg_parser.add_argument_group('chrF related arguments')
+    chrf_args.add_argument('--chrf-order', type=int, default=METRICS['chrf'].ORDER,
+                           help='chrf character order (default: %(default)s)')
+    chrf_args.add_argument('--chrf-beta', type=int, default=METRICS['chrf'].BETA,
+                           help='chrf BETA parameter (default: %(default)s)')
+    chrf_args.add_argument('--chrf-whitespace', action='store_true', default=False,
+                           help='include whitespace in chrF calculation (default: %(default)s)')
 
     # Reporting related arguments
-    arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',
-                            help='suppress informative output')
-    arg_parser.add_argument('--short', default=False, action='store_true',
-                            help='produce a shorter (less human readable) signature')
-    arg_parser.add_argument('--score-only', '-b', default=False, action='store_true',
-                            help='output only the BLEU score')
-    arg_parser.add_argument('--width', '-w', type=int, default=1,
-                            help='floating point width (default: %(default)s)')
-    arg_parser.add_argument('--detail', '-d', default=False, action='store_true',
-                            help='print extra information (split test sets based on origlang)')
+    report_args = arg_parser.add_argument_group('Reporting related arguments')
+    report_args.add_argument('--quiet', '-q', default=False, action='store_true',
+                             help='suppress informative output')
+    report_args.add_argument('--short', default=False, action='store_true',
+                             help='produce a shorter (less human readable) signature')
+    report_args.add_argument('--score-only', '-b', default=False, action='store_true',
+                             help='output only the BLEU score')
+    report_args.add_argument('--width', '-w', type=int, default=1,
+                             help='floating point width (default: %(default)s)')
+    report_args.add_argument('--detail', '-d', default=False, action='store_true',
+                             help='print extra information (split test sets based on origlang)')
 
-    arg_parser.add_argument('-V', '--version', action='version',
-                            version='%(prog)s {}'.format(VERSION))
     args = arg_parser.parse_args()
     return args
 
@@ -175,7 +188,7 @@ def main():
 
     if args.num_refs != 1 and (args.test_set is not None or len(args.refs) > 1):
         sacrelogger.error('The --num-refs argument allows you to provide any number of tab-delimited references in a single file.')
-        sacrelogger.error('You can only use it with externaly-provided references, however (i.e., not with `-t`),')
+        sacrelogger.error('You can only use it with externally provided references, however (i.e., not with `-t`),')
         sacrelogger.error('and you cannot then provide multiple reference files.')
         sys.exit(1)
 
@@ -214,28 +227,28 @@ def main():
             print_test_set(test_set, args.langpair, args.echo, args.origlang, args.subset)
         sys.exit(0)
 
-    if args.test_set is not None and args.tokenize == 'none':
+    if args.test_set is not None and args.bleu_tokenize == 'none':
         sacrelogger.warning("You are turning off sacrebleu's internal tokenization ('--tokenize none'), presumably to supply\n"
                             "your own reference tokenization. Published numbers will not be comparable with other papers.\n")
 
-    if 'ter' in args.metrics and args.tokenize is not None:
+    if 'ter' in args.metrics and args.bleu_tokenize is not None:
         logging.warning("Your setting of --tokenize will be ignored when "
                         "computing TER")
 
     # Internal tokenizer settings
-    if args.tokenize is None:
+    if args.bleu_tokenize is None:
         # set default
         if args.langpair is not None and args.langpair.split('-')[1] == 'zh':
-            args.tokenize = 'zh'
+            args.bleu_tokenize = 'zh'
         elif args.langpair is not None and args.langpair.split('-')[1] == 'ja':
-            args.tokenize = 'ja-mecab'
+            args.bleu_tokenize = 'ja-mecab'
         else:
-            args.tokenize = DEFAULT_TOKENIZER
+            args.bleu_tokenize = DEFAULT_TOKENIZER
 
     if args.langpair is not None and 'bleu' in args.metrics:
-        if args.langpair.split('-')[1] == 'zh' and args.tokenize != 'zh':
+        if args.langpair.split('-')[1] == 'zh' and args.bleu_tokenize != 'zh':
             sacrelogger.warning('You should also pass "--tok zh" when scoring Chinese...')
-        if args.langpair.split('-')[1] == 'ja' and not args.tokenize.startswith('ja-'):
+        if args.langpair.split('-')[1] == 'ja' and not args.bleu_tokenize.startswith('ja-'):
             sacrelogger.warning('You should also pass "--tok ja-mecab" when scoring Japanese...')
 
     # concat_ref_files is a list of list of reference filenames, for example:
@@ -289,15 +302,22 @@ def main():
         sys.exit(1)
 
     # Create metric inventory, let each metric consume relevant args from argparse
-    metrics = [METRICS[met](args) for met in args.metrics]
+    metrics = []
+    for metric in args.metrics:
+        # Each metric's specific arguments are prefixed with `metricname_`
+        # for grouping. Filter accordingly and strip the prefixes prior to
+        # metric object construction.
+        metric_args = args_to_dict(args, metric.lower(), strip_prefix=True)
+        metrics.append(METRICS[metric](**metric_args))
 
     # Handle sentence level and quit
     if args.sentence_level:
         # one metric in use for sentence-level
         metric = metrics[0]
+        sig = metric.signature.get(short=args.short)
         for output, *references in zip(system, *refs):
             score = metric.sentence_score(output, references)
-            print(score.format(args.width, args.score_only, metric.signature))
+            print(score.format(args.width, args.score_only, sig))
 
         sys.exit(0)
 
@@ -317,7 +337,8 @@ def main():
                                   args.test_set)
             sys.exit(1)
         else:
-            print(score.format(args.width, args.score_only, metric.signature))
+            sig = metric.signature.get(short=args.short)
+            print(score.format(args.width, args.score_only, sig))
 
     if args.detail:
         width = args.width
