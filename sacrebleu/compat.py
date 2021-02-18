@@ -1,5 +1,4 @@
 from typing import Union, Iterable, List
-from argparse import Namespace
 
 from .tokenizers import DEFAULT_TOKENIZER
 from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
@@ -27,11 +26,10 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     :param tokenize: The tokenizer to use
     :return: a `BLEUScore` object
     """
-    args = Namespace(
-        smooth_method=smooth_method, smooth_value=smooth_value, force=force,
-        short=False, lc=lowercase, tokenize=tokenize)
+    metric = BLEU(
+        lc=lowercase, force=force, tokenize=tokenize,
+        smooth_method=smooth_method, smooth_value=smooth_value)
 
-    metric = BLEU(args)
     return metric.corpus_score(
         sys_stream, ref_streams, use_effective_order=use_effective_order)
 
@@ -58,6 +56,8 @@ def sentence_bleu(hypothesis: str,
                   references: List[str],
                   smooth_method: str = 'exp',
                   smooth_value: float = None,
+                  lowercase: bool = False,
+                  tokenize=DEFAULT_TOKENIZER,
                   use_effective_order: bool = True) -> BLEUScore:
     """
     Computes BLEU on a single sentence pair.
@@ -69,14 +69,15 @@ def sentence_bleu(hypothesis: str,
     :param references: List of reference strings.
     :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
     :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
+    :param lowercase: Lowercase the data
+    :param tokenize: The tokenizer to use
     :param use_effective_order: Account for references that are shorter than the largest n-gram.
     :return: Returns a `BLEUScore` object.
     """
-    args = Namespace(
-        smooth_method=smooth_method, smooth_value=smooth_value, force=False,
-        short=False, lc=False, tokenize=DEFAULT_TOKENIZER)
+    metric = BLEU(
+        lc=lowercase, tokenize=tokenize, force=False,
+        smooth_method=smooth_method, smooth_value=smooth_value)
 
-    metric = BLEU(args)
     return metric.sentence_score(
         hypothesis, references, use_effective_order=use_effective_order)
 
@@ -96,9 +97,10 @@ def corpus_chrf(hypotheses: Iterable[str],
     :param remove_whitespace: Whether to delete all whitespace from hypothesis and reference strings.
     :return: A `CHRFScore` object.
     """
-    args = Namespace(
-        chrf_order=order, chrf_beta=beta, chrf_whitespace=not remove_whitespace, short=False)
-    metric = CHRF(args)
+    metric = CHRF(
+        order=order,
+        beta=beta,
+        whitespace=not remove_whitespace)
     return metric.corpus_score(hypotheses, references)
 
 
@@ -117,9 +119,10 @@ def sentence_chrf(hypothesis: str,
     :param remove_whitespace: Whether to delete whitespaces from hypothesis and reference strings.
     :return: A `CHRFScore` object.
     """
-    args = Namespace(
-        chrf_order=order, chrf_beta=beta, chrf_whitespace=not remove_whitespace, short=False)
-    metric = CHRF(args)
+    metric = CHRF(
+        order=order,
+        beta=beta,
+        whitespace=not remove_whitespace)
     return metric.sentence_score(hypothesis, references)
 
 
@@ -140,10 +143,11 @@ def corpus_ter(hypotheses: Iterable[str],
     :param case_sensitive: Enable case sensitivity.
     :return: A `TERScore` object.
     """
-    args = Namespace(
-        normalized=normalized, no_punct=no_punct,
-        asian_support=asian_support, case_sensitive=case_sensitive)
-    metric = TER(args)
+    metric = TER(
+        normalized=normalized,
+        no_punct=no_punct,
+        asian_support=asian_support,
+        case_sensitive=case_sensitive)
     return metric.corpus_score(hypotheses, references)
 
 
@@ -164,8 +168,9 @@ def sentence_ter(hypothesis: str,
     :param case_sensitive: Enable case sensitivity.
     :return: A `TERScore` object.
     """
-    args = Namespace(
-        normalized=normalized, no_punct=no_punct,
-        asian_support=asian_support, case_sensitive=case_sensitive)
-    metric = TER(args)
+    metric = TER(
+        normalized=normalized,
+        no_punct=no_punct,
+        asian_support=asian_support,
+        case_sensitive=case_sensitive)
     return metric.sentence_score(hypothesis, references)
