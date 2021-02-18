@@ -313,6 +313,7 @@ def main():
         # for grouping. Filter accordingly and strip the prefixes prior to
         # metric object construction.
         metric_args = args_to_dict(args, metric.lower(), strip_prefix=True)
+        metric_args['num_refs'] = args.num_refs
         metrics.append(METRICS[metric](**metric_args))
 
     # Handle sentence level and quit

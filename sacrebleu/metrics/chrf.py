@@ -46,6 +46,7 @@ class CHRF:
         whitespace: If True, includes the whitespace character in chrF computation.
         order: chrF character order
         beta: chrF Beta parameter
+        num_refs: Number of references (not functional for chrF as of now)
     """
 
     # Default values for CHRF
@@ -56,12 +57,14 @@ class CHRF:
 
     def __init__(self, whitespace: bool = False,
                  order: int = ORDER,
-                 beta: float = BETA):
+                 beta: float = BETA,
+                 num_refs: int = 1):
         self.name = 'chrf'
         self.whitespace = whitespace
         self.order = order
         self.beta = beta
         self.signature = CHRFSignature(self.__dict__)
+        self.num_refs = num_refs
 
         if self.whitespace:
             self._preprocess = lambda x: x

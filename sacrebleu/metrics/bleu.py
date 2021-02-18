@@ -90,6 +90,7 @@ class BLEU:
         smooth_method:
         smooth_value:
         max_ngram_order:
+        num_refs:
     """
 
     SMOOTH_DEFAULTS = {
@@ -107,7 +108,8 @@ class BLEU:
                  force: bool = False,
                  tokenize: str = '13a', smooth_method: str = 'exp',
                  smooth_value: Optional[float] = None,
-                 max_ngram_order: int = MAX_NGRAM_ORDER):
+                 max_ngram_order: int = MAX_NGRAM_ORDER,
+                 num_refs: int = 1):
         self.name = 'bleu'
         self.force = force
         self.lc = lc
@@ -115,6 +117,7 @@ class BLEU:
         self.smooth_method = smooth_method
         self.max_ngram_order = max_ngram_order
         self.tokenizer = TOKENIZERS[tokenize]()
+        self.num_refs = num_refs
 
         # Sanity check
         assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
