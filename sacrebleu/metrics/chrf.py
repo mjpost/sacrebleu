@@ -1,9 +1,9 @@
 import re
-from collections import Counter
 from itertools import zip_longest
 from typing import List, Iterable, Union
 
 from .base import BaseScore, Signature
+from .helpers import extract_char_ngrams
 
 
 class CHRFSignature(Signature):
@@ -59,13 +59,6 @@ class CHRF:
             self._preprocess = lambda x: re.sub(r'\s+', '', x).strip()
 
     @staticmethod
-    def extract_char_ngrams(s: str, n: int) -> Counter:
-        """
-        Yields counts of character n-grams from string s of order n.
-        """
-        return Counter([s[i:i + n] for i in range(len(s) - n + 1)])
-
-    @staticmethod
     def compute_chrf(statistics: List[int],
                      order: int,
                      beta: float) -> CHRFScore:
@@ -109,8 +102,8 @@ class CHRF:
         statistics = [0] * (self.order * 3)
         for i in range(self.order):
             n = i + 1
-            hypothesis_ngrams = self.extract_char_ngrams(hypothesis, n)
-            reference_ngrams = self.extract_char_ngrams(reference, n)
+            hypothesis_ngrams = extract_char_ngrams(hypothesis, n)
+            reference_ngrams = extract_char_ngrams(reference, n)
             common_ngrams = hypothesis_ngrams & reference_ngrams
             statistics[3 * i + 0] = sum(hypothesis_ngrams.values())
             statistics[3 * i + 1] = sum(reference_ngrams.values())

@@ -29,7 +29,8 @@ from .metrics import BLEU, CHRF
 from .compat import *
 
 # Other shorthands for backward-compatibility with <= 1.4.10
-extract_ngrams = BLEU.extract_ngrams
-extract_char_ngrams = CHRF.extract_char_ngrams
+from .metrics.helpers import extract_word_ngrams as extract_ngrams
+from .metrics.helpers import extract_char_ngrams
+
 ref_stats = BLEU.reference_stats
 compute_bleu = BLEU.compute_bleu
