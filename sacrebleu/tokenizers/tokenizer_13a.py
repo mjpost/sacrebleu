@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 from .tokenizer_re import TokenizerRegexp
 
 
-class Tokenizer13a(NoneTokenizer):
+class Tokenizer13a(BaseTokenizer):
 
     def signature(self):
         return '13a'

@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 from .tokenizer_13a import Tokenizer13a
 from .tokenizer_intl import TokenizerV14International
 from .tokenizer_zh import TokenizerZh
@@ -12,7 +10,7 @@ DEFAULT_TOKENIZER = '13a'
 
 
 TOKENIZERS = {
-    'none': NoneTokenizer,
+    'none': BaseTokenizer,
     '13a': Tokenizer13a,
     'intl': TokenizerV14International,
     'zh': TokenizerZh,

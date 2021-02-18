@@ -39,7 +39,7 @@
 # Author: Shujian Huang huangsj@nju.edu.cn
 
 
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 from .tokenizer_re import TokenizerRegexp
 
 _UCODE_RANGES = [
@@ -69,7 +69,7 @@ _UCODE_RANGES = [
 ]
 
 
-class TokenizerZh(NoneTokenizer):
+class TokenizerZh(BaseTokenizer):
 
     def signature(self):
         return 'zh'

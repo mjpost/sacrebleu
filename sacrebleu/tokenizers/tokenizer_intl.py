@@ -5,7 +5,7 @@ import sys
 import functools
 import unicodedata
 
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 
 
 class UnicodeRegex:
@@ -38,7 +38,7 @@ class UnicodeRegex:
         return re.compile('([' + UnicodeRegex._property_chars('S') + '])')
 
 
-class TokenizerV14International(NoneTokenizer):
+class TokenizerV14International(BaseTokenizer):
 
     def signature(self):
         return 'intl'

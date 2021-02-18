@@ -15,7 +15,7 @@
 
 import re
 
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 
 
 def _normalize_general_and_western(sent: str) -> str:
@@ -105,7 +105,7 @@ def _remove_asian_punct(sent: str) -> str:
     return sent
 
 
-class TercomTokenizer(NoneTokenizer):
+class TercomTokenizer(BaseTokenizer):
     """Re-implementation Tercom Tokenizer in Python 3.
 
     See src/ter/core/Normalizer.java in https://github.com/jhclark/tercom

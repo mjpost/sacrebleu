@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 
 
-class TokenizerChar(NoneTokenizer):
+class TokenizerChar(BaseTokenizer):
     def signature(self):
         return 'char'
 

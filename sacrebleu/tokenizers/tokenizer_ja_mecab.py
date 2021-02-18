@@ -6,7 +6,7 @@ except ImportError:
     # Don't fail until the tokenizer is actually used
     MeCab = None
 
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 
 FAIL_MESSAGE = """
 Japanese tokenization requires extra dependencies, but you do not have them installed.
@@ -16,7 +16,7 @@ Please install them like so.
 """
 
 
-class TokenizerJaMecab(NoneTokenizer):
+class TokenizerJaMecab(BaseTokenizer):
     def __init__(self):
         if MeCab is None:
             raise RuntimeError(FAIL_MESSAGE)

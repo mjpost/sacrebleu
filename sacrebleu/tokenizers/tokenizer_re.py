@@ -1,9 +1,9 @@
 import re
 
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 
 
-class TokenizerRegexp(NoneTokenizer):
+class TokenizerRegexp(BaseTokenizer):
 
     def signature(self):
         return 're'
