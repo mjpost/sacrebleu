@@ -27,6 +27,7 @@ SACREBLEU_DIR = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu')
 
 sacrelogger = logging.getLogger('sacrebleu')
 
+
 def smart_open(file, mode='rt', encoding='utf-8'):
     """Convenience function for reading compressed or plain text files.
     :param file: The file to read.
@@ -49,6 +50,18 @@ def my_log(num):
     if num == 0.0:
         return -9999999999
     return math.log(num)
+
+
+def args_to_dict(args, prefix, strip_prefix: bool = False):
+    """Converts argparse's `Namespace` into dictionary with only arguments
+    beginning with the given prefix."""
+    prefix += '_'
+    d = {}
+    for k, v in args.__dict__.items():
+        if k.startswith(prefix):
+            k = k.replace(prefix, '') if strip_prefix else k
+            d[k] = v
+    return d
 
 
 def process_to_text(rawfile, txtfile, field: int = None):
@@ -200,8 +213,8 @@ def download_test_set(test_set, langpair=None):
                         out.write(f.read())
                 except ssl.SSLError:
                     sacrelogger.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
-                                    'you may need to run the "Install Certificates.command" file located in the '
-                                    '"Python 3" folder, often found under /Applications')
+                                        'you may need to run the "Install Certificates.command" file located in the '
+                                        '"Python 3" folder, often found under /Applications')
                     sys.exit(1)
 
                 # Check md5sum
