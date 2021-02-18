@@ -38,7 +38,7 @@ class BLEUSignature(Signature):
 
         self.info.update({
             'smooth': smooth_str,
-            'case': 'lc' if self.args['lc'] else 'mixed',
+            'case': 'lc' if self.args['lowercase'] else 'mixed',
             'tok': self.args['tokenizer_signature'],
             'numrefs': self.args.get('num_refs', '?'),
         })
@@ -104,7 +104,7 @@ class BLEU:
         'exp': None,    # No value is required
     }
 
-    def __init__(self, lc: bool = False,
+    def __init__(self, lowercase: bool = False,
                  force: bool = False,
                  tokenize: str = '13a', smooth_method: str = 'exp',
                  smooth_value: Optional[float] = None,
@@ -112,7 +112,7 @@ class BLEU:
                  num_refs: int = 1):
         self.name = 'bleu'
         self.force = force
-        self.lc = lc
+        self.lowercase = lowercase
         self.smooth_value = smooth_value
         self.smooth_method = smooth_method
         self.max_ngram_order = max_ngram_order
@@ -293,7 +293,7 @@ class BLEU:
             if len(lines) < 2:  # we need at least hypothesis + 1 defined & non-empty reference
                 raise EOFError("No valid references for a sentence!")
 
-            if self.lc:
+            if self.lowercase:
                 lines = [x.lower() for x in lines]
 
             if not (self.force or self.tokenizer.signature() == 'none') and lines[0].rstrip().endswith(' .'):
