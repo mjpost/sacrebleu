@@ -87,11 +87,13 @@ class TERSignature(Signature):
         self._abbr.update({
             'tok': 't',
             'numrefs': '#',
+            'case': 'c',
         })
 
         self.info.update({
             'tok': self.args['tokenizer_signature'],
             'numrefs': self.args.get('num_refs', '?'),
+            'case': 'lc' if self.args['lowercase'] else 'mixed',
         })
 
 
@@ -99,20 +101,23 @@ class TER:
     def __init__(self, normalized: bool = False,
                  no_punct: bool = False,
                  asian_support: bool = False,
-                 case_sensitive: bool = False,
+                 lowercase: bool = True,
                  num_refs: int = 1):
         self.name = 'ter'
         self.normalized = normalized
         self.no_punct = no_punct
         self.asian_support = asian_support
-        self.case_sensitive = case_sensitive
+
+        # NOTE: TERCOM default is case insensitive. Let's keep it as it is
+        # and disallow configuring it.
+        self.lowercase = True
         self.num_refs = num_refs
 
         self.tokenizer = TercomTokenizer(
             normalized=self.normalized,
             no_punct=self.no_punct,
             asian_support=self.asian_support,
-            case_sensitive=self.case_sensitive,
+            case_sensitive=not self.lowercase,
         )
         self.tokenizer_signature = self.tokenizer.signature()
         self.signature = TERSignature(self.__dict__)
