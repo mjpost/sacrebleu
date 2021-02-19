@@ -1,52 +1,64 @@
-# -*- coding: utf-8 -*-
-
 import re
 import sys
-import functools
 import unicodedata
+import pickle as pkl
+from pathlib import Path
+
+from ..utils import SACREBLEU_DIR
 
 from .tokenizer_base import BaseTokenizer
 
 
-class UnicodeRegex:
-    """Ad-hoc hack to recognize all punctuation and symbols
-    without depending on https://pypi.python.org/pypi/regex/."""
-
-    @staticmethod
-    def _property_chars(prefix):
-        return ''.join(chr(x) for x in range(sys.maxunicode)
-                       if unicodedata.category(chr(x)).startswith(prefix))
-
-    @staticmethod
-    @functools.lru_cache(maxsize=1)
-    def punctuation():
-        return UnicodeRegex._property_chars('P')
-
-    @staticmethod
-    @functools.lru_cache(maxsize=1)
-    def nondigit_punct_re():
-        return re.compile(r'([^\d])([' + UnicodeRegex.punctuation() + r'])')
-
-    @staticmethod
-    @functools.lru_cache(maxsize=1)
-    def punct_nondigit_re():
-        return re.compile(r'([' + UnicodeRegex.punctuation() + r'])([^\d])')
-
-    @staticmethod
-    @functools.lru_cache(maxsize=1)
-    def symbol_re():
-        return re.compile('([' + UnicodeRegex._property_chars('S') + '])')
-
-
 class TokenizerV14International(BaseTokenizer):
+    UCD_CACHE_FILE = 'ucd_char_cache_{}.pkl'.format(unicodedata.unidata_version)
+    UCD_CACHE_PATH = Path(SACREBLEU_DIR) / UCD_CACHE_FILE
 
     def signature(self):
         return 'intl'
 
+    def __generate_char_cache(self):
+        """Caches punctuation and symbol character lists for faster lookup."""
+        puncts = []
+        symbols = []
+        for x in range(sys.maxunicode):
+            chrx = chr(x)
+            # Around ~800 punctuations
+            if unicodedata.category(chrx)[0] == 'P':
+                puncts.append(chrx)
+            # Around ~8K symbols
+            elif unicodedata.category(chrx)[0] == 'S':
+                symbols.append(chrx)
+
+        # Join
+        self._chars_symbols = ''.join(symbols)
+        self._chars_puncts = ''.join(puncts)
+
+        # Dump the cache
+        with open(self.UCD_CACHE_PATH, 'wb') as f:
+            # Protocol 4 introduced in Python 3.4 and backwards-incompatible
+            pkl.dump([self._chars_symbols, self._chars_puncts], f, protocol=4)
+
+    def __load_char_cache(self):
+        """Loads the unicode character cache from disk if possible."""
+        try:
+            with open(self.UCD_CACHE_PATH, 'rb') as f:
+                self._chars_symbols, self._chars_puncts = pkl.load(f)
+        except Exception:
+            # Don't bother with any exceptions, just re-generate and cache
+            self.__generate_char_cache()
+
     def __init__(self):
-        self.nondigit_punct_re = UnicodeRegex.nondigit_punct_re()
-        self.punct_nondigit_re = UnicodeRegex.punct_nondigit_re()
-        self.symbol_re = UnicodeRegex.symbol_re()
+        # Load the unicode character cache
+        self.__load_char_cache()
+
+        self._re = [
+            # Separate out punctuations preceeded by a non-digit
+            (re.compile(r'([^\d])([' + self._chars_puncts + r'])'), r'\1 \2 '),
+            # Separate out punctuations followed by a non-digit
+            (re.compile(r'([' + self._chars_puncts + r'])([^\d])'), r' \1 \2'),
+            # Separate out symbols
+            (re.compile('([' + self._chars_symbols + '])'), r' \1 '),
+        ]
 
     def __call__(self, line):
         r"""Tokenize a string following the official BLEU implementation.
@@ -68,9 +80,9 @@ class TokenizerV14International(BaseTokenizer):
         `$norm_text = " $norm_text "` (or `norm = " {} ".format(norm)` in Python).
 
         :param line: the input string
-        :return: a list of tokens
+        :return: the tokenized string
         """
-        line = self.nondigit_punct_re.sub(r'\1 \2 ', line)
-        line = self.punct_nondigit_re.sub(r' \1 \2', line)
-        line = self.symbol_re.sub(r' \1 ', line)
+
+        for (_re, repl) in self._re:
+            line = _re.sub(repl, line)
         return line.strip()
