@@ -75,10 +75,10 @@ class TERScore(BaseScore):
             width = 3
 
         if score_only:
-            return '{0:.{1}f}'.format(self.score, width)
+            return f'{self.score:.{width}f}'
 
-        prefix = "{}+{}".format(self.prefix, signature) if signature else self.prefix
-        return '{pr} = {sc:.{w}f}'.format(pr=prefix, sc=self.score, w=width)
+        prefix = f"{self.prefix}+{signature}" if signature else self.prefix
+        return f'{prefix} = {self.score:.{width}f}'
 
 
 class TERSignature(Signature):
@@ -387,7 +387,7 @@ def trace_to_alignment(trace: str) -> Tuple[Dict, List, List]:
             align[pos_ref] = pos_hyp
             ref_err.append(1)
         else:
-            raise Exception("unknown operation '{}'".format(op))
+            raise Exception(f"unknown operation {op!r}")
 
     return align, ref_err, hyp_err
 
@@ -539,7 +539,7 @@ class BeamEditDistance:
             elif op == _OP_DEL:
                 i -= 1
             else:
-                raise Exception("unknown operation '{}'".format(op))
+                raise Exception(f"unknown operation {op!r}")
 
         return dist[-1][-1][0], dist[len(cache):], trace
 

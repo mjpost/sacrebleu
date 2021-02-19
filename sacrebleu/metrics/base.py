@@ -1,4 +1,3 @@
-
 from .. import __version__
 
 
@@ -54,7 +53,7 @@ class Signature:
             value = self.info[name]
             if value is not None:
                 final_name = self._abbr[name] if short else name
-                pairs.append('{}.{}'.format(final_name, value))
+                pairs.append(f'{final_name}.{value}')
 
         return '+'.join(pairs)
 

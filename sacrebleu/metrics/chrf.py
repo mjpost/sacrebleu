@@ -30,16 +30,16 @@ class CHRFScore(BaseScore):
 
         self.beta = beta
         self.order = order
-        self.prefix = 'chrF{0:d}'.format(self.beta)
+        self.prefix = f'chrF{self.beta}'
 
     def format(self, width=2, score_only=False, signature=''):
         # NOTE: Being 0-1 scaled, a default width of 1 is too small for chrF
         width += 1
         if score_only:
-            return '{0:.{1}f}'.format(self.score, width)
+            return f'{self.score:.{width}f}'
 
-        prefix = "{}+{}".format(self.prefix, signature) if signature else self.prefix
-        return '{pr} = {sc:.{w}f}'.format(pr=prefix, sc=self.score, w=width)
+        prefix = f"{self.prefix}+{signature}" if signature else self.prefix
+        return f'{prefix} = {self.score:.{width}f}'
 
 
 class CHRF:
