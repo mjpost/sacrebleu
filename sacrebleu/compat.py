@@ -7,8 +7,8 @@ from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
 ######################################################################
 # Backward compatibility functions for old style API access (< 1.4.11)
 ######################################################################
-def corpus_bleu(sys_stream: Union[str, Iterable[str]],
-                ref_streams: Union[str, List[Iterable[str]]],
+def corpus_bleu(sys_stream: Iterable[str],
+                ref_streams: List[Iterable[str]],
                 smooth_method='exp',
                 smooth_value=None,
                 force=False,
@@ -34,8 +34,8 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
         sys_stream, ref_streams, use_effective_order=use_effective_order)
 
 
-def raw_corpus_bleu(sys_stream: Union[str, Iterable[str]],
-                    ref_streams: Union[str, List[Iterable[str]]],
+def raw_corpus_bleu(sys_stream: Iterable[str],
+                    ref_streams: List[Iterable[str]],
                     smooth_value: Optional[float] = BLEU.SMOOTH_DEFAULTS['floor']) -> BLEUScore:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
