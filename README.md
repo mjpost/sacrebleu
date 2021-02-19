@@ -1,9 +1,10 @@
 [![PyPI version](https://badge.fury.io/py/sacrebleu.svg)](https://badge.fury.io/py/sacrebleu)
 [![GitHub issues](https://img.shields.io/github/issues/mjpost/sacreBLEU.svg)](https://github.com/awslabs/sockeye/issues)
 
-SacreBLEU ([Post, 2018](http://aclweb.org/anthology/W18-6319)) provides hassle-free computation of shareable, comparable, and reproducible BLEU scores.
+SacreBLEU ([Post, 2018](http://aclweb.org/anthology/W18-6319)) provides hassle-free computation of shareable, comparable, and reproducible **BLEU** scores.
 Inspired by Rico Sennrich's `multi-bleu-detok.perl`, it produces the official WMT scores but works with plain text.
 It also knows all the standard test sets and handles downloading, processing, and tokenization for you.
+Recent versions also include support for computing the **chrF** and the **TER** metrics.
 
 Why use this version of BLEU?
 - It automatically downloads common WMT test sets and processes them to plain text
@@ -14,23 +15,18 @@ Why use this version of BLEU?
 
 The official version is hosted at <https://github.com/mjpost/sacrebleu>.
 
-# QUICK START
+# Installation
 
-Install the Python module (Python 3 only)
+Install the official Python module from PyPI (**Python>=3.6 only**):
 
-    pip3 install sacrebleu
+    pip install sacrebleu
 
 In order to install Japanese tokenizer support through `mecab-python3`, you need to run the
 following command instead, to perform a full installation with dependencies:
 
-    pip3 install sacrebleu[ja]
+    pip install sacrebleu[ja]
 
-Alternately, you can install from the source:
-
-    python3 setup.py install
-
-This installs a shell script, `sacrebleu`.
-(You can also run `python3 -m sacrebleu`, so long as this root directory is in your `$PYTHONPATH`).
+# Commands
 
 Get a list of available test sets:
 
@@ -44,7 +40,7 @@ Download the source for one of the pre-defined test sets:
 
     sacrebleu --test-set wmt14 --language-pair de-en --echo src > wmt14-de-en.src
 
-After tokenizing, translating, and detokenizing it, you can score your decoder output easily:
+After tokenizing, translating, and detokenizing it, you can score your output easily:
 
     cat output.detok.txt | sacrebleu -t wmt14 -l de-en
 
@@ -55,19 +51,20 @@ It also works in backwards compatible model where you manually specify the refer
 
 Note that the system output and references will all be tokenized internally.
 
-SacreBLEU generates version strings like the following.
-Put them in a footnote in your paper!
+## Versioning
+SacreBLEU generates version strings like the following. Put them in a footnote in your paper!
 Use `--short` for a shorter hash if you like.
 
     BLEU+case.mixed+lang.de-en+test.wmt17 = 32.97 66.1/40.2/26.6/18.1 (BP = 0.980 ratio = 0.980 hyp_len = 63134 ref_len = 64399)
 
+## Translationese Support
 If you are interested in the translationese effect, you can evaluate BLEU on a subset of sentences
-with a given original language (identified based on the origlang tag in the raw SGM files).
+with a given original language (identified based on the `origlang` tag in the raw SGM files).
 E.g., to evaluate only against originally German sentences translated to English use:
 
     sacrebleu -t wmt13 -l de-en --origlang=de < my-wmt13-output.txt
 
-and to evaluate against the complement (in this case origlang en, fr, cs, ru, de) use:
+and to evaluate against the complement (in this case `origlang` en, fr, cs, ru, de) use:
 
     sacrebleu -t wmt13 -l de-en --origlang=non-de < my-wmt13-output.txt
 
@@ -76,8 +73,9 @@ but it expects that you pass through the entire translated test set.
 
 ## Using SacreBLEU from Python
 
-For evaluation, it may be useful to compute BLEU inside a script. This is how you can do it:
+### Compatibility API
 
+For evaluation, it may be useful to compute BLEU inside a script. This is how you can do it:
 ```python
 import sacrebleu
 refs = [['The dog bit the man.', 'It was not unexpected.', 'The man bit him first.'],
@@ -85,9 +83,10 @@ refs = [['The dog bit the man.', 'It was not unexpected.', 'The man bit him firs
 sys = ['The dog bit the man.', "It wasn't surprising.", 'The man had just bitten him.']
 bleu = sacrebleu.corpus_bleu(sys, refs)
 print(bleu.score)
-```
 
-# MOTIVATION
+### New API
+
+# Motivation
 
 Comparing BLEU scores is harder than it should be.
 Every decoder has its own implementation, often borrowed from Moses, but maybe with subtle changes.
