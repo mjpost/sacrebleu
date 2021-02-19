@@ -82,7 +82,7 @@ def process_to_text(rawfile, txtfile, field: int = None):
         return re.sub(r'\s+', ' ', s.strip())
 
     if not os.path.exists(txtfile) or os.path.getsize(txtfile) == 0:
-        sacrelogger.info("Processing %s to %s", rawfile, txtfile)
+        sacrelogger.info(f"Processing {rawfile} to {txtfile}")
         if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
             with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
                 for line in fin:
@@ -164,20 +164,20 @@ def get_files(test_set, langpair):
     """
 
     if test_set not in DATASETS:
-        raise Exception("No such test set {}".format(test_set))
+        raise Exception(f"No such test set {test_set}")
     if langpair not in DATASETS[test_set]:
-        raise Exception("No such language pair {}/{}".format(test_set, langpair))
+        raise Exception(f"No such language pair {test_set}/{langpair}")
 
     cachedir = os.path.join(SACREBLEU_DIR, test_set)
     source, target = langpair.split("-")
 
-    source_path = os.path.join(cachedir, "{}.{}".format(langpair, source))
+    source_path = os.path.join(cachedir, f"{langpair}.{source}")
 
     num_refs = len(DATASETS[test_set][langpair]) - 1
     if num_refs == 1:
-        reference_paths = [os.path.join(cachedir, "{}.{}".format(langpair, target))]
+        reference_paths = [os.path.join(cachedir, f"{langpair}.{target}")]
     else:
-        reference_paths = [os.path.join(cachedir, "{}.{}.{}".format(langpair, target, num)) for num in range(num_refs)]
+        reference_paths = [os.path.join(cachedir, f"{langpair}.{target}.{num}") for num in range(num_refs)]
 
     if any(filterfalse(os.path.exists, [source_path] + reference_paths)):
         download_test_set(test_set, langpair)
@@ -194,7 +194,7 @@ def download_test_set(test_set, langpair=None):
     """
 
     if test_set not in DATASETS:
-        raise Exception("No such test set {}".format(test_set))
+        raise Exception(f"No such test set {test_set}")
 
     outdir = os.path.join(SACREBLEU_DIR, test_set)
     os.makedirs(outdir, exist_ok=True)
@@ -204,10 +204,10 @@ def download_test_set(test_set, langpair=None):
         tarball = os.path.join(outdir, os.path.basename(dataset))
         rawdir = os.path.join(outdir, 'raw')
 
-        lockfile = '{}.lock'.format(tarball)
+        lockfile = f'{tarball}.lock'
         with portalocker.Lock(lockfile, 'w', timeout=60):
             if not os.path.exists(tarball) or os.path.getsize(tarball) == 0:
-                sacrelogger.info("Downloading %s to %s", dataset, tarball)
+                sacrelogger.info(f"Downloading {dataset} to {tarball}")
                 try:
                     with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
                         out.write(f.read())
@@ -223,16 +223,17 @@ def download_test_set(test_set, langpair=None):
                     with open(tarball, 'rb') as infile:
                         for line in infile:
                             md5.update(line)
-                    if md5.hexdigest() != expected_md5:
-                        sacrelogger.error('Fatal: MD5 sum of downloaded file was incorrect (got {}, expected {}).'.format(md5.hexdigest(), expected_md5))
-                        sacrelogger.error('Please manually delete "{}" and rerun the command.'.format(tarball))
+                    cur_md5 = md5.hexdigest()
+                    if cur_md5 != expected_md5:
+                        sacrelogger.error(f'Fatal: MD5 sum of downloaded file was incorrect (got {cur_md5}, expected {expected_md5}).')
+                        sacrelogger.error(f'Please manually delete {tarball!r} and rerun the command.')
                         sacrelogger.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
                         sys.exit(1)
                     else:
-                        sacrelogger.info('Checksum passed: {}'.format(md5.hexdigest()))
+                        sacrelogger.info(f'Checksum passed: {cur_md5}')
 
                 # Extract the tarball
-                sacrelogger.info('Extracting %s', tarball)
+                sacrelogger.info(f'Extracting {tarball}')
                 if tarball.endswith('.tar.gz') or tarball.endswith('.tgz'):
                     import tarfile
                     with tarfile.open(tarball) as tar:
@@ -254,7 +255,7 @@ def download_test_set(test_set, langpair=None):
             field, rawfile = rawfile.split(':', maxsplit=1)
             field = int(field)
         rawpath = os.path.join(rawdir, rawfile)
-        outpath = os.path.join(outdir, '{}.{}'.format(pair, src))
+        outpath = os.path.join(outdir, f'{pair}.{src}')
         process_to_text(rawpath, outpath, field=field)
         file_paths.append(outpath)
 
@@ -266,9 +267,9 @@ def download_test_set(test_set, langpair=None):
                 field = int(field)
             rawpath = os.path.join(rawdir, ref)
             if len(refs) >= 2:
-                outpath = os.path.join(outdir, '{}.{}.{}'.format(pair, tgt, i))
+                outpath = os.path.join(outdir, f'{pair}.{tgt}.{i}')
             else:
-                outpath = os.path.join(outdir, '{}.{}'.format(pair, tgt))
+                outpath = os.path.join(outdir, f'{pair}.{tgt}')
             process_to_text(rawpath, outpath, field=field)
             file_paths.append(outpath)
 
@@ -313,7 +314,7 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
     for test_set in test_sets.split(','):
         rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
         if not rawfile.endswith('.sgm'):
-            raise Exception('--origlang and --subset supports only *.sgm files, not %s', rawfile)
+            raise Exception(f'--origlang and --subset supports only *.sgm files, not {rawfile!r}')
         if subset is not None:
             if test_set not in SUBSETS:
                 raise Exception('No subset annotation available for test set ' + test_set)
