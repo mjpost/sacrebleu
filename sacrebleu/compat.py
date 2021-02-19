@@ -1,4 +1,4 @@
-from typing import Union, Iterable, List
+from typing import Union, Iterable, List, Optional
 
 from .tokenizers import DEFAULT_TOKENIZER
 from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
@@ -27,16 +27,16 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
     :return: a `BLEUScore` object
     """
     metric = BLEU(
-        lc=lowercase, force=force, tokenize=tokenize,
+        lowercase=lowercase, force=force, tokenize=tokenize,
         smooth_method=smooth_method, smooth_value=smooth_value)
 
     return metric.corpus_score(
         sys_stream, ref_streams, use_effective_order=use_effective_order)
 
 
-def raw_corpus_bleu(sys_stream,
-                    ref_streams,
-                    smooth_value=BLEU.SMOOTH_DEFAULTS['floor']) -> BLEUScore:
+def raw_corpus_bleu(sys_stream: Union[str, Iterable[str]],
+                    ref_streams: Union[str, List[Iterable[str]]],
+                    smooth_value: Optional[float] = BLEU.SMOOTH_DEFAULTS['floor']) -> BLEUScore:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
     It uses no tokenization and 'floor' smoothing, with the floor default to 0.1.
@@ -75,7 +75,7 @@ def sentence_bleu(hypothesis: str,
     :return: Returns a `BLEUScore` object.
     """
     metric = BLEU(
-        lc=lowercase, tokenize=tokenize, force=False,
+        lowercase=lowercase, tokenize=tokenize, force=False,
         smooth_method=smooth_method, smooth_value=smooth_value)
 
     return metric.sentence_score(
@@ -131,7 +131,7 @@ def corpus_ter(hypotheses: Iterable[str],
                normalized: bool = False,
                no_punct: bool = False,
                asian_support: bool = False,
-               case_sensitive: bool = False) -> TERScore:
+               lowercase: bool = True) -> TERScore:
     """
     Computes TER on a corpus.
 
@@ -140,14 +140,14 @@ def corpus_ter(hypotheses: Iterable[str],
     :param normalized: Enable character normalization.
     :param no_punct: Remove punctuation.
     :param asian_support: Enable special treatment of Asian characters.
-    :param case_sensitive: Enable case sensitivity.
+    :param lowercase: Lowercase all sentences.
     :return: A `TERScore` object.
     """
     metric = TER(
         normalized=normalized,
         no_punct=no_punct,
         asian_support=asian_support,
-        case_sensitive=case_sensitive)
+        lowercase=lowercase)
     return metric.corpus_score(hypotheses, references)
 
 
@@ -156,7 +156,7 @@ def sentence_ter(hypothesis: str,
                  normalized: bool = False,
                  no_punct: bool = False,
                  asian_support: bool = False,
-                 case_sensitive: bool = False) -> TERScore:
+                 lowercase: bool = True) -> TERScore:
     """
     Computes TER on a single sentence pair.
 
@@ -165,12 +165,12 @@ def sentence_ter(hypothesis: str,
     :param normalized: Enable character normalization.
     :param no_punct: Remove punctuation.
     :param asian_support: Enable special treatment of Asian characters.
-    :param case_sensitive: Enable case sensitivity.
+    :param lowercase: Lowercase all sentences.
     :return: A `TERScore` object.
     """
     metric = TER(
         normalized=normalized,
         no_punct=no_punct,
         asian_support=asian_support,
-        case_sensitive=case_sensitive)
+        lowercase=lowercase)
     return metric.sentence_score(hypothesis, references)
