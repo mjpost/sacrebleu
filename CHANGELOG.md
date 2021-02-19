@@ -2,9 +2,12 @@
 
 - 2.0.0 (2021-XX-XX)
   - Refactor API: Allow each metric to have named arguments, drop the Namespace hack
+  - Refactor API: Separate out statistics collection and metric computation for BLEU
   - sacreBLEU: Group metric-specific arguments in `--help` output
   - `compat.sentence_bleu:` Allow passing tokenizer and lowercasing argument
     instead of forcing them to internal defaults.
+  - Make `intl` tokenizer ~10% faster by caching unicode character info on disk
+  - extract_word_ngrams: Slight efficiency improvements
 
 - 1.5.0 (2021-01-15)
   - Fix an assertion error in chrF (#121)
