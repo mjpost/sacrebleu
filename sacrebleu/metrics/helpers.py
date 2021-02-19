@@ -1,22 +1,23 @@
-from collections import Counter
+from collections import Counter, defaultdict
+from typing import List
 
 
-def extract_word_ngrams(line: str, min_order: int, max_order: int) -> Counter:
+def extract_word_ngrams(tokens: List[str], min_order: int, max_order: int) -> Counter:
     """Extracts all ngrams (min_order <= n <= max_order) from a sentence.
 
-    :param line: A segment containing a sequence of words
+    :param tokens: A list of tokens
     :param min_order: Minimum n-gram length
     :param max_order: Maximum n-gram length
-    :return: a dictionary containing ngrams and counts
+    :return: a tuple of (n-gram count dictionary, hypothesis length)
     """
 
-    ngrams = []
-    tokens = line.split()
+    ngrams = defaultdict(int)
+
     for n in range(min_order, max_order + 1):
         for i in range(0, len(tokens) - n + 1):
-            ngrams.append(' '.join(tokens[i: i + n]))
+            ngrams[tuple(tokens[i: i + n])] += 1
 
-    return Counter(ngrams)
+    return ngrams, len(tokens)
 
 
 def extract_char_ngrams(line: str, n: int) -> Counter:
