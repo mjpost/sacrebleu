@@ -37,6 +37,8 @@ limit_test=${1:-}
 SKIP_CHRF=${SKIP_CHRF:-}
 SKIP_TER=${SKIP_TER:-}
 SKIP_MECAB=${SKIP_MECAB:-}
+SKIP_MTEVAL13=${SKIP_MTEVAL13:-}
+SKIP_MTEVAL14=${SKIP_MTEVAL14:-}
 
 # TEST 1: download and process WMT17 data
 [[ -d $SACREBLEU/wmt17 ]] && rm -f $SACREBLEU/wmt17/{en-*,*-en*}
@@ -151,7 +153,6 @@ EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref1"]=36.8799
 EXPECTED["${CMD} -lc -w 4 -b -l cs-en -i $sys $ref1"]=38.1492
 EXPECTED["${CMD} --tokenize 13a  -w 4 -b -l cs-en -i $sys $ref1"]=36.8799
 EXPECTED["${CMD} --tokenize none -w 4 -b -l cs-en -i $sys $ref1"]=34.0638
-EXPECTED["${CMD} --tokenize intl -w 4 -b -l cs-en -i $sys $ref1"]=37.3859
 # multiple REF files
 EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref1 $ref2"]=44.6732
 # multiple REFs with tab-delimited stream
@@ -376,9 +377,9 @@ fi
 ################################################################
 # Pre-computed results from Moses' mteval-v13a.pl for BLEU tests
 ################################################################
-echo "-------------------"
-echo "Starting BLEU tests"
-echo "-------------------"
+echo "------------------------------------"
+echo "Starting BLEU tests (mteval-v13a.pl)"
+echo "------------------------------------"
 declare -A MTEVAL=( ["newstest2017.PJATK.4760.cs-en.sgm"]=23.15
                     ["newstest2017.online-A.0.cs-en.sgm"]=25.12
                     ["newstest2017.online-B.0.cs-en.sgm"]=27.45
@@ -535,35 +536,92 @@ declare -A MTEVAL=( ["newstest2017.PJATK.4760.cs-en.sgm"]=23.15
                     ["kyoto-test"]=14.48
                   )
 
-for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru-en tr-en zh-en; do
-    source=$(echo $pair | cut -d- -f1)
-    target=$(echo $pair | cut -d- -f2)
-    for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
-        name=$(basename $sgm)
+if [ -z $SKIP_MTEVAL13 ]; then
+  for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru-en tr-en zh-en; do
+      source=$(echo $pair | cut -d- -f1)
+      target=$(echo $pair | cut -d- -f2)
+      for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
+          name=$(basename $sgm)
 
-        if [[ ! -v MTEVAL[$name] ]]; then continue; fi
-        if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
+          if [[ ! -v MTEVAL[$name] ]]; then continue; fi
+          if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
 
-        sys=$(basename $sgm .sgm | perl -pe 's/newstest2017\.//')
-        txt=$(dirname $sgm | perl -pe 's/sgm/txt/')/$(basename $sgm .sgm)
-        src=wmt17-submitted-data/sgm/sources/newstest2017-$source$target-src.$source.sgm
-        ref=wmt17-submitted-data/sgm/references/newstest2017-$source$target-ref.$target.sgm
+          sys=$(basename $sgm .sgm | perl -pe 's/newstest2017\.//')
+          txt=$(dirname $sgm | perl -pe 's/sgm/txt/')/$(basename $sgm .sgm)
+          src=wmt17-submitted-data/sgm/sources/newstest2017-$source$target-src.$source.sgm
+          ref=wmt17-submitted-data/sgm/references/newstest2017-$source$target-ref.$target.sgm
 
-        # mteval=$($MOSES/scripts/generic/mteval-v13a.pl -c -s $src -r $ref -t $sgm 2> /dev/null | grep "BLEU score" | cut -d' ' -f9)
-        # mteval=$(echo "print($bleu1 * 100)" | python)
-        score=$(cat $txt | ${CMD} -w 2 -t wmt17 -l $source-$target -b)
+          # mteval=$($MOSES/scripts/generic/mteval-v13a.pl -c -s $src -r $ref -t $sgm 2> /dev/null | grep "BLEU score" | cut -d' ' -f9)
+          # mteval=$(echo "print($bleu1 * 100)" | python)
+          score=$(cat $txt | ${CMD} -w 2 -t wmt17 -l $source-$target -b)
 
-        echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
+          echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
 
-        if [[ $? -eq 1 ]]; then
-            echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
-            exit 1
-        fi
-        echo "Passed $source-$target $sys mteval-v13a.pl: ${MTEVAL[$name]} sacreBLEU: $score"
+          if [[ $? -eq 1 ]]; then
+              echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
+              exit 1
+          fi
+          echo "Passed $source-$target $sys mteval-v13a.pl: ${MTEVAL[$name]} sacreBLEU: $score"
 
-        let i++
-    done
-done
+          let i++
+      done
+  done
+fi
+
+############################################################################
+# Pre-computed results from Moses' mteval-v14.pl for BLEU tests
+# mteval-v14a.pl -c -s $src -r $ref -t $sgm -b --international-tokenization
+############################################################################
+echo "-----------------------------------------------------------------"
+echo "Starting BLEU tests (mteval-v14.pl, --international-tokenization)"
+echo "-----------------------------------------------------------------"
+
+declare -A MTEVAL14=( ["newstest2017.online-A.0.en-ru.sgm"]=23.99
+                      ["newstest2017.online-A.0.en-cs.sgm"]=16.65
+                      ["newstest2017.PJATK.4761.en-cs.sgm"]=16.08
+                      ["newstest2017.uedin-nmt.4890.ru-en.sgm"]=30.91
+                      ["newstest2017.xmunmt.5160.zh-en.sgm"]=26.8
+                      ["newstest2017.LIUM-NMT.4900.en-de.sgm"]=26.89
+                      ["newstest2017.tilde-nc-nmt-smt-hybrid.5047.en-lv.sgm"]=20.88
+                      ["newstest2017.TALP-UPC.4937.fi-en.sgm"]=16.18
+                      ["newstest2017.LIUM-NMT.4888.tr-en.sgm"]=17.94
+                      ["newstest2017.SogouKnowing-nmt.5131.en-zh.sgm"]=7.24
+                      ["newstest2017.online-B.0.en-tr.sgm"]=22.88
+                      ["newstest2017.apertium-unconstrained.4769.en-fi.sgm"]=1.08
+                      ["newstest2017.PJATK.4760.cs-en.sgm"]=24.93
+                      ["newstest2017.tilde-c-nmt-smt-hybrid.5051.lv-en.sgm"]=20.44
+                      ["newstest2017.RWTH-nmt-ensemble.4920.de-en.sgm"]=33.73
+                    )
+
+if [ -z $SKIP_MTEVAL14 ]; then
+  for pair in cs-en de-en en-cs en-de en-fi en-lv en-ru en-tr en-zh fi-en lv-en ru-en tr-en zh-en; do
+      source=$(echo $pair | cut -d- -f1)
+      target=$(echo $pair | cut -d- -f2)
+      for sgm in wmt17-submitted-data/sgm/system-outputs/newstest2017/$pair/*.sgm; do
+          name=$(basename $sgm)
+
+          if [[ ! -v MTEVAL14[$name] ]]; then continue; fi
+          if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
+
+          sys=$(basename $sgm .sgm | perl -pe 's/newstest2017\.//')
+          txt=$(dirname $sgm | perl -pe 's/sgm/txt/')/$(basename $sgm .sgm)
+          src=wmt17-submitted-data/sgm/sources/newstest2017-$source$target-src.$source.sgm
+          ref=wmt17-submitted-data/sgm/references/newstest2017-$source$target-ref.$target.sgm
+
+          score=$(cat $txt | ${CMD} -w 2 -t wmt17 -l $source-$target -b --tokenize intl)
+
+          echo "import sys; sys.exit(1 if abs($score-${MTEVAL14[$name]}) > 0.01 else 0)" | python
+
+          if [[ $? -eq 1 ]]; then
+              echo "FAILED test $pair/$sys (wanted ${MTEVAL14[$name]} got $score)"
+              exit 1
+          fi
+          echo "Passed $source-$target $sys mteval-v14.pl: ${MTEVAL14[$name]} sacreBLEU: $score"
+
+          let i++
+      done
+  done
+fi
 
 #######################################################
 # Pre-computed TER scores from official implementation
