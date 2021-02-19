@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import gzip
 import hashlib
 import logging
@@ -13,7 +11,7 @@ import urllib.request
 
 from itertools import filterfalse
 from typing import List
-from .dataset import DATASETS, SUBSETS
+from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES
 
 
 # Where to store downloaded test sets.
@@ -343,3 +341,38 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
                     indices_to_keep.append(include_doc)
                     number_sentences_included += 1 if include_doc else 0
     return [[sentence for sentence, keep in zip(sys, indices_to_keep) if keep] for sys in systems]
+
+
+def print_subset_results(metrics, full_system, full_refs, args):
+    w = args.width
+    ws = len(str(len(full_system)))
+    origlangs = args.origlang if args.origlang else \
+        get_available_origlangs(args.test_set, args.langpair)
+
+    for origlang in origlangs:
+        subsets = [None]
+        if args.subset is not None:
+            subsets += [args.subset]
+        elif all(t in SUBSETS for t in args.test_set.split(',')):
+            subsets += COUNTRIES + DOMAINS
+        for subset in subsets:
+            system, *refs = filter_subset(
+                [full_system, *full_refs], args.test_set, args.langpair, origlang, subset)
+
+            if len(system) == 0:
+                continue
+
+            subset_str = ''
+            if subset in COUNTRIES:
+                subset_str = f'country={subset}'
+            elif subset in DOMAINS:
+                subset_str = f'domain={subset}'
+
+            # pad
+            subset_str = f'{subset_str:>20}'
+
+            for metric in metrics.values():
+                score = metric.corpus_score(system, refs)
+                res = f'origlang={origlang} {subset_str}: sentences={len(system):>{ws}}'
+                res += f' {score.prefix}={score.score:{w+4}.{w}f}'
+                print(res)
