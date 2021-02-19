@@ -45,12 +45,11 @@ class CHRFScore(BaseScore):
 class CHRF:
     """Computes the chrF metric given hypotheses and references.
 
-    Args:
-        whitespace: If True, includes the whitespace character in chrF computation.
-        order: chrF character order
-        beta: chrF Beta parameter
-        lowercase: Lowercase sentences prior computation
-        num_refs: Number of references (not functional for chrF as of now)
+    :param whitespace: If True, includes the whitespace character in chrF computation.
+    :param order: chrF character order
+    :param beta: chrF Beta parameter
+    :param lowercase: Lowercase sentences prior computation
+    :param num_refs: Number of references (not functional for chrF as of now)
     """
 
     # Default values for CHRF
