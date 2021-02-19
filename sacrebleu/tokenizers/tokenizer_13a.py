@@ -29,5 +29,4 @@ class Tokenizer13a(BaseTokenizer):
         line = line.replace('&lt;', '<')
         line = line.replace('&gt;', '>')
 
-        line = " {} ".format(line)
-        return self._post_tokenizer(line)
+        return self._post_tokenizer(f' {line} ')

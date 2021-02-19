@@ -10,7 +10,7 @@ from .tokenizer_base import BaseTokenizer
 
 
 class TokenizerV14International(BaseTokenizer):
-    UCD_CACHE_FILE = 'ucd_char_cache_{}.pkl'.format(unicodedata.unidata_version)
+    UCD_CACHE_FILE = f'ucd_char_cache_{unicodedata.unidata_version}.pkl'
     UCD_CACHE_PATH = Path(SACREBLEU_DIR) / UCD_CACHE_FILE
 
     def signature(self):
