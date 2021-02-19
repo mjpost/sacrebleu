@@ -16,8 +16,7 @@ class BaseScore:
 class Signature:
     """A convenience class to represent sacreBLEU reproducibility signatures.
 
-    Args:
-        args: key-value dictionary passed from the actual metric instance.
+    :param args: key-value dictionary passed from the actual metric instance.
     """
     def __init__(self, args: dict):
         # Copy the dictionary
@@ -42,11 +41,11 @@ class Signature:
             'subset': self.args.get('subset', None),
         }
 
-    def get(self, short: bool = False):
+    def get(self, short: bool = False) -> str:
         """Returns a string representation of the signature.
 
-        Args:
-            short: If True, shortened signature is produced.
+        :param short: If True, shortened signature is produced.
+        :returns: A string representation of the signature.
         """
         pairs = []
         for name in sorted(self.info.keys()):
