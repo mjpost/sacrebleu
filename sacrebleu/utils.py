@@ -61,6 +61,9 @@ def args_to_dict(args, prefix, strip_prefix: bool = False):
         if k.startswith(prefix):
             k = k.replace(prefix, '') if strip_prefix else k
             d[k] = v
+    # add global lowercase and num_refs arguments as well
+    d['num_refs'] = args.num_refs
+    d['lowercase'] = args.lc
     return d
 
 
