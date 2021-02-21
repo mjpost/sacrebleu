@@ -1,3 +1,4 @@
+from functools import lru_cache
 import re
 
 from .tokenizer_base import BaseTokenizer
@@ -23,6 +24,7 @@ class TokenizerRegexp(BaseTokenizer):
             # (re.compile(r'\s+'), r' '),
         ]
 
+    @lru_cache(maxsize=2**18)
     def __call__(self, line):
         """Common post-processing tokenizer for `13a` and `zh` tokenizers.
 

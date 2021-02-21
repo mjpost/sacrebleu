@@ -1,3 +1,4 @@
+from functools import lru_cache
 import regex
 
 from .tokenizer_base import BaseTokenizer
@@ -40,6 +41,7 @@ class TokenizerV14International(BaseTokenizer):
             (regex.compile(r'(\p{S})'), r' \1 '),
         ]
 
+    @lru_cache(maxsize=2**18)
     def __call__(self, line: str) -> str:
         if '&' in line:
             line = line.replace('&quot;', '"')

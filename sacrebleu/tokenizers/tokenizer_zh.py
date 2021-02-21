@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright 2017--2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You may not
@@ -38,6 +36,8 @@
 
 # Author: Shujian Huang huangsj@nju.edu.cn
 
+
+from functools import lru_cache
 
 from .tokenizer_base import BaseTokenizer
 from .tokenizer_re import TokenizerRegexp
@@ -78,6 +78,7 @@ class TokenizerZh(BaseTokenizer):
         self._post_tokenizer = TokenizerRegexp()
 
     @staticmethod
+    @lru_cache(maxsize=None)
     def _is_chinese_char(uchar):
         """
         :param uchar: input char in unicode
@@ -88,6 +89,7 @@ class TokenizerZh(BaseTokenizer):
                 return True
         return False
 
+    @lru_cache(maxsize=2**18)
     def __call__(self, line):
         """The tokenization of Chinese text in this script contains two
         steps: separate each Chinese characters (by utf-8 encoding); tokenize
@@ -102,6 +104,7 @@ class TokenizerZh(BaseTokenizer):
         line = line.strip()
 
         # TODO: the below code could probably be replaced with the following:
+        # @ozan: Gives slightly different scores, need to investigate
         # import regex
         # line = regex.sub(r'(\p{Han})', r' \1 ', line)
         line_in_chars = ""

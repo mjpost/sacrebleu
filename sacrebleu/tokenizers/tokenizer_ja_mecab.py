@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+from functools import lru_cache
+
 try:
     import MeCab
     import ipadic
@@ -29,6 +30,7 @@ class TokenizerJaMecab(BaseTokenizer):
         # This asserts that no user dictionary has been loaded
         assert d.next is None
 
+    @lru_cache(maxsize=2**18)
     def __call__(self, line):
         """
         Tokenizes an Japanese input line using MeCab morphological analyzer.
