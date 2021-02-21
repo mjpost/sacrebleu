@@ -1,6 +1,5 @@
 from typing import Union, Iterable, List, Optional
 
-from .tokenizers import DEFAULT_TOKENIZER
 from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
 
 
@@ -13,7 +12,7 @@ def corpus_bleu(sys_stream: Iterable[str],
                 smooth_value=None,
                 force=False,
                 lowercase=False,
-                tokenize=DEFAULT_TOKENIZER,
+                tokenize=BLEU.TOKENIZER_DEFAULT,
                 use_effective_order=False) -> BLEUScore:
     """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
 
@@ -57,7 +56,7 @@ def sentence_bleu(hypothesis: str,
                   smooth_method: str = 'exp',
                   smooth_value: float = None,
                   lowercase: bool = False,
-                  tokenize=DEFAULT_TOKENIZER,
+                  tokenize=BLEU.TOKENIZER_DEFAULT,
                   use_effective_order: bool = True) -> BLEUScore:
     """
     Computes BLEU on a single sentence pair.
