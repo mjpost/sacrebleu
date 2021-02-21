@@ -3,10 +3,12 @@ import logging
 from collections import defaultdict
 from typing import List, Iterable, Optional, Tuple
 
-from ..tokenizers import TOKENIZERS
+from ..tokenizers import BLEU_TOKENIZERS
 from ..utils import my_log
 from .base import BaseScore, Signature
 from .helpers import extract_word_ngrams
+
+import numpy as np
 
 sacrelogger = logging.getLogger('sacrebleu')
 
@@ -37,7 +39,7 @@ class BLEUSignature(Signature):
             if smooth_val is None:
                 smooth_val = smooth_def
 
-            smooth_str += '[{smoot-val:.2f}]'
+            smooth_str += '[{smooth_val:.2f}]'
 
         self.info.update({
             'smooth': smooth_str,
@@ -61,6 +63,10 @@ class BLEUScore(BaseScore):
         self.precisions = precisions
         self.prec_str = "/".join([f"{p:.1f}" for p in self.precisions])
         self.ratio = self.sys_len / self.ref_len if self.ref_len else 0
+        self._estimates = None
+
+    def _attach_estimates(self, precisions, score):
+        pass
 
     def format(self, width=2, score_only=False, signature=''):
         if score_only:
@@ -78,11 +84,12 @@ class BLEU:
 
     :param lowercase: If True, lowercased BLEU is computed
     :param force: Ignore data that looks already tokenized
-    :param tokenize: The tokenizer to use
+    :param tokenize: The tokenizer to use. If None, defaults to language-specific tokenizers with '13a' as the fallback default.
     :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
     :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
     :param max_ngram_order: If given, it overrides the maximum n-gram order (default: 4) when computing precisions.
     :param num_refs: The number of references given
+    :param trg_lang: An optional language code to raise potential tokenizer warnings.
     """
 
     SMOOTH_DEFAULTS = {
@@ -96,24 +103,60 @@ class BLEU:
         'exp': None,    # No value is required
     }
 
+    # mteval-v13a.pl tokenizer unless Chinese or Japanese is provided
+    TOKENIZER_DEFAULT = '13a'
+
+    # Some language specific mappings when specific langpair selected
+    # through cmdline
+    _TOKENIZER_MAP = {
+        'zh': 'zh',
+        'ja': 'ja-mecab',
+    }
+
     def __init__(self, lowercase: bool = False,
                  force: bool = False,
-                 tokenize: str = '13a', smooth_method: str = 'exp',
+                 tokenize: Optional[str] = '13a',
+                 smooth_method: str = 'exp',
                  smooth_value: Optional[float] = None,
                  max_ngram_order: int = MAX_NGRAM_ORDER,
-                 num_refs: int = 1):
+                 num_refs: int = 1,
+                 trg_lang: Optional[str] = None):
         self.name = 'bleu'
         self.force = force
         self.num_refs = num_refs
+        self.trg_lang = trg_lang
         self.lowercase = lowercase
         self.smooth_value = smooth_value
         self.smooth_method = smooth_method
         self.max_ngram_order = max_ngram_order
-        self.tokenizer = TOKENIZERS[tokenize]()
 
         # Sanity check
         assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
             "Unknown smooth_method {self.smooth_method!r}"
+
+        # Default tokenizer assignment
+        if tokenize is None:
+            # Set `zh` or `ja-mecab` if target language is provided
+            tokenize = self._TOKENIZER_MAP.get(self.trg_lang, self.TOKENIZER_DEFAULT)
+
+        if self.trg_lang and self.trg_lang in self._TOKENIZER_MAP:
+            best_tokenizer = self._TOKENIZER_MAP[self.trg_lang]
+            if self.trg_lang == 'zh' and tokenize != best_tokenizer:
+                sacrelogger.warning(
+                    "You should use the 'zh' tokenizer for Chinese.")
+            if self.trg_lang == 'ja' and tokenize != best_tokenizer:
+                sacrelogger.warning(
+                    "You should use the 'ja-mecab' tokenizer for Japanese.")
+
+        if tokenize == 'none':
+            sacrelogger.warning(
+                "You are turning off BLEU's internal tokenizer "
+                "presumably to supply your own tokenized files.")
+            sacrelogger.warning(
+                "Published numbers will not be comparable to other papers.")
+
+        # Create the tokenizer
+        self.tokenizer = BLEU_TOKENIZERS[tokenize]()
 
         # Build the signature
         self.tokenizer_signature = self.tokenizer.signature()
@@ -227,7 +270,7 @@ class BLEU:
         return BLEUScore(
             score, correct, total, precisions, bp, sys_len, ref_len)
 
-    def get_segment_statistics(self, hyp: str, refs: Iterable[str]):
+    def get_segment_statistics(self, hyp: str, refs: Iterable[str]) -> List[int]:
         correct = [0 for n in range(self.max_ngram_order)]
         total = correct[:]
 
@@ -245,17 +288,18 @@ class BLEU:
             correct[order - 1] += min(hyp_ngrams[ngram], ref_ngrams.get(ngram, 0))
             total[order - 1] += hyp_ngrams[ngram]
 
-        return (correct, total, hyp_len, ref_len)
+        # Return a flattened list for efficient computation
+        return [hyp_len, ref_len] + correct + total
 
     def get_statistics(self, hyps: Iterable[str],
-                       refs: List[Iterable[str]]) -> List[Tuple[int, ...]]:
+                       refs: List[Iterable[str]] = None) -> List[List[int]]:
         """Reads the corpus and returns sentence-level match statistics for
         quickly re-computing BLEU afterwards, for significance testing.
 
         :param hyps: An iterable of hypotheses / sentences.
         :param refs: Possibly multiple references per each hypotheses, wrapped
             into a nested Iterable.
-        :return: A list of `SampleStat` objects.
+        :return: A list of List[int].
         """
 
         # sanity checks
@@ -265,11 +309,10 @@ class BLEU:
         if any(line is None for line in hyps):
             raise EOFError("Undefined line in hypotheses stream!")
 
-        stats = []
-
         tok_count = 0
+        stats = np.empty([len(hyps), 2 * self.max_ngram_order + 2], dtype=int)
 
-        for hyp, *cur_refs in zip(hyps, *refs):
+        for idx, (hyp, *cur_refs) in enumerate(zip(hyps, *refs)):
             # remove undefined / empty references
             # i.e. we have fewer references for this particular sentence
             lines = [hyp] + [x for x in cur_refs if x is not None and x != ""]
@@ -289,7 +332,8 @@ class BLEU:
             hyp, *cur_refs = [self.tokenizer(x.rstrip()) for x in lines]
 
             # Collect stats
-            stats.append(self.get_segment_statistics(hyp, cur_refs))
+            #stats.append(self.get_segment_statistics(hyp, cur_refs))
+            stats[idx] = self.get_segment_statistics(hyp, cur_refs)
 
         if not self.force and tok_count >= 100:
             sacrelogger.warning("That's 100 lines that end in a tokenized period ('.')")
@@ -298,7 +342,7 @@ class BLEU:
 
         return stats
 
-    def corpus_score_from_stats(self, stats: List[Tuple[int, ...]],
+    def corpus_score_from_stats(self, stats: List[int],
                                 use_effective_order: bool = False) -> BLEUScore:
         # Accumulate the statistics
         all_correct = [0 for n in range(self.max_ngram_order)]
@@ -306,12 +350,13 @@ class BLEU:
         all_hyp_len = 0
         all_ref_len = 0
 
-        for (correct, total, hyp_len, ref_len) in stats:
-            all_hyp_len += hyp_len
-            all_ref_len += ref_len
+        for stat in stats:
+            # Unpack
+            all_hyp_len += stat[0]
+            all_ref_len += stat[1]
             for n in range(self.max_ngram_order):
-                all_correct[n] += correct[n]
-                all_total[n] += total[n]
+                all_correct[n] += stat[n + 2]
+                all_total[n] += stat[n + self.max_ngram_order + 2]
 
         # Get BLEUScore object
         return self.compute_bleu(
@@ -319,9 +364,29 @@ class BLEU:
             smooth_method=self.smooth_method, smooth_value=self.smooth_value,
             use_effective_order=use_effective_order)
 
+    def corpus_score_from_np_stats(self, stats: List[int],
+                                   use_effective_order: bool = False) -> BLEUScore:
+        # Accumulate the statistics
+        sum_stats = stats.sum(0)
+        all_hyp_len, all_ref_len, all_correct, all_total = \
+            sum_stats[0], sum_stats[1], \
+            sum_stats[2: 2 + self.max_ngram_order], \
+            sum_stats[2 + self.max_ngram_order:]
+
+        # Get BLEUScore object
+        return self.compute_bleu(
+            all_correct, all_total, all_hyp_len, all_ref_len,
+            smooth_method=self.smooth_method, smooth_value=self.smooth_value,
+            use_effective_order=use_effective_order)
+
+    def __get_estimated_bleu(self, scores: List[BLEUScore]):
+        pass
+
+
     def corpus_score(self, hyps: Iterable[str],
                      refs: List[Iterable[str]],
-                     use_effective_order: bool = False) -> BLEUScore:
+                     use_effective_order: bool = False,
+                     n_bootstrap: int = 1) -> BLEUScore:
         """Produces BLEU scores along with its sufficient statistics from a source
         against one or more references.
 
@@ -332,7 +397,14 @@ class BLEU:
         """
 
         stats = self.get_statistics(hyps, refs)
-        return self.corpus_score_from_stats(stats)
+        score = self.corpus_score_from_np_stats(stats)
+        if n_bootstrap > 1:
+            scores = [score]
+            samples = np.random.choice(
+                len(stats), size=(n_bootstrap - 1, len(stats)), replace=True)
+            for s in samples:
+                scores.append(self.corpus_score_from_np_stats(stats[s]))
+        return score
 
     def sentence_score(self, hyp: str, refs: Iterable[str],
                        use_effective_order: bool = True) -> BLEUScore:

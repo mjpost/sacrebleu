@@ -19,9 +19,10 @@ EPSILON = 1e-8
 
 Statistics = namedtuple('Statistics', ['common', 'total'])
 
-test_raw_bleu_cases = [(["this is a test", "another test"], ["ref1", "ref2"], 0.003799178428257963),
-                       (["this is a test"], ["this is a test"], 1.0),
-                       (["this is a fest"], ["this is a test"], 0.223606797749979)]
+test_raw_bleu_cases = [
+    (["this is a test", "another test"], [["ref1", "ref2"]], 0.003799178428257963),
+    (["this is a test"], [["this is a test"]], 1.0),
+    (["this is a fest"], [["this is a test"]], 0.223606797749979)]
 
 # test for README example with empty hypothesis strings check
 _refs = [
@@ -44,7 +45,7 @@ test_corpus_bleu_cases = [
     (_hyps, _refs, {'smooth_method': 'none'}, 48.530827),
 ]
 
-test_case_offset = [("am I am a character sequence", "I am a symbol string sequence a a", 0.1555722182, 0)]
+test_case_offset = [(["am I am a character sequence"], [["I am a symbol string sequence a a"]], 0.1555722182, 0)]
 
 # statistic structure:
 # - common counts
@@ -52,14 +53,14 @@ test_case_offset = [("am I am a character sequence", "I am a symbol string seque
 # - hyp_count
 # - ref_count
 
-test_case_statistics = [("am I am a character sequence", "I am a symbol string sequence a a",
+test_case_statistics = [(["am I am a character sequence"], [["I am a symbol string sequence a a"]],
                          Statistics([4, 2, 1, 0], [6, 5, 4, 3]))]
 
 test_case_scoring = [((Statistics([9, 7, 5, 3], [10, 8, 6, 4]), 11, 11), 0.8375922397)]
 
-test_case_effective_order = [(["test"], ["a test"], 0.3678794411714425),
-                             (["a test"], ["a test"], 1.0),
-                             (["a little test"], ["a test"], 0.03218297948685433)]
+test_case_effective_order = [(["test"], [["a test"]], 0.3678794411714425),
+                             (["a test"], [["a test"]], 1.0),
+                             (["a little test"], [["a test"]], 0.03218297948685433)]
 
 
 # testing that right score is returned for null statistics and different offsets
@@ -74,7 +75,7 @@ test_case_degenerate_stats = [((Statistics([0, 0, 0, 0], [4, 4, 2, 1]), 0, 1), 0
 
 @pytest.mark.parametrize("hypotheses, references, expected_bleu", test_raw_bleu_cases)
 def test_raw_bleu(hypotheses, references, expected_bleu):
-    bleu = sacrebleu.raw_corpus_bleu(hypotheses, [references], .01).score / 100
+    bleu = sacrebleu.raw_corpus_bleu(hypotheses, references, .01).score / 100
     assert abs(bleu - expected_bleu) < EPSILON
 
 
@@ -86,7 +87,7 @@ def test_corpus_bleu(hypotheses, references, kwargs, expected_bleu):
 
 @pytest.mark.parametrize("hypotheses, references, expected_bleu", test_case_effective_order)
 def test_effective_order(hypotheses, references, expected_bleu):
-    bleu = sacrebleu.raw_corpus_bleu(hypotheses, [references], .01).score / 100
+    bleu = sacrebleu.raw_corpus_bleu(hypotheses, references, .01).score / 100
     assert abs(bleu - expected_bleu) < EPSILON
 
 
@@ -120,5 +121,10 @@ def test_offset(hypothesis, reference, expected_with_offset, expected_without_of
 
 @pytest.mark.parametrize("statistics, offset, expected_score", test_case_degenerate_stats)
 def test_degenerate_statistics(statistics, offset, expected_score):
-    score = sacrebleu.compute_bleu(statistics[0].common, statistics[0].total, statistics[1], statistics[2], smooth_method='floor', smooth_value=offset).score / 100
+    score = sacrebleu.compute_bleu(
+        statistics[0].common,
+        statistics[0].total,
+        statistics[1],
+        statistics[2],
+        smooth_method='floor', smooth_value=offset).score / 100
     assert score == expected_score
