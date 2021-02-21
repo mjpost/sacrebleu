@@ -1,7 +1,7 @@
 import math
 import logging
-from collections import Counter
-from typing import List, Iterable, Union, Optional
+from collections import defaultdict
+from typing import List, Iterable, Optional, Tuple
 
 from ..tokenizers import TOKENIZERS
 from ..utils import my_log
@@ -9,6 +9,9 @@ from .base import BaseScore, Signature
 from .helpers import extract_word_ngrams
 
 sacrelogger = logging.getLogger('sacrebleu')
+
+# The default for the maximum n-gram order when computing precisions
+MAX_NGRAM_ORDER = 4
 
 
 class BLEUSignature(Signature):
@@ -34,7 +37,7 @@ class BLEUSignature(Signature):
             if smooth_val is None:
                 smooth_val = smooth_def
 
-            smooth_str += '[{:.2f}]'.format(smooth_val)
+            smooth_str += '[{smoot-val:.2f}]'
 
         self.info.update({
             'smooth': smooth_str,
@@ -56,41 +59,30 @@ class BLEUScore(BaseScore):
         self.sys_len = sys_len
         self.ref_len = ref_len
         self.precisions = precisions
-        self.prec_str = "/".join(["{:.1f}".format(p) for p in self.precisions])
+        self.prec_str = "/".join([f"{p:.1f}" for p in self.precisions])
+        self.ratio = self.sys_len / self.ref_len if self.ref_len else 0
 
     def format(self, width=2, score_only=False, signature=''):
         if score_only:
-            return '{0:.{1}f}'.format(self.score, width)
+            return f'{self.score:.{width}f}'
 
-        prefix = "{}+{}".format(self.prefix, signature) if signature else self.prefix
-
-        s = '{pr} = {sc:.{w}f} {prec} (BP = {bp:.3f} ratio = {r:.3f} hyp_len = {sl:d} ref_len = {rl:d})'.format(
-            pr=prefix,
-            sc=self.score,
-            w=width,
-            prec=self.prec_str,
-            bp=self.bp,
-            r=self.sys_len / self.ref_len,
-            sl=self.sys_len,
-            rl=self.ref_len)
+        pr = f"{self.prefix}+{signature}" if signature else self.prefix
+        s = f'{pr} = {self.score:.{width}f} {self.prec_str} '
+        s += f'(BP = {self.bp:.3f} ratio = {self.ratio:.3f} '
+        s += f'hyp_len = {self.sys_len:d} ref_len = {self.ref_len:d})'
         return s
-
-
-# The default for the maximum n-gram order when computing precisions
-MAX_NGRAM_ORDER = 4
 
 
 class BLEU:
     """Computes the BLEU metric given hypotheses and references.
 
-    Args:
-        lowercase: If True, lowercased BLEU is computed.
-        force:
-        tokenize:
-        smooth_method:
-        smooth_value:
-        max_ngram_order:
-        num_refs:
+    :param lowercase: If True, lowercased BLEU is computed
+    :param force: Ignore data that looks already tokenized
+    :param tokenize: The tokenizer to use
+    :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
+    :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
+    :param max_ngram_order: If given, it overrides the maximum n-gram order (default: 4) when computing precisions.
+    :param num_refs: The number of references given
     """
 
     SMOOTH_DEFAULTS = {
@@ -112,50 +104,51 @@ class BLEU:
                  num_refs: int = 1):
         self.name = 'bleu'
         self.force = force
+        self.num_refs = num_refs
         self.lowercase = lowercase
         self.smooth_value = smooth_value
         self.smooth_method = smooth_method
         self.max_ngram_order = max_ngram_order
         self.tokenizer = TOKENIZERS[tokenize]()
-        self.num_refs = num_refs
 
         # Sanity check
         assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
-            "Unknown smooth_method '{}'".format(self.smooth_method)
+            "Unknown smooth_method {self.smooth_method!r}"
 
         # Build the signature
         self.tokenizer_signature = self.tokenizer.signature()
         self.signature = BLEUSignature(self.__dict__)
 
     @staticmethod
-    def reference_stats(refs, output_len, max_ngram_order=MAX_NGRAM_ORDER):
+    def reference_stats(refs, hyp_len, max_ngram_order=MAX_NGRAM_ORDER):
         """Extracts reference statistics for a given segment.
 
         :param refs: A list of segment tokens.
-        :param output_len: Hypothesis length for this segment.
-        :return: a tuple of (ngrams, closest_diff, closest_len)
+        :param hyp_len: Hypothesis length for this segment.
+        :return: a tuple of (ngrams, closest_ref_len)
         """
 
-        ngrams = Counter()
         closest_diff = None
-        closest_len = None
+        closest_ref_len = None
+        ngrams = defaultdict(int)
 
         for ref in refs:
-            tokens = ref.split()
-            reflen = len(tokens)
-            diff = abs(output_len - reflen)
+            # extract n-grams for this ref
+            ref_tokens = ref.split()
+            ref_len = len(ref_tokens)
+            diff = abs(hyp_len - ref_len)
             if closest_diff is None or diff < closest_diff:
                 closest_diff = diff
-                closest_len = reflen
+                closest_ref_len = ref_len
             elif diff == closest_diff:
-                if reflen < closest_len:
-                    closest_len = reflen
+                if ref_len < closest_ref_len:
+                    closest_ref_len = ref_len
 
-            ngrams_ref = extract_word_ngrams(ref, 1, max_ngram_order)
-            for ngram in ngrams_ref.keys():
-                ngrams[ngram] = max(ngrams[ngram], ngrams_ref[ngram])
+            cur_ngrams = extract_word_ngrams(ref_tokens, 1, max_ngram_order)
+            for key in cur_ngrams.keys():
+                ngrams[key] = max(ngrams[key], cur_ngrams[key])
 
-        return ngrams, closest_diff, closest_len
+        return dict(ngrams), closest_ref_len
 
     @staticmethod
     def compute_bleu(correct: List[int],
@@ -187,7 +180,7 @@ class BLEU:
         :return: A BLEU object with the score (100-based) and other statistics.
         """
         assert smooth_method in BLEU.SMOOTH_DEFAULTS.keys(), \
-            "Unknown smooth_method '{}'".format(smooth_method)
+            "Unknown smooth_method {smooth_method!r}"
 
         # Fetch the default value for floor and add-k
         if smooth_value is None:
@@ -234,8 +227,114 @@ class BLEU:
         return BLEUScore(
             score, correct, total, precisions, bp, sys_len, ref_len)
 
-    def sentence_score(self, hypothesis: str,
-                       references: List[str],
+    def get_segment_statistics(self, hyp: str, refs: Iterable[str]):
+        correct = [0 for n in range(self.max_ngram_order)]
+        total = correct[:]
+
+        # Extract n-grams for the hypothesis
+        hyp_tokens = hyp.split()
+        hyp_len = len(hyp_tokens)
+        hyp_ngrams = extract_word_ngrams(hyp_tokens, 1, self.max_ngram_order)
+
+        # Extract n-grams for the reference(s)
+        ref_ngrams, ref_len = BLEU.reference_stats(refs, hyp_len)
+
+        # Count the stats
+        for ngram in hyp_ngrams.keys():
+            order = len(ngram)
+            correct[order - 1] += min(hyp_ngrams[ngram], ref_ngrams.get(ngram, 0))
+            total[order - 1] += hyp_ngrams[ngram]
+
+        return (correct, total, hyp_len, ref_len)
+
+    def get_statistics(self, hyps: Iterable[str],
+                       refs: List[Iterable[str]]) -> List[Tuple[int, ...]]:
+        """Reads the corpus and returns sentence-level match statistics for
+        quickly re-computing BLEU afterwards, for significance testing.
+
+        :param hyps: An iterable of hypotheses / sentences.
+        :param refs: Possibly multiple references per each hypotheses, wrapped
+            into a nested Iterable.
+        :return: A list of `SampleStat` objects.
+        """
+
+        # sanity checks
+        if any(len(ref_stream) != len(hyps) for ref_stream in refs):
+            raise RuntimeError("System and reference streams have different lengths!")
+
+        if any(line is None for line in hyps):
+            raise EOFError("Undefined line in hypotheses stream!")
+
+        stats = []
+
+        tok_count = 0
+
+        for hyp, *cur_refs in zip(hyps, *refs):
+            # remove undefined / empty references
+            # i.e. we have fewer references for this particular sentence
+            lines = [hyp] + [x for x in cur_refs if x is not None and x != ""]
+
+            if len(lines) < 2:
+                # we need at least a hypothesis and a non-empty reference
+                raise RuntimeError("Found hypothesis with no valid reference sentences.")
+
+            if self.lowercase:
+                lines = [x.lower() for x in lines]
+
+            # Check for already-tokenized input problem
+            if lines[0].endswith(' .'):
+                tok_count += 1
+
+            # Unpack the lines back and tokenize
+            hyp, *cur_refs = [self.tokenizer(x.rstrip()) for x in lines]
+
+            # Collect stats
+            stats.append(self.get_segment_statistics(hyp, cur_refs))
+
+        if not self.force and tok_count >= 100:
+            sacrelogger.warning("That's 100 lines that end in a tokenized period ('.')")
+            sacrelogger.warning("It looks like you forgot to detokenize your test data, which may hurt your score.")
+            sacrelogger.warning("If you insist your data is detokenized, or don't care, you can suppress this message with '--force'.")
+
+        return stats
+
+    def corpus_score_from_stats(self, stats: List[Tuple[int, ...]],
+                                use_effective_order: bool = False) -> BLEUScore:
+        # Accumulate the statistics
+        all_correct = [0 for n in range(self.max_ngram_order)]
+        all_total = all_correct[:]
+        all_hyp_len = 0
+        all_ref_len = 0
+
+        for (correct, total, hyp_len, ref_len) in stats:
+            all_hyp_len += hyp_len
+            all_ref_len += ref_len
+            for n in range(self.max_ngram_order):
+                all_correct[n] += correct[n]
+                all_total[n] += total[n]
+
+        # Get BLEUScore object
+        return self.compute_bleu(
+            all_correct, all_total, all_hyp_len, all_ref_len,
+            smooth_method=self.smooth_method, smooth_value=self.smooth_value,
+            use_effective_order=use_effective_order)
+
+    def corpus_score(self, hyps: Iterable[str],
+                     refs: List[Iterable[str]],
+                     use_effective_order: bool = False) -> BLEUScore:
+        """Produces BLEU scores along with its sufficient statistics from a source
+        against one or more references.
+
+        :param hyps: The system / hypothesis stream (a sequence of segments)
+        :param refs: A list of one or more reference streams (each a sequence of segments)
+        :param use_effective_order: Account for references that are shorter than the largest n-gram.
+        :return: a `BLEUScore` object containing everything you'd want
+        """
+
+        stats = self.get_statistics(hyps, refs)
+        return self.corpus_score_from_stats(stats)
+
+    def sentence_score(self, hyp: str, refs: Iterable[str],
                        use_effective_order: bool = True) -> BLEUScore:
         """
         Computes BLEU on a single sentence pair.
@@ -248,80 +347,5 @@ class BLEU:
         :param use_effective_order: Account for references that are shorter than the largest n-gram.
         :return: a `BLEUScore` object containing everything you'd want
         """
-        assert not isinstance(references, str), \
-            "sentence_score needs a list of references, not a single string"
-        return self.corpus_score(hypothesis, [[ref] for ref in references],
+        return self.corpus_score([hyp], [[ref] for ref in refs],
                                  use_effective_order=use_effective_order)
-
-    def corpus_score(self, sys_stream: Union[str, Iterable[str]],
-                     ref_streams: Union[str, List[Iterable[str]]],
-                     use_effective_order: bool = False) -> BLEUScore:
-        """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
-
-        :param sys_stream: The system stream (a sequence of segments)
-        :param ref_streams: A list of one or more reference streams (each a sequence of segments)
-        :param use_effective_order: Account for references that are shorter than the largest n-gram.
-        :return: a `BLEUScore` object containing everything you'd want
-        """
-
-        # Add some robustness to the input arguments
-        if isinstance(sys_stream, str):
-            sys_stream = [sys_stream]
-
-        if isinstance(ref_streams, str):
-            ref_streams = [[ref_streams]]
-
-        sys_len = 0
-        ref_len = 0
-
-        correct = [0 for n in range(self.max_ngram_order)]
-        total = [0 for n in range(self.max_ngram_order)]
-
-        # look for already-tokenized sentences
-        tokenized_count = 0
-
-        # sanity checks
-        if any(len(ref_stream) != len(sys_stream) for ref_stream in ref_streams):
-            raise EOFError("System and reference streams have different lengths!")
-        if any(line is None for line in sys_stream):
-            raise EOFError("Undefined line in system stream!")
-
-        for output, *refs in zip(sys_stream, *ref_streams):
-            # remove undefined/empty references (i.e. we have fewer references for this particular sentence)
-            # but keep empty hypothesis (it's always defined thanks to the sanity check above)
-            lines = [output] + [x for x in refs if x is not None and x != ""]
-            if len(lines) < 2:  # we need at least hypothesis + 1 defined & non-empty reference
-                raise EOFError("No valid references for a sentence!")
-
-            if self.lowercase:
-                lines = [x.lower() for x in lines]
-
-            if not (self.force or self.tokenizer.signature() == 'none') and lines[0].rstrip().endswith(' .'):
-                tokenized_count += 1
-
-                if tokenized_count == 100:
-                    sacrelogger.warning('That\'s 100 lines that end in a tokenized period (\'.\')')
-                    sacrelogger.warning('It looks like you forgot to detokenize your test data, which may hurt your score.')
-                    sacrelogger.warning('If you insist your data is detokenized, or don\'t care, you can suppress this message with \'--force\'.')
-
-            output, *refs = [self.tokenizer(x.rstrip()) for x in lines]
-
-            output_len = len(output.split())
-            ref_ngrams, closest_diff, closest_len = BLEU.reference_stats(refs, output_len)
-
-            sys_len += output_len
-            ref_len += closest_len
-
-            sys_ngrams = extract_word_ngrams(output, 1, self.max_ngram_order)
-            for ngram in sys_ngrams.keys():
-                n = len(ngram.split())
-                correct[n-1] += min(sys_ngrams[ngram], ref_ngrams.get(ngram, 0))
-                total[n-1] += sys_ngrams[ngram]
-
-        # Get BLEUScore object
-        score = self.compute_bleu(
-            correct, total, sys_len, ref_len,
-            smooth_method=self.smooth_method, smooth_value=self.smooth_value,
-            use_effective_order=use_effective_order)
-
-        return score
