@@ -149,19 +149,19 @@ unset EXPECTED
 declare -A EXPECTED
 
 # Single ref, tokenizer variants, lowercase
-EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref1"]=36.8799
-EXPECTED["${CMD} -lc -w 4 -b -l cs-en -i $sys $ref1"]=38.1492
-EXPECTED["${CMD} --tokenize 13a  -w 4 -b -l cs-en -i $sys $ref1"]=36.8799
-EXPECTED["${CMD} --tokenize none -w 4 -b -l cs-en -i $sys $ref1"]=34.0638
+EXPECTED["${CMD} -w 4 -b -l cs-en $ref1 -i $sys"]=36.8799
+EXPECTED["${CMD} -lc -w 4 -b -l cs-en $ref1 -i $sys"]=38.1492
+EXPECTED["${CMD} --tokenize 13a  -w 4 -b -l cs-en $ref1 -i $sys"]=36.8799
+EXPECTED["${CMD} --tokenize none -w 4 -b -l cs-en $ref1 -i $sys"]=34.0638
 # multiple REF files
-EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys $ref1 $ref2"]=44.6732
+EXPECTED["${CMD} -w 4 -b -l cs-en $ref1 $ref2 -i $sys"]=44.6732
 # multiple REFs with tab-delimited stream
-EXPECTED["${CMD} -w 4 -b -l cs-en -i $sys --num-refs 2 <(paste $ref1 $ref2)"]=44.6732
+EXPECTED["${CMD} -w 4 -b -l cs-en --num-refs 2 <(paste $ref1 $ref2) -i $sys"]=44.6732
 # Check signature correctness for multi-reference
 # separate files
-EXPECTED["${CMD} -l cs-en -i $sys $ref1 $ref2 | perl -pe 's/.*numrefs\.([0-9]).*/\1/'"]=2
+EXPECTED["${CMD} -l cs-en $ref1 $ref2 -i $sys | perl -pe 's/.*numrefs\.([0-9]).*/\1/'"]=2
 # tab delimited stream
-EXPECTED["${CMD} -l cs-en -i $sys --num-refs 2 <(paste $ref1 $ref2) | perl -pe 's/.*numrefs\.([0-9]).*/\1/'"]=2
+EXPECTED["${CMD} -l cs-en --num-refs 2 <(paste $ref1 $ref2) -i $sys | perl -pe 's/.*numrefs\.([0-9]).*/\1/'"]=2
 
 
 # Run the tests
