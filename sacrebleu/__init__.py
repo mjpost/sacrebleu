@@ -13,7 +13,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__version__ = '1.5.0'
+__version__ = '2.0.0'
 __description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU, chrF, and TER scores'
 
 
