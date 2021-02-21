@@ -10,7 +10,7 @@ import ssl
 import urllib.request
 
 from itertools import filterfalse
-from typing import List
+from typing import List, Iterable, Optional
 from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES
 
 
@@ -24,6 +24,21 @@ USERHOME = os.path.expanduser("~")
 SACREBLEU_DIR = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
 sacrelogger = logging.getLogger('sacrebleu')
+
+
+def sanity_check_lengths(system: Iterable[str],
+                         refs: List[Iterable[str]],
+                         test_set: Optional[str] = None):
+    n_hyps = len(system)
+    if any(len(ref_stream) != n_hyps for ref_stream in refs):
+        sacrelogger.error("System and reference streams have different lengths.")
+        if test_set:
+            sacrelogger.error("This could be an issue with your system output "
+                              "or with sacreBLEU's reference database if -t is given.")
+            sacrelogger.error("For the latter, try cleaning out the cache by typing:\n")
+            sacrelogger.error(f"  rm -r {SACREBLEU_DIR}/{test_set}\n")
+            sacrelogger.error("The test sets will be downloaded again next time you run sacreBLEU.")
+        sys.exit(1)
 
 
 def smart_open(file, mode='rt', encoding='utf-8'):
