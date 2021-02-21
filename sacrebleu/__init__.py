@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # Copyright 2017--2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
@@ -18,12 +17,7 @@ __version__ = '1.5.0'
 __description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU, chrF, and TER scores'
 
 
-from .utils import smart_open, SACREBLEU_DIR, download_test_set
-from .utils import get_source_file, get_reference_files
-from .utils import get_available_testsets, get_langpairs_for_testset
-from .dataset import DATASETS
-from .tokenizers import TOKENIZERS, DEFAULT_TOKENIZER
-from .metrics import BLEU, CHRF
+from .metrics import BLEU, CHRF, TER
 
 # Backward compatibility functions for old style API access (<= 1.4.10)
 from .compat import corpus_bleu, raw_corpus_bleu, sentence_bleu
@@ -33,6 +27,3 @@ from .compat import corpus_ter, sentence_ter
 # Other shorthands for backward-compatibility with <= 1.4.10
 from .metrics.helpers import extract_word_ngrams as extract_ngrams
 from .metrics.helpers import extract_char_ngrams
-
-ref_stats = BLEU.reference_stats
-compute_bleu = BLEU.compute_bleu
