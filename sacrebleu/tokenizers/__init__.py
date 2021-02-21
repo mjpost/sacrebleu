@@ -5,19 +5,14 @@ from .tokenizer_zh import TokenizerZh
 from .tokenizer_ja_mecab import TokenizerJaMecab
 from .tokenizer_char import TokenizerChar
 
-# No tokenization, only suppresses whitespaces
-from .tokenizer_chrf import TokenizerChrf
 
-
-DEFAULT_TOKENIZER = '13a'
-
-
-TOKENIZERS = {
-    'none': BaseTokenizer,
-    '13a': Tokenizer13a,
-    'intl': TokenizerV14International,
+BLEU_TOKENIZERS = {
     'zh': TokenizerZh,
-    'ja-mecab': TokenizerJaMecab,
+    '13a': Tokenizer13a,
+    'none': BaseTokenizer,
     'char': TokenizerChar,
-    'chrf': TokenizerChrf,
+    'intl': TokenizerV14International,
+    'ja-mecab': TokenizerJaMecab,
 }
+
+DEFAULT_BLEU_TOKENIZER = '13a'
