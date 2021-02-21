@@ -1,18 +1,19 @@
+import os
+import re
+import ssl
+import sys
 import gzip
+import math
 import hashlib
 import logging
-import math
-import os
-import portalocker
-import re
-import sys
-import ssl
 import urllib.request
-
 from itertools import filterfalse
 from typing import List, Iterable, Optional
-from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES
 
+import portalocker
+from tabulate import tabulate
+
+from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
@@ -24,6 +25,16 @@ USERHOME = os.path.expanduser("~")
 SACREBLEU_DIR = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
 sacrelogger = logging.getLogger('sacrebleu')
+
+
+def get_results_table(results: dict,
+                      latex: bool = False):
+    tablefmt = 'latex_booktabs' if latex else 'grid'
+    s = tabulate(
+        results, headers='keys',
+        tablefmt=tablefmt,
+        floatfmt='.2f')
+    return s
 
 
 def sanity_check_lengths(system: Iterable[str],
