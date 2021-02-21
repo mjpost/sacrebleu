@@ -1,7 +1,8 @@
 from itertools import zip_longest
 from typing import List, Iterable, Union
 
-from ..tokenizers import BaseTokenizer, TokenizerChrf
+from ..tokenizers import BaseTokenizer
+from ..tokenizers.tokenizer_chrf import TokenizerChrf
 
 from .base import BaseScore, Signature
 from .helpers import extract_char_ngrams
