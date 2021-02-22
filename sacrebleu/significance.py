@@ -10,6 +10,6 @@ def bootstrap_ci(estimates: List[float]) -> Tuple[float, float]:
     :return: A tuple of (mean, CI).
     """
     estimates = np.array(estimates)
-    mean, stdev = estimates.mean(), estimates.std()
+    mean, stdev = np.mean(estimates), np.std(estimates)
     ci = (1.96 * stdev) / (len(estimates) ** 0.5)
     return mean, ci
