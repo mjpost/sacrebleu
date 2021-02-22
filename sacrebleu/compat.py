@@ -83,21 +83,24 @@ def sentence_bleu(hypothesis: str,
 
 def corpus_chrf(hypotheses: Iterable[str],
                 references: List[Iterable[str]],
-                order: int = CHRF.ORDER,
+                char_order: int = CHRF.CHAR_ORDER,
+                word_order: int = CHRF.WORD_ORDER,
                 beta: float = CHRF.BETA,
                 remove_whitespace: bool = True) -> CHRFScore:
     """
-    Computes ChrF on a corpus.
+    Computes ChrF++ on a corpus.
 
     :param hypotheses: Stream of hypotheses.
     :param references: Stream of references.
-    :param order: Maximum n-gram order.
+    :param char_order: Maximum character n-gram order.
+    :param word_order: Maximum word n-gram order.
     :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
     :param remove_whitespace: Whether to delete all whitespace from hypothesis and reference strings.
     :return: A `CHRFScore` object.
     """
     metric = CHRF(
-        order=order,
+        char_order=char_order,
+        word_order=word_order,
         beta=beta,
         whitespace=not remove_whitespace)
     return metric.corpus_score(hypotheses, references)
@@ -105,21 +108,24 @@ def corpus_chrf(hypotheses: Iterable[str],
 
 def sentence_chrf(hypothesis: str,
                   references: List[str],
-                  order: int = CHRF.ORDER,
+                  char_order: int = CHRF.CHAR_ORDER,
+                  word_order: int = CHRF.WORD_ORDER,
                   beta: float = CHRF.BETA,
                   remove_whitespace: bool = True) -> CHRFScore:
     """
-    Computes ChrF on a single sentence pair.
+    Computes ChrF++ on a single sentence pair.
 
     :param hypothesis: Hypothesis string.
     :param references: Reference string(s).
-    :param order: Maximum n-gram order.
+    :param char_order: Maximum character n-gram order.
+    :param word_order: Maximum word n-gram order.
     :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
     :param remove_whitespace: Whether to delete whitespaces from hypothesis and reference strings.
     :return: A `CHRFScore` object.
     """
     metric = CHRF(
-        order=order,
+        char_order=char_order,
+        word_order=word_order,
         beta=beta,
         whitespace=not remove_whitespace)
     return metric.sentence_score(hypothesis, references)
