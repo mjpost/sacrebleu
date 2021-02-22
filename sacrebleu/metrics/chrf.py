@@ -1,7 +1,6 @@
 from itertools import zip_longest
 from typing import List, Iterable, Union
 
-from ..tokenizers import BaseTokenizer
 from ..tokenizers.tokenizer_chrf import TokenizerChrf
 
 from .base import BaseScore, Signature
@@ -13,7 +12,8 @@ class CHRFSignature(Signature):
         super().__init__(args)
 
         self._abbr.update({
-            'numchars': 'n',
+            'numchars': 'nc',
+            'numwords': 'nw',
             'space': 's',
             'case': 'c',
         })
@@ -21,7 +21,8 @@ class CHRFSignature(Signature):
         self.info.update({
             'space': str(self.args['whitespace']).lower(),
             'case': 'lc' if self.args['lowercase'] else 'mixed',
-            'numchars': self.args['order'],
+            'numchars': self.args['char_order'],
+            'numwords': self.args['word_order'],
         })
 
 
@@ -30,7 +31,7 @@ class CHRFScore(BaseScore):
         super().__init__(score)
 
         self.beta = beta
-        self.order = order
+        self.char_order = order
         self.prefix = f'chrF{self.beta}'
 
     def format(self, width=2, score_only=False, signature=''):
@@ -44,38 +45,40 @@ class CHRFScore(BaseScore):
 
 
 class CHRF:
-    """Computes the chrF metric given hypotheses and references.
+    """Computes the chrF++ metric given hypotheses and references.
 
     :param whitespace: If True, includes the whitespace character in chrF computation.
-    :param order: chrF character order
+    :param char_order: chrF character order
+    :param word_order: chrF word order
     :param beta: chrF Beta parameter
     :param lowercase: Lowercase sentences prior computation
     :param num_refs: Number of references (not functional for chrF as of now)
     """
 
-    # Default values for CHRF
-    ORDER = 6
+    # Maximum character n-gram order to take into account
+    CHAR_ORDER = 6
 
-    # default to 2 (per http://www.aclweb.org/anthology/W16-2341)
+    # chrF++ additionally takes into account some of the word n-grams
+    WORD_ORDER = 0
+
+    # Defaults to 2 (per http://www.aclweb.org/anthology/W16-2341)
     BETA = 2
 
     def __init__(self, whitespace: bool = False,
-                 order: int = ORDER,
+                 char_order: int = CHAR_ORDER,
+                 word_order: int = WORD_ORDER,
                  beta: float = BETA,
                  lowercase: bool = False,
                  num_refs: int = 1):
         self.name = 'chrf'
         self.beta = beta
-        self.order = order
+        self.char_order = char_order
+        self.word_order = word_order
         self.num_refs = num_refs
         self.lowercase = lowercase
         self.whitespace = whitespace
         self.signature = CHRFSignature(self.__dict__)
-
-        if self.whitespace:
-            self.tokenizer = BaseTokenizer()
-        else:
-            self.tokenizer = TokenizerChrf()
+        self.tokenizer = TokenizerChrf(self.lowercase, self.whitespace)
 
     @staticmethod
     def compute_chrf(statistics: List[int],
@@ -118,8 +121,8 @@ class CHRF:
 
         hypothesis = self.tokenizer(hypothesis)
         reference = self.tokenizer(reference)
-        statistics = [0] * (self.order * 3)
-        for i in range(self.order):
+        statistics = [0] * (self.char_order * 3)
+        for i in range(self.char_order):
             n = i + 1
             hypothesis_ngrams = extract_char_ngrams(hypothesis, n)
             reference_ngrams = extract_char_ngrams(reference, n)
@@ -140,7 +143,7 @@ class CHRF:
         assert not isinstance(references, str), \
             "sentence_score needs a list of references, not a single string"
         stats = self.get_sentence_statistics(hypothesis, references)
-        return self.compute_chrf(stats, self.order, self.beta)
+        return self.compute_chrf(stats, self.char_order, self.beta)
 
     def corpus_score(self, sys_stream: Union[str, Iterable[str]],
                      ref_streams: Union[str, List[Iterable[str]]]) -> CHRFScore:
@@ -159,7 +162,7 @@ class CHRF:
         if isinstance(ref_streams, str):
             ref_streams = [[ref_streams]]
 
-        corpus_statistics = [0] * (self.order * 3)
+        corpus_statistics = [0] * (self.char_order * 3)
 
         fhs = [sys_stream] + ref_streams
         for lines in zip_longest(*fhs):
@@ -173,4 +176,4 @@ class CHRF:
             for i in range(len(statistics)):
                 corpus_statistics[i] += statistics[i]
 
-        return self.compute_chrf(corpus_statistics, self.order, self.beta)
+        return self.compute_chrf(corpus_statistics, self.char_order, self.beta)
