@@ -159,9 +159,4 @@ class TercomTokenizer(BaseTokenizer):
         return sent
 
     def signature(self):
-        return("-".join([
-            'tercom',
-            'norm' if self._normalized else 'nonorm',
-            'nopunct' if self._no_punct else 'punct',
-            'asian' if self._asian_support else 'noasian',
-        ]))
+        return 'tercom'
