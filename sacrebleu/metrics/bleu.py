@@ -1,10 +1,11 @@
 import math
 import logging
-from collections import defaultdict
-from typing import List, Iterable, Optional, Tuple
+from collections import Counter
+from typing import List, Iterable, Optional
 
 from ..tokenizers import BLEU_TOKENIZERS
 from ..utils import my_log
+from ..significance import bootstrap_ci
 from .base import BaseScore, Signature
 from .helpers import extract_word_ngrams
 
@@ -51,32 +52,56 @@ class BLEUSignature(Signature):
 
 class BLEUScore(BaseScore):
     """A convenience class to represent BLEU scores (without signature)."""
-    def __init__(self, score, counts, totals, precisions, bp, sys_len, ref_len):
+    def __init__(self, score, precisions, bp, sys_len, ref_len):
         super().__init__(score)
 
         self.prefix = 'BLEU'
         self.bp = bp
-        self.counts = counts
-        self.totals = totals
-        self.sys_len = sys_len
-        self.ref_len = ref_len
+        self.sys_len = int(sys_len)
+        self.ref_len = int(ref_len)
         self.precisions = precisions
         self.prec_str = "/".join([f"{p:.1f}" for p in self.precisions])
         self.ratio = self.sys_len / self.ref_len if self.ref_len else 0
-        self._estimates = None
 
-    def _attach_estimates(self, precisions, score):
-        pass
+    def _set_score_only_string(self, width=2):
+        """Sets the string to be printed if score-only mode requested."""
+        self._sc_str = f'{self.score:.{width}f}'
 
     def format(self, width=2, score_only=False, signature=''):
+        self._set_score_only_string(width)
         if score_only:
-            return f'{self.score:.{width}f}'
+            return self._sc_str
 
         pr = f"{self.prefix}+{signature}" if signature else self.prefix
-        s = f'{pr} = {self.score:.{width}f} {self.prec_str} '
+        s = f'{pr} = {self._sc_str} {self.prec_str} '
         s += f'(BP = {self.bp:.3f} ratio = {self.ratio:.3f} '
         s += f'hyp_len = {self.sys_len:d} ref_len = {self.ref_len:d})'
         return s
+
+
+class BootstrapBLEUScore(BLEUScore):
+    """A convenience class that computes average BLEU and other stats from
+    a collection of bootstrap resamples.
+
+    :param scores: A list of `BLEUScore` objects.
+    """
+    def __init__(self, scores: List[BLEUScore]):
+        self.n_bootstrap = len(scores)
+        bp = sum(map(lambda x: x.bp, scores)) / len(scores)
+        sys_len = sum(map(lambda x: x.sys_len, scores)) / len(scores)
+        ref_len = sum(map(lambda x: x.ref_len, scores)) / len(scores)
+        precisions = np.array([x.precisions for x in scores]).mean(0).tolist()
+        mean_bleu, self.ci = bootstrap_ci([x.score for x in scores])
+
+        # Call parent's __init__()
+        super().__init__(mean_bleu, precisions, bp, sys_len, ref_len)
+
+    def _set_score_only_string(self, width=2):
+        """Adds mean, CI and n_bootstrap info at the end of score string."""
+        super()._set_score_only_string(width)
+
+        # Append mean, CI and n_bootstrap at the end
+        self._sc_str += f' +/- {self.ci:.3f} [n={self.n_bootstrap}]'
 
 
 class BLEU:
@@ -173,7 +198,7 @@ class BLEU:
 
         closest_diff = None
         closest_ref_len = None
-        ngrams = defaultdict(int)
+        ngrams = Counter()
 
         for ref in refs:
             # extract n-grams for this ref
@@ -187,11 +212,10 @@ class BLEU:
                 if ref_len < closest_ref_len:
                     closest_ref_len = ref_len
 
-            cur_ngrams = extract_word_ngrams(ref_tokens, 1, max_ngram_order)
-            for key in cur_ngrams.keys():
-                ngrams[key] = max(ngrams[key], cur_ngrams[key])
+            # Merge counts: Union will keep the max of two
+            ngrams |= extract_word_ngrams(ref_tokens, 1, max_ngram_order)
 
-        return dict(ngrams), closest_ref_len
+        return ngrams, closest_ref_len
 
     @staticmethod
     def compute_bleu(correct: List[int],
@@ -268,11 +292,29 @@ class BLEU:
             sum(map(my_log, precisions[:effective_order])) / effective_order)
 
         return BLEUScore(
-            score, correct, total, precisions, bp, sys_len, ref_len)
+            score, precisions, bp, sys_len, ref_len)
+
+    def _get_ngram_counts(self, ngrams: Counter) -> List[int]:
+        """Returns a list of n-gram counts.
+
+        :param ngrams: A Counter with n-gram tuples and their counts as keys & values.
+        :return: A list of `max_ngram_order` integers that represent the counts.
+        """
+        c = [0 for i in range(self.max_ngram_order)]
+        for key, count in ngrams.items():
+            c[len(key) - 1] += count
+        return c
 
     def get_segment_statistics(self, hyp: str, refs: Iterable[str]) -> List[int]:
-        correct = [0 for n in range(self.max_ngram_order)]
-        total = correct[:]
+        """Computes the match statistics given a single hypothesis and multiple references.
+
+        :param hyp: A string representing the hypothesis
+        :param refs: An iterable of multiple reference segments
+        :return: A flattened list where the first two integers denote the
+            hypothesis and reference lengths. The next `max_gram_order` elements
+            give the number of correct n-gram matches and the final `max_ngram_order`
+            elements give the number of total n-grams in the hypothesis.
+        """
 
         # Extract n-grams for the hypothesis
         hyp_tokens = hyp.split()
@@ -283,23 +325,23 @@ class BLEU:
         ref_ngrams, ref_len = BLEU.reference_stats(refs, hyp_len)
 
         # Count the stats
-        for ngram in hyp_ngrams.keys():
-            order = len(ngram)
-            correct[order - 1] += min(hyp_ngrams[ngram], ref_ngrams.get(ngram, 0))
-            total[order - 1] += hyp_ngrams[ngram]
+        matched_ngrams = hyp_ngrams & ref_ngrams
+        correct = self._get_ngram_counts(matched_ngrams)
+        total = self._get_ngram_counts(hyp_ngrams)
 
         # Return a flattened list for efficient computation
         return [hyp_len, ref_len] + correct + total
 
-    def get_statistics(self, hyps: Iterable[str],
-                       refs: List[Iterable[str]] = None) -> List[List[int]]:
+    def get_corpus_statistics(self, hyps: Iterable[str],
+                              refs: List[Iterable[str]] = None) -> List[List[int]]:
         """Reads the corpus and returns sentence-level match statistics for
         quickly re-computing BLEU afterwards, for significance testing.
 
         :param hyps: An iterable of hypotheses / sentences.
         :param refs: Possibly multiple references per each hypotheses, wrapped
             into a nested Iterable.
-        :return: A list of List[int].
+        :return: A List[List[int]] where each element is a flattened list
+            returned by `BLEU.get_segment_statistics()`.
         """
 
         # sanity checks
@@ -310,7 +352,7 @@ class BLEU:
             raise EOFError("Undefined line in hypotheses stream!")
 
         tok_count = 0
-        stats = np.empty([len(hyps), 2 * self.max_ngram_order + 2], dtype=int)
+        stats = []
 
         for idx, (hyp, *cur_refs) in enumerate(zip(hyps, *refs)):
             # remove undefined / empty references
@@ -332,8 +374,7 @@ class BLEU:
             hyp, *cur_refs = [self.tokenizer(x.rstrip()) for x in lines]
 
             # Collect stats
-            #stats.append(self.get_segment_statistics(hyp, cur_refs))
-            stats[idx] = self.get_segment_statistics(hyp, cur_refs)
+            stats.append(self.get_segment_statistics(hyp, cur_refs))
 
         if not self.force and tok_count >= 100:
             sacrelogger.warning("That's 100 lines that end in a tokenized period ('.')")
@@ -342,46 +383,23 @@ class BLEU:
 
         return stats
 
-    def corpus_score_from_stats(self, stats: List[int],
+    def corpus_score_from_stats(self, stats: List[List[int]],
                                 use_effective_order: bool = False) -> BLEUScore:
-        # Accumulate the statistics
-        all_correct = [0 for n in range(self.max_ngram_order)]
-        all_total = all_correct[:]
-        all_hyp_len = 0
-        all_ref_len = 0
+        """Computes the final BLEU score given the pre-computed corpus statistics.
 
-        for stat in stats:
-            # Unpack
-            all_hyp_len += stat[0]
-            all_ref_len += stat[1]
-            for n in range(self.max_ngram_order):
-                all_correct[n] += stat[n + 2]
-                all_total[n] += stat[n + self.max_ngram_order + 2]
+        :param stats: A list segment-level statistics
+        :return: BLEUScore object.
+        """
+        # Accumulate the statistics
+        sum_stats = stats.sum(0).astype(np.uint).tolist()
 
         # Get BLEUScore object
         return self.compute_bleu(
-            all_correct, all_total, all_hyp_len, all_ref_len,
+            correct=sum_stats[2: 2 + self.max_ngram_order],
+            total=sum_stats[2 + self.max_ngram_order:],
+            sys_len=sum_stats[0], ref_len=sum_stats[1],
             smooth_method=self.smooth_method, smooth_value=self.smooth_value,
             use_effective_order=use_effective_order)
-
-    def corpus_score_from_np_stats(self, stats: List[int],
-                                   use_effective_order: bool = False) -> BLEUScore:
-        # Accumulate the statistics
-        sum_stats = stats.sum(0)
-        all_hyp_len, all_ref_len, all_correct, all_total = \
-            sum_stats[0], sum_stats[1], \
-            sum_stats[2: 2 + self.max_ngram_order], \
-            sum_stats[2 + self.max_ngram_order:]
-
-        # Get BLEUScore object
-        return self.compute_bleu(
-            all_correct, all_total, all_hyp_len, all_ref_len,
-            smooth_method=self.smooth_method, smooth_value=self.smooth_value,
-            use_effective_order=use_effective_order)
-
-    def __get_estimated_bleu(self, scores: List[BLEUScore]):
-        pass
-
 
     def corpus_score(self, hyps: Iterable[str],
                      refs: List[Iterable[str]],
@@ -396,15 +414,20 @@ class BLEU:
         :return: a `BLEUScore` object containing everything you'd want
         """
 
-        stats = self.get_statistics(hyps, refs)
-        score = self.corpus_score_from_np_stats(stats)
+        # float32 is more efficient than (u)int arrays
+        stats = np.array(
+            self.get_corpus_statistics(hyps, refs), dtype='float32')
+
+        # Get bootstrap estimate
         if n_bootstrap > 1:
-            scores = [score]
+            # Resample with replacement
             samples = np.random.choice(
-                len(stats), size=(n_bootstrap - 1, len(stats)), replace=True)
-            for s in samples:
-                scores.append(self.corpus_score_from_np_stats(stats[s]))
-        return score
+                len(stats), size=(n_bootstrap, len(stats)), replace=True)
+            scores = [self.corpus_score_from_stats(stats[idx]) for idx in samples]
+            return BootstrapBLEUScore(scores)
+        else:
+            # Usual BLEU score
+            return self.corpus_score_from_stats(stats)
 
     def sentence_score(self, hyp: str, refs: Iterable[str],
                        use_effective_order: bool = True) -> BLEUScore:
