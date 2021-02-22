@@ -99,9 +99,11 @@ def parse_args():
 
     # Significance testing options
     sign_args = arg_parser.add_argument_group('Significance testing related arguments')
-    sign_args.add_argument('--sig-test', '-st', action='store_true',
+    sign_args.add_argument('--bootstrap', '-bs', action='store_true',
                            help='Enable bootstrap resampling for population score estimates.')
-    sign_args.add_argument('--n-bootstrap', '-nb', type=int, default=1,
+    sign_args.add_argument('--paired-bootstrap', '-pbs', action='store_true',
+                           help='Compare multiple systems with paired bootstrap resampling.')
+    sign_args.add_argument('--n-bootstrap', '-nb', type=int, default=1000,
                            help='Number of bootstrap samples (Default: %(default)s)')
 
     # Metric selection
@@ -382,6 +384,16 @@ def main():
         # Check lengths
         sanity_check_lengths(system, refs, test_set=args.test_set)
 
+    if num_sys == 1 and args.paired_bootstrap:
+        sacrebleu.error(
+            'Paired bootstrap resampling requires multiple input systems')
+        sacrebleu.error('For single system estimates, use --bootstrap')
+        sys.exit(1)
+
+    if not args.bootstrap and not args.paired_bootstrap:
+        # Reset to 1. This is to have a default of 1000 in argparse' defaults
+        args.n_bootstrap = 1
+
     # Create the metrics
     metrics = {}
     signatures = {}
@@ -424,8 +436,9 @@ def main():
             sys_name = sys_names[idx]
             sacrelogger.debug(f'Evaluating {sys_name!r}')
             for name in sorted(metrics):
-                score = metrics[name].corpus_score(system, refs)
-                scores[score.prefix].append(score.score)
+                score = metrics[name].corpus_score(
+                    system, refs, n_bootstrap=args.n_bootstrap)
+                scores[score.prefix].append(score.format(args.width, True))
 
         print()
         print(get_results_table(scores, latex=args.latex))
