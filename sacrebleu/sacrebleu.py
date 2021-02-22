@@ -96,8 +96,6 @@ def parse_args():
                             help='Split the reference stream on tabs, and expect this many references. (Default: %(default)s)')
     arg_parser.add_argument('--encoding', '-e', type=str, default='utf-8',
                             help='Open text files with specified encoding (Default: %(default)s)')
-    arg_parser.add_argument('-lc', action='store_true', default=False,
-                            help='If True, enables case-insensitivity. TER is always case-insensitive regardless of this argument (Default: %(default)s)')
 
     # Significance testing options
     sign_args = arg_parser.add_argument_group('Significance testing related arguments')
@@ -129,18 +127,35 @@ def parse_args():
     bleu_args.add_argument('--tokenize', '-tok', choices=BLEU_TOKENIZERS.keys(), default=None,
                            dest='bleu_tokenize',
                            help='Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `ja-mecab` for Japanese and `13a` (mteval) otherwise.')
+    arg_parser.add_argument('-lc', dest='bleu_lowercase', action='store_true', default=False,
+                            help='If True, enables case-insensitivity. (Default: %(default)s)')
     bleu_args.add_argument('--force', default=False, action='store_true',
                            dest='bleu_force',
                            help='Insist that your tokenized input is actually detokenized')
 
     # ChrF-related arguments
-    chrf_args = arg_parser.add_argument_group('chrF related arguments')
-    chrf_args.add_argument('--chrf-order', type=int, default=METRICS['chrf'].ORDER,
-                           help='chrF character order (Default: %(default)s)')
+    chrf_args = arg_parser.add_argument_group('chrF++ related arguments')
+    chrf_args.add_argument('--chrf-char-order', type=int, default=METRICS['chrf'].CHAR_ORDER,
+                           help='chrF++ character order (Default: %(default)s)')
+    chrf_args.add_argument('--chrf-word-order', type=int, default=METRICS['chrf'].WORD_ORDER,
+                           help='chrF++ word order (Default: %(default)s)')
     chrf_args.add_argument('--chrf-beta', type=int, default=METRICS['chrf'].BETA,
                            help='chrF BETA parameter (Default: %(default)s)')
     chrf_args.add_argument('--chrf-whitespace', action='store_true', default=False,
                            help='Include whitespace in chrF calculation (Default: %(default)s)')
+    chrf_args.add_argument('--chrf-lowercase', action='store_true', default=False,
+                           help='If True, enables case-insensitivity. (Default: %(default)s)')
+
+    # TER related arguments
+    ter_args = arg_parser.add_argument_group('TER related arguments')
+    ter_args.add_argument('--ter-case-sensitive', action='store_true',
+                          help='Enables case sensitivity (Default: %(default)s)')
+    ter_args.add_argument('--ter-asian-support', action='store_true',
+                          help='Enables special treatment of Asian characters (Default: %(default)s)')
+    ter_args.add_argument('--ter-no-punct', action='store_true',
+                          help='Removes punctuation. (Default: %(default)s)')
+    ter_args.add_argument('--ter-normalized', action='store_true',
+                          help='Applies basic normalization and tokenization. (Default: %(default)s)')
 
     # Reporting related arguments
     report_args = arg_parser.add_argument_group('Reporting related arguments')
