@@ -101,7 +101,7 @@ def parse_args():
     sign_args = arg_parser.add_argument_group('Significance testing related arguments')
     sign_args.add_argument('--sig-test', '-st', action='store_true',
                            help='Enable bootstrap resampling for population score estimates.')
-    sign_args.add_argument('--n-bootstrap', '-nb', default=1000,
+    sign_args.add_argument('--n-bootstrap', '-nb', type=int, default=1,
                            help='Number of bootstrap samples (Default: %(default)s)')
 
     # Metric selection
@@ -412,7 +412,8 @@ def main():
         for name in sorted(metrics):
             # Get the signature
             sig = metrics[name].signature.get(short=args.short)
-            score = metrics[name].corpus_score(system, refs)
+            score = metrics[name].corpus_score(
+                system, refs, n_bootstrap=args.n_bootstrap)
             print(score.format(args.width, args.score_only, sig))
 
     else:
