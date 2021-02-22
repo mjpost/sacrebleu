@@ -145,7 +145,7 @@ class BLEU:
                  smooth_value: Optional[float] = None,
                  max_ngram_order: int = MAX_NGRAM_ORDER,
                  num_refs: int = 1,
-                 trg_lang: Optional[str] = None):
+                 trg_lang: str = ''):
         self.name = 'bleu'
         self.force = force
         self.num_refs = num_refs
@@ -354,6 +354,8 @@ class BLEU:
         tok_count = 0
         stats = []
 
+        cur_refs: List[str]
+
         for idx, (hyp, *cur_refs) in enumerate(zip(hyps, *refs)):
             # remove undefined / empty references
             # i.e. we have fewer references for this particular sentence
@@ -383,7 +385,7 @@ class BLEU:
 
         return stats
 
-    def corpus_score_from_stats(self, stats: List[List[int]],
+    def corpus_score_from_stats(self, stats: np.ndarray,
                                 use_effective_order: bool = False) -> BLEUScore:
         """Computes the final BLEU score given the pre-computed corpus statistics.
 
