@@ -1,8 +1,8 @@
-from collections import Counter, defaultdict
-from typing import List, Tuple, DefaultDict
+from collections import Counter
+from typing import List
 
 
-def extract_word_ngrams(tokens: List[str], min_order: int, max_order: int) -> dict:
+def extract_word_ngrams(tokens: List[str], min_order: int, max_order: int) -> Counter:
     """Extracts all ngrams (min_order <= n <= max_order) from a sentence.
 
     :param tokens: A list of tokens
@@ -11,13 +11,13 @@ def extract_word_ngrams(tokens: List[str], min_order: int, max_order: int) -> di
     :return: a count dictionary
     """
 
-    ngrams: DefaultDict[tuple, str] = defaultdict(int)
+    ngrams = []
 
     for n in range(min_order, max_order + 1):
         for i in range(0, len(tokens) - n + 1):
-            ngrams[tuple(tokens[i: i + n])] += 1
+            ngrams.append(tuple(tokens[i: i + n]))
 
-    return dict(ngrams)
+    return Counter(ngrams)
 
 
 def extract_char_ngrams(line: str, n: int) -> Counter:
