@@ -1,4 +1,4 @@
-from typing import Union, Iterable, List, Optional
+from typing import Iterable, List, Optional
 
 from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
 
@@ -136,7 +136,7 @@ def corpus_ter(hypotheses: Iterable[str],
                normalized: bool = False,
                no_punct: bool = False,
                asian_support: bool = False,
-               lowercase: bool = True) -> TERScore:
+               case_sensitive: bool = False) -> TERScore:
     """
     Computes TER on a corpus.
 
@@ -145,14 +145,14 @@ def corpus_ter(hypotheses: Iterable[str],
     :param normalized: Enable character normalization.
     :param no_punct: Remove punctuation.
     :param asian_support: Enable special treatment of Asian characters.
-    :param lowercase: Lowercase all sentences.
+    :param case_sensitive: Enables case-sensitivity.
     :return: A `TERScore` object.
     """
     metric = TER(
         normalized=normalized,
         no_punct=no_punct,
         asian_support=asian_support,
-        lowercase=lowercase)
+        case_sensitive=case_sensitive)
     return metric.corpus_score(hypotheses, references)
 
 
@@ -161,7 +161,7 @@ def sentence_ter(hypothesis: str,
                  normalized: bool = False,
                  no_punct: bool = False,
                  asian_support: bool = False,
-                 lowercase: bool = True) -> TERScore:
+                 case_sensitive: bool = False) -> TERScore:
     """
     Computes TER on a single sentence pair.
 
@@ -177,5 +177,5 @@ def sentence_ter(hypothesis: str,
         normalized=normalized,
         no_punct=no_punct,
         asian_support=asian_support,
-        lowercase=lowercase)
+        case_sensitive=case_sensitive)
     return metric.sentence_score(hypothesis, references)
