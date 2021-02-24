@@ -396,7 +396,6 @@ def main():
 
     # Create the metrics
     metrics = {}
-    signatures = {}
     for name in args.metrics:
         # Each metric's specific arguments are prefixed with `metricname_`
         # for grouping. Filter accordingly and strip the prefixes prior to
@@ -405,9 +404,6 @@ def main():
         metric_args = args_to_dict(args, name, strip_prefix=True)
         metrics[name] = METRICS[name](**metric_args)
 
-        # Get the signature
-        signatures[name] = metrics[name].signature.get(short=args.short)
-
     # Handle sentence level and quit
     if args.sentence_level:
         # one metric and one system in use for sentence-level
@@ -415,7 +411,8 @@ def main():
 
         for output, *references in zip(system, *refs):
             score = metric.sentence_score(output, references)
-            print(score.format(args.width, args.score_only, signatures[metric]))
+            sig = metric.signature.get(args.short)
+            print(score.format(args.width, args.score_only, sig))
 
         sys.exit(0)
 
@@ -423,12 +420,13 @@ def main():
     if num_sys == 1:
         for name in sorted(metrics):
             # Get the signature
-            sig = metrics[name].signature.get(short=args.short)
             score = metrics[name].corpus_score(
                 system, refs, n_bootstrap=args.n_bootstrap)
+            sig = metrics[name].signature.get(short=args.short)
             print(score.format(args.width, args.score_only, sig))
 
     else:
+        sigs = {}
         scores = defaultdict(list)
         scores['System'] = sys_names
 
@@ -438,14 +436,23 @@ def main():
             for name in sorted(metrics):
                 score = metrics[name].corpus_score(
                     system, refs, n_bootstrap=args.n_bootstrap)
+                sigs[name] = metrics[name].signature.get(args.short)
                 scores[score.prefix].append(score.format(args.width, True))
 
-        print()
         print(get_results_table(scores, latex=args.latex))
         print()
         print('Metric signatures:')
-        for name, sig in signatures.items():
+        for name, sig in sigs.items():
             print(f' {name:<10} {sig}')
+
+    if args.bootstrap or args.paired_bootstrap:
+        print()
+        if args.bootstrap:
+            print(f'Bootstrap resampling (n={args.n_bootstrap}) done to '
+                  'provide 95% confidence intervals around the true mean.')
+        if args.paired_bootstrap:
+            print(f'Paired bootstrap resampling (n={args.n_bootstrap}) done to '
+                  'compare candidate systems against a baseline.')
 
     # Prints detailed information for translationese effect experiments
     # FIXME: What happens with many systems here

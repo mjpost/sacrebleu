@@ -1,3 +1,5 @@
+from typing import Any
+
 from .. import __version__
 
 
@@ -29,6 +31,7 @@ class Signature:
             'lang': 'l',
             'subset': 'S',
             'origlang': 'o',
+            'bootstrap': 'bs',  # enabled with bootstrap resampling
         }
 
         # Global items that are shared across all metrics
@@ -55,6 +58,10 @@ class Signature:
                 pairs.append(f'{final_name}.{value}')
 
         return '+'.join(pairs)
+
+    def update(self, key: str, value: Any):
+        """Add a new item or update an existing one."""
+        self.info[key] = value
 
     def __str__(self):
         return self.get()
