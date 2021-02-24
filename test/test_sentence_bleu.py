@@ -41,6 +41,5 @@ def test_compat_sentence_bleu(smooth_method, smooth_value, lowercase, tok, expec
 def test_api_sentence_bleu(smooth_method, smooth_value, lowercase, tok, expected_score):
     metric = sacrebleu.metrics.BLEU(
         lowercase=lowercase, force=False, tokenize=tok,
-        smooth_method=smooth_method, smooth_value=smooth_value,
-        use_effective_order=True)
-    metric.sentence_score(SYS, [REF])
+        smooth_method=smooth_method, smooth_value=smooth_value)
+    metric.sentence_score(SYS, [REF], use_effective_order=True)

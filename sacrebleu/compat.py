@@ -27,10 +27,9 @@ def corpus_bleu(sys_stream: Sequence[str],
     """
     metric = BLEU(
         lowercase=lowercase, force=force, tokenize=tokenize,
-        smooth_method=smooth_method, smooth_value=smooth_value,
-        use_effective_order=use_effective_order)
+        smooth_method=smooth_method, smooth_value=smooth_value)
 
-    return metric.corpus_score(sys_stream, ref_streams)
+    return metric.corpus_score(sys_stream, ref_streams, use_effective_order)
 
 
 def raw_corpus_bleu(sys_stream: Sequence[str],
@@ -75,10 +74,9 @@ def sentence_bleu(hypothesis: str,
     """
     metric = BLEU(
         lowercase=lowercase, tokenize=tokenize, force=False,
-        smooth_method=smooth_method, smooth_value=smooth_value,
-        use_effective_order=use_effective_order)
+        smooth_method=smooth_method, smooth_value=smooth_value)
 
-    return metric.sentence_score(hypothesis, references)
+    return metric.sentence_score(hypothesis, references, use_effective_order)
 
 
 def corpus_chrf(hypotheses: Sequence[str],

@@ -1,5 +1,32 @@
 from collections import Counter
-from typing import List
+from typing import List, Sequence
+
+def check_sentence_score_args(hyp: str, refs: Sequence[str]):
+    if not isinstance(hyp, str):
+        raise RuntimeError('The argument `hyp` should be a string.')
+
+    if not isinstance(refs, Sequence):
+        raise RuntimeError('The argument `refs` should be a sequence of strings.')
+
+    if not isinstance(refs[0], str):
+        raise RuntimeError('Each element of `refs` should be a string.')
+
+
+def check_corpus_score_args(hyps: Sequence[str], refs: Sequence[Sequence[str]]):
+    if not isinstance(hyps, Sequence):
+        raise RuntimeError("`hyps` should be a sequence of strings.")
+
+    if not isinstance(hyps[0], str):
+        raise RuntimeError('Each element of `hyps` should be a string.')
+
+    if not isinstance(refs, Sequence):
+        raise RuntimeError("`refs` should be a sequence of sequence of strings.")
+
+    if not isinstance(refs[0], Sequence):
+        raise RuntimeError("Each element of `refs` should be a sequence of strings.")
+
+    if not isinstance(refs[0][0], str):
+        raise RuntimeError("`refs` should be a sequence of sequence of strings.")
 
 
 def extract_word_ngrams(tokens: List[str], min_order: int, max_order: int) -> Counter:

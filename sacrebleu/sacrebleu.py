@@ -407,7 +407,7 @@ def main():
     # Handle sentence level and quit
     if args.sentence_level:
         # one metric and one system in use for sentence-level
-        metric, system = metrics[0], systems[0]
+        metric, system = metrics[args.metrics[0]], systems[0]
 
         for output, *references in zip(system, *refs):
             score = metric.sentence_score(output, references)

@@ -68,23 +68,3 @@ class Signature:
 
     def __repr__(self):
         return self.get()
-
-
-class Metric:
-    """An abstract base class to derive from when creating a metric."""
-
-    def corpus_score(self, hyps: Sequence[str],
-                     refs: Sequence[Sequence[str]],
-                     n_bootstrap: int = 1) -> Score:
-        pass
-
-    def sentence_score(self, hyp: str,
-                       refs: Sequence[str]) -> Score:
-        if not isinstance(hyp, str):
-            raise RuntimeError('The argument `hyp` should be a string.')
-
-        if not isinstance(refs, Sequence):
-            raise RuntimeError('The argument `refs` should be a sequence of strings.')
-
-        if not isinstance(refs[0], str):
-            raise RuntimeError('Each element of `refs` should be a string.')

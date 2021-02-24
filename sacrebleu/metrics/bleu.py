@@ -6,8 +6,8 @@ from typing import List, Sequence, Optional
 from ..tokenizers import BLEU_TOKENIZERS
 from ..utils import my_log
 from ..significance import bootstrap_ci
-from .base import Score, Signature, Metric
-from .helpers import extract_word_ngrams
+from .base import Score, Signature
+from .helpers import extract_word_ngrams, check_corpus_score_args, check_sentence_score_args
 
 import numpy as np
 
@@ -104,7 +104,7 @@ class BootstrapBLEUScore(BLEUScore):
         return super().format(width, score_only, signature)
 
 
-class BLEU(Metric):
+class BLEU:
     """Computes the BLEU metric given hypotheses and references.
 
     :param lowercase: If True, lowercased BLEU is computed.
@@ -113,7 +113,6 @@ class BLEU(Metric):
     :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none').
     :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
     :param max_ngram_order: If given, it overrides the maximum n-gram order (default: 4) when computing precisions.
-    :param use_effective_order: If True, ignore n-gram orders for which there are no matches. Useful for sentence-level BLEU.
     :param num_refs: The number of references.
     :param trg_lang: An optional language code to raise potential tokenizer warnings.
     """
@@ -145,7 +144,6 @@ class BLEU(Metric):
                  smooth_method: str = 'exp',
                  smooth_value: Optional[float] = None,
                  max_ngram_order: int = MAX_NGRAM_ORDER,
-                 use_effective_order: bool = False,
                  num_refs: int = 1,
                  trg_lang: str = ''):
         self.name = 'bleu'
@@ -156,7 +154,6 @@ class BLEU(Metric):
         self.smooth_value = smooth_value
         self.smooth_method = smooth_method
         self.max_ngram_order = max_ngram_order
-        self.use_effective_order = use_effective_order
 
         # Sanity check
         assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
@@ -245,7 +242,7 @@ class BLEU(Metric):
         :param ref_len: The cumulative reference length
         :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
         :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
-        :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of max_ngram_order.
+        :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of `max_ngram_order`.
         :param max_ngram_order: If given, it overrides the maximum n-gram order (default: 4) when computing precisions.
         :return: A BLEU object with the score (100-based) and other statistics.
         """
@@ -260,13 +257,20 @@ class BLEU(Metric):
 
         smooth_mteval = 1.
         effective_order = max_ngram_order
-        for n in range(1, max_ngram_order + 1):
+        for n in range(1, len(precisions) + 1):
             if smooth_method == 'add-k' and n > 1:
                 correct[n-1] += smooth_value
                 total[n-1] += smooth_value
+
             if total[n-1] == 0:
                 break
 
+            # If the system guesses no i-grams, 1 <= i <= max_ngram_order,
+            # the BLEU score is 0 (technically undefined). This is a problem for sentence
+            # level BLEU or a corpus of short sentences, where systems will get
+            # no credit if sentence lengths fall under the max_ngram_order threshold.
+            # This fix scales max_ngram_order to the observed maximum order.
+            # It is only available through the API and off by default
             if use_effective_order:
                 effective_order = n
 
@@ -278,13 +282,6 @@ class BLEU(Metric):
                     precisions[n-1] = 100. * smooth_value / total[n-1]
             else:
                 precisions[n-1] = 100. * correct[n-1] / total[n-1]
-
-        # If the system guesses no i-grams, 1 <= i <= max_ngram_order, the BLEU
-        # score is 0 (technically undefined). This is a problem for sentence
-        # level BLEU or a corpus of short sentences, where systems will get
-        # no credit if sentence lengths fall under the max_ngram_order threshold.
-        # This fix scales max_ngram_order to the observed maximum order.
-        # It is only available through the API and off by default
 
         if sys_len < ref_len:
             bp = math.exp(1 - ref_len / sys_len) if sys_len > 0 else 0.0
@@ -388,10 +385,12 @@ class BLEU(Metric):
 
         return stats
 
-    def corpus_score_from_stats(self, stats: np.ndarray) -> BLEUScore:
+    def _corpus_score_from_stats(self, stats: np.ndarray,
+                                 use_effective_order: bool = False) -> BLEUScore:
         """Computes the final BLEU score given the pre-computed corpus statistics.
 
-        :param stats: A list segment-level statistics
+        :param stats: A numpy array with segment-level statistics
+        :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of `max_ngram_order`.
         :return: BLEUScore object.
         """
         # Accumulate the statistics
@@ -403,46 +402,59 @@ class BLEU(Metric):
             total=sum_stats[2 + self.max_ngram_order:],
             sys_len=sum_stats[0], ref_len=sum_stats[1],
             smooth_method=self.smooth_method, smooth_value=self.smooth_value,
-            use_effective_order=self.use_effective_order)
+            use_effective_order=use_effective_order)
 
     def corpus_score(self, hyps: Sequence[str],
                      refs: Sequence[Sequence[str]],
+                     use_effective_order: bool = False,
                      n_bootstrap: int = 1) -> BLEUScore:
         """Produces BLEU scores along with its sufficient statistics from a source
         against one or more references.
 
         :param hyps: The system / hypothesis stream (a sequence of segments)
         :param refs: A list of one or more reference streams (each a sequence of segments)
-        :return: a `BLEUScore` object containing everything you'd want
+        :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of `max_ngram_order`.
+        :return: a `BLEUScore` object.
         """
+        check_corpus_score_args(hyps, refs)
 
         # float32 is more efficient than (u)int arrays
         stats = np.array(
             self.get_corpus_statistics(hyps, refs), dtype='float32')
 
-        # Get bootstrap estimate
-        if n_bootstrap > 1:
-            # Update signature
-            self.signature.update('bootstrap', n_bootstrap)
-            # Resample with replacement
-            samples = np.random.choice(
-                len(stats), size=(n_bootstrap, len(stats)), replace=True)
-            scores = [self.corpus_score_from_stats(stats[idx]) for idx in samples]
-            return BootstrapBLEUScore(scores)
-        else:
-            # Usual BLEU score
-            return self.corpus_score_from_stats(stats)
+        if n_bootstrap == 1:
+            # Compute the usual BLEU score
+            return self._corpus_score_from_stats(stats, use_effective_order)
 
-    def sentence_score(self, hyp: str, refs: Sequence[str]) -> BLEUScore:
+        # Get bootstrap estimate & resample
+        samples = np.random.choice(
+            len(stats), size=(n_bootstrap, len(stats)), replace=True)
+        scores = [self._corpus_score_from_stats(stats[idx], use_effective_order) for idx in samples]
+
+        # Update BLEU signature
+        self.signature.update('bootstrap', n_bootstrap)
+        return BootstrapBLEUScore(scores)
+
+    def sentence_score(self, hyp: str, refs: Sequence[str],
+                       use_effective_order: bool = True) -> BLEUScore:
         """
         Computes BLEU on a single sentence pair.
 
         Disclaimer: computing BLEU on the sentence level is not its intended use,
         BLEU is a corpus-level metric.
 
-        :param hypothesis: Hypothesis string.
-        :param references: List of reference strings.
-        :return: a `BLEUScore` object containing everything you'd want
+        :param hyp: Hypothesis string.
+        :param refs: List of reference strings.
+        :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of `max_ngram_order`.
+        :return: a `BLEUScore` object.
         """
-        # NOTE: Call super
-        return self.corpus_score([hyp], [[ref] for ref in refs])
+        check_sentence_score_args(hyp, refs)
+
+        sum_stats = self.get_corpus_statistics([hyp], [[ref] for ref in refs])[0]
+
+        return self.compute_bleu(
+            correct=sum_stats[2: 2 + self.max_ngram_order],
+            total=sum_stats[2 + self.max_ngram_order:],
+            sys_len=sum_stats[0], ref_len=sum_stats[1],
+            smooth_method=self.smooth_method, smooth_value=self.smooth_value,
+            use_effective_order=use_effective_order)
