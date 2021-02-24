@@ -1,10 +1,12 @@
 from typing import List, Sequence
+from collections import Counter
 
 from ..tokenizers.tokenizer_chrf import TokenizerChrf
 from ..significance import bootstrap_ci
 
 from .base import Score, Signature
-from .helpers import extract_char_ngrams, check_corpus_score_args, check_sentence_score_args
+from .helpers import check_corpus_score_args, check_sentence_score_args
+from .helpers import extract_char_ngrams, extract_word_ngrams
 
 import numpy as np
 
@@ -119,7 +121,7 @@ class CHRF:
 
         statistics = statistics.sum(0).astype(int).tolist()
 
-        for i in range(self.char_order):
+        for i in range(self.order):
             hypotheses_ngrams = statistics[3 * i + 0]
             references_ngrams = statistics[3 * i + 1]
             common_ngrams = statistics[3 * i + 2]
@@ -143,6 +145,16 @@ class CHRF:
 
         return CHRFScore(score, self.char_order, self.word_order, self.beta)
 
+    @staticmethod
+    def _get_match_statistics(hyp_ngrams: Counter, ref_ngrams: Counter) -> List[int]:
+        match_ngrams = hyp_ngrams & ref_ngrams
+
+        return [
+            sum(hyp_ngrams.values()),
+            sum(ref_ngrams.values()),
+            sum(match_ngrams.values()),
+        ]
+
     def _extract_segment_statistics(self, hyp: str, refs: Sequence[str]) -> List[int]:
         """Computes the match statistics given a single hypothesis and multiple references.
 
@@ -153,20 +165,27 @@ class CHRF:
         # NOTE: multi-reference not supported yet
         ref = refs[0]
 
-        statistics = [0 for i in range(self.order * 3)]
+        statistics = []
+
+        # Unpack the lines back and tokenize
+        hyp_char_form = self.tokenizer.to_chars(hyp)
+        ref_char_form = self.tokenizer.to_chars(ref)
 
         # extract character n-grams
-        for i in range(self.char_order):
-            n = i + 1
+        for n in range(self.char_order):
+            hyp_ngrams = extract_char_ngrams(hyp_char_form, n + 1)
+            ref_ngrams = extract_char_ngrams(ref_char_form, n + 1)
+            statistics.extend(self._get_match_statistics(hyp_ngrams, ref_ngrams))
 
-            hypothesis_ngrams = extract_char_ngrams(hyp, n)
-            reference_ngrams = extract_char_ngrams(ref, n)
-            common_ngrams = hypothesis_ngrams & reference_ngrams
+        # chrF++ takes into account word n-grams too
+        if self.word_order > 0:
+            hyp_word_form = self.tokenizer.to_words(hyp)
+            ref_word_form = self.tokenizer.to_words(ref)
 
-            # compute character stats
-            statistics[3 * i + 0] = sum(hypothesis_ngrams.values())
-            statistics[3 * i + 1] = sum(reference_ngrams.values())
-            statistics[3 * i + 2] = sum(common_ngrams.values())
+            for n in range(self.word_order):
+                hyp_ngrams = extract_word_ngrams(hyp_word_form, n + 1)
+                ref_ngrams = extract_word_ngrams(ref_word_form, n + 1)
+                statistics.extend(self._get_match_statistics(hyp_ngrams, ref_ngrams))
 
         return statistics
 
@@ -196,14 +215,11 @@ class CHRF:
         for idx, (hyp, *cur_refs) in enumerate(zip(hyps, *refs)):
             # remove undefined / empty references
             # i.e. we have fewer references for this particular sentence
-            lines = [hyp] + [x for x in cur_refs if x is not None and x != ""]
+            cur_refs = [x for x in cur_refs if x is not None and x != ""]
 
-            if len(lines) < 2:
+            if len(cur_refs) < 1:
                 # we need at least a hypothesis and a non-empty reference
                 raise RuntimeError("Found hypothesis with no valid reference sentences.")
-
-            # Unpack the lines back and tokenize
-            hyp, *cur_refs = [self.tokenizer(x.rstrip()) for x in lines]
 
             # Collect stats
             stats.append(self._extract_segment_statistics(hyp, cur_refs))

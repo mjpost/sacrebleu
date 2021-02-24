@@ -7,7 +7,7 @@ from ..tokenizers import BLEU_TOKENIZERS
 from ..utils import my_log
 from ..significance import bootstrap_ci
 from .base import Score, Signature
-from .helpers import extract_word_ngrams, check_corpus_score_args, check_sentence_score_args
+from .helpers import extract_all_word_ngrams, check_corpus_score_args, check_sentence_score_args
 
 import numpy as np
 
@@ -213,7 +213,7 @@ class BLEU:
                     closest_ref_len = ref_len
 
             # Merge counts: Union will keep the max of two
-            ngrams |= extract_word_ngrams(ref_tokens, 1, max_ngram_order)
+            ngrams |= extract_all_word_ngrams(ref_tokens, 1, max_ngram_order)
 
         return ngrams, closest_ref_len
 
@@ -319,7 +319,7 @@ class BLEU:
         # Extract n-grams for the hypothesis
         hyp_tokens = hyp.split()
         hyp_len = len(hyp_tokens)
-        hyp_ngrams = extract_word_ngrams(hyp_tokens, 1, self.max_ngram_order)
+        hyp_ngrams = extract_all_word_ngrams(hyp_tokens, 1, self.max_ngram_order)
 
         # Extract n-grams for the reference(s)
         ref_ngrams, ref_len = BLEU.reference_stats(refs, hyp_len)
