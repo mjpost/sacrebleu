@@ -1,7 +1,7 @@
-from itertools import zip_longest
-from typing import List, Union, Sequence
+from typing import List, Sequence
 
 from ..tokenizers.tokenizer_chrf import TokenizerChrf
+from ..significance import bootstrap_ci
 
 from .base import Score, Signature
 from .helpers import extract_char_ngrams, check_corpus_score_args, check_sentence_score_args
@@ -29,7 +29,7 @@ class CHRFSignature(Signature):
 
 
 class CHRFScore(Score):
-    def __init__(self, score: float, char_order: int, word_order:int, beta: int):
+    def __init__(self, score: float, char_order: int, word_order: int, beta: int):
         super().__init__(score)
 
         self.beta = beta
@@ -60,10 +60,12 @@ class BootstrapCHRFScore(CHRFScore):
         self.n_bootstrap = len(scores)
         mean_chrf, self.ci = bootstrap_ci([x.score for x in scores])
 
-        super().__init__(mean_chrf, char_order, word_order, beta)
+        super().__init__(
+            mean_chrf, scores[0].char_order,
+            scores[0].word_order, scores[0].beta)
 
     def format(self, width=2, score_only=False, signature=''):
-        self._score_string = f'{self.score:.{width}f} +/- {self.ci:.3f}'
+        self._score_string = f'{self.score:.{width}f} +/- {self.ci:.5f}'
         return super().format(width, score_only, signature)
 
 
@@ -104,17 +106,18 @@ class CHRF:
         self.signature = CHRFSignature(self.__dict__)
         self.tokenizer = TokenizerChrf(self.lowercase, self.whitespace)
 
-    def compute_chrf(self, statistics: List[int]) -> CHRFScore:
+    def compute_chrf(self, statistics: np.ndarray) -> CHRFScore:
         """Computes the chrF++ score from the given match statistics.
 
-        :param statistics: A list of integers
+        :param statistics: A numpy array with the match statistics.
         :return: a `CHRFScore` object.
         """
-
         score = 0.0
         avg_recall = 0.0
         avg_precision = 0.0
         effective_order = 0
+
+        statistics = statistics.sum(0).astype(int).tolist()
 
         for i in range(self.char_order):
             hypotheses_ngrams = statistics[3 * i + 0]
@@ -150,7 +153,7 @@ class CHRF:
         # NOTE: multi-reference not supported yet
         ref = refs[0]
 
-        statistics = [0] * (self.order * 3)
+        statistics = [0 for i in range(self.order * 3)]
 
         # extract character n-grams
         for i in range(self.char_order):
@@ -227,13 +230,14 @@ class CHRF:
 
         if n_bootstrap == 1:
             # Compute the usual BLEU score
-            #return self._corpus_score_from_stats(stats, use_effective_order)
-            return self.compute_chrf(stats.sum(0).tolist())
+            return self.compute_chrf(stats)
 
         # Get bootstrap estimate & resample
         samples = np.random.choice(
             len(stats), size=(n_bootstrap, len(stats)), replace=True)
-        scores = [self._corpus_score_from_stats(stats[idx]) for idx in samples]
+
+        # recompute chrF scores
+        scores = [self.compute_chrf(stats[idx]) for idx in samples]
 
         # Update BLEU signature
         self.signature.update('bootstrap', n_bootstrap)
@@ -249,30 +253,5 @@ class CHRF:
         """
         check_sentence_score_args(hyp, refs)
 
-        stats = self.get_sentence_statistics(hyp, refs)
-        return self.compute_chrf(stats, self.char_order, self.beta)
-
-
-    # def sentence_score(self, hyp: str, refs: Sequence[str],
-                       # use_effective_order: bool = True) -> BLEUScore:
-        # """
-        # Computes BLEU on a single sentence pair.
-
-        # Disclaimer: computing BLEU on the sentence level is not its intended use,
-        # BLEU is a corpus-level metric.
-
-        # :param hyp: Hypothesis string.
-        # :param refs: List of reference strings.
-        # :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of `max_ngram_order`.
-        # :return: a `BLEUScore` object.
-        # """
-        # check_sentence_score_args(hyp, refs)
-
-        # sum_stats = self._extract_corpus_statistics([hyp], [[ref] for ref in refs])[0]
-
-        # return self.compute_bleu(
-            # correct=sum_stats[2: 2 + self.max_ngram_order],
-            # total=sum_stats[2 + self.max_ngram_order:],
-            # sys_len=sum_stats[0], ref_len=sum_stats[1],
-            # smooth_method=self.smooth_method, smooth_value=self.smooth_value,
-            # use_effective_order=use_effective_order)
+        stats = self._extract_segment_statistics(hyp, refs)
+        return self.compute_chrf(stats)
