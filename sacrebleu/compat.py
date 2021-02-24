@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional
+from typing import Sequence, Sequence, Optional
 
 from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
 
@@ -6,8 +6,8 @@ from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
 ######################################################################
 # Backward compatibility functions for old style API access (< 1.4.11)
 ######################################################################
-def corpus_bleu(sys_stream: Iterable[str],
-                ref_streams: List[Iterable[str]],
+def corpus_bleu(sys_stream: Sequence[str],
+                ref_streams: Sequence[Sequence[str]],
                 smooth_method='exp',
                 smooth_value=None,
                 force=False,
@@ -27,14 +27,14 @@ def corpus_bleu(sys_stream: Iterable[str],
     """
     metric = BLEU(
         lowercase=lowercase, force=force, tokenize=tokenize,
-        smooth_method=smooth_method, smooth_value=smooth_value)
+        smooth_method=smooth_method, smooth_value=smooth_value,
+        use_effective_order=use_effective_order)
 
-    return metric.corpus_score(
-        sys_stream, ref_streams, use_effective_order=use_effective_order)
+    return metric.corpus_score(sys_stream, ref_streams)
 
 
-def raw_corpus_bleu(sys_stream: Iterable[str],
-                    ref_streams: List[Iterable[str]],
+def raw_corpus_bleu(sys_stream: Sequence[str],
+                    ref_streams: Sequence[Sequence[str]],
                     smooth_value: Optional[float] = BLEU.SMOOTH_DEFAULTS['floor']) -> BLEUScore:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
@@ -52,7 +52,7 @@ def raw_corpus_bleu(sys_stream: Iterable[str],
 
 
 def sentence_bleu(hypothesis: str,
-                  references: List[str],
+                  references: Sequence[str],
                   smooth_method: str = 'exp',
                   smooth_value: float = None,
                   lowercase: bool = False,
@@ -65,7 +65,7 @@ def sentence_bleu(hypothesis: str,
     BLEU is a corpus-level metric.
 
     :param hypothesis: Hypothesis string.
-    :param references: List of reference strings.
+    :param references: Sequence of reference strings.
     :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
     :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
     :param lowercase: Lowercase the data
@@ -75,14 +75,14 @@ def sentence_bleu(hypothesis: str,
     """
     metric = BLEU(
         lowercase=lowercase, tokenize=tokenize, force=False,
-        smooth_method=smooth_method, smooth_value=smooth_value)
+        smooth_method=smooth_method, smooth_value=smooth_value,
+        use_effective_order=use_effective_order)
 
-    return metric.sentence_score(
-        hypothesis, references, use_effective_order=use_effective_order)
+    return metric.sentence_score(hypothesis, references)
 
 
-def corpus_chrf(hypotheses: Iterable[str],
-                references: List[Iterable[str]],
+def corpus_chrf(hypotheses: Sequence[str],
+                references: Sequence[Sequence[str]],
                 char_order: int = CHRF.CHAR_ORDER,
                 word_order: int = CHRF.WORD_ORDER,
                 beta: float = CHRF.BETA,
@@ -107,7 +107,7 @@ def corpus_chrf(hypotheses: Iterable[str],
 
 
 def sentence_chrf(hypothesis: str,
-                  references: List[str],
+                  references: Sequence[str],
                   char_order: int = CHRF.CHAR_ORDER,
                   word_order: int = CHRF.WORD_ORDER,
                   beta: float = CHRF.BETA,
@@ -131,8 +131,8 @@ def sentence_chrf(hypothesis: str,
     return metric.sentence_score(hypothesis, references)
 
 
-def corpus_ter(hypotheses: Iterable[str],
-               references: List[Iterable[str]],
+def corpus_ter(hypotheses: Sequence[str],
+               references: Sequence[Sequence[str]],
                normalized: bool = False,
                no_punct: bool = False,
                asian_support: bool = False,
@@ -157,7 +157,7 @@ def corpus_ter(hypotheses: Iterable[str],
 
 
 def sentence_ter(hypothesis: str,
-                 references: List[str],
+                 references: Sequence[str],
                  normalized: bool = False,
                  no_punct: bool = False,
                  asian_support: bool = False,

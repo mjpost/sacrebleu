@@ -18,7 +18,7 @@ from typing import List, Tuple, Dict, Union, Iterable
 from itertools import zip_longest
 
 from ..tokenizers.tokenizer_ter import TercomTokenizer
-from .base import BaseScore, Signature
+from .base import Score, Signature
 
 # Translation edit rate (TER).
 #
@@ -59,7 +59,7 @@ _OP_SUB = 's'
 _OP_UNDEF = 'x'
 
 
-class TERScore(BaseScore):
+class TERScore(Score):
     def __init__(self, num_edits, ref_length):
         score = num_edits / ref_length if ref_length > 0 else 1
         super().__init__(score)

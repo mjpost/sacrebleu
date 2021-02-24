@@ -11,9 +11,13 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-import pytest
-import sacrebleu
 from collections import namedtuple
+import pytest
+
+import sacrebleu
+
+from sacrebleu.metrics import BLEU
+
 
 EPSILON = 1e-8
 
@@ -100,7 +104,7 @@ def test_statistics(hypothesis, reference, expected_stat):
 
 @pytest.mark.parametrize("statistics, expected_score", test_case_scoring)
 def test_scoring(statistics, expected_score):
-    score = sacrebleu.compute_bleu(statistics[0].common, statistics[0].total, statistics[1], statistics[2]).score / 100
+    score = BLEU.compute_bleu(statistics[0].common, statistics[0].total, statistics[1], statistics[2]).score / 100
     assert abs(score - expected_score) < EPSILON
 
 
@@ -121,7 +125,7 @@ def test_offset(hypothesis, reference, expected_with_offset, expected_without_of
 
 @pytest.mark.parametrize("statistics, offset, expected_score", test_case_degenerate_stats)
 def test_degenerate_statistics(statistics, offset, expected_score):
-    score = sacrebleu.compute_bleu(
+    score = BLEU.compute_bleu(
         statistics[0].common,
         statistics[0].total,
         statistics[1],

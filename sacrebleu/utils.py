@@ -8,7 +8,7 @@ import hashlib
 import logging
 import urllib.request
 from itertools import filterfalse
-from typing import List, Iterable, Optional
+from typing import List, Iterable, Optional, Sequence
 
 import portalocker
 from tabulate import tabulate
@@ -46,8 +46,8 @@ def get_results_table(results: dict,
     return s
 
 
-def sanity_check_lengths(system: Iterable[str],
-                         refs: List[Iterable[str]],
+def sanity_check_lengths(system: Sequence[str],
+                         refs: Sequence[Sequence[str]],
                          test_set: Optional[str] = None):
     n_hyps = len(system)
     if any(len(ref_stream) != n_hyps for ref_stream in refs):

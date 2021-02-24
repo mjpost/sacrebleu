@@ -1,9 +1,9 @@
 from itertools import zip_longest
-from typing import List, Iterable, Union
+from typing import List, Union, Sequence
 
 from ..tokenizers.tokenizer_chrf import TokenizerChrf
 
-from .base import BaseScore, Signature
+from .base import Score, Signature
 from .helpers import extract_char_ngrams
 
 
@@ -26,7 +26,7 @@ class CHRFSignature(Signature):
         })
 
 
-class CHRFScore(BaseScore):
+class CHRFScore(Score):
     def __init__(self, score, beta, order):
         super().__init__(score)
 
@@ -35,13 +35,12 @@ class CHRFScore(BaseScore):
         self.prefix = f'chrF{self.beta}'
 
     def format(self, width=2, score_only=False, signature=''):
-        # NOTE: Being 0-1 scaled, a default width of 1 is too small for chrF
-        width += 1
+        # Being 0-1 scaled, a default width of 1 is too small for chrF
         if score_only:
-            return f'{self.score:.{width}f}'
+            return f'{self.score:.{width + 1}f}'
 
         prefix = f"{self.prefix}+{signature}" if signature else self.prefix
-        return f'{prefix} = {self.score:.{width}f}'
+        return f'{prefix} = {self.score:.{width + 1}f}'
 
 
 class CHRF:
@@ -82,15 +81,14 @@ class CHRF:
 
     @staticmethod
     def compute_chrf(statistics: List[int],
-                     order: int,
+                     char_order: int,
                      beta: float) -> CHRFScore:
-
         score = 0.0
         avg_recall = 0.0
         avg_precision = 0.0
         effective_order = 0
 
-        for i in range(order):
+        for i in range(char_order):
             hypotheses_ngrams = statistics[3 * i + 0]
             references_ngrams = statistics[3 * i + 1]
             common_ngrams = statistics[3 * i + 2]
@@ -112,7 +110,7 @@ class CHRF:
             score = (1 + beta_square) * (avg_precision * avg_recall)
             score /= ((beta_square * avg_precision) + avg_recall)
 
-        return CHRFScore(score, beta, order)
+        return CHRFScore(score, beta, char_order)
 
     def get_sentence_statistics(self, hypothesis: str,
                                 references: List[str]) -> List[int]:
@@ -132,12 +130,12 @@ class CHRF:
             statistics[3 * i + 2] = sum(common_ngrams.values())
         return statistics
 
-    def sentence_score(self, hypothesis: str, references: List[str]) -> CHRFScore:
+    def sentence_score(self, hyp: str, refs: Sequence[str]) -> CHRFScore:
         """
         Computes ChrF on a single sentence pair.
 
-        :param hypothesis: Hypothesis string.
-        :param references: Reference string(s).
+        :param hyp: Hypothesis string.
+        :param refs: Reference string(s).
         :return: Chrf score.
         """
         assert not isinstance(references, str), \
@@ -145,8 +143,8 @@ class CHRF:
         stats = self.get_sentence_statistics(hypothesis, references)
         return self.compute_chrf(stats, self.char_order, self.beta)
 
-    def corpus_score(self, sys_stream: Union[str, Iterable[str]],
-                     ref_streams: Union[str, List[Iterable[str]]]) -> CHRFScore:
+    def corpus_score(self, hyps: Sequence[str],
+                     refs: Sequence[Sequence[str]]) -> CHRFScore:
         """
         Computes Chrf on a corpus.
 

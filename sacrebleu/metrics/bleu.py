@@ -1,12 +1,12 @@
 import math
 import logging
 from collections import Counter
-from typing import List, Iterable, Optional
+from typing import List, Sequence, Optional
 
 from ..tokenizers import BLEU_TOKENIZERS
 from ..utils import my_log
 from ..significance import bootstrap_ci
-from .base import BaseScore, Signature
+from .base import Score, Signature, Metric
 from .helpers import extract_word_ngrams
 
 import numpy as np
@@ -50,13 +50,15 @@ class BLEUSignature(Signature):
         })
 
 
-class BLEUScore(BaseScore):
+class BLEUScore(Score):
     """A convenience class to represent BLEU scores (without signature)."""
-    def __init__(self, score, precisions, bp, sys_len, ref_len):
+    def __init__(self, score, counts, totals, precisions, bp, sys_len, ref_len):
         super().__init__(score)
 
         self.prefix = 'BLEU'
         self.bp = bp
+        self.counts = counts
+        self.totals = totals
         self.sys_len = int(sys_len)
         self.ref_len = int(ref_len)
         self.precisions = precisions
@@ -89,27 +91,30 @@ class BootstrapBLEUScore(BLEUScore):
         bp = sum(map(lambda x: x.bp, scores)) / len(scores)
         sys_len = sum(map(lambda x: x.sys_len, scores)) / len(scores)
         ref_len = sum(map(lambda x: x.ref_len, scores)) / len(scores)
+        counts = np.array([x.counts for x in scores], dtype=np.int).mean(0).tolist()
+        totals = np.array([x.totals for x in scores], dtype=np.int).mean(0).tolist()
         precisions = np.array([x.precisions for x in scores]).mean(0).tolist()
         mean_bleu, self.ci = bootstrap_ci([x.score for x in scores])
 
         # Call parent's __init__()
-        super().__init__(mean_bleu, precisions, bp, sys_len, ref_len)
+        super().__init__(mean_bleu, counts, totals, precisions, bp, sys_len, ref_len)
 
     def format(self, width=2, score_only=False, signature=''):
         self._score_string = f'{self.score:.{width}f} +/- {self.ci:.3f}'
         return super().format(width, score_only, signature)
 
 
-class BLEU:
+class BLEU(Metric):
     """Computes the BLEU metric given hypotheses and references.
 
-    :param lowercase: If True, lowercased BLEU is computed
-    :param force: Ignore data that looks already tokenized
+    :param lowercase: If True, lowercased BLEU is computed.
+    :param force: Ignore data that looks already tokenized.
     :param tokenize: The tokenizer to use. If None, defaults to language-specific tokenizers with '13a' as the fallback default.
-    :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
+    :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none').
     :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
     :param max_ngram_order: If given, it overrides the maximum n-gram order (default: 4) when computing precisions.
-    :param num_refs: The number of references given
+    :param use_effective_order: If True, ignore n-gram orders for which there are no matches. Useful for sentence-level BLEU.
+    :param num_refs: The number of references.
     :param trg_lang: An optional language code to raise potential tokenizer warnings.
     """
 
@@ -140,6 +145,7 @@ class BLEU:
                  smooth_method: str = 'exp',
                  smooth_value: Optional[float] = None,
                  max_ngram_order: int = MAX_NGRAM_ORDER,
+                 use_effective_order: bool = False,
                  num_refs: int = 1,
                  trg_lang: str = ''):
         self.name = 'bleu'
@@ -150,6 +156,7 @@ class BLEU:
         self.smooth_value = smooth_value
         self.smooth_method = smooth_method
         self.max_ngram_order = max_ngram_order
+        self.use_effective_order = use_effective_order
 
         # Sanity check
         assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
@@ -288,7 +295,7 @@ class BLEU:
             sum(map(my_log, precisions[:effective_order])) / effective_order)
 
         return BLEUScore(
-            score, precisions, bp, sys_len, ref_len)
+            score, correct, total, precisions, bp, sys_len, ref_len)
 
     def _get_ngram_counts(self, ngrams: Counter) -> List[int]:
         """Returns a list of n-gram counts.
@@ -301,7 +308,7 @@ class BLEU:
             c[len(key) - 1] += count
         return c
 
-    def get_segment_statistics(self, hyp: str, refs: Iterable[str]) -> List[int]:
+    def get_segment_statistics(self, hyp: str, refs: Sequence[str]) -> List[int]:
         """Computes the match statistics given a single hypothesis and multiple references.
 
         :param hyp: A string representing the hypothesis
@@ -328,14 +335,14 @@ class BLEU:
         # Return a flattened list for efficient computation
         return [hyp_len, ref_len] + correct + total
 
-    def get_corpus_statistics(self, hyps: Iterable[str],
-                              refs: List[Iterable[str]] = None) -> List[List[int]]:
+    def get_corpus_statistics(self, hyps: Sequence[str],
+                              refs: Sequence[Sequence[str]] = None) -> List[List[int]]:
         """Reads the corpus and returns sentence-level match statistics for
         quickly re-computing BLEU afterwards, for significance testing.
 
         :param hyps: An iterable of hypotheses / sentences.
         :param refs: Possibly multiple references per each hypotheses, wrapped
-            into a nested Iterable.
+            into a nested Sequence.
         :return: A List[List[int]] where each element is a flattened list
             returned by `BLEU.get_segment_statistics()`.
         """
@@ -381,8 +388,7 @@ class BLEU:
 
         return stats
 
-    def corpus_score_from_stats(self, stats: np.ndarray,
-                                use_effective_order: bool = False) -> BLEUScore:
+    def corpus_score_from_stats(self, stats: np.ndarray) -> BLEUScore:
         """Computes the final BLEU score given the pre-computed corpus statistics.
 
         :param stats: A list segment-level statistics
@@ -397,18 +403,16 @@ class BLEU:
             total=sum_stats[2 + self.max_ngram_order:],
             sys_len=sum_stats[0], ref_len=sum_stats[1],
             smooth_method=self.smooth_method, smooth_value=self.smooth_value,
-            use_effective_order=use_effective_order)
+            use_effective_order=self.use_effective_order)
 
-    def corpus_score(self, hyps: Iterable[str],
-                     refs: List[Iterable[str]],
-                     use_effective_order: bool = False,
+    def corpus_score(self, hyps: Sequence[str],
+                     refs: Sequence[Sequence[str]],
                      n_bootstrap: int = 1) -> BLEUScore:
         """Produces BLEU scores along with its sufficient statistics from a source
         against one or more references.
 
         :param hyps: The system / hypothesis stream (a sequence of segments)
         :param refs: A list of one or more reference streams (each a sequence of segments)
-        :param use_effective_order: Account for references that are shorter than the largest n-gram.
         :return: a `BLEUScore` object containing everything you'd want
         """
 
@@ -429,8 +433,7 @@ class BLEU:
             # Usual BLEU score
             return self.corpus_score_from_stats(stats)
 
-    def sentence_score(self, hyp: str, refs: Iterable[str],
-                       use_effective_order: bool = True) -> BLEUScore:
+    def sentence_score(self, hyp: str, refs: Sequence[str]) -> BLEUScore:
         """
         Computes BLEU on a single sentence pair.
 
@@ -439,8 +442,7 @@ class BLEU:
 
         :param hypothesis: Hypothesis string.
         :param references: List of reference strings.
-        :param use_effective_order: Account for references that are shorter than the largest n-gram.
         :return: a `BLEUScore` object containing everything you'd want
         """
-        return self.corpus_score([hyp], [[ref] for ref in refs],
-                                 use_effective_order=use_effective_order)
+        # NOTE: Call super
+        return self.corpus_score([hyp], [[ref] for ref in refs])
