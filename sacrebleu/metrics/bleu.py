@@ -305,7 +305,7 @@ class BLEU:
             c[len(key) - 1] += count
         return c
 
-    def get_segment_statistics(self, hyp: str, refs: Sequence[str]) -> List[int]:
+    def _extract_segment_statistics(self, hyp: str, refs: Sequence[str]) -> List[int]:
         """Computes the match statistics given a single hypothesis and multiple references.
 
         :param hyp: A string representing the hypothesis
@@ -332,8 +332,8 @@ class BLEU:
         # Return a flattened list for efficient computation
         return [hyp_len, ref_len] + correct + total
 
-    def get_corpus_statistics(self, hyps: Sequence[str],
-                              refs: Sequence[Sequence[str]] = None) -> List[List[int]]:
+    def _extract_corpus_statistics(self, hyps: Sequence[str],
+                                   refs: Sequence[Sequence[str]] = None) -> List[List[int]]:
         """Reads the corpus and returns sentence-level match statistics for
         quickly re-computing BLEU afterwards, for significance testing.
 
@@ -341,7 +341,7 @@ class BLEU:
         :param refs: Possibly multiple references per each hypotheses, wrapped
             into a nested Sequence.
         :return: A List[List[int]] where each element is a flattened list
-            returned by `BLEU.get_segment_statistics()`.
+            returned by `BLEU._extract_segment_statistics()`.
         """
 
         # sanity checks
@@ -376,7 +376,7 @@ class BLEU:
             hyp, *cur_refs = [self.tokenizer(x.rstrip()) for x in lines]
 
             # Collect stats
-            stats.append(self.get_segment_statistics(hyp, cur_refs))
+            stats.append(self._extract_segment_statistics(hyp, cur_refs))
 
         if not self.force and tok_count >= 100:
             sacrelogger.warning("That's 100 lines that end in a tokenized period ('.')")
@@ -414,13 +414,15 @@ class BLEU:
         :param hyps: The system / hypothesis stream (a sequence of segments)
         :param refs: A list of one or more reference streams (each a sequence of segments)
         :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of `max_ngram_order`.
+        :param n_bootstrap: If > 1, provides 95% confidence interval around true mean
+            using bootstrap resampling with `n_bootstrap` samples with replacement.
         :return: a `BLEUScore` object.
         """
         check_corpus_score_args(hyps, refs)
 
         # float32 is more efficient than (u)int arrays
         stats = np.array(
-            self.get_corpus_statistics(hyps, refs), dtype='float32')
+            self._extract_corpus_statistics(hyps, refs), dtype='float32')
 
         if n_bootstrap == 1:
             # Compute the usual BLEU score
@@ -450,7 +452,7 @@ class BLEU:
         """
         check_sentence_score_args(hyp, refs)
 
-        sum_stats = self.get_corpus_statistics([hyp], [[ref] for ref in refs])[0]
+        sum_stats = self._extract_corpus_statistics([hyp], [[ref] for ref in refs])[0]
 
         return self.compute_bleu(
             correct=sum_stats[2: 2 + self.max_ngram_order],

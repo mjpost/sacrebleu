@@ -137,9 +137,9 @@ def parse_args():
 
     # ChrF-related arguments
     chrf_args = arg_parser.add_argument_group('chrF++ related arguments')
-    chrf_args.add_argument('--chrf-char-order', type=int, default=METRICS['chrf'].CHAR_ORDER,
+    chrf_args.add_argument('--chrf-char-order', '-cc', type=int, default=METRICS['chrf'].CHAR_ORDER,
                            help='chrF++ character order (Default: %(default)s)')
-    chrf_args.add_argument('--chrf-word-order', type=int, default=METRICS['chrf'].WORD_ORDER,
+    chrf_args.add_argument('--chrf-word-order', '-cw', type=int, default=METRICS['chrf'].WORD_ORDER,
                            help='chrF++ word order (Default: %(default)s)')
     chrf_args.add_argument('--chrf-beta', type=int, default=METRICS['chrf'].BETA,
                            help='chrF BETA parameter (Default: %(default)s)')
