@@ -62,18 +62,17 @@ class BLEUScore(BaseScore):
         self.precisions = precisions
         self.prec_str = "/".join([f"{p:.1f}" for p in self.precisions])
         self.ratio = self.sys_len / self.ref_len if self.ref_len else 0
-
-    def _set_score_only_string(self, width=2):
-        """Sets the string to be printed if score-only mode requested."""
-        self._sc_str = f'{self.score:.{width}f}'
+        self._score_string = None
 
     def format(self, width=2, score_only=False, signature=''):
-        self._set_score_only_string(width)
+        if not self._score_string:
+            self._score_string = f'{self.score:.{width}f}'
+
         if score_only:
-            return self._sc_str
+            return self._score_string
 
         pr = f"{self.prefix}+{signature}" if signature else self.prefix
-        s = f'{pr} = {self._sc_str} {self.prec_str} '
+        s = f'{pr} = {self._score_string} {self.prec_str} '
         s += f'(BP = {self.bp:.3f} ratio = {self.ratio:.3f} '
         s += f'hyp_len = {self.sys_len:d} ref_len = {self.ref_len:d})'
         return s
@@ -96,12 +95,9 @@ class BootstrapBLEUScore(BLEUScore):
         # Call parent's __init__()
         super().__init__(mean_bleu, precisions, bp, sys_len, ref_len)
 
-    def _set_score_only_string(self, width=2):
-        """Adds mean, CI and n_bootstrap info at the end of score string."""
-        super()._set_score_only_string(width)
-
-        # Append mean, CI and n_bootstrap at the end
-        self._sc_str += f' +/- {self.ci:.3f} [n={self.n_bootstrap}]'
+    def format(self, width=2, score_only=False, signature=''):
+        self._score_string = f'{self.score:.{width}f} +/- {self.ci:.3f}'
+        return super().format(width, score_only, signature)
 
 
 class BLEU:
@@ -422,6 +418,8 @@ class BLEU:
 
         # Get bootstrap estimate
         if n_bootstrap > 1:
+            # Update signature
+            self.signature.update('bootstrap', n_bootstrap)
             # Resample with replacement
             samples = np.random.choice(
                 len(stats), size=(n_bootstrap, len(stats)), replace=True)
