@@ -52,7 +52,10 @@ class BLEUSignature(Signature):
 
 class BLEUScore(Score):
     """A convenience class to represent BLEU scores (without signature)."""
-    def __init__(self, score, counts, totals, precisions, bp, sys_len, ref_len):
+    def __init__(self, score: float, counts: List[int], totals: List[int],
+                 precisions: List[float], bp: float,
+                 sys_len: float, ref_len: float,
+                 n_bootstrap: int = 1, ci: float = 0.0):
         super().__init__(score)
 
         self.prefix = 'BLEU'
@@ -64,44 +67,41 @@ class BLEUScore(Score):
         self.precisions = precisions
         self.prec_str = "/".join([f"{p:.1f}" for p in self.precisions])
         self.ratio = self.sys_len / self.ref_len if self.ref_len else 0
-        self._score_string = None
 
-    def format(self, width=2, score_only=False, signature=''):
-        if not self._score_string:
-            self._score_string = f'{self.score:.{width}f}'
+        self.ci = ci
+        self.n_bootstrap = n_bootstrap
 
-        if score_only:
-            return self._score_string
+    @staticmethod
+    def average_score(scores):
+        """Compute averages across bootstrap resample scores / stats
 
-        pr = f"{self.prefix}+{signature}" if signature else self.prefix
-        s = f'{pr} = {self._score_string} {self.prec_str} '
-        s += f'(BP = {self.bp:.3f} ratio = {self.ratio:.3f} '
-        s += f'hyp_len = {self.sys_len:d} ref_len = {self.ref_len:d})'
-        return s
-
-
-class BootstrapBLEUScore(BLEUScore):
-    """A convenience class that computes average BLEU and other stats from
-    a collection of bootstrap resamples.
-
-    :param scores: A list of `BLEUScore` objects.
-    """
-    def __init__(self, scores: List[BLEUScore]):
-        self.n_bootstrap = len(scores)
+        :param scores: A list of `BLEUScore` objects for each bootstrap resample.
+        :return: a `BLEUScore` object reflecting the estimate scores.
+        """
         bp = sum(map(lambda x: x.bp, scores)) / len(scores)
         sys_len = sum(map(lambda x: x.sys_len, scores)) / len(scores)
         ref_len = sum(map(lambda x: x.ref_len, scores)) / len(scores)
         counts = np.array([x.counts for x in scores], dtype=np.int).mean(0).tolist()
         totals = np.array([x.totals for x in scores], dtype=np.int).mean(0).tolist()
         precisions = np.array([x.precisions for x in scores]).mean(0).tolist()
-        mean_bleu, self.ci = bootstrap_ci([x.score for x in scores])
 
-        # Call parent's __init__()
-        super().__init__(mean_bleu, counts, totals, precisions, bp, sys_len, ref_len)
+        # Get the mean BLEU and 95% CI
+        mean_bleu, ci = bootstrap_ci([x.score for x in scores])
+
+        return BLEUScore(mean_bleu, counts, totals, precisions,
+                         bp, sys_len, ref_len,
+                         n_bootstrap=len(scores), ci=ci)
 
     def format(self, width=2, score_only=False, signature=''):
-        self._score_string = f'{self.score:.{width}f} +/- {self.ci:.3f}'
-        return super().format(width, score_only, signature)
+        sc = f'{self.score:.{width}f}'
+        if self.n_bootstrap > 1:
+            sc += f' +/- {self.ci:.3f}'
+
+        pr = f"{self.prefix}+{signature}" if signature else self.prefix
+        s = f'{pr} = {sc} {self.prec_str} '
+        s += f'(BP = {self.bp:.3f} ratio = {self.ratio:.3f} '
+        s += f'hyp_len = {self.sys_len:d} ref_len = {self.ref_len:d})'
+        return s
 
 
 class BLEU:
@@ -435,7 +435,7 @@ class BLEU:
 
         # Update BLEU signature
         self.signature.update('bootstrap', n_bootstrap)
-        return BootstrapBLEUScore(scores)
+        return BLEUScore.average_score(scores)
 
     def sentence_score(self, hyp: str, refs: Sequence[str],
                        use_effective_order: bool = True) -> BLEUScore:
