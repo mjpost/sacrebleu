@@ -95,7 +95,10 @@ class BLEUScore(Score):
     def format(self, width=2, score_only=False, signature=''):
         sc = f'{self.score:.{width}f}'
         if self.n_bootstrap > 1:
-            sc += f' +/- {self.ci:.3f}'
+            sc += f' (+/- {self.ci:.3f})'
+
+        if score_only:
+            return sc
 
         pr = f"{self.prefix}+{signature}" if signature else self.prefix
         s = f'{pr} = {sc} {self.prec_str} '
@@ -172,13 +175,6 @@ class BLEU:
             if self.trg_lang == 'ja' and tokenize != best_tokenizer:
                 sacrelogger.warning(
                     "You should use the 'ja-mecab' tokenizer for Japanese.")
-
-        if tokenize == 'none':
-            sacrelogger.warning(
-                "You are turning off BLEU's internal tokenizer "
-                "presumably to supply your own tokenized files.")
-            sacrelogger.warning(
-                "Published numbers will not be comparable to other papers.")
 
         # Create the tokenizer
         self.tokenizer = BLEU_TOKENIZERS[tokenize]()
@@ -291,8 +287,7 @@ class BLEU:
         score = bp * math.exp(
             sum(map(my_log, precisions[:effective_order])) / effective_order)
 
-        return BLEUScore(
-            score, correct, total, precisions, bp, sys_len, ref_len)
+        return BLEUScore(score, correct, total, precisions, bp, sys_len, ref_len)
 
     def _get_ngram_counts(self, ngrams: Counter) -> List[int]:
         """Returns a list of n-gram counts.
@@ -434,7 +429,7 @@ class BLEU:
         scores = [self._corpus_score_from_stats(stats[idx], use_effective_order) for idx in samples]
 
         # Update BLEU signature
-        self.signature.update('bootstrap', n_bootstrap)
+        self.signature.update('bstrap', n_bootstrap)
         return BLEUScore.average_score(scores)
 
     def sentence_score(self, hyp: str, refs: Sequence[str],
