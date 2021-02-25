@@ -1,4 +1,4 @@
-from typing import Any, Sequence
+from typing import Any
 
 from .. import __version__
 
@@ -31,7 +31,8 @@ class Signature:
             'lang': 'l',
             'subset': 'S',
             'origlang': 'o',
-            'bootstrap': 'bs',  # enabled with bootstrap resampling
+            'bstrap': 'bs',     # enabled with bootstrap resampling
+            'seed': 'rs',       # enabled with bootstrap resampling
         }
 
         # Global items that are shared across all metrics
