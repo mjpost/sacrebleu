@@ -13,8 +13,8 @@ class TokenizerV14International(BaseTokenizer):
     We just tokenize on punctuation and symbols,
     except when a punctuation is preceded and followed by a digit
     (e.g. a comma/dot as a thousand/decimal separator).
-    We also recover escaped forms of some punctuations such as '&apos;', '&gt;'
-    as these can appear in MT system outputs (See issue #138)
+    We do not recover escaped forms of punctuations such as &apos; or &gt;
+    as these should never appear in MT system outputs (see issue #138)
 
     Note that a number (e.g., a year) followed by a dot at the end of
     sentence is NOT tokenized, i.e. the dot stays with the number because
@@ -43,13 +43,6 @@ class TokenizerV14International(BaseTokenizer):
 
     @lru_cache(maxsize=2**18)
     def __call__(self, line: str) -> str:
-        if '&' in line:
-            line = line.replace('&quot;', '"')
-            line = line.replace('&amp;', '&')
-            line = line.replace('&lt;', '<')
-            line = line.replace('&gt;', '>')
-            line = line.replace('&apos;', "'")
-
         for (_re, repl) in self._re:
             line = _re.sub(repl, line)
 
