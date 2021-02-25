@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from .. import __version__
 
@@ -10,6 +9,9 @@ class BaseScore:
 
     def format(self, width=2, score_only=False, signature=''):
         raise NotImplementedError()
+
+    def __repr__(self):
+        return self.format()
 
 
 class Signature:

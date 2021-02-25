@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-
 import math
 import logging
 from collections import Counter
-from itertools import zip_longest
 from typing import List, Iterable, Union
 
 from ..tokenizers import TOKENIZERS
@@ -11,6 +8,7 @@ from ..utils import my_log
 from .base import BaseScore, Signature
 
 sacrelogger = logging.getLogger('sacrebleu')
+
 
 class BLEUSignature(Signature):
     def __init__(self, args):
@@ -23,8 +21,22 @@ class BLEUSignature(Signature):
             'numrefs': '#',
         })
 
+        # Construct a combined string for smoothing method and value
+        smooth_str = self.args['smooth_method']
+        smooth_def = BLEU.SMOOTH_DEFAULTS[smooth_str]
+
+        # If the method requires a parameter, add it within brackets
+        if smooth_def is not None:
+            # the following can be None if the user wants to use the default
+            smooth_val = self.args['smooth_value']
+
+            if smooth_val is None:
+                smooth_val = smooth_def
+
+            smooth_str += '[{:.2f}]'.format(smooth_val)
+
         self.info.update({
-            'smooth': self.args['smooth_method'],
+            'smooth': smooth_str,
             'case': 'lc' if self.args['lc'] else 'mixed',
             'tok': TOKENIZERS[self.args['tokenize']]().signature(),
             'numrefs': self.args.get('num_refs', '?'),
@@ -67,10 +79,14 @@ class BLEU:
     NGRAM_ORDER = 4
 
     SMOOTH_DEFAULTS = {
-        'floor': 0.0,
+        # The defaults for `floor` and `add-k` are obtained from the following paper
+        # A Systematic Comparison of Smoothing Techniques for Sentence-Level BLEU
+        # Boxing Chen and Colin Cherry
+        # http://aclweb.org/anthology/W14-3346
+        'none': None,   # No value is required
+        'floor': 0.1,
         'add-k': 1,
         'exp': None,    # No value is required
-        'none': None,   # No value is required
     }
 
     def __init__(self, args):
@@ -96,7 +112,7 @@ class BLEU:
         :return: a dictionary containing ngrams and counts
         """
 
-        ngrams = Counter() # type: Counter
+        ngrams = Counter()  # type: Counter
         tokens = line.split()
         for n in range(min_order, max_order + 1):
             for i in range(0, len(tokens) - n + 1):
@@ -148,16 +164,16 @@ class BLEU:
         Smoothing methods (citing "A Systematic Comparison of Smoothing Techniques for Sentence-Level BLEU",
         Boxing Chen and Colin Cherry, WMT 2014: http://aclweb.org/anthology/W14-3346)
 
-        - exp: NIST smoothing method (Method 3)
-        - floor: Method 1
-        - add-k: Method 2 (generalizing Lin and Och, 2004)
-        - none: do nothing.
+        - none: No smoothing.
+        - floor: Method 1 (requires small positive value (0.1 in the paper) to be set)
+        - add-k: Method 2 (Generalizing Lin and Och, 2004)
+        - exp: Method 3 (NIST smoothing method i.e. in use with mteval-v13a.pl)
 
         :param correct: List of counts of correct ngrams, 1 <= n <= NGRAM_ORDER
         :param total: List of counts of total ngrams, 1 <= n <= NGRAM_ORDER
         :param sys_len: The cumulative system length
         :param ref_len: The cumulative reference length
-        :param smooth: The smoothing method to use
+        :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
         :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
         :param use_effective_order: If true, use the length of `correct` for the n-gram order instead of NGRAM_ORDER.
         :return: A BLEU object with the score (100-based) and other statistics.
@@ -224,7 +240,8 @@ class BLEU:
         :param use_effective_order: Account for references that are shorter than the largest n-gram.
         :return: a `BLEUScore` object containing everything you'd want
         """
-        assert not isinstance(references, str), "sentence_score needs a list of references, not a single string"
+        assert not isinstance(references, str), \
+            "sentence_score needs a list of references, not a single string"
         return self.corpus_score(hypothesis, [[ref] for ref in references],
                                  use_effective_order=use_effective_order)
 
@@ -255,10 +272,18 @@ class BLEU:
         # look for already-tokenized sentences
         tokenized_count = 0
 
-        fhs = [sys_stream] + ref_streams
-        for lines in zip_longest(*fhs):
-            if None in lines:
-                raise EOFError("Source and reference streams have different lengths!")
+        # sanity checks
+        if any(len(ref_stream) != len(sys_stream) for ref_stream in ref_streams):
+            raise EOFError("System and reference streams have different lengths!")
+        if any(line is None for line in sys_stream):
+            raise EOFError("Undefined line in system stream!")
+
+        for output, *refs in zip(sys_stream, *ref_streams):
+            # remove undefined/empty references (i.e. we have fewer references for this particular sentence)
+            # but keep empty hypothesis (it's always defined thanks to the sanity check above)
+            lines = [output] + [x for x in refs if x is not None and x != ""]
+            if len(lines) < 2:  # we need at least hypothesis + 1 defined & non-empty reference
+                raise EOFError("No valid references for a sentence!")
 
             if self.lc:
                 lines = [x.lower() for x in lines]

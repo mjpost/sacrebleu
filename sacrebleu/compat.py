@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 from typing import Union, Iterable, List
 from argparse import Namespace
 
-from .tokenizers import DEFAULT_TOKENIZER, TOKENIZERS
+from .tokenizers import DEFAULT_TOKENIZER
 from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
 
 
@@ -22,8 +20,8 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
 
     :param sys_stream: The system stream (a sequence of segments)
     :param ref_streams: A list of one or more reference streams (each a sequence of segments)
-    :param smooth_method: The smoothing method to use
-    :param smooth_value: For 'floor' smoothing, the floor to use
+    :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
+    :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
     :param force: Ignore data that looks already tokenized
     :param lowercase: Lowercase the data
     :param tokenize: The tokenizer to use
@@ -40,13 +38,14 @@ def corpus_bleu(sys_stream: Union[str, Iterable[str]],
 
 def raw_corpus_bleu(sys_stream,
                     ref_streams,
-                    smooth_value=None) -> BLEUScore:
+                    smooth_value=BLEU.SMOOTH_DEFAULTS['floor']) -> BLEUScore:
     """Convenience function that wraps corpus_bleu().
     This is convenient if you're using sacrebleu as a library, say for scoring on dev.
-    It uses no tokenization and 'floor' smoothing, with the floor default to 0 (no smoothing).
+    It uses no tokenization and 'floor' smoothing, with the floor default to 0.1.
 
     :param sys_stream: the system stream (a sequence of segments)
     :param ref_streams: a list of one or more reference streams (each a sequence of segments)
+    :param smooth_value: The smoothing value for `floor`. If not given, the default of 0.1 is used.
     :return: Returns a `BLEUScore` object.
     """
     return corpus_bleu(
@@ -57,7 +56,7 @@ def raw_corpus_bleu(sys_stream,
 
 def sentence_bleu(hypothesis: str,
                   references: List[str],
-                  smooth_method: str = 'floor',
+                  smooth_method: str = 'exp',
                   smooth_value: float = None,
                   use_effective_order: bool = True,
                   tokenize=DEFAULT_TOKENIZER) -> BLEUScore:
@@ -69,8 +68,8 @@ def sentence_bleu(hypothesis: str,
 
     :param hypothesis: Hypothesis string.
     :param references: List of reference strings.
-    :param smooth_method: The smoothing method to use
-    :param smooth_value: For 'floor' smoothing, the floor value to use.
+    :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
+    :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
     :param use_effective_order: Account for references that are shorter than the largest n-gram.
     :return: Returns a `BLEUScore` object.
     """
