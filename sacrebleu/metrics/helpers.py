@@ -58,11 +58,15 @@ def extract_word_ngrams(tokens: List[str], n: int) -> Counter:
     return Counter([' '.join(tokens[i:i + n]) for i in range(len(tokens) - n + 1)])
 
 
-def extract_char_ngrams(line: str, n: int) -> Counter:
+def extract_char_ngrams(line: str, n: int, include_whitespace: bool = False) -> Counter:
     """Yields counts of character n-grams from a sentence.
 
     :param line: A segment containing a sequence of words.
     :param n: The order of the n-grams.
+    :param include_whitespace: If given, will not strip whitespaces from the line.
     :return: a dictionary containing ngrams and counts
     """
+    if not include_whitespace:
+        line = ''.join(line.split())
+
     return Counter([line[i:i + n] for i in range(len(line) - n + 1)])
