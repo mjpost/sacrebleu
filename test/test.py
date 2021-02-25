@@ -13,7 +13,7 @@ ref = ""
 sys = ""
 score = sacrebleu.corpus_chrf([sys], [ref], 6, 3)
 print(score)
-#assert(score == 1.0)
+# assert(score == 1.0)
 
 ref = "A"
 sys = ""

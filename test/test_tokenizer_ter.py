@@ -34,18 +34,18 @@ def test_ter_tokenizer_default(input, expected):
 
 
 @pytest.mark.parametrize("input, expected", test_cases_no_punct)
-def test_ter_tokenizer_default(input, expected):
+def test_ter_tokenizer_nopunct(input, expected):
     tokenizer = TercomTokenizer(no_punct=True)
     assert tokenizer(input) == expected
 
 
 @pytest.mark.parametrize("input, expected", test_cases_norm)
-def test_ter_tokenizer_default(input, expected):
+def test_ter_tokenizer_norm(input, expected):
     tokenizer = TercomTokenizer(normalized=True)
     assert tokenizer(input) == expected
 
 
 @pytest.mark.parametrize("input, expected", test_cases_asian)
-def test_ter_tokenizer_default(input, expected):
+def test_ter_tokenizer_asian(input, expected):
     tokenizer = TercomTokenizer(normalized=True, asian_support=True)
     assert tokenizer(input) == expected

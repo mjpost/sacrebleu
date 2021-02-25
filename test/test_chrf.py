@@ -11,8 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-# -*- coding: utf-8 -*-
-
 import pytest
 import sacrebleu
 
@@ -36,10 +34,12 @@ test_cases_keep_whitespace = [
               (["Die Beziehung zwischen Obama und Netanjahu ist nicht gerade freundlich."], ["Das Verhältnis zwischen Obama und Netanyahu ist nicht gerade freundschaftlich."], 0.67348160629772402),
               (["risk assessment must be made of those who are qualified and expertise in the sector - these are the scientists ."], ["risk assessment has to be undertaken by those who are qualified and expert in that area - that is the scientists ."], 0.652414427449)]
 
+
 @pytest.mark.parametrize("hypotheses, references, expected_score", test_cases)
 def test_chrf(hypotheses, references, expected_score):
     score = sacrebleu.corpus_chrf(hypotheses, [references], 6, 3).score
     assert abs(score - expected_score) < EPSILON
+
 
 @pytest.mark.parametrize("hypotheses, references, expected_score", test_cases_keep_whitespace)
 def test_chrf_keep_whitespace(hypotheses, references, expected_score):

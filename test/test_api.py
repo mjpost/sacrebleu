@@ -13,8 +13,6 @@
 
 import pytest
 
-import sacrebleu
-
 from sacrebleu.utils import get_available_testsets, get_langpairs_for_testset
 from sacrebleu.utils import get_source_file, get_reference_files
 from sacrebleu.dataset import DATASETS
@@ -25,6 +23,7 @@ test_api_get_data = [
     ("wmt19/google/ar", "en-de", 1, "Welsh AMs worried about 'looking like muppets'", "Walisische Abgeordnete befürchten als ,Idioten’ dazustehen."),
 ]
 
+
 @pytest.mark.parametrize("testset, langpair, sentno, source, reference", test_api_get_data)
 def test_api_get_source(testset, langpair, sentno, source, reference):
     with open(get_source_file(testset, langpair)) as fh:
@@ -32,11 +31,13 @@ def test_api_get_source(testset, langpair, sentno, source, reference):
 
         assert line == source
 
+
 @pytest.mark.parametrize("testset, langpair, sentno, source, reference", test_api_get_data)
 def test_api_get_reference(testset, langpair, sentno, source, reference):
     with open(get_reference_files(testset, langpair)[0]) as fh:
         line = fh.readlines()[sentno - 1].strip()
         assert line == reference
+
 
 def test_api_get_available_testsets():
     """
@@ -51,6 +52,7 @@ def test_api_get_available_testsets():
     for testset in DATASETS.keys():
         assert testset in available
         assert "slashdot_" + testset not in available
+
 
 def test_api_get_langpairs_for_testset():
     """
