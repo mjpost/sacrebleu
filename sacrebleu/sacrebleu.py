@@ -268,6 +268,13 @@ def main():
     if args.langpair:
         args.bleu_trg_lang = args.langpair.split('-')[1]
 
+    if args.test_set is not None and args.bleu_tokenize == 'none':
+        sacrelogger.warning(
+            "You are turning off BLEU's internal tokenizer "
+            "presumably to supply your own tokenized files.")
+        sacrelogger.warning(
+            "Published numbers will not be comparable to other papers.")
+
     # concat_ref_files is a list of list of reference filenames
     # (concatenation happens if multiple test sets are given through -t)
     # Example: [[testset1_refA, testset1_refB], [testset2_refA, testset2_refB]]
@@ -385,9 +392,9 @@ def main():
         sanity_check_lengths(system, refs, test_set=args.test_set)
 
     if num_sys == 1 and args.paired_bootstrap:
-        sacrebleu.error(
+        sacrelogger.error(
             'Paired bootstrap resampling requires multiple input systems')
-        sacrebleu.error('For single system estimates, use --bootstrap')
+        sacrelogger.error('For single system estimates, use --bootstrap')
         sys.exit(1)
 
     if not args.bootstrap and not args.paired_bootstrap:
@@ -444,15 +451,6 @@ def main():
         print('Metric signatures:')
         for name, sig in sigs.items():
             print(f' {name:<10} {sig}')
-
-    if args.bootstrap or args.paired_bootstrap:
-        print()
-        if args.bootstrap:
-            print(f'Bootstrap resampling (n={args.n_bootstrap}) done to '
-                  'provide 95% confidence intervals around the true mean.')
-        if args.paired_bootstrap:
-            print(f'Paired bootstrap resampling (n={args.n_bootstrap}) done to '
-                  'compare candidate systems against a baseline.')
 
     # Prints detailed information for translationese effect experiments
     # FIXME: What happens with many systems here
