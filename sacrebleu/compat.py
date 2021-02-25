@@ -1,4 +1,4 @@
-from typing import Sequence, Sequence, Optional
+from typing import Sequence, Optional
 
 from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
 
