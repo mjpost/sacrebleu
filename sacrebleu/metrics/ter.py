@@ -126,7 +126,8 @@ class TER:
         self.signature = TERSignature(self.__dict__)
 
     def corpus_score(self, sys_stream: Union[str, Iterable[str]],
-                     ref_streams: Union[str, List[Iterable[str]]]) -> TERScore:
+                     ref_streams: Union[str, List[Iterable[str]]],
+                     n_bootstrap: int = 1) -> TERScore:
         # Add some robustness to the input arguments
         if isinstance(sys_stream, str):
             sys_stream = [sys_stream]
