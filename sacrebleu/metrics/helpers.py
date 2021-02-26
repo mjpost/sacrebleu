@@ -6,7 +6,7 @@ def check_sentence_score_args(hyp: str, refs: Sequence[str]):
     if not isinstance(hyp, str):
         raise RuntimeError('The argument `hyp` should be a string.')
 
-    if not isinstance(refs, Sequence):
+    if isinstance(refs, str) or not isinstance(refs, Sequence):
         raise RuntimeError('The argument `refs` should be a sequence of strings.')
 
     if not isinstance(refs[0], str):
