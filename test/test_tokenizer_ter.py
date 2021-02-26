@@ -16,8 +16,8 @@ test_cases_no_punct = [
 ]
 
 test_cases_norm = [
-    ("a b (c) d.", "a b ( c ) d"),
-    ("Jim's car.", "Jim 's car ."),
+    ("a b (c) d.", "a b ( c ) d ."),
+    ("Jim's car.", "jim 's car ."),
     ("4.2", "4.2"),
 ]
 
