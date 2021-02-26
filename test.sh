@@ -199,7 +199,7 @@ declare -A CHRF=( ["newstest2017.PJATK.4760.cs-en.sgm"]=52.5947
                   ["newstest2017.online-B.0.en-ru.sgm"]=60.4059
                   ["newstest2017.LIUM-NMT.4953.en-tr.sgm"]=47.5881
                   ["newstest2017.online-G.0.en-tr.sgm"]=48.7404
-                  ["newstest2017.UU-HNMT.5134.en-zh.sgm"]=22.6901
+                  ["newstest2017.UU-HNMT.5134.en-zh.sgm"]=22.6844
                   ["newstest2017.online-F.0.en-zh.sgm"]=18.7403
                 )
 
@@ -221,7 +221,7 @@ declare -A CHRFPP=( ["newstest2017.PJATK.4760.cs-en.sgm"]=50.2947
                     ["newstest2017.online-B.0.en-ru.sgm"]=57.6404
                     ["newstest2017.LIUM-NMT.4953.en-tr.sgm"]=43.8311
                     ["newstest2017.online-G.0.en-tr.sgm"]=44.6236
-                    ["newstest2017.UU-HNMT.5134.en-zh.sgm"]=17.0224
+                    ["newstest2017.UU-HNMT.5134.en-zh.sgm"]=17.0181
                     ["newstest2017.online-F.0.en-zh.sgm"]=14.1572
                   )
 
@@ -246,7 +246,7 @@ if [ -z $SKIP_CHRF ]; then
           # Test chrF
           score=$(cat $txt | ${CMD} -w 4 -t wmt17 -l $source-$target -b --metrics chrf)
           expected_score=${CHRF[$name]}
-          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 0.01 else 0)" | python
+          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | python
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED chrF test $pair/$sys (wanted $expected_score got $score)"
@@ -259,7 +259,7 @@ if [ -z $SKIP_CHRF ]; then
           score=$(cat $txt | ${CMD} -w 4 -t wmt17 -l $source-$target -b --metrics chrf --chrf-word-order 2)
           expected_score=${CHRFPP[$name]}
 
-          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 0.01 else 0)" | python
+          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | python
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED chrF++ test $pair/$sys (wanted $expected_score got $score)"

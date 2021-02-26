@@ -109,6 +109,24 @@ class CHRF:
         self.whitespace = whitespace
         self.signature = CHRFSignature(self.__dict__)
 
+    @staticmethod
+    def _get_match_statistics(hyp_ngrams: Counter, ref_ngrams: Counter) -> List[int]:
+        """Computes the match statistics between hypothesis and reference n-grams.
+
+        :param hyp_ngrams: A `Counter` holding hypothesis n-grams.
+        :param ref_ngrams: A `Counter` holding reference n-grams.
+        :return: A list of three numbers denoting hypothesis n-gram count,
+            reference n-gram count and the intersection count.
+        """
+        match_ngrams = hyp_ngrams & ref_ngrams
+
+        return [
+            # Don't count hits if no reference exists for that n-gram
+            sum(hyp_ngrams.values()) if ref_ngrams else 0,
+            sum(ref_ngrams.values()),
+            sum(match_ngrams.values()),
+        ]
+
     def _remove_punctuation(self, sent: str) -> List[str]:
         """Separates out punctuations from beginning and end of words for chrF++.
         Adapted from https://github.com/m-popovic/chrF
@@ -130,23 +148,28 @@ class CHRF:
                     tokenized.append(w)
         return tokenized
 
-    def _get_f1_score(self, statistics: List[int]) -> float:
-        precs, recs, f_scores = [], [], []
+    def _get_f_score(self, statistics: List[int]) -> float:
+        """Compute the chrF score given the n-gram match statistics.
+
+        :param statistics: A flattened list of 3 * (`char_order` + `word_order`)
+            elements giving the [hyp, ref, match] counts for each order.
+        :return: The final f_beta score.
+        """
         eps = 1e-16
+        score = 0.0
         factor = self.beta ** 2
+
         _par_iter = zip(statistics[0::3], statistics[1::3], statistics[2::3])
         for (n_hyp, n_ref, n_match) in _par_iter:
-            precs.append(n_match / n_hyp if n_hyp > 0 else eps)
-            recs.append(n_match / n_ref if n_ref > 0 else eps)
-            denom = factor * precs[-1] + recs[-1]
+            prec = n_match / n_hyp if n_hyp > 0 else eps
+            rec = n_match / n_ref if n_ref > 0 else eps
+            denom = factor * prec + rec
             if denom > 0:
-                f_score = (1 + factor) * precs[-1] * recs[-1] / denom
+                score += (1 + factor) * prec * rec / denom
             else:
-                f_score = eps
-            f_scores.append(f_score)
+                score += eps
 
-        f1 = 100 * sum(f_scores) / len(f_scores)
-        return f1
+        return 100 * score / self.order
 
     def compute_chrf(self, statistics: List[int]) -> CHRFScore:
         """Computes the chrF++ score from already aggregated match statistics.
@@ -156,18 +179,8 @@ class CHRF:
             reference ngrams and matched ngrams counts, respectively.
         :return: a `CHRFScore` object.
         """
-        f1 = self._get_f1_score(statistics)
-        return CHRFScore(f1, self.char_order, self.word_order, self.beta)
-
-    @staticmethod
-    def _get_match_statistics(hyp_ngrams: Counter, ref_ngrams: Counter) -> List[int]:
-        match_ngrams = hyp_ngrams & ref_ngrams
-
-        return [
-            sum(hyp_ngrams.values()),
-            sum(ref_ngrams.values()),
-            sum(match_ngrams.values()),
-        ]
+        score = self._get_f_score(statistics)
+        return CHRFScore(score, self.char_order, self.word_order, self.beta)
 
     def _extract_segment_statistics(self, hyp: str, refs: Sequence[str]) -> List[int]:
         """Computes the match statistics given a single hypothesis and multiple references.
@@ -243,11 +256,23 @@ class CHRF:
 
         return np.array(stats, dtype='float32')
 
+    def sentence_score(self, hyp: str, refs: Sequence[str]) -> CHRFScore:
+        """
+        Computes chrF++ on a single sentence pair.
+
+        :param hyp: Hypothesis string.
+        :param refs: Reference string(s).
+        :return: a `CHRFScore` object.
+        """
+        check_sentence_score_args(hyp, refs)
+
+        return self.compute_chrf(self._extract_segment_statistics(hyp, refs))
+
     def corpus_score(self, hyps: Sequence[str],
                      refs: Sequence[Sequence[str]],
                      n_bootstrap: int = 1) -> CHRFScore:
         """
-        Computes Chrf on a corpus.
+        Computes chrF++ on a corpus.
 
         :param hyps: The system / hypothesis stream (a sequence of segments)
         :param refs: A list of one or more reference streams (each a sequence of segments)
@@ -281,14 +306,4 @@ class CHRF:
         self.signature.update('bstrap', n_bootstrap)
         return CHRFScore.average_score(scores)
 
-    def sentence_score(self, hyp: str, refs: Sequence[str]) -> CHRFScore:
-        """
-        Computes chrF++ on a single sentence pair.
 
-        :param hyp: Hypothesis string.
-        :param refs: Reference string(s).
-        :return: a `CHRFScore` object.
-        """
-        check_sentence_score_args(hyp, refs)
-
-        return self.compute_chrf(self._extract_segment_statistics(hyp, refs))
