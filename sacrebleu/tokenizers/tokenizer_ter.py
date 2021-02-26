@@ -156,7 +156,7 @@ class TercomTokenizer(BaseTokenizer):
             if self._asian_support:
                 sent = _remove_asian_punct(sent)
 
-        return sent
+        return ' '.join(sent.split())
 
     def signature(self):
         return 'tercom'
