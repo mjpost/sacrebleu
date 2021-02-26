@@ -1,7 +1,8 @@
+import string
+
 from typing import List, Sequence
 from collections import Counter
 
-from ..tokenizers.tokenizer_chrf import TokenizerChrf
 from ..significance import bootstrap_ci
 
 from .base import Score, Signature
@@ -16,8 +17,8 @@ class CHRFSignature(Signature):
         super().__init__(args)
 
         self._abbr.update({
-            'numchars': 'nc',
-            'numwords': 'nw',
+            'nchars': 'nc',
+            'nwords': 'nw',
             'space': 's',
             'case': 'c',
         })
@@ -25,50 +26,48 @@ class CHRFSignature(Signature):
         self.info.update({
             'space': str(self.args['whitespace']).lower(),
             'case': 'lc' if self.args['lowercase'] else 'mixed',
-            'numchars': self.args['char_order'],
-            'numwords': self.args['word_order'],
+            'nchars': self.args['char_order'],
+            'nwords': self.args['word_order'],
         })
 
 
 class CHRFScore(Score):
-    def __init__(self, score: float, char_order: int, word_order: int, beta: int):
+    def __init__(self, score: float, char_order: int,
+                 word_order: int, beta: int,
+                 n_bootstrap: int = 1, ci: float = 0.0):
         super().__init__(score)
 
+        self.ci = ci
         self.beta = beta
         self._score_string = None
         self.char_order = char_order
         self.word_order = word_order
+        self.n_bootstrap = n_bootstrap
         self.prefix = f'chrF{self.beta}'
 
+    @staticmethod
+    def average_score(scores):
+        """Compute averages across bootstrap resample scores / stats
+
+        :param scores: A list of `CHRFScore` objects for each bootstrap resample.
+        :return: a `CHRFScore` object reflecting the estimate scores.
+        """
+        mean_chrf, ci = bootstrap_ci([x.score for x in scores])
+        return CHRFScore(mean_chrf, char_order=scores[0].char_order,
+                         word_order=scores[0].word_order,
+                         beta=scores[0].beta, n_bootstrap=len(scores),
+                         ci=ci)
+
     def format(self, width=2, score_only=False, signature=''):
-        if not self._score_string:
-            # Being 0-1 scaled, a default width of 1 is too small for chrF
-            self._score_string = f'{self.score:.{width + 1}f}'
+        sc = f'{self.score:.{width}f}'
+        if self.n_bootstrap > 1:
+            sc += f' (+/- {self.ci:.3f})'
 
         if score_only:
-            return self._score_string
+            return sc
 
         pr = f"{self.prefix}+{signature}" if signature else self.prefix
-        return f'{pr} = {self._score_string}'
-
-
-class BootstrapCHRFScore(CHRFScore):
-    """A convenience class that computes average chrF score from a collection
-    of bootstrap resamples.
-
-    :param scores: A list of `CHRFScore` objects.
-    """
-    def __init__(self, scores: List[CHRFScore]):
-        self.n_bootstrap = len(scores)
-        mean_chrf, self.ci = bootstrap_ci([x.score for x in scores])
-
-        super().__init__(
-            mean_chrf, scores[0].char_order,
-            scores[0].word_order, scores[0].beta)
-
-    def format(self, width=2, score_only=False, signature=''):
-        self._score_string = f'{self.score:.{width}f} +/- {self.ci:.5f}'
-        return super().format(width, score_only, signature)
+        return f'{pr} = {sc}'
 
 
 class CHRF:
@@ -91,13 +90,16 @@ class CHRF:
     # Defaults to 2 (per http://www.aclweb.org/anthology/W16-2341)
     BETA = 2
 
+    # Cache punctuations for chrF++' punctuation stripper
+    _PUNCTS = set(string.punctuation)
+
     def __init__(self, whitespace: bool = False,
                  char_order: int = CHAR_ORDER,
                  word_order: int = WORD_ORDER,
                  beta: float = BETA,
                  lowercase: bool = False,
                  num_refs: int = 1):
-        self.name = 'chrf'
+        self.name = 'chrf++' if word_order > 0 else 'chrf'
         self.beta = beta
         self.char_order = char_order
         self.word_order = word_order
@@ -106,44 +108,56 @@ class CHRF:
         self.lowercase = lowercase
         self.whitespace = whitespace
         self.signature = CHRFSignature(self.__dict__)
-        self.tokenizer = TokenizerChrf(self.lowercase, self.whitespace)
 
-    def compute_chrf(self, statistics: np.ndarray) -> CHRFScore:
-        """Computes the chrF++ score from the given match statistics.
+    def _remove_punctuation(self, sent: str) -> List[str]:
+        """Separates out punctuations from beginning and end of words for chrF++.
+        Adapted from https://github.com/m-popovic/chrF
 
-        :param statistics: A numpy array with the match statistics.
+        :param sent: A string representing a sentence.
+        :return: A list of words.
+        """
+        tokenized = []
+        for w in sent.split():
+            if len(w) == 1:
+                tokenized.append(w)
+            else:
+                # NOTE: This splits '(hi)' to '(hi' and ')' (issue #124)
+                if w[-1] in self._PUNCTS:
+                    tokenized += [w[:-1], w[-1]]
+                elif w[0] in self._PUNCTS:
+                    tokenized += [w[0], w[1:]]
+                else:
+                    tokenized.append(w)
+        return tokenized
+
+    def _get_f1_score(self, statistics: List[int]) -> float:
+        precs, recs, f_scores = [], [], []
+        eps = 1e-16
+        factor = self.beta ** 2
+        _par_iter = zip(statistics[0::3], statistics[1::3], statistics[2::3])
+        for (n_hyp, n_ref, n_match) in _par_iter:
+            precs.append(n_match / n_hyp if n_hyp > 0 else eps)
+            recs.append(n_match / n_ref if n_ref > 0 else eps)
+            denom = factor * precs[-1] + recs[-1]
+            if denom > 0:
+                f_score = (1 + factor) * precs[-1] * recs[-1] / denom
+            else:
+                f_score = eps
+            f_scores.append(f_score)
+
+        f1 = 100 * sum(f_scores) / len(f_scores)
+        return f1
+
+    def compute_chrf(self, statistics: List[int]) -> CHRFScore:
+        """Computes the chrF++ score from already aggregated match statistics.
+
+        :param statistics: A list of integers for character and word n-gram
+            matches. Each triplet in the list denote hypotheses ngrams,
+            reference ngrams and matched ngrams counts, respectively.
         :return: a `CHRFScore` object.
         """
-        score = 0.0
-        avg_recall = 0.0
-        avg_precision = 0.0
-        effective_order = 0
-
-        statistics = statistics.sum(0).astype(int).tolist()
-
-        for i in range(self.order):
-            hypotheses_ngrams = statistics[3 * i + 0]
-            references_ngrams = statistics[3 * i + 1]
-            common_ngrams = statistics[3 * i + 2]
-            if hypotheses_ngrams > 0 and references_ngrams > 0:
-                avg_precision += common_ngrams / hypotheses_ngrams
-                avg_recall += common_ngrams / references_ngrams
-                effective_order += 1
-
-        if effective_order == 0:
-            avg_precision, avg_recall = 0.0, 0.0
-        else:
-            avg_precision /= effective_order
-            avg_recall /= effective_order
-
-        if avg_precision + avg_recall == 0:
-            score = 0.0
-        else:
-            beta_square = self.beta ** 2
-            score = (1 + beta_square) * (avg_precision * avg_recall)
-            score /= ((beta_square * avg_precision) + avg_recall)
-
-        return CHRFScore(score, self.char_order, self.word_order, self.beta)
+        f1 = self._get_f1_score(statistics)
+        return CHRFScore(f1, self.char_order, self.word_order, self.beta)
 
     @staticmethod
     def _get_match_statistics(hyp_ngrams: Counter, ref_ngrams: Counter) -> List[int]:
@@ -162,43 +176,40 @@ class CHRF:
         :param refs: An iterable of multiple reference segments
         :return: A flattened list.
         """
-        # NOTE: multi-reference not supported yet
-        ref = refs[0]
-
         statistics = []
-
-        # Unpack the lines back and tokenize
-        hyp_char_form = self.tokenizer.to_chars(hyp)
-        ref_char_form = self.tokenizer.to_chars(ref)
 
         # extract character n-grams
         for n in range(self.char_order):
-            hyp_ngrams = extract_char_ngrams(hyp_char_form, n + 1)
-            ref_ngrams = extract_char_ngrams(ref_char_form, n + 1)
+            hyp_ngrams = extract_char_ngrams(hyp, n + 1, self.whitespace)
+            # NOTE: multi-ref
+            ref_ngrams = extract_char_ngrams(refs[0], n + 1, self.whitespace)
             statistics.extend(self._get_match_statistics(hyp_ngrams, ref_ngrams))
 
-        # chrF++ takes into account word n-grams too
+        # Check chrF++ mode
         if self.word_order > 0:
-            hyp_word_form = self.tokenizer.to_words(hyp)
-            ref_word_form = self.tokenizer.to_words(ref)
+            # Primitive tokenization: separate out punctuations
+            hyp = self._remove_punctuation(hyp)
+            refs = [self._remove_punctuation(ref) for ref in refs]
 
-            for n in range(self.word_order):
-                hyp_ngrams = extract_word_ngrams(hyp_word_form, n + 1)
-                ref_ngrams = extract_word_ngrams(ref_word_form, n + 1)
-                statistics.extend(self._get_match_statistics(hyp_ngrams, ref_ngrams))
+        # chrF++ takes into account word n-grams too
+        for n in range(self.word_order):
+            hyp_ngrams = extract_word_ngrams(hyp, n + 1)
+            # NOTE: Multi-ref
+            ref_ngrams = extract_word_ngrams(refs[0], n + 1)
+            statistics.extend(self._get_match_statistics(hyp_ngrams, ref_ngrams))
 
         return statistics
 
     def _extract_corpus_statistics(self, hyps: Sequence[str],
-                                   refs: Sequence[Sequence[str]] = None) -> List[List[int]]:
+                                   refs: Sequence[Sequence[str]] = None) -> np.ndarray:
         """Reads the corpus and returns sentence-level match statistics for
         quickly re-computing BLEU afterwards, for significance testing.
 
         :param hyps: An iterable of hypotheses / sentences.
         :param refs: Possibly multiple references per each hypotheses, wrapped
             into a nested Sequence.
-        :return: A List[List[int]] where each element is a flattened list
-            returned by `BLEU.get_segment_statistics()`.
+        :return: A numpy matrix where each row is a statistics vector as
+            returned by `CHRF._extract_segment_statistics()`.
         """
 
         # sanity checks
@@ -215,16 +226,22 @@ class CHRF:
         for idx, (hyp, *cur_refs) in enumerate(zip(hyps, *refs)):
             # remove undefined / empty references
             # i.e. we have fewer references for this particular sentence
-            cur_refs = [x for x in cur_refs if x is not None and x != ""]
+            lines = [hyp] + [x for x in cur_refs if x is not None and x != ""]
 
-            if len(cur_refs) < 1:
+            if len(lines) < 2:
                 # we need at least a hypothesis and a non-empty reference
                 raise RuntimeError("Found hypothesis with no valid reference sentences.")
+
+            if self.lowercase:
+                lines = [x.lower() for x in lines]
+
+            # Unpack the lines back
+            hyp, *cur_refs = lines
 
             # Collect stats
             stats.append(self._extract_segment_statistics(hyp, cur_refs))
 
-        return stats
+        return np.array(stats, dtype='float32')
 
     def corpus_score(self, hyps: Sequence[str],
                      refs: Sequence[Sequence[str]],
@@ -240,12 +257,14 @@ class CHRF:
         """
         check_corpus_score_args(hyps, refs)
 
-        # float32 is more efficient than (u)int arrays
-        stats = np.array(
-            self._extract_corpus_statistics(hyps, refs), dtype='float32')
+        # Get the statistics
+        stats = self._extract_corpus_statistics(hyps, refs)
 
         if n_bootstrap == 1:
-            # Compute the usual BLEU score
+            # Aggregate stats
+            stats = stats.sum(0).astype(int).tolist()
+
+            # Compute the usual CHRF score
             return self.compute_chrf(stats)
 
         # Get bootstrap estimate & resample
@@ -253,11 +272,14 @@ class CHRF:
             len(stats), size=(n_bootstrap, len(stats)), replace=True)
 
         # recompute chrF scores
-        scores = [self.compute_chrf(stats[idx]) for idx in samples]
+        scores = []
+        for idx_list in samples:
+            agg_stats = stats[idx_list].sum(0).astype(int).tolist()
+            scores.append(self.compute_chrf(agg_stats))
 
-        # Update BLEU signature
-        self.signature.update('bootstrap', n_bootstrap)
-        return BootstrapCHRFScore(scores)
+        # Update signature
+        self.signature.update('bstrap', n_bootstrap)
+        return CHRFScore.average_score(scores)
 
     def sentence_score(self, hyp: str, refs: Sequence[str]) -> CHRFScore:
         """
@@ -269,5 +291,4 @@ class CHRF:
         """
         check_sentence_score_args(hyp, refs)
 
-        stats = self._extract_segment_statistics(hyp, refs)
-        return self.compute_chrf(stats)
+        return self.compute_chrf(self._extract_segment_statistics(hyp, refs))
