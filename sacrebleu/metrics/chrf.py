@@ -3,7 +3,7 @@ import string
 from typing import List, Sequence
 from collections import Counter
 
-from ..significance import bootstrap_ci
+from ..significance import Bootstrap
 
 from .base import Score, Signature
 from .helpers import check_corpus_score_args, check_sentence_score_args
@@ -52,7 +52,7 @@ class CHRFScore(Score):
         :param scores: A list of `CHRFScore` objects for each bootstrap resample.
         :return: a `CHRFScore` object reflecting the estimate scores.
         """
-        mean_chrf, ci = bootstrap_ci([x.score for x in scores])
+        mean_chrf, ci = Bootstrap.confidence_interval([x.score for x in scores])
         return CHRFScore(mean_chrf, char_order=scores[0].char_order,
                          word_order=scores[0].word_order,
                          beta=scores[0].beta, n_bootstrap=len(scores),
@@ -291,19 +291,20 @@ class CHRF:
 
             # Compute the usual CHRF score
             return self.compute_chrf(stats)
+        else:
+            # Update signature
+            self.signature.update('bstrap', n_bootstrap)
+            self.signature.update('seed', Bootstrap.get_seed())
 
-        # Get bootstrap estimate & resample
-        samples = np.random.choice(
-            len(stats), size=(n_bootstrap, len(stats)), replace=True)
+            # Get bootstrap estimate & resample
+            resample = Bootstrap.resample_stats(stats, n_bootstrap)
 
-        # recompute chrF scores
-        scores = []
-        for idx_list in samples:
-            agg_stats = stats[idx_list].sum(0).astype(int).tolist()
-            scores.append(self.compute_chrf(agg_stats))
+            # recompute chrF scores
+            scores = []
+            for _stats in resample:
+                agg_stats = _stats.sum(0).astype(int).tolist()
+                scores.append(self.compute_chrf(agg_stats))
 
-        # Update signature
-        self.signature.update('bstrap', n_bootstrap)
-        return CHRFScore.average_score(scores)
+            return CHRFScore.average_score(scores)
 
 

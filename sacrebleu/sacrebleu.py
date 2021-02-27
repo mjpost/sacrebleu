@@ -431,7 +431,6 @@ def main():
                 system, refs, n_bootstrap=args.n_bootstrap)
             sig = metrics[name].signature.get(short=args.short)
             print(score.format(args.width, args.score_only, sig))
-
     else:
         sigs = {}
         scores = defaultdict(list)

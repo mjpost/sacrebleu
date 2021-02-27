@@ -5,7 +5,7 @@ from typing import List, Sequence, Optional
 
 from ..tokenizers import BLEU_TOKENIZERS
 from ..utils import my_log
-from ..significance import bootstrap_ci
+from ..significance import Bootstrap
 from .base import Score, Signature
 from .helpers import extract_all_word_ngrams, check_corpus_score_args, check_sentence_score_args
 
@@ -86,7 +86,7 @@ class BLEUScore(Score):
         precisions = np.array([x.precisions for x in scores]).mean(0).tolist()
 
         # Get the mean BLEU and 95% CI
-        mean_bleu, ci = bootstrap_ci([x.score for x in scores])
+        mean_bleu, ci = Bootstrap.confidence_interval([x.score for x in scores])
 
         return BLEUScore(mean_bleu, counts, totals, precisions,
                          bp, sys_len, ref_len,
@@ -423,14 +423,21 @@ class BLEU:
             # Compute the usual BLEU score
             return self._corpus_score_from_stats(stats, use_effective_order)
 
-        # Get bootstrap estimate & resample
-        samples = np.random.choice(
-            len(stats), size=(n_bootstrap, len(stats)), replace=True)
-        scores = [self._corpus_score_from_stats(stats[idx], use_effective_order) for idx in samples]
+        else:
+            # Update signature
+            self.signature.update('bstrap', n_bootstrap)
+            self.signature.update('seed', Bootstrap.get_seed())
 
-        # Update BLEU signature
-        self.signature.update('bstrap', n_bootstrap)
-        return BLEUScore.average_score(scores)
+            # Get bootstrap estimate & resample
+            resample = Bootstrap.resample_stats(stats, n_bootstrap)
+
+            # recompute chrF scores
+            scores = []
+            for _stats in resample:
+                scores.append(
+                    self._corpus_score_from_stats(_stats, use_effective_order))
+
+            return BLEUScore.average_score(scores)
 
     def sentence_score(self, hyp: str, refs: Sequence[str],
                        use_effective_order: bool = True) -> BLEUScore:

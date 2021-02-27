@@ -10,7 +10,6 @@ import urllib.request
 from itertools import filterfalse
 from typing import List, Optional, Sequence
 
-import numpy as np
 import portalocker
 from tabulate import tabulate
 
@@ -26,14 +25,6 @@ USERHOME = os.path.expanduser("~")
 SACREBLEU_DIR = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
 sacrelogger = logging.getLogger('sacrebleu')
-
-# Set numpy RNG's seed for significance testing
-# If not given -> Fix to 12345
-# If given but <= 0, don't fix the seed i.e. leave it uninitialized
-
-SACREBLEU_SEED = int(os.environ.get('SACREBLEU_SEED', '12345'))
-if SACREBLEU_SEED > 1:
-    np.random.seed(SACREBLEU_SEED)
 
 
 def get_results_table(results: dict,
