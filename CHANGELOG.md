@@ -1,7 +1,8 @@
 # VERSION HISTORY
 
-- 1.5.1 (2021-03-04)
+- 1.5.1 (2021-03-05)
   - Fix extraction error for WMT18 extra test sets (test-ts) (#142)
+  - Validation and test datasets are added for multilingual TEDx
 
 - 1.5.0 (2021-01-15)
   - Fix an assertion error in chrF (#121)
