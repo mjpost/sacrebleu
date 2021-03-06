@@ -6,6 +6,7 @@ from .tokenizer_intl import TokenizerV14International
 from .tokenizer_zh import TokenizerZh
 from .tokenizer_ja_mecab import TokenizerJaMecab
 from .tokenizer_char import TokenizerChar
+from .tokenizer_spm import TokenizerSPM
 
 
 DEFAULT_TOKENIZER = '13a'
@@ -18,4 +19,5 @@ TOKENIZERS = {
     'zh': TokenizerZh,
     'ja-mecab': TokenizerJaMecab,
     'char': TokenizerChar,
+    'spm': TokenizerSPM,
 }

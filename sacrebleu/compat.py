@@ -58,7 +58,8 @@ def sentence_bleu(hypothesis: str,
                   references: List[str],
                   smooth_method: str = 'exp',
                   smooth_value: float = None,
-                  use_effective_order: bool = True) -> BLEUScore:
+                  use_effective_order: bool = True,
+                  tokenize=DEFAULT_TOKENIZER) -> BLEUScore:
     """
     Computes BLEU on a single sentence pair.
 
@@ -74,7 +75,7 @@ def sentence_bleu(hypothesis: str,
     """
     args = Namespace(
         smooth_method=smooth_method, smooth_value=smooth_value, force=False,
-        short=False, lc=False, tokenize=DEFAULT_TOKENIZER)
+        short=False, lc=False, tokenize=tokenize)
 
     metric = BLEU(args)
     return metric.sentence_score(
