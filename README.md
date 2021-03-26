@@ -149,7 +149,7 @@ $ sacrebleu -t wmt17 -l en-de -i output.detok.txt -b -w 4
 20.7965
 
 # Finally you can dump the information as JSON with --format/-f json
-$ sacrebleu -t wmt17 -l en-de -i output.detok.txt
+$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -f json
 {
  "name": "BLEU",
  "score": 20.796506153855994,
@@ -164,7 +164,7 @@ $ sacrebleu -t wmt17 -l en-de -i output.detok.txt
 }
 ```
 
-Let's now compute multiple metrics for the same system:
+Let's now compute **multiple metrics** for the same system:
 
 ```
 # Let's first compute BLEU, chrF and TER with the default settings
@@ -177,7 +177,7 @@ TER|nrefs:1|case:lc|tok:tercom|norm:no|punct:yes|asian:no|version:2.0.0 = 69.0
 # Observe how the nw:0 gets changed into nw:2 for chrF in line 2
 $ sacrebleu -t wmt17 -l en-de -i output.detok.txt -m bleu chrf ter --chrf-word-order 2
         BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 <stripped>
-      chrF2|nrefs:1|case:mixed|eff:yes|nc:6|nw:2|space:no|version:2.0.0 = 49.0
+    chrF2++|nrefs:1|case:mixed|eff:yes|nc:6|nw:2|space:no|version:2.0.0 = 49.0
 TER|nrefs:1|case:lc|tok:tercom|norm:no|punct:yes|asian:no|version:2.0.0 = 69.0
 ```
 
@@ -240,13 +240,31 @@ $ cat output.detok.txt | sacrebleu ref.detok.txt -m bleu -b -w 4
 20.7965
 ```
 
+## Version Signatures
+As you may have noticed, sacreBLEU generates version strings such as `BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0` for reproducibility reasons. It's strongly recommended to share these signatures in your papers!
+
+## Translationese Support
+
+If you are interested in the translationese effect, you can evaluate BLEU on a subset of sentences
+with a given original language (identified based on the `origlang` tag in the raw SGM files).
+E.g., to evaluate only against originally German sentences translated to English use:
+
+    $ sacrebleu -t wmt13 -l de-en --origlang=de -i my-wmt13-output.txt
+
+and to evaluate against the complement (in this case `origlang` en, fr, cs, ru, de) use:
+
+    $ sacrebleu -t wmt13 -l de-en --origlang=non-de -i my-wmt13-output.txt
+
+*Please note* that the evaluator will return a BLEU score only on the requested subset,
+but it expects that you pass through the entire translated test set.
+
 ## Languages & Preprocessing
 
 ### BLEU
 
 - You can compute case-insensitive BLEU by passing `--lowercase` to sacreBLEU
 - The default tokenizer for BLEU is `13a` which mimics the `mteval-v13a` script from Moses.
-- Other options are:
+- Other tokenizers are:
    - `none` which will not apply any kind of tokenization at all
    - `char` for language-agnostic character-level tokenization
    - `intl` applies international tokenization and mimics the `mteval-v14` script from Moses
@@ -271,13 +289,13 @@ $ sacrebleu kyoto-test.ref.ja -i kyoto-test.hyp.ja -l en-ja -b
 14.5
 ```
 
-### chrF
+### chrF / chrF+
 
-chrF does a minimum effort on tokenization since it deals with character n-grams.
+chrF applies minimum to none pre-processing as it deals with character n-grams:
 
-- If you pass `--chrf-whitespace`, whitespace characters will be preserved when computing the character n-grams.
+- If you pass `--chrf-whitespace`, whitespace characters will be preserved when computing character n-grams.
 - If you pass `--chrf-lowercase`, sacreBLEU will compute case-insensitive chrF(+).
-- If you enable chrF+ mode by passing `--chrf-word-order` (Number of `+` letters denotes the word n-gram order that you select),
+- If you enable chrF+ mode by passing `--chrf-word-order` (The number of `+` letters denotes the word n-gram order that you select),
   a very simple punctuation tokenization will be internally applied.
 
 
@@ -297,20 +315,16 @@ behavior through the command-line:
 
 All three metrics support the use of multiple references during evaluation:
 
+**Pass all references as positional arguments:**
 ```
-# Single reference: ref1
-$ sacrebleu ref1 -i system -m bleu chrf ter
-        BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 44.5 <stripped>
-      chrF2|nrefs:1|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0 = 68.8
-TER|nrefs:1|case:lc|tok:tercom|norm:no|punct:yes|asian:no|version:2.0.0 = 40.4
-
-# Pass each reference as positional arguments
 $ sacrebleu ref1 ref2 -i system -m bleu chrf ter
         BLEU|nrefs:2|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 61.8 <stripped>
       chrF2|nrefs:2|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0 = 75.0
 TER|nrefs:2|case:lc|tok:tercom|norm:no|punct:yes|asian:no|version:2.0.0 = 31.2
+```
 
-# Alternative (less recommended): Paste each system using '\t' delimited lines
+**Alternative (less recommended): Concatenate references using tabs as delimiters:**
+```
 $ paste ref1 ref2 > refs.tsv
 
 # Don't forget to provide --num-refs/-nr !
@@ -321,7 +335,7 @@ BLEU|nrefs:2|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 61.8 <stripped
 ## Multi-system Evaluation
 SacreBLEU supports evaluation of an arbitrary number of systems for a particular
 test set and language-pair. This has the advantage of seeing all results in a
-nicely formatted table.
+nicely formatted table:
 
 ```
 # Pass multiple systems to --input/-i
@@ -370,15 +384,12 @@ Metric signatures
 ```
 
 ## Confidence Intervals for Single System Evaluation
-(Although provided, solely having confidence intervals does not yield much more
-information unless you perform a comparison across systems. For this reason, it will
-make much more sense to directly perform paired statistical tests using multiple systems.
-See the next section for this.)
 
-By enabling confidence interval estimation through `--confidence`, SacreBLEU will print
+- When enabled with the `--confidence` flag, SacreBLEU will print
 (1) the actual system score, (2) the true mean estimated from bootstrap resampling and (3),
 the 95% [confidence interval](https://en.wikipedia.org/wiki/Confidence_interval) around the mean.
-By default, the number of bootstrap resamples is 2000 (denoted with `bs:2000` in the signature)
+
+- By default, the number of bootstrap resamples is 2000 (denoted with `bs:2000` in the signature)
 and can be changed with `--confidence-n`.
 
 ```
@@ -392,89 +403,209 @@ $ sacrebleu/sacrebleu.py ref1 -i system -m bleu chrf -w 4 --score-only
 68.8338
 ```
 
+**NOTE:** Although provided as a functionality, having access to confidence intervals for just one system
+may not reveal much information about the underlying model. It often makes much more sense to perform
+**paired statistical tests** using multiple systems.
+
 ## Paired Significance Tests for Multi-system Evaluation
-Ideally, one would have many systems to compare, when testing whether a newly added
-feature yields significantly different scores than the system without that feature.
-Same procedure can also be used to evaluate submissions for a particular shared task.
-As of version 2.0.0, SacreBLEU allows performing two types of paired significance tests.
-Verbose information printed during the tests can be disabled by the `--quiet` flag.
+Ideally, one would have access to many systems in cases such as (1) investigating
+whether a newly added feature yields significantly different scores than the system without that feature or
+(2) evaluating submissions for a particular shared task.
 
-### How to provide multiple systems?
+SacreBLEU offers two different paired significance tests that are widely used in MT research.
 
-- The **first** system provided to `--input/-i` will be automatically taken as the **baseline system** against which you want to compare your other systems.
-  The systems will also be automatically named by the filenames provided, to provide a disambiguous results table.
-- Same logic applies when tab-separated input file is redirected into SacreBLEU: The first column hypotheses will be taken as the **baseline system**.
-  **NOTE:** This method is not recommended as you will not be able to name your systems.
-- When using `--input/-i`, SacreBLEU will automatically discard the baseline system if it appears more than one time. This is a useful trick when you run the tool with something like the following: `-i systems/baseline systems/*`. Here, the `baseline` file will not be also considered as a candidate system.
+### Paired bootstrap resampling (--paired bs)
 
-### Paired bootstrap resampling (`--paired bs`)
+- This is an efficient implementation of the paper [Statistical Significance Tests for Machine Translation Evaluation](https://www.aclweb.org/anthology/W04-3250.pdf) and is result-compliant with the [reference Moses implementation](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/analysis/bootstrap-hypothesis-difference-significance.pl).
 
-This is an efficient implementation of the paper
-[Statistical Significance Tests for Machine Translation Evaluation](https://www.aclweb.org/anthology/W04-3250.pdf)
-and is feature-compliant with the [reference Moses implementation](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/analysis/bootstrap-hypothesis-difference-significance.pl).
+- Unlike the Moses' implementation that defaults to 1000 bootstrap resamples, SacreBLEU uses a default of 2000 to produce more stable
+estimations. This can be changed with the `--paired-n` flag.
 
-- Paired bootstrap resampling will by default use 2000 resamples (unlike the Moses' implementation that defaults to 1000) to produce more stable
-estimations. The number of resamples can be changed with `--paired-n` flag.
-
-- When launched, this test will (1) perform bootstrap resampling to estimate
-  the 95% CI for all systems (similar to `--confidence` for single-system evaluation)
-  and (2) perform a significance test between the **baseline** and each **candidate system**
-  to compute a [p value](https://en.wikipedia.org/wiki/P-value)
+- When launched, paired bootstrap resampling will perform:
+   - Bootstrap resampling to estimate the 95% CI for all systems and the baseline (similar to `--confidence` for single-system evaluation)
+   - A significance test between the **baseline** and each **system** to compute a [p value](https://en.wikipedia.org/wiki/P-value).
   
-### Paired approximate randomization (`--paired ar`)
+### Paired approximate randomization (--paired ar)
 
-Approximate randomization (AR) is another type of paired significance test. According to
-[Riezler and Maxwell III, 2005](https://www.aclweb.org/anthology/W05-0908.pdf), this test
-is more accurate than paired bootstrap resampling when it comes to Type-I errors which
-indicate *failures to reject the null hypothesis when it is true*:
+- Paired approximate randomization (AR) is another type of paired significance test that is claimed to be more accurate than paired bootstrap resampling when it comes to Type-I errors ([Riezler and Maxwell III, 2005](https://www.aclweb.org/anthology/W05-0908.pdf)). Type-I errors
+indicate failures to reject the null hypothesis when it is true. In other words, AR should in theory be more robust to subtle changes across systems.
 
-```
-...
-(Section 4.3) We can say that the approximate randomization test estimates p-values more conservatively
-than the bootstrap, thus increasing the likelihood of type-I error for the bootstrap test.
-```
+- Our implementation is verified to be result-compliant with the [Multeval toolkit](https://github.com/jhclark/multeval) that also uses paired AR test for pairwise comparison.
 
-Approximate randomization is also the method implemented by the [Multeval toolkit](https://github.com/jhclark/multeval)
-and we have verified that the results produced by SacreBLEU are compliant with Multeval.
-
-**NOTE:** This method does not compute 95% CI's by default and it will only provide the p-values
-for each system. If you also want to get confidence intervals, you need to manually
-enable it through `--paired-ar-confidence-n <value>`. If `<value>` is 0, the default
+- The number of approximate randomization trials is set to 10,000 by default. This can be changed with the `--paired-n` flag.
+  
+- This method will only compute the p-values for each pairwise comparison. If you also want to get confidence intervals similar to **paired bootstrap resampling**, you need to manually enable it through `--paired-ar-confidence-n <value>`. If `<value>` is 0, the default
 of 2000 bootstrap resamples will be used, otherwise `<value>` resamples will be used.
-  
 
+### Running the tests
 
+- The **first system** provided to `--input/-i` will be automatically taken as the **baseline system** against which you want to compare the **other systems.**
+The systems will also be automatically named by the provided filename (more specifically, the `basename` of the filenames). (SacreBLEU will automatically discard the baseline system if it appears more than one time. This is a useful trick when you run the tool with something like the following: `-i systems/baseline.txt systems/*.txt`. Here, the `baseline.txt` file will not be also considered as a candidate system.)
 
-## Version Signatures
-As you may have noticed, sacreBLEU generates version strings such as `BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0` for reproducibility reasons. It's strongly recommended to share these signatures in your papers!
+- A similar logic applies when tab-separated input file is redirected into SacreBLEU i.e. the first column hypotheses will be taken as the **baseline system**. However, this method is **not recommended** as it won't allow naming your systems in a human-readable way. It will instead enumerate them from 1 to N following the column order in the tab-separated input.
 
-## Translationese Support
+- On Linux and Mac OS X, you can also launch the tests on multiple CPU's by passing the flag `--paired-jobs N`. If equals to 0, SacreBLEU will launch one worker for each pairwise comparison. If > 0, the number of worker processes in the pool will be `N`. This will substantially speed up the runtime especially if you ask **TER** to be computed.
 
-If you are interested in the translationese effect, you can evaluate BLEU on a subset of sentences
-with a given original language (identified based on the `origlang` tag in the raw SGM files).
-E.g., to evaluate only against originally German sentences translated to English use:
+#### Example: Paired bootstrap resampling
+In the example below, we set `newstest2017.LIUM-NMT.4900.en-de` as the baseline and compare it to 5 other WMT17 submissions using paired bootstrap resampling. According to the results, the null hypothesis (i.e. the two systems being essentially the same) could not be rejected (at the significance level of 0.05) for the following comparisons:
 
-    sacrebleu -t wmt13 -l de-en --origlang=de < my-wmt13-output.txt
+- 0.3 BLEU difference between the baseline and the FBK system (p = 0.0945)
+- 0.1 chrF2 difference between the baseline and the KIT system (p = 0.1089)
+- 0.1 BLEU difference between the baseline and the online-B system (p = 0.3073)
 
-and to evaluate against the complement (in this case `origlang` en, fr, cs, ru, de) use:
+```
+$ sacrebleu -t wmt17 -l en-de -i newstest2017.LIUM-NMT.4900.en-de newstest2017.* \
+        -m bleu chrf --paired bs --quiet
++--------------------------------------------+-----------------------+------------------------+
+|                                     System |  BLEU / μ / ± 95% CI  |  chrF2 / μ / ± 95% CI  |
++============================================+=======================+========================+
+| Baseline: newstest2017.LIUM-NMT.4900.en-de |  26.6 / 26.6 / 0.65   |   55.9 / 55.9 / 0.47   |
++--------------------------------------------+-----------------------+------------------------+
+|                newstest2017.FBK.4870.en-de |  26.3 / 26.3 / 0.65   |   54.7 / 54.7 / 0.48   |
+|                                            |     (p = 0.0945)      |     (p = 0.0005)*      |
++--------------------------------------------+-----------------------+------------------------+
+|                newstest2017.KIT.4950.en-de |  26.1 / 26.1 / 0.66   |   55.8 / 55.8 / 0.46   |
+|                                            |     (p = 0.0105)*     |      (p = 0.1089)      |
++--------------------------------------------+-----------------------+------------------------+
+|              newstest2017.online-A.0.en-de |  20.8 / 20.8 / 0.59   |   52.0 / 52.0 / 0.43   |
+|                                            |     (p = 0.0005)*     |     (p = 0.0005)*      |
++--------------------------------------------+-----------------------+------------------------+
+|              newstest2017.online-B.0.en-de |  26.7 / 26.7 / 0.67   |   56.3 / 56.3 / 0.45   |
+|                                            |     (p = 0.3073)      |     (p = 0.0240)*      |
++--------------------------------------------+-----------------------+------------------------+
+|   newstest2017.PROMT-Rule-based.4735.en-de |  16.6 / 16.6 / 0.51   |   50.4 / 50.4 / 0.40   |
+|                                            |     (p = 0.0005)*     |     (p = 0.0005)*      |
++--------------------------------------------+-----------------------+------------------------+
 
-    sacrebleu -t wmt13 -l de-en --origlang=non-de < my-wmt13-output.txt
+------------------------------------------------------------
+Paired bootstrap resampling test with 2000 resampling trials
+------------------------------------------------------------
+ - Each system is pairwise compared to Baseline: newstest2017.LIUM-NMT.4900.en-de.
+   Actual system score / estimated true mean / 95% CI are provided for each metric.
 
-*Please note* that the evaluator will return a BLEU score only on the requested subset,
-but it expects that you pass through the entire translated test set.
+ - Null hypothesis: the system and the baseline translations are essentially
+   generated by the same underlying process. The p-value is roughly the probability
+   of the absolute score difference (delta) between a system and the {bline} occurring due to chance.
+
+ - Assuming a significance threshold of 0.05, the Null hypothesis can be rejected
+   for p-values < 0.05 (marked with "*"). This means that the delta is unlikely to be attributed
+   to chance, hence the system is significantly "different" than the baseline.
+   Otherwise, the p-values are highlighted in red (if the terminal supports colors).
+
+ - NOTE: Significance does not tell whether a system is "better" than the baseline but rather
+   emphasizes the "difference" of the systems in terms of the replicability of the delta.
+
+-----------------
+Metric signatures
+-----------------
+ - BLEU       nrefs:1|bs:2000|seed:12345|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0
+ - chrF2      nrefs:1|bs:2000|seed:12345|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0
+```
+
+#### Example: Paired approximate randomization
+
+Let's now run the paired approximate randomization test for the same systems. According to the results, the findings are compatible with the paired bootstrap resampling test. However, the p-values here are much more higher (i.e. the test is much more confident that the deltas between the baseline and the FBK/KIT/online-B systems are due to chance). 
+
+```
+$ sacrebleu -t wmt17 -l en-de -i newstest2017.LIUM-NMT.4900.en-de newstest2017.* \
+        -m bleu chrf --paired ar --quiet
++--------------------------------------------+---------------+---------------+
+|                                     System |     BLEU      |     chrF2     |
++============================================+===============+===============+
+| Baseline: newstest2017.LIUM-NMT.4900.en-de |     26.6      |     55.9      |
++--------------------------------------------+---------------+---------------+
+|                newstest2017.FBK.4870.en-de |     26.3      |     54.7      |
+|                                            | (p = 0.1887)  | (p = 0.0001)* |
++--------------------------------------------+---------------+---------------+
+|                newstest2017.KIT.4950.en-de |     26.1      |     55.8      |
+|                                            | (p = 0.0193)* | (p = 0.2511)  |
++--------------------------------------------+---------------+---------------+
+|              newstest2017.online-A.0.en-de |     20.8      |     52.0      |
+|                                            | (p = 0.0001)* | (p = 0.0001)* |
++--------------------------------------------+---------------+---------------+
+|              newstest2017.online-B.0.en-de |     26.7      |     56.3      |
+|                                            | (p = 0.8066)  | (p = 0.0385)* |
++--------------------------------------------+---------------+---------------+
+|   newstest2017.PROMT-Rule-based.4735.en-de |     16.6      |     50.4      |
+|                                            | (p = 0.0001)* | (p = 0.0001)* |
++--------------------------------------------+---------------+---------------+
+
+ <stripped>
+```
 
 # Using SacreBLEU from Python
 
+For evaluation, it may be useful to compute BLEU, chrF or TER from a Python script. The recommended
+way of doing this is to use the object-oriented API, by creating an instance of the `metrics.BLEU` class
+for example:
+
+```python
+In [1]: from sacrebleu.metrics import BLEU, CHRF, TER
+   ...: 
+   ...: refs = [ # First set of references
+   ...:          ['The dog bit the man.', 'It was not unexpected.', 'The man bit him first.'],
+   ...:          # Second set of references
+   ...:          ['The dog had bit the man.', 'No one was surprised.', 'The man had bitten the dog.'],
+   ...:        ]
+   ...: sys = ['The dog bit the man.', "It wasn't surprising.", 'The man had just bitten him.']
+
+In [2]: bleu = BLEU()
+
+In [3]: bleu.corpus_score(sys, refs)
+Out[3]: BLEU = 48.53 82.4/50.0/45.5/37.5 (BP = 0.943 ratio = 0.944 hyp_len = 17 ref_len = 18)
+
+In [4]: bleu.get_signature()
+Out[4]: nrefs:2|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0
+
+In [5]: chrf = CHRF()
+
+In [6]: chrf.corpus_score(sys, refs)
+Out[6]: chrF2 = 59.73
+```
+
+### Variable Number of References
+
+Let's now remove the first reference sentence for the first system sentence `The dog bit the man.` by replacing it with either `None` or the empty string `''`.
+This allows using a variable number of reference segments per hypothesis. Observe how the signature changes from `nrefs:2` to `nrefs:var`:
+
+```python
+In [1]: from sacrebleu.metrics import BLEU, CHRF, TER
+   ...: 
+   ...: refs = [ # First set of references
+                 # 1st sentence does not have a ref here
+   ...:          ['', 'It was not unexpected.', 'The man bit him first.'],
+   ...:          # Second set of references
+   ...:          ['', 'No one was surprised.', 'The man had bitten the dog.'],
+   ...:        ]
+   ...: sys = ['The dog bit the man.', "It wasn't surprising.", 'The man had just bitten him.']
+   
+In [2]: bleu = BLEU()
+
+In [3]: bleu.corpus_score(sys, refs)
+Out[3]: BLEU = 29.44 82.4/42.9/27.3/12.5 (BP = 0.889 ratio = 0.895 hyp_len = 17 ref_len = 19)
+
+In [4]: bleu.get_signature()
+Out[4]: nrefs:var|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0
+```
+
 ## Compatibility API
 
-For evaluation, it may be useful to compute BLEU inside a script. This is how you can do it:
+You can also use the compatibility API that provides wrapper functions around the object-oriented API to
+compute sentence-level and corpus-level BLEU, chrF and TER: (It should be noted that this API can be
+removed in future releases)
+
 ```python
-import sacrebleu
-refs = [['The dog bit the man.', 'It was not unexpected.', 'The man bit him first.'],
-        ['The dog had bit the man.', 'No one was surprised.', 'The man had bitten the dog.']]
-sys = ['The dog bit the man.', "It wasn't surprising.", 'The man had just bitten him.']
-bleu = sacrebleu.corpus_bleu(sys, refs)
-print(bleu.score)
+In [1]: import sacrebleu
+   ...: 
+   ...: refs = [ # First set of references
+   ...:          ['The dog bit the man.', 'It was not unexpected.', 'The man bit him first.'],
+   ...:          # Second set of references
+   ...:          ['The dog had bit the man.', 'No one was surprised.', 'The man had bitten the dog.'],
+   ...:        ]
+   ...: sys = ['The dog bit the man.', "It wasn't surprising.", 'The man had just bitten him.']
+
+In [2]: sacrebleu.corpus_bleu(sys, refs)
+Out[2]: BLEU = 48.53 82.4/50.0/45.5/37.5 (BP = 0.943 ratio = 0.944 hyp_len = 17 ref_len = 18)
 ```
 
 # License
