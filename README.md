@@ -5,7 +5,31 @@ SacreBLEU ([Post, 2018](http://aclweb.org/anthology/W18-6319)) provides hassle-f
 Inspired by Rico Sennrich's `multi-bleu-detok.perl`, it produces the official WMT scores but works with plain text.
 It also knows all the standard test sets and handles downloading, processing, and tokenization for you.
 
+In recent versions, sacreBLEU also provides:
+
+- Different tokenizers for BLEU including support for Japanese and Chinese
+- Support for **chrF, chrF++** and **Translation error rate (TER)** metrics
+- An object-oriented API for all metrics
+
 The official version is hosted at <https://github.com/mjpost/sacrebleu>.
+
+# Motivation
+
+Comparing BLEU scores is harder than it should be.
+Every decoder has its own implementation, often borrowed from Moses, but maybe with subtle changes.
+Moses itself has a number of implementations as standalone scripts, with little indication of how they differ (note: they mostly don't, but `multi-bleu.pl` expects tokenized input).
+Different flags passed to each of these scripts can produce wide swings in the final score.
+All of these may handle tokenization in different ways.
+On top of this, downloading and managing test sets is a moderate annoyance.
+Sacre bleu!
+What a mess.
+
+**SacreBLEU** aims to solve these problems by wrapping the original Papineni reference implementation together with other useful features.
+The defaults are set the way that BLEU should be computed, and furthermore, the script outputs a short version string that allows others to know exactly what you did.
+As an added bonus, it automatically downloads and manages test sets for you, so that you can simply tell it to score against `wmt14`, without having to hunt down a path on your local file system.
+It is all designed to take BLEU a little more seriously.
+After all, even with all its problems, BLEU is the default and---admit it---well-loved metric of our entire research community.
+Sacre BLEU.
 
 # Features
 
@@ -14,11 +38,6 @@ The official version is hosted at <https://github.com/mjpost/sacrebleu>.
 - It properly computes scores on detokenized outputs, using WMT ([Conference on Machine Translation](http://statmt.org/wmt17)) standard tokenization
 - It produces the same values as official script (`mteval-v13a.pl`) used by WMT
 - It outputs the BLEU score without the comma, so you don't have to remove it with `sed` (Looking at you, `multi-bleu.perl`)
-
-Recent versions also added the following features to sacreBLEU:
-- Different tokenizers for BLEU including support for Japanese and Chinese
-- Support for chrF, chrF++ and Translation error rate (TER) metrics
-- An experimental object-oriented API for all metrics
 
 # Installation
 
@@ -31,7 +50,7 @@ following command instead, to perform a full installation with dependencies:
 
     pip install sacrebleu[ja]
 
-# Commands
+# Command-line Usage
 
 Get a list of available test sets:
 
@@ -50,20 +69,20 @@ After tokenizing, translating, and detokenizing it, you can score your output ea
     cat output.detok.txt | sacrebleu -t wmt14 -l de-en
 
 SacreBLEU knows about common WMT test sets, but you can also use it to score system outputs with arbitrary references.
-It also works in backwards compatible model where you manually specify the reference(s), similar to the format of `multi-bleu.txt`:
+It also works in backwards compatible mode where you manually specify the reference(s), similar to `multi-bleu.perl`:
 
     cat output.detok.txt | sacrebleu REF1 [REF2 ...]
 
 Note that the system output and references will all be tokenized internally.
 
-## Versioning
+# Versioning
 
 SacreBLEU generates version strings like the following. Put them in a footnote in your paper!
-Use `--short` for a shorter hash if you like.
+Use `--short` for a shorter hash if you like:
 
     BLEU+case.mixed+lang.de-en+test.wmt17 = 32.97 66.1/40.2/26.6/18.1 (BP = 0.980 ratio = 0.980 hyp_len = 63134 ref_len = 64399)
 
-## Translationese Support
+# Translationese Support
 
 If you are interested in the translationese effect, you can evaluate BLEU on a subset of sentences
 with a given original language (identified based on the `origlang` tag in the raw SGM files).
@@ -78,9 +97,9 @@ and to evaluate against the complement (in this case `origlang` en, fr, cs, ru, 
 *Please note* that the evaluator will return a BLEU score only on the requested subset,
 but it expects that you pass through the entire translated test set.
 
-## Using SacreBLEU from Python
+# Using SacreBLEU from Python
 
-### Compatibility API
+## Compatibility API
 
 For evaluation, it may be useful to compute BLEU inside a script. This is how you can do it:
 ```python
@@ -91,29 +110,12 @@ sys = ['The dog bit the man.', "It wasn't surprising.", 'The man had just bitten
 bleu = sacrebleu.corpus_bleu(sys, refs)
 print(bleu.score)
 ```
-# Motivation
 
-Comparing BLEU scores is harder than it should be.
-Every decoder has its own implementation, often borrowed from Moses, but maybe with subtle changes.
-Moses itself has a number of implementations as standalone scripts, with little indication of how they differ (note: they mostly don't, but `multi-bleu.pl` expects tokenized input).
-Different flags passed to each of these scripts can produce wide swings in the final score.
-All of these may handle tokenization in different ways.
-On top of this, downloading and managing test sets is a moderate annoyance.
-Sacre bleu!
-What a mess.
+# License
 
-SacreBLEU aims to solve these problems by wrapping the original Papineni reference implementation together with other useful features.
-The defaults are set the way that BLEU should be computed, and furthermore, the script outputs a short version string that allows others to know exactly what you did.
-As an added bonus, it automatically downloads and manages test sets for you, so that you can simply tell it to score against 'wmt14', without having to hunt down a path on your local file system.
-It is all designed to take BLEU a little more seriously.
-After all, even with all its problems, BLEU is the default and---admit it---well-loved metric of our entire research community.
-Sacre BLEU.
+SacreBLEU is licensed under the [Apache 2.0 License](LICENSE.txt).
 
-# LICENSE
-
-SacreBLEU is licensed under the Apache 2.0 License.
-
-# CREDITS
+# Credits
 
 This was all Rico Sennrich's idea.
 Originally written by Matt Post.
