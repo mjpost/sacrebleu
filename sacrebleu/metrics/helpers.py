@@ -1,3 +1,5 @@
+"""Various utility functions for word and character n-gram extraction."""
+
 from collections import Counter
 from typing import List, Tuple
 

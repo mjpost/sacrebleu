@@ -1,3 +1,5 @@
+"""The implementation of chrF (Popović 2015) and chrF++ (Popović 2017) metrics."""
+
 from typing import List, Sequence, Optional, Dict
 from collections import Counter
 
@@ -7,7 +9,12 @@ from .helpers import extract_all_char_ngrams, extract_word_ngrams
 
 
 class CHRFSignature(Signature):
+    """A convenience class to represent the reproducibility signature for chrF.
+
+    :param args: key-value dictionary passed from the actual metric instance.
+    """
     def __init__(self, args: dict):
+        """`CHRFSignature` initializer."""
         super().__init__(args)
         self._abbr.update({
             'case': 'c',
@@ -27,7 +34,15 @@ class CHRFSignature(Signature):
 
 
 class CHRFScore(Score):
+    """A convenience class to represent chrF scores.
+
+    :param score: The chrF (chrF++) score.
+    :param char_order: The character n-gram order.
+    :param word_order: The word n-gram order. If equals to 2, the metric is referred to as chrF++.
+    :param beta: Determine the importance of recall w.r.t precision.
+    """
     def __init__(self, score: float, char_order: int, word_order: int, beta: int):
+        """`CHRFScore` initializer."""
         self.beta = beta
         self.char_order = char_order
         self.word_order = word_order
@@ -75,6 +90,7 @@ class CHRF(Metric):
                  whitespace: bool = False,
                  eps_smoothing: bool = False,
                  references: Optional[Sequence[Sequence[str]]] = None):
+        """`CHRF` initializer."""
         super().__init__()
 
         self.beta = beta

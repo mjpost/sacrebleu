@@ -1,3 +1,5 @@
+"""The implementation of the BLEU metric (Papineni et al., 2002)."""
+
 import math
 import logging
 
@@ -15,7 +17,7 @@ sacrelogger = logging.getLogger('sacrebleu')
 MAX_NGRAM_ORDER = 4
 
 
-def _get_tokenizer(name):
+def _get_tokenizer(name: str):
     """Dynamically import tokenizer as importing all is slow."""
     if name == 'none':
         from ..tokenizers.tokenizer_base import BaseTokenizer as _tok
@@ -33,7 +35,12 @@ def _get_tokenizer(name):
 
 
 class BLEUSignature(Signature):
+    """A convenience class to represent the reproducibility signature for BLEU.
+
+    :param args: key-value dictionary passed from the actual metric instance.
+    """
     def __init__(self, args: dict):
+        """`BLEUSignature` initializer."""
         super().__init__(args)
 
         self._abbr.update({
@@ -66,10 +73,20 @@ class BLEUSignature(Signature):
 
 
 class BLEUScore(Score):
-    """A convenience class to represent BLEU scores."""
+    """A convenience class to represent BLEU scores.
+
+    :param score: The BLEU score.
+    :param counts: List of counts of correct ngrams, 1 <= n <= max_ngram_order
+    :param totals: List of counts of total ngrams, 1 <= n <= max_ngram_order
+    :param precisions: List of precisions, 1 <= n <= max_ngram_order
+    :param bp: The brevity penalty.
+    :param sys_len: The cumulative system length.
+    :param ref_len: The cumulative reference length.
+    """
     def __init__(self, score: float, counts: List[int], totals: List[int],
                  precisions: List[float], bp: float,
                  sys_len: float, ref_len: float):
+        """`BLEUScore` initializer."""
         super().__init__('BLEU', score)
         self.bp = bp
         self.counts = counts
@@ -139,6 +156,7 @@ class BLEU(Metric):
                  effective_order: bool = False,
                  trg_lang: str = '',
                  references: Optional[Sequence[Sequence[str]]] = None):
+        """`BLEU` initializer."""
         super().__init__()
 
         self._force = force

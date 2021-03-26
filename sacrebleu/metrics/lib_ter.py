@@ -1,3 +1,5 @@
+"""This module implements various utility functions for the TER metric."""
+
 # Copyright 2020 Memsource
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -289,8 +291,11 @@ class BeamEditDistance:
     "pseudo"-diagonal since we take the ratio of sequence lengths into account).
 
     Tracking allows to reconstruct the optimal sequence of edit operations.
+
+    :param words_ref: A list of reference tokens.
     """
     def __init__(self, words_ref: List[str]):
+        """`BeamEditDistance` initializer."""
         self._words_ref = words_ref
         self._n_words_ref = len(self._words_ref)
 

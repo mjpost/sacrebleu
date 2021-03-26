@@ -1,3 +1,10 @@
+"""The base `Score`, `Metric` and `Signature` classes to derive from.
+
+`Metric` is an abstract class that enforces the implementation of a set
+of abstract methods. This way, a correctly implemented metric will work
+seamlessly with the rest of the codebase.
+"""
+
 import json
 import logging
 import statistics
@@ -12,9 +19,11 @@ sacrelogger = logging.getLogger('sacrebleu')
 class Score:
     """A base score class to derive from.
 
+    :param name: The name of the underlying metric.
     :param score: A floating point number for the final metric.
     """
     def __init__(self, name: str, score: float):
+        """`Score` initializer."""
         self.name = name
         self.score = score
 
@@ -34,7 +43,6 @@ class Score:
         :param signature: A string representation of the given `Signature`
         instance.
         :param is_json: If `True`, will output the score in JSON string.
-
         :return: A plain or JSON-formatted string representation.
         """
         d = {'name': self.name, 'score': self.score, 'signature': signature}
@@ -82,6 +90,7 @@ class Score:
         self._mean = statistics.mean(raw_scores)
 
     def __repr__(self):
+        """Returns a human readable score string."""
         return self.format()
 
 
@@ -91,6 +100,7 @@ class Signature:
     :param args: key-value dictionary passed from the actual metric instance.
     """
     def __init__(self, args: dict):
+        """`Signature` initializer."""
         # Global items that are shared across all metrics
         self._abbr = {
             'version': 'v',
@@ -131,7 +141,7 @@ class Signature:
         """Returns a string representation of the signature.
 
         :param short: If True, shortened signature is produced.
-        :returns: A string representation of the signature.
+        :return: A string representation of the signature.
         """
         pairs = []
         keys = list(self.info.keys())
@@ -149,13 +159,19 @@ class Signature:
         return '|'.join(pairs)
 
     def update(self, key: str, value: Any):
-        """Add a new item or update an existing one."""
+        """Add a new item or update an existing one.
+
+        :param key: The key to use in the dictionary.
+        :param value: The associated value for the `key`.
+        """
         self.info[key] = value
 
     def __str__(self):
+        """Returns a human-readable signature string."""
         return self.format()
 
     def __repr__(self):
+        """Returns a human-readable signature string."""
         return self.format()
 
 
@@ -168,6 +184,7 @@ class Metric(metaclass=ABCMeta):
     _SIGNATURE_TYPE = Signature
 
     def __init__(self):
+        """`Metric` initializer."""
         # The pre-computed reference cache
         self._ref_cache = None
 
@@ -180,6 +197,11 @@ class Metric(metaclass=ABCMeta):
         self.seed = None
 
     def _check_sentence_score_args(self, hyp: str, refs: Sequence[str]):
+        """Performs sanity checks on `sentence_score` method's arguments.
+
+        :param hyp: A single hypothesis string.
+        :param refs: A sequence of reference strings.
+        """
         prefix = self.__class__.__name__
         err_msg = None
 
@@ -194,8 +216,15 @@ class Metric(metaclass=ABCMeta):
             raise RuntimeError(f'{prefix}: {err_msg}')
 
     def _check_corpus_score_args(self, hyps: Sequence[str],
-                                 refs: Optional[Sequence[Sequence[str]]],
-                                 n_bootstrap: int = 1):
+                                 refs: Optional[Sequence[Sequence[str]]]):
+        """Performs sanity checks on `corpus_score` method's arguments.
+
+        :param hypses: A sequence of hypothesis strings.
+        :param refs: A sequence of reference documents with document being
+        defined as a sequence of reference strings. If `None`, cached references
+        will be used.
+        """
+
         prefix = self.__class__.__name__
         err_msg = None
 
@@ -375,7 +404,7 @@ class Metric(metaclass=ABCMeta):
         using bootstrap resampling with `n_bootstrap` samples.
         :return: A `Score` object.
         """
-        self._check_corpus_score_args(hypotheses, references, n_bootstrap)
+        self._check_corpus_score_args(hypotheses, references)
 
         # Collect corpus stats
         stats = self._extract_corpus_statistics(hypotheses, references)

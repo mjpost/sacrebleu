@@ -1,3 +1,5 @@
+"""The implementation of the TER metric (Snover et al., 2006)."""
+
 # Copyright 2020 Memsource
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +24,12 @@ from .lib_ter import translation_edit_rate
 
 
 class TERSignature(Signature):
+    """A convenience class to represent the reproducibility signature for TER.
+
+    :param args: key-value dictionary passed from the actual metric instance.
+    """
     def __init__(self, args: dict):
+        """`TERSignature` initializer."""
         super().__init__(args)
         self._abbr.update({
             'case': 'c',
@@ -42,7 +49,14 @@ class TERSignature(Signature):
 
 
 class TERScore(Score):
+    """A convenience class to represent TER scores.
+
+    :param score: The TER score.
+    :param num_edits: The cumulative number of edits.
+    :param ref_length: The cumulative average reference length.
+    """
     def __init__(self, score: float, num_edits: float, ref_length: float):
+        """`TERScore` initializer."""
         super().__init__('TER', score)
         self.num_edits = int(num_edits)
         self.ref_length = ref_length
@@ -77,6 +91,7 @@ class TER(Metric):
                  asian_support: bool = False,
                  case_sensitive: bool = False,
                  references: Optional[Sequence[Sequence[str]]] = None):
+        """`TER` initializer."""
         super().__init__()
 
         self.no_punct = no_punct
