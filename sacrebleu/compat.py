@@ -1,171 +1,198 @@
-from typing import Union, Iterable, List
-from argparse import Namespace
+from typing import Sequence, Optional
 
-from .tokenizers import DEFAULT_TOKENIZER
 from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
 
 
 ######################################################################
 # Backward compatibility functions for old style API access (< 1.4.11)
 ######################################################################
-def corpus_bleu(sys_stream: Union[str, Iterable[str]],
-                ref_streams: Union[str, List[Iterable[str]]],
+def corpus_bleu(hypotheses: Sequence[str],
+                references: Sequence[Sequence[str]],
                 smooth_method='exp',
                 smooth_value=None,
                 force=False,
                 lowercase=False,
-                tokenize=DEFAULT_TOKENIZER,
-                use_effective_order=False) -> BLEUScore:
-    """Produces BLEU scores along with its sufficient statistics from a source against one or more references.
+                tokenize=BLEU.TOKENIZER_DEFAULT,
+                effective_order=False) -> BLEUScore:
+    """Computes BLEU for a corpus against a single (or multiple) reference(s).
 
-    :param sys_stream: The system stream (a sequence of segments)
-    :param ref_streams: A list of one or more reference streams (each a sequence of segments)
+    :param hypotheses: A sequence of hypothesis strings.
+    :param references: A sequence of reference documents with document being
+        defined as a sequence of reference strings.
     :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
     :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
     :param force: Ignore data that looks already tokenized
     :param lowercase: Lowercase the data
     :param tokenize: The tokenizer to use
+    :param effective_order: Don't take into account n-gram orders without any match.
     :return: a `BLEUScore` object
     """
-    args = Namespace(
-        smooth_method=smooth_method, smooth_value=smooth_value, force=force,
-        short=False, lc=lowercase, tokenize=tokenize)
+    metric = BLEU(
+        lowercase=lowercase, force=force, tokenize=tokenize,
+        smooth_method=smooth_method, smooth_value=smooth_value,
+        effective_order=effective_order)
 
-    metric = BLEU(args)
-    return metric.corpus_score(
-        sys_stream, ref_streams, use_effective_order=use_effective_order)
+    return metric.corpus_score(hypotheses, references)
 
 
-def raw_corpus_bleu(sys_stream,
-                    ref_streams,
-                    smooth_value=BLEU.SMOOTH_DEFAULTS['floor']) -> BLEUScore:
-    """Convenience function that wraps corpus_bleu().
-    This is convenient if you're using sacrebleu as a library, say for scoring on dev.
-    It uses no tokenization and 'floor' smoothing, with the floor default to 0.1.
+def raw_corpus_bleu(hypotheses: Sequence[str],
+                    references: Sequence[Sequence[str]],
+                    smooth_value: Optional[float] = BLEU.SMOOTH_DEFAULTS['floor']) -> BLEUScore:
+    """Computes BLEU for a corpus against a single (or multiple) reference(s).
+    This convenience function assumes a particular set of arguments i.e.
+    it disables tokenization and applies a `floor` smoothing with value `0.1`.
 
-    :param sys_stream: the system stream (a sequence of segments)
-    :param ref_streams: a list of one or more reference streams (each a sequence of segments)
+    :param hypotheses: A sequence of hypothesis strings.
+    :param references: A sequence of reference documents with document being
+        defined as a sequence of reference strings.
     :param smooth_value: The smoothing value for `floor`. If not given, the default of 0.1 is used.
     :return: Returns a `BLEUScore` object.
     """
     return corpus_bleu(
-        sys_stream, ref_streams, smooth_method='floor',
+        hypotheses, references, smooth_method='floor',
         smooth_value=smooth_value, force=True, tokenize='none',
-        use_effective_order=True)
+        effective_order=True)
 
 
 def sentence_bleu(hypothesis: str,
-                  references: List[str],
+                  references: Sequence[str],
                   smooth_method: str = 'exp',
                   smooth_value: float = None,
-                  use_effective_order: bool = True) -> BLEUScore:
+                  lowercase: bool = False,
+                  tokenize=BLEU.TOKENIZER_DEFAULT,
+                  effective_order: bool = True) -> BLEUScore:
     """
-    Computes BLEU on a single sentence pair.
+    Computes BLEU for a single sentence against a single (or multiple) reference(s).
 
-    Disclaimer: computing BLEU on the sentence level is not its intended use,
+    Disclaimer: Computing BLEU at the sentence level is not its intended use as
     BLEU is a corpus-level metric.
 
-    :param hypothesis: Hypothesis string.
-    :param references: List of reference strings.
+    :param hypothesis: A single hypothesis string.
+    :param references: A sequence of reference strings.
     :param smooth_method: The smoothing method to use ('floor', 'add-k', 'exp' or 'none')
     :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
-    :param use_effective_order: Account for references that are shorter than the largest n-gram.
+    :param lowercase: Lowercase the data
+    :param tokenize: The tokenizer to use
+    :param effective_order: Don't take into account n-gram orders without any match.
     :return: Returns a `BLEUScore` object.
     """
-    args = Namespace(
-        smooth_method=smooth_method, smooth_value=smooth_value, force=False,
-        short=False, lc=False, tokenize=DEFAULT_TOKENIZER)
+    metric = BLEU(
+        lowercase=lowercase, tokenize=tokenize, force=False,
+        smooth_method=smooth_method, smooth_value=smooth_value,
+        effective_order=effective_order)
 
-    metric = BLEU(args)
-    return metric.sentence_score(
-        hypothesis, references, use_effective_order=use_effective_order)
+    return metric.sentence_score(hypothesis, references)
 
 
-def corpus_chrf(hypotheses: Iterable[str],
-                references: List[Iterable[str]],
-                order: int = CHRF.ORDER,
-                beta: float = CHRF.BETA,
-                remove_whitespace: bool = True) -> CHRFScore:
+def corpus_chrf(hypotheses: Sequence[str],
+                references: Sequence[Sequence[str]],
+                char_order: int = CHRF.CHAR_ORDER,
+                word_order: int = CHRF.WORD_ORDER,
+                beta: int = CHRF.BETA,
+                remove_whitespace: bool = True,
+                eps_smoothing: bool = False) -> CHRFScore:
     """
-    Computes ChrF on a corpus.
+    Computes chrF for a corpus against a single (or multiple) reference(s).
+    If `word_order` equals to 2, the metric is referred to as chrF++.
 
-    :param hypotheses: Stream of hypotheses.
-    :param references: Stream of references.
-    :param order: Maximum n-gram order.
-    :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
-    :param remove_whitespace: Whether to delete all whitespace from hypothesis and reference strings.
+    :param hypotheses: A sequence of hypothesis strings.
+    :param references: A sequence of reference documents with document being
+        defined as a sequence of reference strings.
+    :param char_order: Character n-gram order.
+    :param word_order: Word n-gram order. If equals to 2, the metric is referred to as chrF++.
+    :param beta: Determine the importance of recall w.r.t precision.
+    :param eps_smoothing: If `True`, applies epsilon smoothing similar
+    to reference chrF++.py, NLTK and Moses implementations. Otherwise,
+    it takes into account effective match order similar to sacreBLEU < 2.0.0.
+    :param remove_whitespace: If `True`, removes whitespaces prior to character n-gram extraction.
     :return: A `CHRFScore` object.
     """
-    args = Namespace(
-        chrf_order=order, chrf_beta=beta, chrf_whitespace=not remove_whitespace, short=False)
-    metric = CHRF(args)
+    metric = CHRF(
+        char_order=char_order,
+        word_order=word_order,
+        beta=beta,
+        whitespace=not remove_whitespace,
+        eps_smoothing=eps_smoothing)
     return metric.corpus_score(hypotheses, references)
 
 
 def sentence_chrf(hypothesis: str,
-                  references: List[str],
-                  order: int = CHRF.ORDER,
-                  beta: float = CHRF.BETA,
-                  remove_whitespace: bool = True) -> CHRFScore:
+                  references: Sequence[str],
+                  char_order: int = CHRF.CHAR_ORDER,
+                  word_order: int = CHRF.WORD_ORDER,
+                  beta: int = CHRF.BETA,
+                  remove_whitespace: bool = True,
+                  eps_smoothing: bool = False) -> CHRFScore:
     """
-    Computes ChrF on a single sentence pair.
+    Computes chrF for a single sentence against a single (or multiple) reference(s).
+    If `word_order` equals to 2, the metric is referred to as chrF++.
 
-    :param hypothesis: Hypothesis string.
-    :param references: Reference string(s).
-    :param order: Maximum n-gram order.
-    :param beta: Defines importance of recall w.r.t precision. If beta=1, same importance.
-    :param remove_whitespace: Whether to delete whitespaces from hypothesis and reference strings.
+    :param hypothesis: A single hypothesis string.
+    :param references: A sequence of reference strings.
+    :param char_order: Character n-gram order.
+    :param word_order: Word n-gram order. If equals to 2, the metric is referred to as chrF++.
+    :param beta: Determine the importance of recall w.r.t precision.
+    :param eps_smoothing: If `True`, applies epsilon smoothing similar
+    to reference chrF++.py, NLTK and Moses implementations. Otherwise,
+    it takes into account effective match order similar to sacreBLEU < 2.0.0.
+    :param remove_whitespace: If `True`, removes whitespaces prior to character n-gram extraction.
     :return: A `CHRFScore` object.
     """
-    args = Namespace(
-        chrf_order=order, chrf_beta=beta, chrf_whitespace=not remove_whitespace, short=False)
-    metric = CHRF(args)
+    metric = CHRF(
+        char_order=char_order,
+        word_order=word_order,
+        beta=beta,
+        whitespace=not remove_whitespace,
+        eps_smoothing=eps_smoothing)
     return metric.sentence_score(hypothesis, references)
 
 
-def corpus_ter(hypotheses: Iterable[str],
-               references: List[Iterable[str]],
+def corpus_ter(hypotheses: Sequence[str],
+               references: Sequence[Sequence[str]],
                normalized: bool = False,
                no_punct: bool = False,
                asian_support: bool = False,
                case_sensitive: bool = False) -> TERScore:
     """
-    Computes TER on a corpus.
+    Computes TER for a corpus against a single (or multiple) reference(s).
 
-    :param hypotheses: Stream of hypotheses.
-    :param references: Stream of references.
+    :param hypotheses: A sequence of hypothesis strings.
+    :param references: A sequence of reference documents with document being
+        defined as a sequence of reference strings.
     :param normalized: Enable character normalization.
     :param no_punct: Remove punctuation.
     :param asian_support: Enable special treatment of Asian characters.
-    :param case_sensitive: Enable case sensitivity.
+    :param case_sensitive: Enables case-sensitivity.
     :return: A `TERScore` object.
     """
-    args = Namespace(
-        normalized=normalized, no_punct=no_punct,
-        asian_support=asian_support, case_sensitive=case_sensitive)
-    metric = TER(args)
+    metric = TER(
+        normalized=normalized,
+        no_punct=no_punct,
+        asian_support=asian_support,
+        case_sensitive=case_sensitive)
     return metric.corpus_score(hypotheses, references)
 
 
 def sentence_ter(hypothesis: str,
-                 references: List[str],
+                 references: Sequence[str],
                  normalized: bool = False,
                  no_punct: bool = False,
                  asian_support: bool = False,
                  case_sensitive: bool = False) -> TERScore:
     """
-    Computes TER on a single sentence pair.
+    Computes TER for a single hypothesis against a single (or multiple) reference(s).
 
-    :param hypothesis: Hypothesis string.
-    :param references: Reference string(s).
+    :param hypothesis: A single hypothesis string.
+    :param references: A sequence of reference strings.
     :param normalized: Enable character normalization.
     :param no_punct: Remove punctuation.
     :param asian_support: Enable special treatment of Asian characters.
-    :param case_sensitive: Enable case sensitivity.
+    :param case_sensitive: Enable case-sensitivity.
     :return: A `TERScore` object.
     """
-    args = Namespace(
-        normalized=normalized, no_punct=no_punct,
-        asian_support=asian_support, case_sensitive=case_sensitive)
-    metric = TER(args)
+    metric = TER(
+        normalized=normalized,
+        no_punct=no_punct,
+        asian_support=asian_support,
+        case_sensitive=case_sensitive)
     return metric.sentence_score(hypothesis, references)
