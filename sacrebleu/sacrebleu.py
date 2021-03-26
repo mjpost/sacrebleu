@@ -41,6 +41,7 @@ from .metrics import METRICS
 from .utils import smart_open, filter_subset, get_langpairs_for_testset, get_available_testsets
 from .utils import print_test_set, print_subset_results, get_reference_files, download_test_set
 from .utils import args_to_dict, sanity_check_lengths, print_results_table, print_single_results
+from . import color
 
 from . import __version__ as VERSION
 
@@ -183,6 +184,8 @@ def parse_args():
                              help='Sets the output format. `json` is only valid for single-system mode. `latex, rst, html` are valid for multi-system mode (Default: %(default)s).')
     report_args.add_argument('--detail', '-d', default=False, action='store_true',
                              help='Print detailed information (split test sets based on origlang).')
+    report_args.add_argument('--no-color', '-nc', action='store_true',
+                             help='Disable the occasional use of terminal colors.')
 
     arg_parser.add_argument('--version', '-V', action='version',
                             version='%(prog)s {}'.format(VERSION))
@@ -197,6 +200,9 @@ def main():
     # Explicitly set the encoding
     sys.stdin = open(sys.stdin.fileno(), mode='r', encoding='utf-8', buffering=True, newline="\n")
     sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=True)
+
+    if args.no_color:
+        color._ENABLE = False
 
     if not args.quiet:
         logging.basicConfig(level=logging.INFO, format='sacreBLEU: %(message)s')
