@@ -19,8 +19,8 @@ class Score:
         self.score = score
 
         # Statistical test related fields
-        self._mean = 0.0
-        self._confidence_info = ''
+        self._mean = -1.0
+        self._ci = -1.0
 
         # More info can be added right after the score
         self._verbose = ''
@@ -40,9 +40,11 @@ class Score:
         d = {'name': self.name, 'score': self.score, 'signature': signature}
         sc = f'{self.score:.{width}f}'
 
-        if self._confidence_info:
-            sc += ' ' + self._confidence_info
-            d['confidence'] = self._confidence_info
+        if self._mean > 0:
+            confidence_info = f'(μ = {self._mean:.{width}f} ± {self._ci:.3f})'
+
+            sc += ' ' + confidence_info
+            d['confidence'] = confidence_info
 
         # Construct full score line
         full_score = f"{self.name}|{signature}" if signature else self.name
@@ -76,9 +78,8 @@ class Score:
         lower_idx = n // 40
         upper_idx = n - lower_idx - 1
         lower, upper = raw_scores[lower_idx], raw_scores[upper_idx]
-        var = 0.5 * (upper - lower)
+        self._ci = 0.5 * (upper - lower)
         self._mean = statistics.mean(raw_scores)
-        self._confidence_info = f'(μ = {self._mean:.2f} ± {var:.2f})'
 
     def __repr__(self):
         return self.format()
