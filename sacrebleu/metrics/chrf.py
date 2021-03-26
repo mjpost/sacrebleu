@@ -1,164 +1,268 @@
-import re
+from typing import List, Sequence, Optional, Dict
 from collections import Counter
-from itertools import zip_longest
-from typing import List, Iterable, Union
 
-from .base import BaseScore, Signature
+from ..utils import sum_of_lists
+from .base import Score, Signature, Metric
+from .helpers import extract_all_char_ngrams, extract_word_ngrams
 
 
 class CHRFSignature(Signature):
-    def __init__(self, args):
+    def __init__(self, args: dict):
         super().__init__(args)
-
         self._abbr.update({
-            'numchars': 'n',
+            'case': 'c',
+            'eff': 'e',
+            'nc': 'nc',
+            'nw': 'nw',
             'space': 's',
         })
 
         self.info.update({
-            'space': str(self.args['chrf_whitespace']).lower(),
-            'numchars': self.args['chrf_order'],
+            'case': 'lc' if args['lowercase'] else 'mixed',
+            'eff': 'yes' if not args['eps_smoothing'] else 'no',
+            'nc': args['char_order'],
+            'nw': args['word_order'],
+            'space': 'yes' if args['whitespace'] else 'no',
         })
 
 
-class CHRFScore(BaseScore):
-    def __init__(self, score, beta, order):
-        super().__init__(score)
-
+class CHRFScore(Score):
+    def __init__(self, score: float, char_order: int, word_order: int, beta: int):
         self.beta = beta
-        self.order = order
-        self.prefix = 'chrF{0:d}'.format(self.beta)
+        self.char_order = char_order
+        self.word_order = word_order
 
-    def format(self, width=2, score_only=False, signature=''):
-        # NOTE: Being 0-1 scaled, a default width of 1 is too small for chrF
-        width += 1
-        if score_only:
-            return '{0:.{1}f}'.format(self.score, width)
+        # Add + signs to denote chrF+ variant
+        name = f'chrF{self.beta}' + '+' * self.word_order
 
-        prefix = "{}+{}".format(self.prefix, signature) if signature else self.prefix
-        return '{pr} = {sc:.{w}f}'.format(pr=prefix, sc=self.score, w=width)
+        super().__init__(name, score)
 
 
-class CHRF:
-    # Default values for CHRF
-    ORDER = 6
+class CHRF(Metric):
+    """Computes the chrF(++) metric given hypotheses and references.
 
-    # default to 2 (per http://www.aclweb.org/anthology/W16-2341)
+    :param char_order: Character n-gram order.
+    :param word_order: Word n-gram order. If equals to 2, the metric is referred to as chrF++.
+    :param beta: Determine the importance of recall w.r.t precision.
+    :param lowercase: Enable case-insensitivity.
+    :param whitespace: If `True`, include whitespaces when extracting character n-grams.
+    :param eps_smoothing: If `True`, applies epsilon smoothing similar
+    to reference chrF++.py, NLTK and Moses implementations. Otherwise,
+    it takes into account effective match order similar to sacreBLEU < 2.0.0.
+    :param references: A sequence of reference documents with document being
+    defined as a sequence of reference strings. If given, the reference n-grams
+    will be pre-computed and cached for faster re-computation across many systems.
+    """
+
+    # Maximum character n-gram order to take into account
+    CHAR_ORDER = 6
+
+    # chrF+ additionally takes into account some of the word n-grams
+    WORD_ORDER = 0
+
+    # Defaults to 2 (per http://www.aclweb.org/anthology/W16-2341)
     BETA = 2
 
-    def __init__(self, args):
-        self.name = 'chrf'
-        self.include_whitespace = args.chrf_whitespace
-        self.order = args.chrf_order
-        self.beta = args.chrf_beta
-        self.signature = CHRFSignature(args)
+    # Cache string.punctuation for chrF+' punctuation stripper
+    _PUNCTS = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
 
-        if self.include_whitespace:
-            self._preprocess = lambda x: x
-        else:
-            self._preprocess = lambda x: re.sub(r'\s+', '', x).strip()
+    _SIGNATURE_TYPE = CHRFSignature
+
+    def __init__(self, char_order: int = CHAR_ORDER,
+                 word_order: int = WORD_ORDER,
+                 beta: int = BETA,
+                 lowercase: bool = False,
+                 whitespace: bool = False,
+                 eps_smoothing: bool = False,
+                 references: Optional[Sequence[Sequence[str]]] = None):
+        super().__init__()
+
+        self.beta = beta
+        self.char_order = char_order
+        self.word_order = word_order
+        self.order = self.char_order + self.word_order
+        self.lowercase = lowercase
+        self.whitespace = whitespace
+        self.eps_smoothing = eps_smoothing
+
+        if references is not None:
+            # Pre-compute reference ngrams
+            self._ref_cache = self._cache_references(references)
 
     @staticmethod
-    def extract_char_ngrams(s: str, n: int) -> Counter:
-        """
-        Yields counts of character n-grams from string s of order n.
-        """
-        return Counter([s[i:i + n] for i in range(len(s) - n + 1)])
+    def _get_match_statistics(hyp_ngrams: Counter, ref_ngrams: Counter) -> List[int]:
+        """Computes the match statistics between hypothesis and reference n-grams.
 
-    @staticmethod
-    def compute_chrf(statistics: List[int],
-                     order: int,
-                     beta: float) -> CHRFScore:
+        :param hyp_ngrams: A `Counter` holding hypothesis n-grams.
+        :param ref_ngrams: A `Counter` holding reference n-grams.
+        :return: A list of three numbers denoting hypothesis n-gram count,
+            reference n-gram count and the intersection count.
+        """
+        # Counter's internal intersection is not that fast, count manually
+        match_count, hyp_count = 0, 0
+        for ng, count in hyp_ngrams.items():
+            hyp_count += count
+            if ng in ref_ngrams:
+                match_count += min(count, ref_ngrams[ng])
 
+        return [
+            # Don't count hits if no reference exists for that n-gram
+            hyp_count if ref_ngrams else 0,
+            sum(ref_ngrams.values()),
+            match_count,
+        ]
+
+    def _remove_punctuation(self, sent: str) -> List[str]:
+        """Separates out punctuations from beginning and end of words for chrF.
+        Adapted from https://github.com/m-popovic/chrF
+
+        :param sent: A string.
+        :return: A list of words.
+        """
+        tokenized = []
+        for w in sent.split():
+            if len(w) == 1:
+                tokenized.append(w)
+            else:
+                # NOTE: This splits '(hi)' to '(hi' and ')' (issue #124)
+                if w[-1] in self._PUNCTS:
+                    tokenized += [w[:-1], w[-1]]
+                elif w[0] in self._PUNCTS:
+                    tokenized += [w[0], w[1:]]
+                else:
+                    tokenized.append(w)
+        return tokenized
+
+    def _preprocess_segment(self, sent: str) -> str:
+        """Given a sentence, apply optional lowercasing.
+
+        :param sent: The input sentence string.
+        :return: The pre-processed output string.
+        """
+        return sent.lower() if self.lowercase else sent
+
+    def _compute_f_score(self, statistics: List[int]) -> float:
+        """Compute the chrF score given the n-gram match statistics.
+
+        :param statistics: A flattened list of 3 * (`char_order` + `word_order`)
+            elements giving the [hyp, ref, match] counts for each order.
+        :return: The final f_beta score between [0, 100].
+        """
+        eps = 1e-16
         score = 0.0
-        avg_recall = 0.0
-        avg_precision = 0.0
         effective_order = 0
+        factor = self.beta ** 2
+        avg_prec, avg_rec = 0.0, 0.0
 
-        for i in range(order):
-            hypotheses_ngrams = statistics[3 * i + 0]
-            references_ngrams = statistics[3 * i + 1]
-            common_ngrams = statistics[3 * i + 2]
-            if hypotheses_ngrams > 0 and references_ngrams > 0:
-                avg_precision += common_ngrams / hypotheses_ngrams
-                avg_recall += common_ngrams / references_ngrams
+        for i in range(self.order):
+            n_hyp, n_ref, n_match = statistics[3 * i: 3 * i + 3]
+
+            # chrF++.py style EPS smoothing (also used by Moses and NLTK)
+            prec = n_match / n_hyp if n_hyp > 0 else eps
+            rec = n_match / n_ref if n_ref > 0 else eps
+
+            denom = factor * prec + rec
+            score += ((1 + factor) * prec * rec / denom) if denom > 0 else eps
+
+            # sacreBLEU <2.0.0 style effective order smoothing
+            if n_hyp > 0 and n_ref > 0:
+                avg_prec += prec
+                avg_rec += rec
                 effective_order += 1
 
+        if self.eps_smoothing:
+            return 100 * score / self.order
+
         if effective_order == 0:
-            avg_precision, avg_recall = 0.0, 0.0
+            avg_prec = avg_rec = 0.0
         else:
-            avg_precision /= effective_order
-            avg_recall /= effective_order
+            avg_prec /= effective_order
+            avg_rec /= effective_order
 
-        if avg_precision + avg_recall == 0:
-            score = 0.0
+        if avg_prec + avg_rec:
+            score = (1 + factor) * avg_prec * avg_rec
+            score /= ((factor * avg_prec) + avg_rec)
+            return 100 * score
         else:
-            beta_square = beta ** 2
-            score = (1 + beta_square) * (avg_precision * avg_recall)
-            score /= ((beta_square * avg_precision) + avg_recall)
+            return 0.0
 
-        return CHRFScore(score, beta, order)
+    def _compute_score_from_stats(self, stats: List[int]) -> CHRFScore:
+        """Computes the final score from already aggregated statistics.
 
-    def get_sentence_statistics(self, hypothesis: str,
-                                references: List[str]) -> List[int]:
-        # NOTE: multi-reference not supported yet
-        reference = references[0]
-
-        hypothesis = self._preprocess(hypothesis)
-        reference = self._preprocess(reference)
-        statistics = [0] * (self.order * 3)
-        for i in range(self.order):
-            n = i + 1
-            hypothesis_ngrams = self.extract_char_ngrams(hypothesis, n)
-            reference_ngrams = self.extract_char_ngrams(reference, n)
-            common_ngrams = hypothesis_ngrams & reference_ngrams
-            statistics[3 * i + 0] = sum(hypothesis_ngrams.values())
-            statistics[3 * i + 1] = sum(reference_ngrams.values())
-            statistics[3 * i + 2] = sum(common_ngrams.values())
-        return statistics
-
-    def sentence_score(self, hypothesis: str, references: List[str]) -> CHRFScore:
+        :param stats: A list or numpy array of segment-level statistics.
+        :return: A `CHRFScore` object.
         """
-        Computes ChrF on a single sentence pair.
+        return CHRFScore(
+            self._compute_f_score(stats), self.char_order,
+            self.word_order, self.beta)
 
-        :param hypothesis: Hypothesis string.
-        :param references: Reference string(s).
-        :return: Chrf score.
+    def _aggregate_and_compute(self, stats: List[List[int]]) -> CHRFScore:
+        """Computes the final score given the pre-computed corpus statistics.
+
+        :param stats: A list of segment-level statistics
+        :return: A `CHRFScore` object.
         """
-        assert not isinstance(references, str), \
-            "sentence_score needs a list of references, not a single string"
-        stats = self.get_sentence_statistics(hypothesis, references)
-        return self.compute_chrf(stats, self.order, self.beta)
+        return self._compute_score_from_stats(sum_of_lists(stats))
 
-    def corpus_score(self, sys_stream: Union[str, Iterable[str]],
-                     ref_streams: Union[str, List[Iterable[str]]]) -> CHRFScore:
+    def _extract_reference_info(self, refs: Sequence[str]) -> Dict[str, List[List[Counter]]]:
+        """Given a list of reference segments, extract the character and word n-grams.
+
+        :param refs: A sequence of reference segments.
+        :return: A list where each element contains n-grams per reference segment.
         """
-        Computes Chrf on a corpus.
+        ngrams = []
 
-        :param hypotheses: Stream of hypotheses.
-        :param references: Stream of references.
-        :return: Chrf score.
+        for ref in refs:
+            # extract character n-grams
+            stats = extract_all_char_ngrams(ref, self.char_order, self.whitespace)
+
+            # Check chrF+ mode
+            if self.word_order > 0:
+                ref_words = self._remove_punctuation(ref)
+
+                for n in range(self.word_order):
+                    stats.append(extract_word_ngrams(ref_words, n + 1))
+
+            ngrams.append(stats)
+
+        return {'ref_ngrams': ngrams}
+
+    def _compute_segment_statistics(
+            self, hypothesis: str, ref_kwargs: Dict) -> List[int]:
+        """Given a (pre-processed) hypothesis sentence and already computed
+        reference n-grams, returns the best match statistics across the
+        references.
+
+        :param hypothesis: Hypothesis sentence.
+        :param ref_kwargs: A dictionary with key `ref_ngrams` which is a list
+        where each sublist contains n-gram counters for a particular reference sentence.
+        :return: A list of integers where each triplet denotes [hyp, ref, match]
+        statistics.
         """
+        best_stats = []
+        best_f_score = -1.0
 
-        # Add some robustness to the input arguments
-        if isinstance(sys_stream, str):
-            sys_stream = [sys_stream]
+        # extract character n-grams
+        all_hyp_ngrams = extract_all_char_ngrams(
+            hypothesis, self.char_order, self.whitespace)
 
-        if isinstance(ref_streams, str):
-            ref_streams = [[ref_streams]]
+        # Check chrF+ mode to see if we'll add word n-grams as well
+        if self.word_order > 0:
+            # Primitive tokenization: separate out punctuations
+            hwords = self._remove_punctuation(hypothesis)
+            _range = range(1, self.word_order + 1)
+            all_hyp_ngrams.extend([extract_word_ngrams(hwords, n) for n in _range])
 
-        corpus_statistics = [0] * (self.order * 3)
+        # Iterate over multiple references, pick the one with best F score
+        for _ref_ngrams in ref_kwargs['ref_ngrams']:
+            stats = []
+            # Traverse all orders
+            for h, r in zip(all_hyp_ngrams, _ref_ngrams):
+                stats.extend(self._get_match_statistics(h, r))
+            f_score = self._compute_f_score(stats)
 
-        fhs = [sys_stream] + ref_streams
-        for lines in zip_longest(*fhs):
-            if None in lines:
-                raise EOFError("Source and reference streams have different lengths!")
+            if f_score > best_f_score:
+                best_f_score = f_score
+                best_stats = stats
 
-            # Unpack
-            hypothesis, *refs = lines
-
-            statistics = self.get_sentence_statistics(hypothesis, refs)
-            for i in range(len(statistics)):
-                corpus_statistics[i] += statistics[i]
-
-        return self.compute_chrf(corpus_statistics, self.order, self.beta)
+        return best_stats
