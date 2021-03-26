@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-
-from .bleu import BLEU, BLEUScore
-from .chrf import CHRF, CHRFScore
-from .ter import TER, TERScore
+from .bleu import BLEU, BLEUScore   # noqa: F401
+from .chrf import CHRF, CHRFScore   # noqa: F401
+from .ter import TER, TERScore      # noqa: F401
 
 METRICS = {
-    'bleu': BLEU,
-    'chrf': CHRF,
-    'ter': TER,
+    'BLEU': BLEU,
+    'CHRF': CHRF,
+    'TER': TER,
 }
