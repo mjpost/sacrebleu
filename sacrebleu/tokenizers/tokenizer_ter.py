@@ -14,8 +14,9 @@
 
 
 import re
+from functools import lru_cache
 
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 
 
 def _normalize_general_and_western(sent: str) -> str:
@@ -34,7 +35,7 @@ def _normalize_general_and_western(sent: str) -> str:
     sent = re.sub(r"&gt;", ">", sent)
 
     # language-dependent (Western) part
-    sent = " {} ".format(sent)
+    sent = f" {sent} "
 
     # tokenize punctuation
     sent = re.sub(r"([{-~[-` -&(-+:-@/])", r" \1 ", sent)
@@ -105,8 +106,8 @@ def _remove_asian_punct(sent: str) -> str:
     return sent
 
 
-class TercomTokenizer(NoneTokenizer):
-    """Re-implementation Tercom Tokenizer in Python 3.
+class TercomTokenizer(BaseTokenizer):
+    """Re-implementation of Tercom Tokenizer in Python 3.
 
     See src/ter/core/Normalizer.java in https://github.com/jhclark/tercom
 
@@ -135,6 +136,10 @@ class TercomTokenizer(NoneTokenizer):
         self._asian_support = asian_support
         self._case_sensitive = case_sensitive
 
+    @lru_cache(maxsize=None)
+    # Although the cache is shared across different instances, same sentence
+    # queries do not return invalid returns across different instances since
+    # `self` becomes part of the query as well.
     def __call__(self, sent: str) -> str:
         if not sent:
             return ""
@@ -147,22 +152,13 @@ class TercomTokenizer(NoneTokenizer):
             if self._asian_support:
                 sent = _normalize_asian(sent)
 
-            sent = re.sub(r"\s+", " ", sent)  # one space only between words
-            sent = re.sub(r"^\s+", "", sent)  # no leading space
-            sent = re.sub(r"\s+$", "", sent)  # no trailing space
-
         if self._no_punct:
             sent = _remove_punct(sent)
             if self._asian_support:
                 sent = _remove_asian_punct(sent)
 
-        return sent
+        # Strip extra whitespaces
+        return ' '.join(sent.split())
 
     def signature(self):
-        return("-".join([
-            'tercom',
-            'norm' if self._normalized else 'nonorm',
-            'nopunct' if self._no_punct else 'punct',
-            'asian' if self._asian_support else 'noasian',
-            'cased' if self._case_sensitive else 'uncased',
-        ]))
+        return 'tercom'
