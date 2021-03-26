@@ -1,4 +1,66 @@
-# VERSION HISTORY
+# Release Notes
+
+- 2.0.0 (2021-04-01)
+  - Improve documentation and type annotations.
+  - Drop `Python < 3.6` support and migrate to f-strings.
+  - Relax `portalocker` version pinning, add `regex, tabulate, numpy` dependencies.
+  - Drop input type manipulation through `isinstance` checks. If the user does not obey
+    to the expected annotations, exceptions will be raised. Robustness attempts lead to
+    confusions and obfuscated score errors in the past (#121)
+  - Variable # references per segment is supported for all metrics by default. It is
+    still only available through the API.
+  - Use colored strings in tabular outputs (multi-system evaluation mode). The
+    colored output is disabled if the platform is Windows or if the output is
+    redirected into a file.
+  - tokenizers: Add caching to tokenizers which seem to speed up things a bit.
+  - `intl` tokenizer: Use `regex` module. Speed goes from ~4 seconds to ~0.6 seconds
+    for a particular test set evaluation. (#46)
+  - Signature: Formatting changed (mostly to remove '+' separator as it was
+    interfering with chrF++). The field separator is now '|' and key values
+    are separated with ':' rather than '.'.
+  - Signature: Boolean true / false values are shortened to yes / no.
+  - Signature: Number of references is `var` if variable number of references is used.
+  - Signature: Add effective order (yes/no) to BLEU and chrF signatures.
+  - Metrics: Scale all metrics into the [0, 100] range (#140)
+  - Metrics API: Use explicit argument names and defaults for the metrics instead of
+    passing obscure `argparse.Namespace` objects.
+  - Metrics API: A base abstract `Metric` class is introduced to guide further
+    metric development. This class defines the methods that should be implemented
+    in the derived classes and offers boilerplate methods for the common functionality.
+    A new metric implemented this way will automatically support significance testing.
+  - Metrics API: All metrics now receive an optional `references` argument at
+    initialization time to process and cache the references. Further evaluations
+    of different systems against the same references becomes faster this way
+    for example when using significance testing.
+  - BLEU: In case of no n-gram matches at all, skip smoothing and return 0.0 BLEU (#141).
+  - CHRF: Added multi-reference support, verified the scores against chrF++.py, added test case.
+  - CHRF: Added chrF+ support through `word_order` argument. Added test cases against chrF++.py.
+    Exposed it through the CLI (--chrf-word-order) (#124)
+  - CHRF: Add possibility to disable effective order smoothing (pass --chrf-eps-smoothing).
+    This way, the scores obtained are exactly the same as chrF++, Moses and NLTK implementations.
+    We keep the effective ordering as the default for compatibility, since this only
+    affects sentence-level scoring with very short sentences. (#144)
+  - CLI: `--input/-i` can now ingest multiple systems. For this reason, the positional
+    `references` should always preceed the `-i` flag.
+  - CLI: Allow modifying TER arguments through CLI. We still keep the TERCOM defaults.
+  - CLI: Prefix metric-specific arguments with --chrf and --ter. To maintain compatibility,
+    BLEU argument names are kept the same.
+  - CLI: Separate metric-specific arguments for clarity when `--help` is printed.
+  - CLI: Added `--format/-f` flag. If single system is evaluated, `-f json` will
+    print the results in a parseable JSON format. Arguments such as `--short, --score-only`
+    are ignored and full information is dumped when `-f json` is given.
+  - CLI: For multi-system mode, `json` falls back to plain text. Other options exist
+    in this mode such as `latex, rst, html`.
+  - CLI: sacreBLEU now supports evaluating multiple systems for a given test set
+    in an efficient way. Through the use of `tabulate` package, the results are
+    nicely rendered into a plain text table, LaTeX, HTML or RST (cf. --format/-f argument).
+    The systems can be either given as a list of plain text files to `-i/--input` or
+    as a tab-separated single stream redirected into `STDIN`. In the former case,
+    the basenames of the files will be automatically used as system names.
+  - Statistical tests: sacreBLEU now supports confidence interval estimation
+    through bootstrap resampling for single-system evaluation (`--confidence` flag)
+    as well as paired bootstrap resampling (`--paired bs`) and paired approximate
+    randomization tests (`--paired ar`) when evaluating multiple systems (#40 and #78).
 
 - 1.5.1 (2021-03-05)
   - Fix extraction error for WMT18 extra test sets (test-ts) (#142)

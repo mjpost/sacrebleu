@@ -73,31 +73,39 @@ def get_description():
     return DESCRIPTION_RE.search(init).group(1)
 
 
-setup(
-    name = 'sacrebleu',
+def get_long_description():
+    with open('README.md') as f:
+        long_description = f.read()
 
-    # Versions should comply with PEP440.  For a discussion on single-sourcing
+    with open('CHANGELOG.md') as f:
+        release_notes = f.read()
+
+    # Plug release notes into the long description
+    long_description = long_description.replace(
+        '# Release Notes\n\nPlease see [CHANGELOG.md](CHANGELOG.md) for release notes.',
+        release_notes)
+
+    return long_description
+
+
+setup(
+    name='sacrebleu',
+    # Versions should comply with PEP440. For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version = get_version(),
-
-    description = get_description(),
-
-    long_description = 'SacreBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.',
-
-    # The project's main homepage.
-    url = 'https://github.com/mjpost/sacrebleu',
-
-    author = 'Matt Post',
+    version=get_version(),
+    description=get_description(),
+    long_description_content_type='text/markdown',
+    long_description=get_long_description(),
+    url='https://github.com/mjpost/sacrebleu',
+    author='Matt Post',
     author_email='post@cs.jhu.edu',
     maintainer_email='post@cs.jhu.edu',
-
-    license = 'Apache License 2.0',
-
-    python_requires = '>=3',
-
+    license='Apache License 2.0',
+    # We don't support Python < 3.6 anymore
+    python_requires='>=3.6',
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
-    classifiers = [
+    classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
         #   4 - Beta
@@ -114,16 +122,21 @@ setup(
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: Apache Software License',
 
+        # List operating systems
+        'Operating System :: POSIX',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows',
+
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 3 :: Only',
     ],
 
     # What does your project relate to?
-    keywords = ['machine translation, evaluation, NLP, natural language processing, computational linguistics'],
+    keywords=['machine translation, evaluation, NLP, natural language processing, computational linguistics'],
 
     # Which packages to deploy (currently sacrebleu, sacrebleu.matrics and sacrebleu.tokenizers)?
-    packages = find_packages(),
+    packages=find_packages(),
 
     # Mark sacrebleu (and recursively all its sub-packages) as supporting mypy type hints (see PEP 561).
     package_data={"sacrebleu": ["py.typed"]},
@@ -132,16 +145,13 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires = [
-        'typing;python_version<"3.5"',
-        'portalocker==2.0.0',
-    ],
+    install_requires=['portalocker', 'regex', 'tabulate', 'numpy>=1.17'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-    extras_require = {'ja': ['mecab-python3==1.0.3', 'ipadic>=1.0,<2.0'] },
+    extras_require={'ja': ['mecab-python3==1.0.3', 'ipadic>=1.0,<2.0']},
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
