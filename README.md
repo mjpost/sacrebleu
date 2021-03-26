@@ -407,6 +407,12 @@ $ sacrebleu/sacrebleu.py ref1 -i system -m bleu chrf -w 4 --score-only
 may not reveal much information about the underlying model. It often makes much more sense to perform
 **paired statistical tests** using multiple systems.
 
+**NOTE:** For all the resampling functionality, the seed of the `numpy`'s random number generator (RNG)
+is fixed to `12345`. If you want to relax this and set your own seed, you can make this by
+exporting the environment variable `SACREBLEU_SEED` to an integer. Alternatively, you can export
+`SACREBLEU_SEED=None` to skip initializing the RNG's seed and allow for non-deterministic
+behavior.
+
 ## Paired Significance Tests for Multi-system Evaluation
 Ideally, one would have access to many systems in cases such as (1) investigating
 whether a newly added feature yields significantly different scores than the system without that feature or
@@ -422,7 +428,7 @@ SacreBLEU offers two different paired significance tests that are widely used in
 estimations. This can be changed with the `--paired-n` flag.
 
 - When launched, paired bootstrap resampling will perform:
-   - Bootstrap resampling to estimate the 95% CI for all systems and the baseline (similar to `--confidence` for single-system evaluation)
+   - Bootstrap resampling to estimate 95% CI for all systems and the baseline (similar to `--confidence` in single-system mode)
    - A significance test between the **baseline** and each **system** to compute a [p value](https://en.wikipedia.org/wiki/P-value).
   
 ### Paired approximate randomization (--paired ar)
