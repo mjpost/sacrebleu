@@ -13,7 +13,7 @@ def corpus_bleu(hypotheses: Sequence[str],
                 force=False,
                 lowercase=False,
                 tokenize=BLEU.TOKENIZER_DEFAULT,
-                effective_order=False) -> BLEUScore:
+                use_effective_order=False) -> BLEUScore:
     """Computes BLEU for a corpus against a single (or multiple) reference(s).
 
     :param hypotheses: A sequence of hypothesis strings.
@@ -24,13 +24,13 @@ def corpus_bleu(hypotheses: Sequence[str],
     :param force: Ignore data that looks already tokenized
     :param lowercase: Lowercase the data
     :param tokenize: The tokenizer to use
-    :param effective_order: Don't take into account n-gram orders without any match.
+    :param use_effective_order: Don't take into account n-gram orders without any match.
     :return: a `BLEUScore` object
     """
     metric = BLEU(
         lowercase=lowercase, force=force, tokenize=tokenize,
         smooth_method=smooth_method, smooth_value=smooth_value,
-        effective_order=effective_order)
+        effective_order=use_effective_order)
 
     return metric.corpus_score(hypotheses, references)
 
@@ -51,7 +51,7 @@ def raw_corpus_bleu(hypotheses: Sequence[str],
     return corpus_bleu(
         hypotheses, references, smooth_method='floor',
         smooth_value=smooth_value, force=True, tokenize='none',
-        effective_order=True)
+        use_effective_order=True)
 
 
 def sentence_bleu(hypothesis: str,
@@ -60,7 +60,7 @@ def sentence_bleu(hypothesis: str,
                   smooth_value: float = None,
                   lowercase: bool = False,
                   tokenize=BLEU.TOKENIZER_DEFAULT,
-                  effective_order: bool = True) -> BLEUScore:
+                  use_effective_order: bool = True) -> BLEUScore:
     """
     Computes BLEU for a single sentence against a single (or multiple) reference(s).
 
@@ -73,13 +73,13 @@ def sentence_bleu(hypothesis: str,
     :param smooth_value: The smoothing value for `floor` and `add-k` methods. `None` falls back to default value.
     :param lowercase: Lowercase the data
     :param tokenize: The tokenizer to use
-    :param effective_order: Don't take into account n-gram orders without any match.
+    :param use_effective_order: Don't take into account n-gram orders without any match.
     :return: Returns a `BLEUScore` object.
     """
     metric = BLEU(
         lowercase=lowercase, tokenize=tokenize, force=False,
         smooth_method=smooth_method, smooth_value=smooth_value,
-        effective_order=effective_order)
+        effective_order=use_effective_order)
 
     return metric.sentence_score(hypothesis, references)
 

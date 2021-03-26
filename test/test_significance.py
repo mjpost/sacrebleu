@@ -16,14 +16,6 @@ def _read_pickle_file():
     return data
 
 
-def _read_file(fname):
-    lines = []
-    with open(fname) as f:
-        for line in f:
-            lines.append(line.strip())
-    return lines
-
-
 # P-values obtained from Moses' significance script (mean of 3 runs)
 # Script: scripts/moses-sigdiff.pl (modified to bootstrap samples = 2000)
 MOSES_P_VALS = {

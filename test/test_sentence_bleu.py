@@ -47,7 +47,7 @@ def test_compat_sentence_bleu(smooth_method, smooth_value, lowercase, tok, expec
         SYS, [REF], smooth_method=smooth_method, smooth_value=smooth_value,
         tokenize=tok,
         lowercase=lowercase,
-        effective_order=True)
+        use_effective_order=True)
     assert abs(score.score - expected_score) < EPSILON
 
 
