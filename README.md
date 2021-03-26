@@ -54,7 +54,7 @@ following command instead, to perform a full installation with dependencies:
 
 ## Basics
 
-- Get a list of available test sets:
+Get a list of available test sets:
 
 ```
 $ sacrebleu --list
@@ -114,7 +114,8 @@ wmt20/robust/set3             : WMT20 robustness task, set 3
 wmt20/tworefs                 : WMT20 news test sets with two references
 ```
 
-- Download the source for one of the pre-defined test sets:
+Download the source for one of the pre-defined test sets:
+
 ```
 $ sacrebleu -t wmt17 -l en-de --echo src | head -n2
 28-Year-Old Chef Found Dead at San Francisco Mall
@@ -124,8 +125,8 @@ A 28-year-old chef who had recently moved to San Francisco was found dead in the
 $ sacrebleu --test-set wmt17 --language-pair en-de --echo src | head -n2
 ```
 
-- Let's say that you just translated the `en-de` test set of WMT17 with your fancy MT system and the **detokenized** translations
-  are in a file called `output.detok.txt`:
+Let's say that you just translated the `en-de` test set of WMT17 with your fancy MT system and the **detokenized** translations are in a file called `output.detok.txt`:
+
 ```
 # Option 1: Redirect system output to STDIN
 $ cat output.detok.txt | sacrebleu -t wmt17 -l en-de
@@ -163,7 +164,7 @@ $ sacrebleu -t wmt17 -l en-de -i output.detok.txt
 }
 ```
 
-- Let's now compute multiple metrics for the same system:
+Let's now compute multiple metrics for the same system:
 
 ```
 # Let's first compute BLEU, chrF and TER with the default settings
@@ -178,8 +179,11 @@ $ sacrebleu -t wmt17 -l en-de -i output.detok.txt -m bleu chrf ter --chrf-word-o
         BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 <stripped>
       chrF2|nrefs:1|case:mixed|eff:yes|nc:6|nw:2|space:no|version:2.0.0 = 49.0
 TER|nrefs:1|case:lc|tok:tercom|norm:no|punct:yes|asian:no|version:2.0.0 = 69.0
+```
 
-# Metric-specific arguments are detailed in --help
+Metric-specific arguments are detailed in `--help` output:
+
+```
 BLEU related arguments:
   --smooth-method {none,floor,add-k,exp}, -s {none,floor,add-k,exp}
                         Smoothing method: exponential decay, floor (increment
@@ -221,7 +225,7 @@ TER related arguments (The defaults replicate TERCOM's behavior):
                         (Default: False)
 ```
 
-- SacreBLEU knows about common test sets (as detailed in the `--list` example above), but you can also use it to score system outputs with arbitrary references. In this case, do not forget to provide **detokenized** reference and hypotheses files:
+SacreBLEU knows about common test sets (as detailed in the `--list` example above), but you can also use it to score system outputs with arbitrary references. In this case, do not forget to provide **detokenized** reference and hypotheses files:
 
 ```
 # Let's save the reference to a text file
@@ -250,7 +254,7 @@ $ cat output.detok.txt | sacrebleu ref.detok.txt -m bleu -b -w 4
    - `ja-mecab` tokenizes **Japanese** inputs using the [MeCab](https://pypi.org/project/mecab-python3) morphological analyzer
 - You can switch tokenizers using the `--tokenize` flag of sacreBLEU. Alternatively, if you provide language-pair strings
   using `--language-pair/-l`, `zh` and `ja-mecab` tokenizers will be used if the target language is `zh` or `ja`, respectively.
-- **NOTE:** There's no automatic language detection from the hypotheses so you need to make sure that you are correctly
+- **Note that** there's no automatic language detection from the hypotheses so you need to make sure that you are correctly
   selecting the tokenizer for **Japanese** and **Chinese**.
 
 ```
@@ -270,6 +274,7 @@ $ sacrebleu kyoto-test.ref.ja -i kyoto-test.hyp.ja -l en-ja -b
 ### chrF
 
 chrF does a minimum effort on tokenization since it deals with character n-grams.
+
 - If you pass `--chrf-whitespace`, whitespace characters will be preserved when computing the character n-grams.
 - If you pass `--chrf-lowercase`, sacreBLEU will compute case-insensitive chrF(+).
 - If you enable chrF+ mode by passing `--chrf-word-order` (Number of `+` letters denotes the word n-gram order that you select),
@@ -281,6 +286,7 @@ chrF does a minimum effort on tokenization since it deals with character n-grams
 Translation Error Rate (TER) has its own special tokenizer that you can configure through the command line.
 The defaults provided are **compatible with the upstream TER implementation (TERCOM)** but you can nevertheless modify the
 behavior through the command-line:
+
 - TER is by default case-insensitive. Pass `--ter-case-sensitive` to enable case-sensitivity.
 - Pass `--ter-normalize` to apply a general Western tokenization
 - Pass `--ter-asian-support` to enable the tokenization of Asian characters. If provided with `--ter-normalize`,
@@ -313,7 +319,7 @@ BLEU|nrefs:2|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 61.8 <stripped
 ```
 
 ## Multi-system Evaluation
-sacreBLEU supports evaluation of an arbitrary number of systems for a particular
+SacreBLEU supports evaluation of an arbitrary number of systems for a particular
 test set and language-pair. This has the advantage of seeing all results in a
 nicely formatted table.
 
@@ -362,6 +368,82 @@ Metric signatures
  - BLEU       nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0
  - chrF2      nrefs:1|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0
 ```
+
+## Confidence Intervals for Single System Evaluation
+(Although provided, solely having confidence intervals does not yield much more
+information unless you perform a comparison across systems. For this reason, it will
+make much more sense to directly perform paired statistical tests using multiple systems.
+See the next section for this.)
+
+By enabling confidence interval estimation through `--confidence`, SacreBLEU will print
+(1) the actual system score, (2) the true mean estimated from bootstrap resampling and (3),
+the 95% [confidence interval](https://en.wikipedia.org/wiki/Confidence_interval) around the mean.
+By default, the number of bootstrap resamples is 2000 (denoted with `bs:2000` in the signature)
+and can be changed with `--confidence-n`.
+
+```
+$ sacrebleu ref1 -i system -m bleu chrf --confidence -w 4 --short
+   BLEU|#:1|bs:2000|rs:12345|c:mixed|e:no|tok:13a|s:exp|v:2.0.0 = 44.5101 (μ = 44.5081 ± 0.724) <stripped>
+chrF2|#:1|bs:2000|rs:12345|c:mixed|e:yes|nc:6|nw:0|s:no|v:2.0.0 = 68.8338 (μ = 68.8337 ± 0.496)
+
+# Verify that the first numbers above to the actual scores
+$ sacrebleu/sacrebleu.py ref1 -i system -m bleu chrf -w 4 --score-only
+44.5101
+68.8338
+```
+
+## Paired Significance Tests for Multi-system Evaluation
+Ideally, one would have many systems to compare, when testing whether a newly added
+feature yields significantly different scores than the system without that feature.
+Same procedure can also be used to evaluate submissions for a particular shared task.
+As of version 2.0.0, SacreBLEU allows performing two types of paired significance tests.
+Verbose information printed during the tests can be disabled by the `--quiet` flag.
+
+### How to provide multiple systems?
+
+- The **first** system provided to `--input/-i` will be automatically taken as the **baseline system** against which you want to compare your other systems.
+  The systems will also be automatically named by the filenames provided, to provide a disambiguous results table.
+- Same logic applies when tab-separated input file is redirected into SacreBLEU: The first column hypotheses will be taken as the **baseline system**.
+  **NOTE:** This method is not recommended as you will not be able to name your systems.
+- When using `--input/-i`, SacreBLEU will automatically discard the baseline system if it appears more than one time. This is a useful trick when you run the tool with something like the following: `-i systems/baseline systems/*`. Here, the `baseline` file will not be also considered as a candidate system.
+
+### Paired bootstrap resampling (`--paired bs`)
+
+This is an efficient implementation of the paper
+[Statistical Significance Tests for Machine Translation Evaluation](https://www.aclweb.org/anthology/W04-3250.pdf)
+and is feature-compliant with the [reference Moses implementation](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/analysis/bootstrap-hypothesis-difference-significance.pl).
+
+- Paired bootstrap resampling will by default use 2000 resamples (unlike the Moses' implementation that defaults to 1000) to produce more stable
+estimations. The number of resamples can be changed with `--paired-n` flag.
+
+- When launched, this test will (1) perform bootstrap resampling to estimate
+  the 95% CI for all systems (similar to `--confidence` for single-system evaluation)
+  and (2) perform a significance test between the **baseline** and each **candidate system**
+  to compute a [p value](https://en.wikipedia.org/wiki/P-value)
+  
+### Paired approximate randomization (`--paired ar`)
+
+Approximate randomization (AR) is another type of paired significance test. According to
+[Riezler and Maxwell III, 2005](https://www.aclweb.org/anthology/W05-0908.pdf), this test
+is more accurate than paired bootstrap resampling when it comes to Type-I errors which
+indicate *failures to reject the null hypothesis when it is true*:
+
+```
+...
+(Section 4.3) We can say that the approximate randomization test estimates p-values more conservatively
+than the bootstrap, thus increasing the likelihood of type-I error for the bootstrap test.
+```
+
+Approximate randomization is also the method implemented by the [Multeval toolkit](https://github.com/jhclark/multeval)
+and we have verified that the results produced by SacreBLEU are compliant with Multeval.
+
+**NOTE:** This method does not compute 95% CI's by default and it will only provide the p-values
+for each system. If you also want to get confidence intervals, you need to manually
+enable it through `--paired-ar-confidence-n <value>`. If `<value>` is 0, the default
+of 2000 bootstrap resamples will be used, otherwise `<value>` resamples will be used.
+  
+
+
 
 ## Version Signatures
 As you may have noticed, sacreBLEU generates version strings such as `BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0` for reproducibility reasons. It's strongly recommended to share these signatures in your papers!
