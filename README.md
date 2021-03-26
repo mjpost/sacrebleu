@@ -389,7 +389,7 @@ Metric signatures
 (1) the actual system score, (2) the true mean estimated from bootstrap resampling and (3),
 the 95% [confidence interval](https://en.wikipedia.org/wiki/Confidence_interval) around the mean.
 
-- By default, the number of bootstrap resamples is 2000 (denoted with `bs:2000` in the signature)
+- By default, the number of bootstrap resamples is 2000 (`bs:2000` in the signature)
 and can be changed with `--confidence-n`.
 
 ```
