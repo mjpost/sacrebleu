@@ -27,38 +27,38 @@ DATASETS = {
         "description": 'mTEDx evaluation data, valid: http://openslr.org/100',
         "citation": "@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
         "md5": ['40618171614c50e6cbb5e5bbceee0635'],
-        "el-en": ['valid/mtedx-valid-elen.el','valid/mtedx-valid-elen.en'],
-        "es-en": ['valid/mtedx-valid-esen.es','valid/mtedx-valid-esen.en'],
-        "es-fr": ['valid/mtedx-valid-esfr.es','valid/mtedx-valid-esfr.fr'],
-        "es-it": ['valid/mtedx-valid-esit.es','valid/mtedx-valid-esit.it'],
-        "es-pt": ['valid/mtedx-valid-espt.es','valid/mtedx-valid-espt.pt'],
-        "fr-en": ['valid/mtedx-valid-fren.fr','valid/mtedx-valid-fren.en'],
-        "fr-es": ['valid/mtedx-valid-fres.fr','valid/mtedx-valid-fres.es'],
-        "fr-pt": ['valid/mtedx-valid-frpt.fr','valid/mtedx-valid-frpt.pt'],
-        "it-en": ['valid/mtedx-valid-iten.it','valid/mtedx-valid-iten.en'],
-        "it-es": ['valid/mtedx-valid-ites.it','valid/mtedx-valid-ites.es'],
-        "pt-en": ['valid/mtedx-valid-pten.pt','valid/mtedx-valid-pten.en'],
-        "pt-es": ['valid/mtedx-valid-ptes.pt','valid/mtedx-valid-ptes.es'],
-        "ru-en": ['valid/mtedx-valid-ruen.ru','valid/mtedx-valid-ruen.en']
+        "el-en": ['valid/mtedx-valid-elen.el', 'valid/mtedx-valid-elen.en'],
+        "es-en": ['valid/mtedx-valid-esen.es', 'valid/mtedx-valid-esen.en'],
+        "es-fr": ['valid/mtedx-valid-esfr.es', 'valid/mtedx-valid-esfr.fr'],
+        "es-it": ['valid/mtedx-valid-esit.es', 'valid/mtedx-valid-esit.it'],
+        "es-pt": ['valid/mtedx-valid-espt.es', 'valid/mtedx-valid-espt.pt'],
+        "fr-en": ['valid/mtedx-valid-fren.fr', 'valid/mtedx-valid-fren.en'],
+        "fr-es": ['valid/mtedx-valid-fres.fr', 'valid/mtedx-valid-fres.es'],
+        "fr-pt": ['valid/mtedx-valid-frpt.fr', 'valid/mtedx-valid-frpt.pt'],
+        "it-en": ['valid/mtedx-valid-iten.it', 'valid/mtedx-valid-iten.en'],
+        "it-es": ['valid/mtedx-valid-ites.it', 'valid/mtedx-valid-ites.es'],
+        "pt-en": ['valid/mtedx-valid-pten.pt', 'valid/mtedx-valid-pten.en'],
+        "pt-es": ['valid/mtedx-valid-ptes.pt', 'valid/mtedx-valid-ptes.es'],
+        "ru-en": ['valid/mtedx-valid-ruen.ru', 'valid/mtedx-valid-ruen.en']
     },
     "mtedx/test": {
         "data": ['https://raw.githubusercontent.com/esalesky/mtedx-eval/main/test.tar.gz'],
         "description": 'mTEDx evaluation data, test: http://openslr.org/100',
         "citation": "@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
         "md5": ['fa4cb1548c210ec424d7d6bc9a3675a7'],
-        "el-en": ['test/mtedx-test-elen.el','test/mtedx-test-elen.en'],
-        "es-en": ['test/mtedx-test-esen.es','test/mtedx-test-esen.en'],
-        "es-fr": ['test/mtedx-test-esfr.es','test/mtedx-test-esfr.fr'],
-        "es-it": ['test/mtedx-test-esit.es','test/mtedx-test-esit.it'],
-        "es-pt": ['test/mtedx-test-espt.es','test/mtedx-test-espt.pt'],
-        "fr-en": ['test/mtedx-test-fren.fr','test/mtedx-test-fren.en'],
-        "fr-es": ['test/mtedx-test-fres.fr','test/mtedx-test-fres.es'],
-        "fr-pt": ['test/mtedx-test-frpt.fr','test/mtedx-test-frpt.pt'],
-        "it-en": ['test/mtedx-test-iten.it','test/mtedx-test-iten.en'],
-        "it-es": ['test/mtedx-test-ites.it','test/mtedx-test-ites.es'],
-        "pt-en": ['test/mtedx-test-pten.pt','test/mtedx-test-pten.en'],
-        "pt-es": ['test/mtedx-test-ptes.pt','test/mtedx-test-ptes.es'],
-        "ru-en": ['test/mtedx-test-ruen.ru','test/mtedx-test-ruen.en']
+        "el-en": ['test/mtedx-test-elen.el', 'test/mtedx-test-elen.en'],
+        "es-en": ['test/mtedx-test-esen.es', 'test/mtedx-test-esen.en'],
+        "es-fr": ['test/mtedx-test-esfr.es', 'test/mtedx-test-esfr.fr'],
+        "es-it": ['test/mtedx-test-esit.es', 'test/mtedx-test-esit.it'],
+        "es-pt": ['test/mtedx-test-espt.es', 'test/mtedx-test-espt.pt'],
+        "fr-en": ['test/mtedx-test-fren.fr', 'test/mtedx-test-fren.en'],
+        "fr-es": ['test/mtedx-test-fres.fr', 'test/mtedx-test-fres.es'],
+        "fr-pt": ['test/mtedx-test-frpt.fr', 'test/mtedx-test-frpt.pt'],
+        "it-en": ['test/mtedx-test-iten.it', 'test/mtedx-test-iten.en'],
+        "it-es": ['test/mtedx-test-ites.it', 'test/mtedx-test-ites.es'],
+        "pt-en": ['test/mtedx-test-pten.pt', 'test/mtedx-test-pten.en'],
+        "pt-es": ['test/mtedx-test-ptes.pt', 'test/mtedx-test-ptes.es'],
+        "ru-en": ['test/mtedx-test-ruen.ru', 'test/mtedx-test-ruen.en']
     },
     "wmt20/robust/set1": {
         "data": ["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
@@ -611,7 +611,7 @@ DATASETS = {
         'ja-en': ['ja-en/IWSLT17.TED.tst2017.ja-en.ja.xml', 'en-ja/IWSLT17.TED.tst2017.en-ja.en.xml'],
         'en-ko': ['en-ko/IWSLT17.TED.tst2017.en-ko.en.xml', 'ko-en/IWSLT17.TED.tst2017.ko-en.ko.xml'],
         'ko-en': ['ko-en/IWSLT17.TED.tst2017.ko-en.ko.xml', 'en-ko/IWSLT17.TED.tst2017.en-ko.en.xml'],
-        },
+    },
     'iwslt17/tst2016': {
         'data': ['https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/en/fr/en-fr.tgz',
                  'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/fr/en/fr-en.tgz',
@@ -812,38 +812,39 @@ DATASETS = {
 # when applied on large data (TODO: annotate all documents from recent WMT years, at least for origlang=en, consider renaming "world" to "other").
 _SUBSETS = {
     'wmt18': 'rt.com.68098=US-crime guardian.181611=US-politics bbc.310963=GB-sport washpost.116881=US-politics scotsman.104228=GB-sport timemagazine.75207=OTHER-world-ID '
-        'euronews-en.117981=OTHER-crime-AE smh.com.au.242810=US-crime msnbc.53726=US-politics euronews-en.117983=US-politics msnbc.53894=US-crime theglobeandmail.com.62700=US-business '
-        'bbc.310870=OTHER-world-AF reuters.196698=US-politics latimes.231739=US-sport thelocal.51929=OTHER-world-SE cbsnews.198694=US-politics reuters.196718=OTHER-sport-RU '
-        'abcnews.255599=EU-sport nytimes.127256=US-entertainment scotsman.104225=GB-politics dailymail.co.uk.233026=GB-scitech independent.181088=GB-entertainment '
-        'brisbanetimes.com.au.181614=OTHER-business-AU washpost.116837=US-politics dailymail.co.uk.232928=GB-world thelocal.51916=OTHER-politics-IT bbc.310871=US-crime '
-        'nytimes.127392=EU-business-DE euronews-en.118001=EU-scitech-FR washpost.116866=OTHER-crime-MX dailymail.co.uk.233025=OTHER-scitech-CA latimes.231829=US-crime '
-        'guardian.181662=US-entertainment msnbc.53731=US-crime rt.com.68127=OTHER-sport-RU latimes.231782=US-business latimes.231840=US-sport reuters.196711=OTHER-scitech '
-        'guardian.181666=GB-entertainment novinite.com.24019=US-politics smh.com.au.242750=OTHER-scitech guardian.181610=US-politics telegraph.364393=OTHER-crime-ZA '
-        'novinite.com.23995=EU-world dailymail.co.uk.233028=GB-scitech independent.181071=GB-sport telegraph.364538=GB-scitech timemagazine.75193=US-politics '
-        'independent.181096=US-entertainment upi.140602=OTHER-world-AF bbc.310946=GB-business independent.181052=EU-sport ',
+             'euronews-en.117981=OTHER-crime-AE smh.com.au.242810=US-crime msnbc.53726=US-politics euronews-en.117983=US-politics msnbc.53894=US-crime theglobeandmail.com.62700=US-business '
+             'bbc.310870=OTHER-world-AF reuters.196698=US-politics latimes.231739=US-sport thelocal.51929=OTHER-world-SE cbsnews.198694=US-politics reuters.196718=OTHER-sport-RU '
+             'abcnews.255599=EU-sport nytimes.127256=US-entertainment scotsman.104225=GB-politics dailymail.co.uk.233026=GB-scitech independent.181088=GB-entertainment '
+             'brisbanetimes.com.au.181614=OTHER-business-AU washpost.116837=US-politics dailymail.co.uk.232928=GB-world thelocal.51916=OTHER-politics-IT bbc.310871=US-crime '
+             'nytimes.127392=EU-business-DE euronews-en.118001=EU-scitech-FR washpost.116866=OTHER-crime-MX dailymail.co.uk.233025=OTHER-scitech-CA latimes.231829=US-crime '
+             'guardian.181662=US-entertainment msnbc.53731=US-crime rt.com.68127=OTHER-sport-RU latimes.231782=US-business latimes.231840=US-sport reuters.196711=OTHER-scitech '
+             'guardian.181666=GB-entertainment novinite.com.24019=US-politics smh.com.au.242750=OTHER-scitech guardian.181610=US-politics telegraph.364393=OTHER-crime-ZA '
+             'novinite.com.23995=EU-world dailymail.co.uk.233028=GB-scitech independent.181071=GB-sport telegraph.364538=GB-scitech timemagazine.75193=US-politics '
+             'independent.181096=US-entertainment upi.140602=OTHER-world-AF bbc.310946=GB-business independent.181052=EU-sport ',
     'wmt19': 'bbc.381790=GB-politics rt.com.91337=OTHER-politics-MK nytimes.184853=US-world upi.176266=US-crime guardian.221754=GB-business dailymail.co.uk.298595=GB-business '
-        'cnbc.com.6790=US-politics nytimes.184837=OTHER-world-ID upi.176249=GB-sport euronews-en.153835=OTHER-world-ID dailymail.co.uk.298732=GB-crime telegraph.405401=GB-politics '
-        'newsweek.51331=OTHER-crime-CN abcnews.306815=US-world cbsnews.248384=US-politics reuters.218882=GB-politics cbsnews.248387=US-crime abcnews.306764=OTHER-world-MX '
-        'reuters.218888=EU-politics bbc.381780=GB-crime bbc.381746=GB-sport euronews-en.153800=EU-politics bbc.381679=GB-crime bbc.381735=GB-crime newsweek.51338=US-world '
-        'bbc.381765=GB-crime cnn.304489=US-politics reuters.218863=OTHER-world-ID nytimes.184860=OTHER-world-ID cnn.304404=US-crime bbc.381647=US-entertainment '
-        'abcnews.306758=OTHER-politics-MX cnbc.com.6772=US-business reuters.218932=OTHER-politics-MK upi.176251=GB-sport reuters.218921=US-sport cnn.304447=US-politics '
-        'guardian.221679=GB-politics scotsman.133765=GB-sport scotsman.133804=GB-entertainment guardian.221762=OTHER-politics-BO cnbc.com.6769=US-politics '
-        'dailymail.co.uk.298692=EU-entertainment scotsman.133744=GB-world reuters.218911=US-sport newsweek.51310=US-politics independent.226301=US-sport reuters.218923=EU-sport '
-        'reuters.218861=US-politics dailymail.co.uk.298759=US-world scotsman.133791=GB-sport cbsnews.248484=EU-scitech dailymail.co.uk.298630=US-scitech '
-        'newsweek.51329=US-entertainment bbc.381701=GB-crime dailymail.co.uk.298738=GB-entertainment bbc.381669=OTHER-world-CN foxnews.94512=US-politics '
-        'guardian.221718=GB-entertainment dailymail.co.uk.298686=GB-politics cbsnews.248471=US-politics newsweek.51318=US-entertainment rt.com.91335=US-politics '
-        'newsweek.51300=US-politics cnn.304478=US-politics upi.176275=US-politics telegraph.405422=OTHER-world-ID reuters.218933=US-politics newsweek.51328=US-politics '
-        'newsweek.51307=US-business bbc.381692=GB-world independent.226346=GB-entertainment bbc.381646=GB-sport reuters.218914=US-sport scotsman.133758=EU-sport '
-        'rt.com.91350=EU-world scotsman.133773=GB-scitech rt.com.91334=EU-crime bbc.381680=GB-politics guardian.221756=US-politics scotsman.133783=GB-politics cnn.304521=US-sport '
-        'dailymail.co.uk.298622=GB-politics bbc.381789=GB-sport dailymail.co.uk.298644=GB-business dailymail.co.uk.298602=GB-world scotsman.133753=GB-sport '
-        'independent.226317=GB-entertainment nytimes.184862=US-politics thelocal.65969=OTHER-world-SY nytimes.184825=US-politics cnbc.com.6784=US-politics nytimes.184804=US-politics '
-        'nytimes.184830=US-politics scotsman.133801=GB-sport cnbc.com.6770=US-business bbc.381760=GB-crime reuters.218865=OTHER-world-ID newsweek.51339=US-crime '
-        'euronews-en.153797=OTHER-world-ID abcnews.306774=US-crime dailymail.co.uk.298696=GB-politics abcnews.306755=US-politics reuters.218909=US-crime '
-        'independent.226349=OTHER-sport-RU newsweek.51330=US-politics bbc.381705=GB-sport newsweek.51340=OTHER-world-ID cbsnews.248411=OTHER-world-FM abcnews.306776=US-crime '
-        'bbc.381694=GB-entertainment rt.com.91356=US-world telegraph.405430=GB-entertainment telegraph.405404=EU-world bbc.381749=GB-world telegraph.405413=US-politics '
-        'bbc.381736=OTHER-politics-KP cbsnews.248394=US-politics nytimes.184822=US-world telegraph.405408=US-politics euronews-en.153799=OTHER-politics-SY '
-        'euronews-en.153826=EU-sport cnn.304400=US-world'
+             'cnbc.com.6790=US-politics nytimes.184837=OTHER-world-ID upi.176249=GB-sport euronews-en.153835=OTHER-world-ID dailymail.co.uk.298732=GB-crime telegraph.405401=GB-politics '
+             'newsweek.51331=OTHER-crime-CN abcnews.306815=US-world cbsnews.248384=US-politics reuters.218882=GB-politics cbsnews.248387=US-crime abcnews.306764=OTHER-world-MX '
+             'reuters.218888=EU-politics bbc.381780=GB-crime bbc.381746=GB-sport euronews-en.153800=EU-politics bbc.381679=GB-crime bbc.381735=GB-crime newsweek.51338=US-world '
+             'bbc.381765=GB-crime cnn.304489=US-politics reuters.218863=OTHER-world-ID nytimes.184860=OTHER-world-ID cnn.304404=US-crime bbc.381647=US-entertainment '
+             'abcnews.306758=OTHER-politics-MX cnbc.com.6772=US-business reuters.218932=OTHER-politics-MK upi.176251=GB-sport reuters.218921=US-sport cnn.304447=US-politics '
+             'guardian.221679=GB-politics scotsman.133765=GB-sport scotsman.133804=GB-entertainment guardian.221762=OTHER-politics-BO cnbc.com.6769=US-politics '
+             'dailymail.co.uk.298692=EU-entertainment scotsman.133744=GB-world reuters.218911=US-sport newsweek.51310=US-politics independent.226301=US-sport reuters.218923=EU-sport '
+             'reuters.218861=US-politics dailymail.co.uk.298759=US-world scotsman.133791=GB-sport cbsnews.248484=EU-scitech dailymail.co.uk.298630=US-scitech '
+             'newsweek.51329=US-entertainment bbc.381701=GB-crime dailymail.co.uk.298738=GB-entertainment bbc.381669=OTHER-world-CN foxnews.94512=US-politics '
+             'guardian.221718=GB-entertainment dailymail.co.uk.298686=GB-politics cbsnews.248471=US-politics newsweek.51318=US-entertainment rt.com.91335=US-politics '
+             'newsweek.51300=US-politics cnn.304478=US-politics upi.176275=US-politics telegraph.405422=OTHER-world-ID reuters.218933=US-politics newsweek.51328=US-politics '
+             'newsweek.51307=US-business bbc.381692=GB-world independent.226346=GB-entertainment bbc.381646=GB-sport reuters.218914=US-sport scotsman.133758=EU-sport '
+             'rt.com.91350=EU-world scotsman.133773=GB-scitech rt.com.91334=EU-crime bbc.381680=GB-politics guardian.221756=US-politics scotsman.133783=GB-politics cnn.304521=US-sport '
+             'dailymail.co.uk.298622=GB-politics bbc.381789=GB-sport dailymail.co.uk.298644=GB-business dailymail.co.uk.298602=GB-world scotsman.133753=GB-sport '
+             'independent.226317=GB-entertainment nytimes.184862=US-politics thelocal.65969=OTHER-world-SY nytimes.184825=US-politics cnbc.com.6784=US-politics nytimes.184804=US-politics '
+             'nytimes.184830=US-politics scotsman.133801=GB-sport cnbc.com.6770=US-business bbc.381760=GB-crime reuters.218865=OTHER-world-ID newsweek.51339=US-crime '
+             'euronews-en.153797=OTHER-world-ID abcnews.306774=US-crime dailymail.co.uk.298696=GB-politics abcnews.306755=US-politics reuters.218909=US-crime '
+             'independent.226349=OTHER-sport-RU newsweek.51330=US-politics bbc.381705=GB-sport newsweek.51340=OTHER-world-ID cbsnews.248411=OTHER-world-FM abcnews.306776=US-crime '
+             'bbc.381694=GB-entertainment rt.com.91356=US-world telegraph.405430=GB-entertainment telegraph.405404=EU-world bbc.381749=GB-world telegraph.405413=US-politics '
+             'bbc.381736=OTHER-politics-KP cbsnews.248394=US-politics nytimes.184822=US-world telegraph.405408=US-politics euronews-en.153799=OTHER-politics-SY '
+             'euronews-en.153826=EU-sport cnn.304400=US-world',
 }
+
 SUBSETS = {k: {d.split('=')[0]: d.split('=')[1] for d in v.split()} for (k, v) in _SUBSETS.items()}
 COUNTRIES = sorted(list({v.split('-')[0] for v in SUBSETS['wmt19'].values()}))
 DOMAINS = sorted(list({v.split('-')[1] for v in SUBSETS['wmt19'].values()}))
