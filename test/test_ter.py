@@ -1,15 +1,13 @@
 import pytest
 import sacrebleu
 
-from argparse import Namespace
-
 EPSILON = 1e-3
 
 test_cases = [
     (['aaaa bbbb cccc dddd'], ['aaaa bbbb cccc dddd'], 0),  # perfect match
     (['dddd eeee ffff'], ['aaaa bbbb cccc'], 1),  # no overlap
-    ([''], [''], 1),  # corner case, empty strings
-    (['d e f g h a b c'], ['a b c d e f g h'], 1/8),  # a single shift fixes MT
+    ([''], ['a'], 1),  # corner case, empty hypothesis
+    (['d e f g h a b c'], ['a b c d e f g h'], 1 / 8),  # a single shift fixes MT
     (
         [
             'wählen Sie " Bild neu berechnen , " um beim Ändern der Bildgröße Pixel hinzuzufügen oder zu entfernen , damit das Bild ungefähr dieselbe Größe aufweist wie die andere Größe .',
@@ -32,7 +30,6 @@ test_cases = [
 
 @pytest.mark.parametrize("hypotheses, references, expected_score", test_cases)
 def test_ter(hypotheses, references, expected_score):
-    args = Namespace(tokenize=sacrebleu.DEFAULT_TOKENIZER)
-    metric = sacrebleu.metrics.TER(args)
+    metric = sacrebleu.metrics.TER()
     score = metric.corpus_score(hypotheses, [references]).score
-    assert abs(score - expected_score) < EPSILON
+    assert abs(score - 100 * expected_score) < EPSILON
