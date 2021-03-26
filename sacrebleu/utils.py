@@ -5,6 +5,7 @@ import gzip
 import math
 import hashlib
 import logging
+from collections import defaultdict
 from typing import List, Optional, Sequence, Dict
 from argparse import Namespace
 
@@ -150,7 +151,7 @@ def print_single_results(results: List[str]):
 
     if 'μ' in results[0]:
         # Color confidence strings for emphasis
-        color_re = re.compile('(\(μ = [0-9\.]+ ± [0-9\.]+\))')
+        color_re = re.compile(r'(\(μ = [0-9\.]+ ± [0-9\.]+\))')
         for idx in range(len(results)):
             results[idx] = color_re.sub(
                 lambda m: Color.format(m.group(), 'cyan'), results[idx])
@@ -499,7 +500,11 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
     if test_sets is None or langpair is None:
         raise ValueError('Filtering for --origlang or --subset needs a test (-t) and a language pair (-l).')
 
+    re_origlang = re.compile(r'.* origlang="([^"]+)".*\n')
+    re_id = re.compile(r'.* docid="([^"]+)".*\n')
+
     indices_to_keep = []
+
     for test_set in test_sets.split(','):
         rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
         if not rawfile.endswith('.sgm'):
@@ -516,13 +521,14 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
                     if origlang is None:
                         include_doc = True
                     else:
-                        doc_origlang = re.sub(r'.* origlang="([^"]+)".*\n', '\\1', line)
+                        doc_origlang = re_origlang.sub(r'\1', line)
                         if origlang.startswith('non-'):
                             include_doc = doc_origlang != origlang[4:]
                         else:
                             include_doc = doc_origlang == origlang
+
                     if subset is not None:
-                        doc_id = re.sub(r'.* docid="([^"]+)".*\n', '\\1', line)
+                        doc_id = re_id.sub(r'\1', line)
                         if not re.search(subset, doc_to_tags.get(doc_id, '')):
                             include_doc = False
                 if line.startswith('<seg '):
@@ -533,13 +539,14 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
 
 def print_subset_results(metrics, full_system, full_refs, args):
     w = args.width
-    ws = len(str(len(full_system)))
     origlangs = args.origlang if args.origlang else \
         get_available_origlangs(args.test_set, args.langpair)
 
     if len(origlangs) == 0:
         print('No subset information found. Consider using --origlang argument.')
         return
+
+    results = defaultdict(list)
 
     for origlang in origlangs:
         subsets = [None]
@@ -554,17 +561,19 @@ def print_subset_results(metrics, full_system, full_refs, args):
             if len(system) == 0:
                 continue
 
-            subset_str = ''
+            key = f'origlang={origlang}'
             if subset in COUNTRIES:
-                subset_str = f'country={subset}'
+                key += f' country={subset}'
             elif subset in DOMAINS:
-                subset_str = f'domain={subset}'
-
-            # pad
-            subset_str = f'{subset_str:>20}'
+                key += f' domain={subset}'
 
             for metric in metrics.values():
                 score = metric.corpus_score(system, refs)
-                res = f'origlang={origlang} {subset_str}: sentences={len(system):>{ws}}'
-                res += f' {score.name}={score.score:{w+4}.{w}f}'
-                print(res)
+                results[key].append((len(system), score))
+
+    max_left_width = max([len(k) for k in results.keys()]) + 1
+    max_metric_width = max([len(val[1].name) for val in list(results.values())[0]])
+    for key, scores in results.items():
+        key = Color.format(f'{key:<{max_left_width}}', 'yellow')
+        for n_system, score in scores:
+            print(f'{key}: sentences={n_system:<6} {score.name:<{max_metric_width}} = {score.score:.{w}f}')

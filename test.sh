@@ -53,23 +53,23 @@ ${CMD} --echo src -t wmt17 -l cs-en > /dev/null
 declare -A EXPECTED
 EXPECTED["${CMD} -t wmt16,wmt17 -l en-fi --echo ref | ${CMD} -b -w 4 -t wmt16/B,wmt17/B -l en-fi"]=53.7432
 EXPECTED["${CMD} -t wmt16,wmt17 -l en-fi --echo ref | ${CMD} -b -w 4 -t wmt16/B,wmt17/B -l en-fi --origlang=en"]=18.9054
-EXPECTED["${CMD} -t wmt17 -l en-fi --echo ref | ${CMD} -b -t wmt17/B -l en-fi --detail"]="55.6
-origlang=en                     : sentences=1502 BLEU= 21.4
-origlang=fi                     : sentences=1500 BLEU=100.0"
-EXPECTED["${CMD} -t wmt18,wmt19 -l en-de --echo=src | ${CMD} -t wmt18,wmt19 -l en-de -b --detail"]="3.6
-origlang=de                     : sentences=1498 BLEU=  3.6
-origlang=en                     : sentences=3497 BLEU=  3.5
-origlang=en           country=EU: sentences= 265 BLEU=  2.5
-origlang=en           country=GB: sentences= 913 BLEU=  3.1
-origlang=en        country=OTHER: sentences= 801 BLEU=  2.5
-origlang=en           country=US: sentences=1518 BLEU=  4.2
-origlang=en      domain=business: sentences= 241 BLEU=  3.4
-origlang=en         domain=crime: sentences= 570 BLEU=  3.6
-origlang=en domain=entertainment: sentences= 322 BLEU=  5.1
-origlang=en      domain=politics: sentences= 959 BLEU=  3.0
-origlang=en       domain=scitech: sentences= 211 BLEU=  3.1
-origlang=en         domain=sport: sentences= 534 BLEU=  3.6
-origlang=en         domain=world: sentences= 660 BLEU=  3.1"
+EXPECTED["${CMD} -t wmt17 -l en-fi --echo ref | ${CMD} -nc -b -t wmt17/B -l en-fi --detail"]="55.6
+origlang=en : sentences=1502   BLEU = 21.4
+origlang=fi : sentences=1500   BLEU = 100.0"
+EXPECTED["${CMD} -t wmt18,wmt19 -l en-de --echo=src | ${CMD} -nc -t wmt18,wmt19 -l en-de -b --detail"]="3.6
+origlang=de                      : sentences=1498   BLEU = 3.6
+origlang=en                      : sentences=3497   BLEU = 3.5
+origlang=en country=EU           : sentences=265    BLEU = 2.5
+origlang=en country=GB           : sentences=913    BLEU = 3.1
+origlang=en country=OTHER        : sentences=801    BLEU = 2.5
+origlang=en country=US           : sentences=1518   BLEU = 4.2
+origlang=en domain=business      : sentences=241    BLEU = 3.4
+origlang=en domain=crime         : sentences=570    BLEU = 3.6
+origlang=en domain=entertainment : sentences=322    BLEU = 5.1
+origlang=en domain=politics      : sentences=959    BLEU = 3.0
+origlang=en domain=scitech       : sentences=211    BLEU = 3.1
+origlang=en domain=sport         : sentences=534    BLEU = 3.6
+origlang=en domain=world         : sentences=660    BLEU = 3.1"
 
 [[ ! -d data ]] && mkdir data
 cd data
