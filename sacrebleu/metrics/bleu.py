@@ -2,10 +2,9 @@
 
 import math
 import logging
-
+from importlib import import_module
 from typing import List, Sequence, Optional, Dict, Any
 
-# Import BLEU-specific tokenizers
 from ..utils import my_log, sum_of_lists
 
 from .base import Score, Signature, Metric
@@ -16,22 +15,22 @@ sacrelogger = logging.getLogger('sacrebleu')
 # The default for the maximum n-gram order when computing precisions
 MAX_NGRAM_ORDER = 4
 
+_TOKENIZERS = {
+    'none': 'tokenizer_base.BaseTokenizer',
+    'zh': 'tokenizer_zh.TokenizerZh',
+    '13a': 'tokenizer_13a.Tokenizer13a',
+    'intl': 'tokenizer_intl.TokenizerV14International',
+    'char': 'tokenizer_char.TokenizerChar',
+    'ja-mecab': 'tokenizer_ja_mecab.TokenizerJaMecab',
+}
+
 
 def _get_tokenizer(name: str):
     """Dynamically import tokenizer as importing all is slow."""
-    if name == 'none':
-        from ..tokenizers.tokenizer_base import BaseTokenizer as _tok
-    elif name == 'zh':
-        from ..tokenizers.tokenizer_zh import TokenizerZh as _tok
-    elif name == '13a':
-        from ..tokenizers.tokenizer_13a import Tokenizer13a as _tok
-    elif name == 'char':
-        from ..tokenizers.tokenizer_char import TokenizerChar as _tok
-    elif name == 'intl':
-        from ..tokenizers.tokenizer_intl import TokenizerV14International as _tok
-    elif name == 'ja-mecab':
-        from ..tokenizers.tokenizer_ja_mecab import TokenizerJaMecab as _tok
-    return _tok
+    module_name, class_name = _TOKENIZERS[name].rsplit('.', 1)
+    return getattr(
+        import_module(f'.tokenizers.{module_name}', 'sacrebleu'),
+        class_name)
 
 
 class BLEUSignature(Signature):
