@@ -55,7 +55,7 @@ try:
     from signal import signal, SIG_DFL
     signal(SIGPIPE, SIG_DFL)
 except ImportError:
-    sacrelogger.warning('Could not import signal.SIGPIPE (this is expected on Windows machines)')
+    pass
 
 
 def parse_args():
