@@ -547,7 +547,7 @@ for example:
 
 ```python
 In [1]: from sacrebleu.metrics import BLEU, CHRF, TER
-   ...: 
+   ...:
    ...: refs = [ # First set of references
    ...:          ['The dog bit the man.', 'It was not unexpected.', 'The man bit him first.'],
    ...:          # Second set of references
@@ -576,15 +576,15 @@ This allows using a variable number of reference segments per hypothesis. Observ
 
 ```python
 In [1]: from sacrebleu.metrics import BLEU, CHRF, TER
-   ...: 
+   ...:
    ...: refs = [ # First set of references
                  # 1st sentence does not have a ref here
    ...:          ['', 'It was not unexpected.', 'The man bit him first.'],
    ...:          # Second set of references
-   ...:          ['', 'No one was surprised.', 'The man had bitten the dog.'],
+   ...:          ['The dog had bit the man.', 'No one was surprised.', 'The man had bitten the dog.'],
    ...:        ]
    ...: sys = ['The dog bit the man.', "It wasn't surprising.", 'The man had just bitten him.']
-   
+
 In [2]: bleu = BLEU()
 
 In [3]: bleu.corpus_score(sys, refs)
