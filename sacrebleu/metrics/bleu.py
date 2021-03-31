@@ -84,14 +84,14 @@ class BLEUScore(Score):
     """
     def __init__(self, score: float, counts: List[int], totals: List[int],
                  precisions: List[float], bp: float,
-                 sys_len: float, ref_len: float):
+                 sys_len: int, ref_len: int):
         """`BLEUScore` initializer."""
         super().__init__('BLEU', score)
         self.bp = bp
         self.counts = counts
         self.totals = totals
-        self.sys_len = int(sys_len)
-        self.ref_len = int(ref_len)
+        self.sys_len = sys_len
+        self.ref_len = ref_len
         self.precisions = precisions
 
         self.prec_str = "/".join([f"{p:.1f}" for p in self.precisions])
@@ -298,7 +298,7 @@ class BLEU(Metric):
         return self.compute_bleu(
             correct=stats[2: 2 + self.max_ngram_order],
             total=stats[2 + self.max_ngram_order:],
-            sys_len=stats[0], ref_len=stats[1],
+            sys_len=int(stats[0]), ref_len=int(stats[1]),
             smooth_method=self.smooth_method, smooth_value=self.smooth_value,
             effective_order=self.effective_order)
 
