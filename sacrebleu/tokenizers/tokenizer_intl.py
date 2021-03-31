@@ -47,4 +47,4 @@ class TokenizerV14International(BaseTokenizer):
         for (_re, repl) in self._re:
             line = _re.sub(repl, line)
 
-        return ' '.join(line.strip().split())
+        return ' '.join(line.split())
