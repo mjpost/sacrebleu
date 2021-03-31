@@ -27,11 +27,19 @@ if [[ $(echo $BASH_VERSION | cut -d. -f1) -lt 4 ]]; then
     exit 1
 fi
 
+# For Travis CI to work on Windows/Mac OS X
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+	CMD="python -m sacrebleu"
+elif [[ "$OSTYPE" == "msys" ]]; then
+	CMD="python -m sacrebleu"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  # OS X ships python -> python2 by default, be explicit
+	CMD="python3 -m sacrebleu"
+fi
+
 export SACREBLEU=$(pwd)/.sacrebleu
 export PYTHONPATH="${PWD}"    # assuming PYTHONPATH=. as the default
 export NO_COLOR=1
-
-CMD="python3 -m sacrebleu"
 
 # Only run this test
 limit_test=${1:-}
