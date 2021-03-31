@@ -99,7 +99,8 @@ fi
 if [ -z $SKIP_INITIAL ]; then
   for command in "${!EXPECTED[@]}"; do
     echo Testing $command
-    obtained=`eval $command`
+    # Convert line endings to UNIX for Windows tests
+    obtained=`eval $command | tr -d '\015'`
     expected=${EXPECTED[$command]}
     if [[ $obtained != $expected ]]; then
         echo -e "\nFAILED:\n expected = $expected\n obtained = $obtained"
