@@ -23,18 +23,18 @@
 set -u
 
 if [[ $(echo $BASH_VERSION | cut -d. -f1) -lt 4 ]]; then
-    echo "This script requires BASH version 4 or above (since it uses hashes)."
-    exit 1
+  echo "This script requires BASH version 4 or above (since it uses hashes)."
+  exit 1
 fi
 
 # For Travis CI to work on Windows/Mac OS X
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-	CMD="python -m sacrebleu"
+  CMD="python -m sacrebleu"
 elif [[ "$OSTYPE" == "msys" ]]; then
-	CMD="python -m sacrebleu"
+  CMD="python -m sacrebleu"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   # OS X ships python -> python2 by default, be explicit
-	CMD="python3 -m sacrebleu"
+  CMD="python3 -m sacrebleu"
 fi
 
 export SACREBLEU=$(pwd)/.sacrebleu
