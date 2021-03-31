@@ -27,6 +27,9 @@ if [[ $(echo $BASH_VERSION | cut -d. -f1) -lt 4 ]]; then
   exit 1
 fi
 
+# Cleanup temporary files
+trap "rm -f .tmp* data/.tmp*" EXIT INT TERM
+
 # For Travis CI to work on Windows/Mac OS X
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   CMD="python -m sacrebleu"
@@ -111,9 +114,8 @@ if [ -z $SKIP_INITIAL ]; then
 
   # Test loading via file instead of STDIN
   echo "Testing loading via file instead of STDIN"
-  ${CMD} -t wmt17 -l en-de --echo ref > .wmt17.en-de.de.tmp
-  score=$(${CMD} -t wmt17 -l en-de -i .wmt17.en-de.de.tmp -b)
-  rm .wmt17.en-de.de.tmp
+  ${CMD} -t wmt17 -l en-de --echo ref > .wmt17.tmp
+  score=$(${CMD} -t wmt17 -l en-de -i .wmt17.tmp -b)
   if [[ $score != '100.0' ]]; then
       echo "File test failed."
       exit 1
@@ -121,13 +123,14 @@ if [ -z $SKIP_INITIAL ]; then
   echo PASS
 
   # Test echoing of source, reference, and both
-  ${CMD} -t wmt17/ms -l zh-en --echo src > .tmp.echo
+  # Replace \r\n with \n for Windows compatibility
+  ${CMD} -t wmt17/ms -l zh-en --echo src | tr -d '\015' > .tmp.echo
   diff .tmp.echo $SACREBLEU/wmt17/ms/zh-en.zh
   if [[ $? -ne 0 ]]; then
       echo "Source echo failed."
       exit 1
   fi
-  ${CMD} -t wmt17/ms -l zh-en --echo ref | cut -f3 > .tmp.echo
+  ${CMD} -t wmt17/ms -l zh-en --echo ref | tr -d '\015' | cut -f3 > .tmp.echo
   diff .tmp.echo $SACREBLEU/wmt17/ms/zh-en.en.2
   if [[ $? -ne 0 ]]; then
       echo "Source echo failed."
@@ -139,8 +142,10 @@ if [ -z $SKIP_INITIAL ]; then
   echo '-----------------------'
   echo 'Control character tests'
   echo '-----------------------'
-  score1=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b <(printf "Hello! How are you \r doing today?") )
-  score2=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b <(echo "Hello! How are you doing today?") )
+  printf "Hello! How are you \r doing today?" > .tmp_ref_buggy
+  echo "Hello! How are you doing today?" > .tmp_ref_okay
+  score1=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b .tmp_ref_buggy )
+  score2=$( echo "Hello! How are you doing today?" | ${CMD} -w 2 -b .tmp_ref_okay )
   if [[ $score1 != $score2 ]]; then
     echo "Control character in reference test failed"
     exit 1
@@ -162,6 +167,8 @@ if [ -z $SKIP_INITIAL ]; then
   unset EXPECTED
   declare -A EXPECTED
 
+  paste $ref1 $ref2 > .tmp_refs
+
   # Single ref, tokenizer variants, lowercase
   EXPECTED["${CMD} -w 4 -b -l cs-en $ref1 -i $sys"]=36.8799
   EXPECTED["${CMD} -lc -w 4 -b -l cs-en $ref1 -i $sys"]=38.1492
@@ -176,12 +183,12 @@ if [ -z $SKIP_INITIAL ]; then
   # multiple REF CHRF++
   EXPECTED["${CMD} -m chrf -cw 2 -w 4 -b -l cs-en $ref1 $ref2 -i $sys"]=66.1016
   # multiple REFs with tab-delimited stream
-  EXPECTED["${CMD} -w 4 -b -l cs-en --num-refs 2 <(paste $ref1 $ref2) -i $sys"]=44.6732
+  EXPECTED["${CMD} -w 4 -b -l cs-en --num-refs 2 .tmp_refs -i $sys"]=44.6732
   # Check signature correctness for multi-reference
   # separate files
   EXPECTED["${CMD} -l cs-en $ref1 $ref2 -i $sys | perl -pe 's/.*nrefs:([0-9]).*/\1/'"]=2
   # tab delimited stream
-  EXPECTED["${CMD} -l cs-en --num-refs 2 <(paste $ref1 $ref2) -i $sys | perl -pe 's/.*nrefs:([0-9]).*/\1/'"]=2
+  EXPECTED["${CMD} -l cs-en --num-refs 2 .tmp_refs -i $sys | perl -pe 's/.*nrefs:([0-9]).*/\1/'"]=2
 
 
   # Run the tests
