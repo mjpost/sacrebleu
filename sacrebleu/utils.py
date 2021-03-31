@@ -11,10 +11,9 @@ from argparse import Namespace
 
 import portalocker
 from tabulate import tabulate
-
+import colorama
 
 from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES
-from .color import Color
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
@@ -26,6 +25,25 @@ USERHOME = os.path.expanduser("~")
 SACREBLEU_DIR = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
 sacrelogger = logging.getLogger('sacrebleu')
+
+
+class Color:
+    ENABLE_COLORS = True
+    @staticmethod
+    def format(msg: str, color: str) -> str:
+        """Returns a colored version of the given message string.
+
+        :param msg: The string to Color.format.
+        :param color: The color specifier i.e. 'red', 'blue', 'green', etc.
+        :return: A colored version of the string if the output is a terminal.
+        """
+        if not Color.ENABLE_COLORS:
+            return msg
+        _ansi_str = getattr(colorama.Fore, color.upper(), None)
+        if _ansi_str:
+            return f'{_ansi_str}{msg}{colorama.Style.RESET_ALL}'
+
+        return msg
 
 
 def _format_score_lines(scores: dict,
@@ -133,7 +151,7 @@ def print_results_table(results: dict, signatures: dict, args: Namespace):
         print(f' - Assuming a significance threshold of 0.05, the {null_hyp} can be rejected')
         print('   for p-values < 0.05 (marked with "*"). This means that the delta is unlikely to be attributed')
         print(f'   to chance, hence the system is significantly "different" than the {bline}.')
-        print(f'   Otherwise, the p-values are {pval_color} (if the terminal supports colors).')
+        print(f'   Otherwise, the p-values are {pval_color}.')
         print()
         print(f' - NOTE: Significance does not tell whether a system is "better" than the {bline} but rather')
         print('   emphasizes the "difference" of the systems in terms of the replicability of the delta.')

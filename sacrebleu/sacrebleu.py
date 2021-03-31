@@ -22,6 +22,7 @@ See the [README.md] file for more information.
 """
 
 import io
+import os
 import sys
 import logging
 import pathlib
@@ -41,7 +42,7 @@ from .metrics import METRICS
 from .utils import smart_open, filter_subset, get_langpairs_for_testset, get_available_testsets
 from .utils import print_test_set, print_subset_results, get_reference_files, download_test_set
 from .utils import args_to_dict, sanity_check_lengths, print_results_table, print_single_results
-from . import color
+from .utils import Color
 
 from . import __version__ as VERSION
 
@@ -201,8 +202,13 @@ def main():
     sys.stdin = open(sys.stdin.fileno(), mode='r', encoding='utf-8', buffering=True, newline="\n")
     sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=True)
 
-    if args.no_color:
-        color._ENABLE = False
+    if os.environ.get('NO_COLOR', False) or args.no_color:
+        Color.ENABLE_COLORS = False
+    else:
+        # These should come after all stdout manipulations otherwise cause
+        # issues esp. on Windows
+        import colorama
+        colorama.init()
 
     if not args.quiet:
         logging.basicConfig(level=logging.INFO, format='sacreBLEU: %(message)s')

@@ -9,9 +9,8 @@
     confusions and obfuscated score errors in the past (#121)
   - Variable # references per segment is supported for all metrics by default. It is
     still only available through the API.
-  - Use colored strings in tabular outputs (multi-system evaluation mode). The
-    colored output is disabled if the platform is Windows or if the output is
-    redirected into a file.
+  - Use colored strings in tabular outputs (multi-system evaluation mode) through
+    the help of `colorama` package.
   - tokenizers: Add caching to tokenizers which seem to speed up things a bit.
   - `intl` tokenizer: Use `regex` module. Speed goes from ~4 seconds to ~0.6 seconds
     for a particular test set evaluation. (#46)

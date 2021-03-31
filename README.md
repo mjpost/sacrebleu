@@ -496,7 +496,7 @@ Paired bootstrap resampling test with 2000 resampling trials
  - Assuming a significance threshold of 0.05, the Null hypothesis can be rejected
    for p-values < 0.05 (marked with "*"). This means that the delta is unlikely to be attributed
    to chance, hence the system is significantly "different" than the baseline.
-   Otherwise, the p-values are highlighted in red (if the terminal supports colors).
+   Otherwise, the p-values are highlighted in red.
 
  - NOTE: Significance does not tell whether a system is "better" than the baseline but rather
    emphasizes the "difference" of the systems in terms of the replicability of the delta.

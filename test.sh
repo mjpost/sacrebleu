@@ -29,6 +29,8 @@ fi
 
 export SACREBLEU=$(pwd)/.sacrebleu
 export PYTHONPATH="${PWD}"    # assuming PYTHONPATH=. as the default
+export NO_COLOR=1
+
 CMD="python3 -m sacrebleu"
 
 # Only run this test
@@ -53,10 +55,10 @@ ${CMD} --echo src -t wmt17 -l cs-en > /dev/null
 declare -A EXPECTED
 EXPECTED["${CMD} -t wmt16,wmt17 -l en-fi --echo ref | ${CMD} -b -w 4 -t wmt16/B,wmt17/B -l en-fi"]=53.7432
 EXPECTED["${CMD} -t wmt16,wmt17 -l en-fi --echo ref | ${CMD} -b -w 4 -t wmt16/B,wmt17/B -l en-fi --origlang=en"]=18.9054
-EXPECTED["${CMD} -t wmt17 -l en-fi --echo ref | ${CMD} -nc -b -t wmt17/B -l en-fi --detail"]="55.6
+EXPECTED["${CMD} -t wmt17 -l en-fi --echo ref | ${CMD} -b -t wmt17/B -l en-fi --detail"]="55.6
 origlang=en : sentences=1502   BLEU = 21.4
 origlang=fi : sentences=1500   BLEU = 100.0"
-EXPECTED["${CMD} -t wmt18,wmt19 -l en-de --echo=src | ${CMD} -nc -t wmt18,wmt19 -l en-de -b --detail"]="3.6
+EXPECTED["${CMD} -t wmt18,wmt19 -l en-de --echo=src | ${CMD} -t wmt18,wmt19 -l en-de -b --detail"]="3.6
 origlang=de                      : sentences=1498   BLEU = 3.6
 origlang=en                      : sentences=3497   BLEU = 3.5
 origlang=en country=EU           : sentences=265    BLEU = 2.5
