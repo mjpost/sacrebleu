@@ -114,8 +114,8 @@ if [ -z $SKIP_INITIAL ]; then
 
   # Test loading via file instead of STDIN
   echo "Testing loading via file instead of STDIN"
-  ${CMD} -t wmt17 -l en-de --echo ref > .wmt17.tmp
-  score=$(${CMD} -t wmt17 -l en-de -i .wmt17.tmp -b)
+  ${CMD} -t wmt17 -l en-de --echo ref > .tmp.wmt17
+  score=$(${CMD} -t wmt17 -l en-de -i .tmp.wmt17 -b)
   if [[ $score != '100.0' ]]; then
       echo "File test failed."
       exit 1
