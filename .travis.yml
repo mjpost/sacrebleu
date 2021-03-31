@@ -11,11 +11,16 @@ jobs:
   fast_finish: true
   include:
     # ======= OSX ========
-    - name: "Python 3.7.5 on macOS 10.14"
+    - name: "Python 3.x on OS X"
       os: osx
-      osx_image: xcode10.2  # Python 3.7.5 running on macOS 10.14.3
+      osx_image: xcode12.2  # Python 3.7.5 running on macOS 10.14.3
       language: shell       # 'language: python' is an error on Travis CI macOS
+      addons:
+        homebrew:
+          packages:
+            - bash
       before_install:
+        - bash --version
         - python3 --version
         - python3 -m pip install --upgrade pip
         - python3 -m pip install --upgrade pytest-cov
