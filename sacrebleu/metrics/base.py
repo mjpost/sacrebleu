@@ -45,11 +45,11 @@ class Score:
         :param is_json: If `True`, will output the score in JSON string.
         :return: A plain or JSON-formatted string representation.
         """
-        d = {'name': self.name, 'score': self.score, 'signature': signature}
+        d = {'name': self.name, 'score': float(f'{self.score:.{width}f}'), 'signature': signature}
         sc = f'{self.score:.{width}f}'
 
         if self._mean > 0:
-            confidence_info = f'(μ = {self._mean:.{width}f} ± {self._ci:.3f})'
+            confidence_info = f'(μ = {self._mean:.{width}f} ± {self._ci:.{width}f})'
 
             sc += ' ' + confidence_info
             d['confidence'] = confidence_info

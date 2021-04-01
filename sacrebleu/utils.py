@@ -29,6 +29,7 @@ sacrelogger = logging.getLogger('sacrebleu')
 
 class Color:
     ENABLE_COLORS = True
+
     @staticmethod
     def format(msg: str, color: str) -> str:
         """Returns a colored version of the given message string.
@@ -69,7 +70,7 @@ def _format_score_lines(scores: dict,
                 _str = f'{result.score:.{width}f}'
                 if result.mean is not None:
                     is_bootstrap = True
-                    _str += f' / {result.mean:.{width}f} / {result.ci:.2f}'
+                    _str += f' ({result.mean:.{width}f} ± {result.ci:.{width}f})'
                 if result.p_value is not None:
                     _str += p_val_break_char + _color_p_value(result.p_value)
             else:
@@ -80,7 +81,7 @@ def _format_score_lines(scores: dict,
 
         if is_bootstrap:
             # Change titles
-            metric += ' / μ / ± 95% CI'
+            metric += ' (μ ± 95% CI)'
 
         new_scores[metric] = new_vals
 
@@ -165,39 +166,39 @@ def print_results_table(results: dict, signatures: dict, args: Namespace):
         print(f' - {name:<10} {sig}')
 
 
-def print_single_results(results: List[str]):
+def print_single_results(results: List[str], args: Namespace):
     """Re-process metric strings to align them nicely."""
+    if args.format == 'json':
+        for line in results:
+            print(line)
+        return
 
+    # Color confidence strings for emphasis
     if 'μ' in results[0]:
-        # Color confidence strings for emphasis
         color_re = re.compile(r'(\(μ = [0-9\.]+ ± [0-9\.]+\))')
         for idx in range(len(results)):
             results[idx] = color_re.sub(
                 lambda m: Color.format(m.group(), 'cyan'), results[idx])
 
-    if results[0].strip()[0] == '{':
-        # json format, dump directly
-        for line in results:
-            print(line)
-
-    elif len(results) == 1:
+    if len(results) == 1:
         # Just one system, nothing to align.
         print(results[0])
+        return
 
-    else:
-        lens = []
-        for line in results:
-            # If not score_only, split lines from '=' for re-alignment
-            try:
-                lens.append(line.index('=') - 1)
-            except ValueError:
-                print(line)
+    # Align by '=' character
+    lens = []
+    for line in results:
+        # If not score_only, split lines from '=' for re-alignment
+        try:
+            lens.append(line.index('=') - 1)
+        except ValueError:
+            print(line)
 
-        if len(lens) > 0:
-            w = max(lens)
-            for (_len, line) in zip(lens, results):
-                left, right = line[:_len], line[_len:]
-                print(f'{left:>{w}}{right}')
+    if len(lens) > 0:
+        w = max(lens)
+        for (_len, line) in zip(lens, results):
+            left, right = line[:_len], line[_len:]
+            print(f'{left:>{w}}{right}')
 
 
 def sanity_check_lengths(system: Sequence[str],

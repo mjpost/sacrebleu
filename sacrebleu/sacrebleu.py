@@ -496,7 +496,7 @@ def main():
             results.append(
                 score.format(args.width, args.score_only, sig, args.format == 'json'))
 
-        print_single_results(results)
+        print_single_results(results, args)
 
         # Prints detailed information for translationese effect experiments
         if args.detail:

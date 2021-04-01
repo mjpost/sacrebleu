@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 import sys
 import time
-import argparse
 import statistics
 
 sys.path.insert(0, '.')
 
 import sacrebleu
-from sacrebleu.metrics import BLEU, CHRF, TER
+from sacrebleu.metrics import BLEU, CHRF
 
 
 N_REPEATS = 5
@@ -94,4 +93,3 @@ if __name__ == '__main__':
 
         print(' >   [cached] ', end='')
         measure(klass, kwargs, systems, refs, cache=True)
-

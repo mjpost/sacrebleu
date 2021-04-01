@@ -888,6 +888,5 @@ if __name__ == '__main__':
         header = '| ' + '-' * 30 + ' | ' + '-' * 115 + ' |'
         print(header)
         for name, dset in DATASETS.items():
-            desc = dset['description']
-            desc = re.sub(r'(http[s]?:\/\/\S+)', r'[URL](\1)', desc)
+            desc = re.sub(r'(http[s]?:\/\/\S+)', r'[URL](\1)', str(dset['description']))
             print(f'| {name:<30} | {desc:<115} |')
