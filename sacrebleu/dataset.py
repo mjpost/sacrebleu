@@ -851,26 +851,43 @@ DOMAINS = sorted(list({v.split('-')[1] for v in SUBSETS['wmt19'].values()}))
 
 
 if __name__ == '__main__':
-    # check downloading of files and MD5 hashsums
-    import urllib.request
-    import hashlib
-    url_md5 = {}
+    import sys
+    try:
+        cmd = sys.argv[1]
+    except IndexError:
+        print(f'Usage: {sys.argv[0]} --check | --dump')
+        sys.exit(1)
 
-    for key, value in DATASETS.items():
-        md5_hashes = value.get('md5', None)
-        if md5_hashes is not None:
-            assert len(value['data']) == len(md5_hashes)
-            pairs = zip(value['data'], md5_hashes)
-            for url, md5_hash in pairs:
-                url_md5[url] = md5_hash
+    if cmd == '--check':
+        import urllib.request
+        import hashlib
+        url_md5 = {}
 
-    for url, md5_hash in url_md5.items():
-        try:
-            print('Downloading ', url)
-            with urllib.request.urlopen(url) as f:
-                data = f.read()
-        except Exception as exc:
-            raise(exc)
+        for key, value in DATASETS.items():
+            md5_hashes = value.get('md5', None)
+            if md5_hashes is not None:
+                assert len(value['data']) == len(md5_hashes)
+                pairs = zip(value['data'], md5_hashes)
+                for url, md5_hash in pairs:
+                    url_md5[url] = md5_hash
 
-        if hashlib.md5(data).hexdigest() != md5_hash:
-            print('MD5 check failed for', url)
+        for url, md5_hash in url_md5.items():
+            try:
+                print('Downloading ', url)
+                with urllib.request.urlopen(url) as f:
+                    data = f.read()
+            except Exception as exc:
+                raise(exc)
+
+            if hashlib.md5(data).hexdigest() != md5_hash:
+                print('MD5 check failed for', url)
+    elif cmd == '--dump':
+        import re
+        # Dumps a table in markdown format
+        print(f'| {"Dataset":<30} | {"Description":<115} |')
+        header = '| ' + '-' * 30 + ' | ' + '-' * 115 + ' |'
+        print(header)
+        for name, dset in DATASETS.items():
+            desc = dset['description']
+            desc = re.sub(r'(http[s]?:\/\/\S+)', r'[URL](\1)', desc)
+            print(f'| {name:<30} | {desc:<115} |')
