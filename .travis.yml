@@ -16,11 +16,9 @@ jobs:
       # osx_image: xcode12.2  # xcode12.2: Python 3.9.0
       osx_image: xcode10.2  # xcode12.2: Python 3.7.5
       language: shell       # 'language: python' is an error on Travis CI macOS
-      addons:
-        homebrew:
-          packages:
-            - bash
       before_install:
+        - bash --version
+        - HOMEBREW_NO_AUTO_UPDATE=1 brew install bash
         - bash --version
         - python3 --version
         - python3 -m pip install --upgrade pip
