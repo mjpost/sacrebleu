@@ -93,13 +93,13 @@ def print_results_table(results: dict, signatures: dict, args: Namespace):
     tablefmt = args.format
     if tablefmt in ('text', 'json'):
         # Fallback to simple table if json is given
-        tablefmt = 'grid'
+        tablefmt = 'fancy_grid'
     elif tablefmt == 'latex':
         # Use booktabs
         tablefmt = 'latex_booktabs'
 
     # If paired testing has been given, this'll format the score lines
-    results = _format_score_lines(results, args.width, multiline=tablefmt == 'grid')
+    results = _format_score_lines(results, args.width, multiline=tablefmt == 'fancy_grid')
 
     new_dict = {}
 
