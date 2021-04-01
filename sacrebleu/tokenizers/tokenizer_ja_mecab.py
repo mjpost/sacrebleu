@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+from functools import lru_cache
+
 try:
     import MeCab
     import ipadic
@@ -6,7 +7,7 @@ except ImportError:
     # Don't fail until the tokenizer is actually used
     MeCab = None
 
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 
 FAIL_MESSAGE = """
 Japanese tokenization requires extra dependencies, but you do not have them installed.
@@ -15,7 +16,8 @@ Please install them like so.
     pip install sacrebleu[ja]
 """
 
-class TokenizerJaMecab(NoneTokenizer):
+
+class TokenizerJaMecab(BaseTokenizer):
     def __init__(self):
         if MeCab is None:
             raise RuntimeError(FAIL_MESSAGE)
@@ -28,6 +30,7 @@ class TokenizerJaMecab(NoneTokenizer):
         # This asserts that no user dictionary has been loaded
         assert d.next is None
 
+    @lru_cache(maxsize=None)
     def __call__(self, line):
         """
         Tokenizes an Japanese input line using MeCab morphological analyzer.

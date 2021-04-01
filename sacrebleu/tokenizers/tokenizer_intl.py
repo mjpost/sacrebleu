@@ -1,76 +1,50 @@
-# -*- coding: utf-8 -*-
+from functools import lru_cache
 
-import re
-import sys
-import functools
-import unicodedata
+import regex
 
-from .tokenizer_none import NoneTokenizer
+from .tokenizer_base import BaseTokenizer
 
 
-class UnicodeRegex:
-    """Ad-hoc hack to recognize all punctuation and symbols
-    without depending on https://pypi.python.org/pypi/regex/."""
+class TokenizerV14International(BaseTokenizer):
+    """Tokenizes a string following the official BLEU implementation.
 
-    @staticmethod
-    def _property_chars(prefix):
-        return ''.join(chr(x) for x in range(sys.maxunicode)
-                       if unicodedata.category(chr(x)).startswith(prefix))
+    See github.com/moses-smt/mosesdecoder/blob/master/scripts/generic/mteval-v14.pl#L954-L983
 
-    @staticmethod
-    @functools.lru_cache(maxsize=1)
-    def punctuation():
-        return UnicodeRegex._property_chars('P')
+    In our case, the input string is expected to be just one line.
+    We just tokenize on punctuation and symbols,
+    except when a punctuation is preceded and followed by a digit
+    (e.g. a comma/dot as a thousand/decimal separator).
+    We do not recover escaped forms of punctuations such as &apos; or &gt;
+    as these should never appear in MT system outputs (see issue #138)
 
-    @staticmethod
-    @functools.lru_cache(maxsize=1)
-    def nondigit_punct_re():
-        return re.compile(r'([^\d])([' + UnicodeRegex.punctuation() + r'])')
+    Note that a number (e.g., a year) followed by a dot at the end of
+    sentence is NOT tokenized, i.e. the dot stays with the number because
+    `s/(\\p{P})(\\P{N})/ $1 $2/g` does not match this case (unless we add a
+    space after each sentence). However, this error is already in the
+    original mteval-v14.pl and we want to be consistent with it.
+    The error is not present in the non-international version,
+    which uses `$norm_text = " $norm_text "`.
 
-    @staticmethod
-    @functools.lru_cache(maxsize=1)
-    def punct_nondigit_re():
-        return re.compile(r'([' + UnicodeRegex.punctuation() + r'])([^\d])')
-
-    @staticmethod
-    @functools.lru_cache(maxsize=1)
-    def symbol_re():
-        return re.compile('([' + UnicodeRegex._property_chars('S') + '])')
-
-
-class TokenizerV14International(NoneTokenizer):
+    :param line: the input string to tokenize.
+    :return: The tokenized string.
+    """
 
     def signature(self):
         return 'intl'
 
     def __init__(self):
-        self.nondigit_punct_re = UnicodeRegex.nondigit_punct_re()
-        self.punct_nondigit_re = UnicodeRegex.punct_nondigit_re()
-        self.symbol_re = UnicodeRegex.symbol_re()
+        self._re = [
+            # Separate out punctuations preceeded by a non-digit
+            (regex.compile(r'(\P{N})(\p{P})'), r'\1 \2 '),
+            # Separate out punctuations followed by a non-digit
+            (regex.compile(r'(\p{P})(\P{N})'), r' \1 \2'),
+            # Separate out symbols
+            (regex.compile(r'(\p{S})'), r' \1 '),
+        ]
 
-    def __call__(self, line):
-        r"""Tokenize a string following the official BLEU implementation.
+    @lru_cache(maxsize=None)
+    def __call__(self, line: str) -> str:
+        for (_re, repl) in self._re:
+            line = _re.sub(repl, line)
 
-        See https://github.com/moses-smt/mosesdecoder/blob/master/scripts/generic/mteval-v14.pl#L954-L983
-        In our case, the input string is expected to be just one line
-        and no HTML entities de-escaping is needed.
-        So we just tokenize on punctuation and symbols,
-        except when a punctuation is preceded and followed by a digit
-        (e.g. a comma/dot as a thousand/decimal separator).
-
-        Note that a number (e.g., a year) followed by a dot at the end of
-        sentence is NOT tokenized, i.e. the dot stays with the number because
-        `s/(\p{P})(\P{N})/ $1 $2/g` does not match this case (unless we add a
-        space after each sentence). However, this error is already in the
-        original mteval-v14.pl and we want to be consistent with it.
-        The error is not present in the non-international version,
-        which uses
-        `$norm_text = " $norm_text "` (or `norm = " {} ".format(norm)` in Python).
-
-        :param line: the input string
-        :return: a list of tokens
-        """
-        line = self.nondigit_punct_re.sub(r'\1 \2 ', line)
-        line = self.punct_nondigit_re.sub(r' \1 \2', line)
-        line = self.symbol_re.sub(r' \1 ', line)
-        return line.strip()
+        return ' '.join(line.split())
