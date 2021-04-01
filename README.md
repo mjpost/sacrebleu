@@ -232,14 +232,13 @@ $ sacrebleu kyoto-test.ref.ja -i kyoto-test.hyp.ja -l en-ja -b
 14.5
 ```
 
-### chrF / chrF+
+### chrF / chrF++
 
 chrF applies minimum to none pre-processing as it deals with character n-grams:
 
 - If you pass `--chrf-whitespace`, whitespace characters will be preserved when computing character n-grams.
-- If you pass `--chrf-lowercase`, sacreBLEU will compute case-insensitive chrF(+).
-- If you enable chrF+ mode by passing `--chrf-word-order` (The number of `+` letters denotes the word n-gram order that you select),
-  a very simple punctuation tokenization will be internally applied.
+- If you pass `--chrf-lowercase`, sacreBLEU will compute case-insensitive chrF.
+- If you enable non-zero `--chrf-word-order` (pass `2` for `chrF++`), a very simple punctuation tokenization will be internally applied.
 
 
 ### TER
