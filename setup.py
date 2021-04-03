@@ -46,9 +46,32 @@ To install:
    twine upload dist/*
 """
 
+import os
+import re
+
 # Always prefer setuptools over distutils
-from setuptools import setup
-import sacrebleu
+from setuptools import setup, find_packages
+
+
+ROOT = os.path.dirname(__file__)
+
+
+def get_version():
+    """
+    Reads the version from sacrebleu's __init__.py file.
+    We can't import the module because required modules may not
+    yet be installed.
+    """
+    VERSION_RE = re.compile(r'''__version__ = ['"]([0-9.]+)['"]''')
+    init = open(os.path.join(ROOT, 'sacrebleu', '__init__.py')).read()
+    return VERSION_RE.search(init).group(1)
+
+
+def get_description():
+    DESCRIPTION_RE = re.compile(r'''__description__ = ['"](.*)['"]''')
+    init = open(os.path.join(ROOT, 'sacrebleu', '__init__.py')).read()
+    return DESCRIPTION_RE.search(init).group(1)
+
 
 setup(
     name = 'sacrebleu',
@@ -56,9 +79,10 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version = sacrebleu.__version__,
+    version = get_version(),
 
-    description = sacrebleu.__description__,
+    description = get_description(),
+
     long_description = 'SacreBLEU is a standard BLEU implementation that downloads and manages WMT datasets, produces scores on detokenized outputs, and reports a string encapsulating BLEU parameters, facilitating the production of shareable, comparable BLEU scores.',
 
     # The project's main homepage.
@@ -98,22 +122,26 @@ setup(
     # What does your project relate to?
     keywords = ['machine translation, evaluation, NLP, natural language processing, computational linguistics'],
 
-    # Alternatively, if you want to distribute just a my_module.py, uncomment this:
-    #py_modules = ["sacrebleu"],
-    packages = ["sacrebleu"],
+    # Which packages to deploy (currently sacrebleu, sacrebleu.matrics and sacrebleu.tokenizers)?
+    packages = find_packages(),
 
+    # Mark sacrebleu (and recursively all its sub-packages) as supporting mypy type hints (see PEP 561).
+    package_data={"sacrebleu": ["py.typed"]},
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires = ['typing', 'portalocker', 'mecab-python3'],
+    install_requires = [
+        'typing;python_version<"3.5"',
+        'portalocker==2.0.0',
+    ],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-    extras_require = {},
+    extras_require = {'ja': ['mecab-python3==1.0.3', 'ipadic>=1.0,<2.0'] },
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow

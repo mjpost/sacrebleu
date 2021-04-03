@@ -22,6 +22,98 @@
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
 # The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 DATASETS = {
+    "mtedx/valid": {
+        "data": ['https://raw.githubusercontent.com/esalesky/mtedx-eval/main/valid.tar.gz'],
+        "description": 'mTEDx evaluation data, valid: http://openslr.org/100',
+        "citation": "@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
+        "md5": ['40618171614c50e6cbb5e5bbceee0635'],
+        "el-en": ['valid/mtedx-valid-elen.el','valid/mtedx-valid-elen.en'],
+        "es-en": ['valid/mtedx-valid-esen.es','valid/mtedx-valid-esen.en'],
+        "es-fr": ['valid/mtedx-valid-esfr.es','valid/mtedx-valid-esfr.fr'],
+        "es-it": ['valid/mtedx-valid-esit.es','valid/mtedx-valid-esit.it'],
+        "es-pt": ['valid/mtedx-valid-espt.es','valid/mtedx-valid-espt.pt'],
+        "fr-en": ['valid/mtedx-valid-fren.fr','valid/mtedx-valid-fren.en'],
+        "fr-es": ['valid/mtedx-valid-fres.fr','valid/mtedx-valid-fres.es'],
+        "fr-pt": ['valid/mtedx-valid-frpt.fr','valid/mtedx-valid-frpt.pt'],
+        "it-en": ['valid/mtedx-valid-iten.it','valid/mtedx-valid-iten.en'],
+        "it-es": ['valid/mtedx-valid-ites.it','valid/mtedx-valid-ites.es'],
+        "pt-en": ['valid/mtedx-valid-pten.pt','valid/mtedx-valid-pten.en'],
+        "pt-es": ['valid/mtedx-valid-ptes.pt','valid/mtedx-valid-ptes.es'],
+        "ru-en": ['valid/mtedx-valid-ruen.ru','valid/mtedx-valid-ruen.en']
+    },
+    "mtedx/test": {
+        "data": ['https://raw.githubusercontent.com/esalesky/mtedx-eval/main/test.tar.gz'],
+        "description": 'mTEDx evaluation data, test: http://openslr.org/100',
+        "citation": "@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
+        "md5": ['fa4cb1548c210ec424d7d6bc9a3675a7'],
+        "el-en": ['test/mtedx-test-elen.el','test/mtedx-test-elen.en'],
+        "es-en": ['test/mtedx-test-esen.es','test/mtedx-test-esen.en'],
+        "es-fr": ['test/mtedx-test-esfr.es','test/mtedx-test-esfr.fr'],
+        "es-it": ['test/mtedx-test-esit.es','test/mtedx-test-esit.it'],
+        "es-pt": ['test/mtedx-test-espt.es','test/mtedx-test-espt.pt'],
+        "fr-en": ['test/mtedx-test-fren.fr','test/mtedx-test-fren.en'],
+        "fr-es": ['test/mtedx-test-fres.fr','test/mtedx-test-fres.es'],
+        "fr-pt": ['test/mtedx-test-frpt.fr','test/mtedx-test-frpt.pt'],
+        "it-en": ['test/mtedx-test-iten.it','test/mtedx-test-iten.en'],
+        "it-es": ['test/mtedx-test-ites.it','test/mtedx-test-ites.es'],
+        "pt-en": ['test/mtedx-test-pten.pt','test/mtedx-test-pten.en'],
+        "pt-es": ['test/mtedx-test-ptes.pt','test/mtedx-test-ptes.es'],
+        "ru-en": ['test/mtedx-test-ruen.ru','test/mtedx-test-ruen.en']
+    },
+    "wmt20/robust/set1": {
+        "data": ["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        'description': "WMT20 robustness task, set 1",
+        "en-ja": ["robustness20-3-sets/robustness20-set1-enja.en", "robustness20-3-sets/robustness20-set1-enja.ja"],
+        "en-de": ["robustness20-3-sets/robustness20-set1-ende.en", "robustness20-3-sets/robustness20-set1-ende.de"],
+    },
+    "wmt20/robust/set2": {
+        "data": ["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        'description': "WMT20 robustness task, set 2",
+        "en-ja": ["robustness20-3-sets/robustness20-set2-enja.en", "robustness20-3-sets/robustness20-set2-enja.ja"],
+        "ja-en": ["robustness20-3-sets/robustness20-set2-jaen.ja", "robustness20-3-sets/robustness20-set2-jaen.en"],
+    },
+    "wmt20/robust/set3": {
+        "data": ["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        'description': "WMT20 robustness task, set 3",
+        "de-en": ["robustness20-3-sets/robustness20-set3-deen.de", "robustness20-3-sets/robustness20-set3-deen.en"],
+    },
+    "wmt20/tworefs": {
+        'data': ['http://data.statmt.org/wmt20/translation-task/test.tgz'],
+        'description': 'WMT20 news test sets with two references',
+        'md5': ['3b1f777cfd2fb15ccf66e9bfdb2b1699'],
+        'de-en': ['sgm/newstest2020-deen-src.de.sgm', 'sgm/newstest2020-deen-ref.en.sgm', 'sgm/newstestB2020-deen-ref.en.sgm'],
+        'en-de': ['sgm/newstest2020-ende-src.en.sgm', 'sgm/newstest2020-ende-ref.de.sgm', 'sgm/newstestB2020-ende-ref.de.sgm'],
+        'en-zh': ['sgm/newstest2020-enzh-src.en.sgm', 'sgm/newstest2020-enzh-ref.zh.sgm', 'sgm/newstestB2020-enzh-ref.zh.sgm'],
+        'ru-en': ['sgm/newstest2020-ruen-src.ru.sgm', 'sgm/newstest2020-ruen-ref.en.sgm', 'sgm/newstestB2020-ruen-ref.en.sgm'],
+        'zh-en': ['sgm/newstest2020-zhen-src.zh.sgm', 'sgm/newstest2020-zhen-ref.en.sgm', 'sgm/newstestB2020-zhen-ref.en.sgm'],
+    },
+    "wmt20": {
+        'data': ['http://data.statmt.org/wmt20/translation-task/test.tgz'],
+        'description': 'Official evaluation data for WMT20',
+        'md5': ['3b1f777cfd2fb15ccf66e9bfdb2b1699'],
+        'cs-en': ['sgm/newstest2020-csen-src.cs.sgm', 'sgm/newstest2020-csen-ref.en.sgm'],
+        'de-en': ['sgm/newstest2020-deen-src.de.sgm', 'sgm/newstest2020-deen-ref.en.sgm'],
+        'de-fr': ['sgm/newstest2020-defr-src.de.sgm', 'sgm/newstest2020-defr-ref.fr.sgm'],
+        'en-cs': ['sgm/newstest2020-encs-src.en.sgm', 'sgm/newstest2020-encs-ref.cs.sgm'],
+        'en-de': ['sgm/newstest2020-ende-src.en.sgm', 'sgm/newstest2020-ende-ref.de.sgm'],
+        'en-iu': ['sgm/newstest2020-eniu-src.en.sgm', 'sgm/newstest2020-eniu-ref.iu.sgm'],
+        'en-ja': ['sgm/newstest2020-enja-src.en.sgm', 'sgm/newstest2020-enja-ref.ja.sgm'],
+        'en-km': ['sgm/newstest2020-enkm-src.en.sgm', 'sgm/newstest2020-enkm-ref.km.sgm'],
+        'en-pl': ['sgm/newstest2020-enpl-src.en.sgm', 'sgm/newstest2020-enpl-ref.pl.sgm'],
+        'en-ps': ['sgm/newstest2020-enps-src.en.sgm', 'sgm/newstest2020-enps-ref.ps.sgm'],
+        'en-ru': ['sgm/newstest2020-enru-src.en.sgm', 'sgm/newstest2020-enru-ref.ru.sgm'],
+        'en-ta': ['sgm/newstest2020-enta-src.en.sgm', 'sgm/newstest2020-enta-ref.ta.sgm'],
+        'en-zh': ['sgm/newstest2020-enzh-src.en.sgm', 'sgm/newstest2020-enzh-ref.zh.sgm'],
+        'fr-de': ['sgm/newstest2020-frde-src.fr.sgm', 'sgm/newstest2020-frde-ref.de.sgm'],
+        'iu-en': ['sgm/newstest2020-iuen-src.iu.sgm', 'sgm/newstest2020-iuen-ref.en.sgm'],
+        'ja-en': ['sgm/newstest2020-jaen-src.ja.sgm', 'sgm/newstest2020-jaen-ref.en.sgm'],
+        'km-en': ['sgm/newstest2020-kmen-src.km.sgm', 'sgm/newstest2020-kmen-ref.en.sgm'],
+        'pl-en': ['sgm/newstest2020-plen-src.pl.sgm', 'sgm/newstest2020-plen-ref.en.sgm'],
+        'ps-en': ['sgm/newstest2020-psen-src.ps.sgm', 'sgm/newstest2020-psen-ref.en.sgm'],
+        'ru-en': ['sgm/newstest2020-ruen-src.ru.sgm', 'sgm/newstest2020-ruen-ref.en.sgm'],
+        'ta-en': ['sgm/newstest2020-taen-src.ta.sgm', 'sgm/newstest2020-taen-ref.en.sgm'],
+        'zh-en': ['sgm/newstest2020-zhen-src.zh.sgm', 'sgm/newstest2020-zhen-ref.en.sgm'],
+    },
     'mtnt2019': {
         'data': ['http://www.cs.cmu.edu/~pmichel1/hosting/MTNT2019.tar.gz'],
         'description': 'Test set for the WMT 19 robustness shared task',
@@ -78,6 +170,31 @@ DATASETS = {
         'data': ['http://data.statmt.org/wmt19/translation-task/test.tgz'],
         'description': 'Official evaluation data.',
         'md5': ['84de7162d158e28403103b01aeefc39a'],
+        'citation': r"""@proceedings{ws-2019-machine,
+    title = "Proceedings of the Fourth Conference on Machine Translation (Volume 1: Research Papers)",
+    editor = "Bojar, Ond{\v{r}}ej  and
+      Chatterjee, Rajen  and
+      Federmann, Christian  and
+      Fishel, Mark  and
+      Graham, Yvette  and
+      Haddow, Barry  and
+      Huck, Matthias  and
+      Yepes, Antonio Jimeno  and
+      Koehn, Philipp  and
+      Martins, Andr{\'e}  and
+      Monz, Christof  and
+      Negri, Matteo  and
+      N{\'e}v{\'e}ol, Aur{\'e}lie  and
+      Neves, Mariana  and
+      Post, Matt  and
+      Turchi, Marco  and
+      Verspoor, Karin",
+    month = aug,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/W19-5200",
+}""",
         'cs-de': ['sgm/newstest2019-csde-src.cs.sgm', 'sgm/newstest2019-csde-ref.de.sgm'],
         'de-cs': ['sgm/newstest2019-decs-src.de.sgm', 'sgm/newstest2019-decs-ref.cs.sgm'],
         'de-en': ['sgm/newstest2019-deen-src.de.sgm', 'sgm/newstest2019-deen-ref.en.sgm'],
@@ -109,6 +226,54 @@ DATASETS = {
         'kk-en': ['dev/newsdev2019-kken-src.kk.sgm', 'dev/newsdev2019-kken-ref.en.sgm'],
         'en-kk': ['dev/newsdev2019-enkk-src.en.sgm', 'dev/newsdev2019-enkk-ref.kk.sgm'],
     },
+    "wmt19/google/ar": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-ar.ref"],
+        "description": "Additional high-quality reference for WMT19/en-de.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "d66d9e91548ced0ac476f2390e32e2de"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-ar.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
+    "wmt19/google/arp": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-arp.ref"],
+        "description": "Additional paraphrase of wmt19/google/ar.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "c70ea808cf2bff621ad7a8fddd4deca9"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-arp.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
+    "wmt19/google/wmtp": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-wmtp.ref"],
+        "description": "Additional paraphrase of the official WMT19 reference.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "587c660ee5fd44727f0db025b71c6a82"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-wmtp.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
+    "wmt19/google/hqr": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-hqr.ref"],
+        "description": "Best human selected-reference between wmt19 and wmt19/google/ar.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "d9221135f62d7152de041f5bfc8efaea"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-hqr.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
+    "wmt19/google/hqp": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-hqp.ref"],
+        "description": "Best human-selected reference between wmt19/google/arp and wmt19/google/wmtp.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "b7c3a07a59c8eccea5367e9ec5417a8a"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-hqp.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
+    "wmt19/google/hqall": {
+        "data": ["http://data.statmt.org/wmt19/translation-task/test.tgz",
+                 "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-hqall.ref"],
+        "description": "Best human-selected reference among original official reference and the Google reference and paraphrases.",
+        "md5": ["84de7162d158e28403103b01aeefc39a", "edecf10ced59e10b703a6fbcf1fa9dfa"],
+        'en-de': ['sgm/newstest2019-ende-src.en.sgm', '../wmt19-ende-hqall.ref'],
+        "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+    },
     'wmt18': {
         'data': ['http://data.statmt.org/wmt18/translation-task/test.tgz'],
         'md5': ['f996c245ecffea23d0006fa4c34e9064'],
@@ -133,20 +298,20 @@ DATASETS = {
         'data': ['http://data.statmt.org/wmt18/translation-task/test-ts.tgz'],
         'md5': ['5c621a34d512cc2dd74162ae7d00b320'],
         'description': 'Official evaluation sources with extra test sets interleaved.',
-        'cs-en': ['test/newstest2018-csen-src-ts.cs.sgm'],
-        'de-en': ['test/newstest2018-deen-src-ts.de.sgm'],
-        'en-cs': ['test/newstest2018-encs-src-ts.en.sgm'],
-        'en-de': ['test/newstest2018-ende-src-ts.en.sgm'],
-        'en-et': ['test/newstest2018-enet-src-ts.en.sgm'],
-        'en-fi': ['test/newstest2018-enfi-src-ts.en.sgm'],
-        'en-ru': ['test/newstest2018-enru-src-ts.en.sgm'],
-        'et-en': ['test/newstest2018-eten-src-ts.et.sgm'],
-        'fi-en': ['test/newstest2018-fien-src-ts.fi.sgm'],
-        'ru-en': ['test/newstest2018-ruen-src-ts.ru.sgm'],
-        'en-tr': ['test/newstest2018-entr-src-ts.en.sgm'],
-        'tr-en': ['test/newstest2018-tren-src-ts.tr.sgm'],
-        'en-zh': ['test/newstest2018-enzh-src-ts.en.sgm'],
-        'zh-en': ['test/newstest2018-zhen-src-ts.zh.sgm'],
+        'cs-en': ['test-ts/newstest2018-csen-src-ts.cs.sgm'],
+        'de-en': ['test-ts/newstest2018-deen-src-ts.de.sgm'],
+        'en-cs': ['test-ts/newstest2018-encs-src-ts.en.sgm'],
+        'en-de': ['test-ts/newstest2018-ende-src-ts.en.sgm'],
+        'en-et': ['test-ts/newstest2018-enet-src-ts.en.sgm'],
+        'en-fi': ['test-ts/newstest2018-enfi-src-ts.en.sgm'],
+        'en-ru': ['test-ts/newstest2018-enru-src-ts.en.sgm'],
+        'et-en': ['test-ts/newstest2018-eten-src-ts.et.sgm'],
+        'fi-en': ['test-ts/newstest2018-fien-src-ts.fi.sgm'],
+        'ru-en': ['test-ts/newstest2018-ruen-src-ts.ru.sgm'],
+        'en-tr': ['test-ts/newstest2018-entr-src-ts.en.sgm'],
+        'tr-en': ['test-ts/newstest2018-tren-src-ts.tr.sgm'],
+        'en-zh': ['test-ts/newstest2018-enzh-src-ts.en.sgm'],
+        'zh-en': ['test-ts/newstest2018-zhen-src-ts.zh.sgm'],
     },
     'wmt18/dev': {
         'data': ['http://data.statmt.org/wmt18/translation-task/dev.tgz'],
@@ -408,18 +573,18 @@ DATASETS = {
         'en-fr': ['test/test2008-src.en.sgm', 'test/test2008-src.fr.sgm']
     },
     'iwslt17': {
-        'data': ['https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/fr/en-fr.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/fr/en/fr-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/de/en-de.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/de/en/de-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/ar/en-ar.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/ar/en/ar-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/ja/en-ja.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/ja/en/ja-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/ko/en-ko.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/ko/en/ko-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/zh/en-zh.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/zh/en/zh-en.tgz'],
+        'data': ['https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/en/fr/en-fr.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/fr/en/fr-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/en/de/en-de.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/de/en/de-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/en/ar/en-ar.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/ar/en/ar-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/en/ja/en-ja.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/ja/en/ja-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/en/ko/en-ko.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/ko/en/ko-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/en/zh/en-zh.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/zh/en/zh-en.tgz'],
         'md5': ["1849bcc3b006dc0642a8843b11aa7192",
                 "79bf7a2ef02d226875f55fb076e7e473",
                 "b68e7097b179491f6c466ef41ad72b9b",
@@ -448,12 +613,12 @@ DATASETS = {
         'ko-en': ['ko-en/IWSLT17.TED.tst2017.ko-en.ko.xml', 'en-ko/IWSLT17.TED.tst2017.en-ko.en.xml'],
         },
     'iwslt17/tst2016': {
-        'data': ['https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/fr/en-fr.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/fr/en/fr-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/de/en-de.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/de/en/de-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/en/zh/en-zh.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-ted-test/texts/zh/en/zh-en.tgz'],
+        'data': ['https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/en/fr/en-fr.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/fr/en/fr-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/en/de/en-de.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/de/en/de-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/en/zh/en-zh.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-ted-test/texts/zh/en/zh-en.tgz'],
         "md5": ["1849bcc3b006dc0642a8843b11aa7192",
                 "79bf7a2ef02d226875f55fb076e7e473",
                 "b68e7097b179491f6c466ef41ad72b9b",
@@ -469,12 +634,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2016.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2016.en-zh.en.xml'],
     },
     'iwslt17/tst2015': {
-        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         "md5": ["d8a32cfc002a4f12b17429cfa78050e6",
                 "ca2b94d694150d4d6c5dc64c200fa589",
                 "3cf07ebe305312b12f7f1a4d5f8f8377",
@@ -490,12 +655,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2015.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2015.en-zh.en.xml'],
     },
     'iwslt17/tst2014': {
-        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         "md5": ["d8a32cfc002a4f12b17429cfa78050e6",
                 "ca2b94d694150d4d6c5dc64c200fa589",
                 "3cf07ebe305312b12f7f1a4d5f8f8377",
@@ -511,12 +676,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2014.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2014.en-zh.en.xml'],
     },
     'iwslt17/tst2013': {
-        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         "md5": ["d8a32cfc002a4f12b17429cfa78050e6",
                 "ca2b94d694150d4d6c5dc64c200fa589",
                 "3cf07ebe305312b12f7f1a4d5f8f8377",
@@ -532,12 +697,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2013.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2013.en-zh.en.xml'],
     },
     'iwslt17/tst2012': {
-        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         "md5": ["d8a32cfc002a4f12b17429cfa78050e6",
                 "ca2b94d694150d4d6c5dc64c200fa589",
                 "3cf07ebe305312b12f7f1a4d5f8f8377",
@@ -553,12 +718,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2012.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2012.en-zh.en.xml'],
     },
     'iwslt17/tst2011': {
-        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         "md5": ["d8a32cfc002a4f12b17429cfa78050e6",
                 "ca2b94d694150d4d6c5dc64c200fa589",
                 "3cf07ebe305312b12f7f1a4d5f8f8377",
@@ -574,12 +739,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2011.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2011.en-zh.en.xml'],
     },
     'iwslt17/tst2010': {
-        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         "md5": ["d8a32cfc002a4f12b17429cfa78050e6",
                 "ca2b94d694150d4d6c5dc64c200fa589",
                 "3cf07ebe305312b12f7f1a4d5f8f8377",
@@ -595,12 +760,12 @@ DATASETS = {
         'zh-en': ['zh-en/IWSLT17.TED.tst2010.zh-en.zh.xml', 'en-zh/IWSLT17.TED.tst2010.en-zh.en.xml'],
     },
     'iwslt17/dev2010': {
-        'data': ['https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/de/en-de.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/de/en/de-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
-                 'https://wit3.fbk.eu/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
+        'data': ['https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/de/en-de.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/de/en/de-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/fr/en-fr.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/fr/en/fr-en.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/en/zh/en-zh.tgz',
+                 'https://raw.githubusercontent.com/hlt-mt/WIT3/master/archive/2017-01-trnted/texts/zh/en/zh-en.tgz'],
         "md5": ["d8a32cfc002a4f12b17429cfa78050e6",
                 "ca2b94d694150d4d6c5dc64c200fa589",
                 "3cf07ebe305312b12f7f1a4d5f8f8377",
@@ -615,12 +780,37 @@ DATASETS = {
         'en-zh': ['en-zh/IWSLT17.TED.dev2010.en-zh.en.xml', 'zh-en/IWSLT17.TED.dev2010.zh-en.zh.xml'],
         'zh-en': ['zh-en/IWSLT17.TED.dev2010.zh-en.zh.xml', 'en-zh/IWSLT17.TED.dev2010.en-zh.en.xml'],
     },
+    'multi30k/2016': {
+        'data': ['https://raw.githubusercontent.com/multi30k/dataset/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
+        "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
+        'description': '2016 flickr test set of Multi30k dataset',
+        'citation': '@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}',
+        'en-fr': ['test_2016_flickr.en', 'test_2016_flickr.fr'],
+        'en-de': ['test_2016_flickr.en', 'test_2016_flickr.de'],
+        'en-cs': ['test_2016_flickr.en', 'test_2016_flickr.cs'],
+    },
+    'multi30k/2017': {
+        'data': ['https://raw.githubusercontent.com/multi30k/dataset/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
+        "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
+        'description': '2017 flickr test set of Multi30k dataset',
+        'citation': '@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}\n\n@InProceedings{elliott-etal-2017-findings,\n    title = "Findings of the Second Shared Task on Multimodal Machine Translation and Multilingual Image Description",\n    author = {Elliott, Desmond  and Frank, Stella  and Barrault, Lo{\\"\\i}c  and Bougares, Fethi  and Specia, Lucia},\n    booktitle = "Proceedings of the Second Conference on Machine Translation",\n    month = sep,\n    year = "2017",\n    address = "Copenhagen, Denmark",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W17-4718",\n    doi = "10.18653/v1/W17-4718",\n    pages = "215--233",\n}\n',
+        'en-fr': ['test_2017_flickr.en', 'test_2017_flickr.fr'],
+        'en-de': ['test_2017_flickr.en', 'test_2017_flickr.de'],
+    },
+    'multi30k/2018': {
+        'data': ['https://raw.githubusercontent.com/multi30k/dataset/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz'],
+        "md5": ['9cf8f22d57fee2ca2af3c682dfdc525b'],
+        'description': '2018 flickr test set of Multi30k dataset. See https://competitions.codalab.org/competitions/19917 for evaluation.',
+        'citation': '@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}\n\n@InProceedings{barrault-etal-2018-findings,\n    title = "Findings of the Third Shared Task on Multimodal Machine Translation",\n    author = {Barrault, Lo{\\"\\i}c  and Bougares, Fethi  and Specia, Lucia  and Lala, Chiraag  and Elliott, Desmond  and Frank, Stella},\n    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",\n    month = oct,\n    year = "2018",\n    address = "Belgium, Brussels",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W18-6402",\n    doi = "10.18653/v1/W18-6402",\n    pages = "304--323",\n}\n',
+        'en-fr': ['test_2018_flickr.en'],
+        'en-de': ['test_2018_flickr.en'],
+    },
 }
 
 # Detailed document metadata annotation in form DocumentID -> CountryCode - Domain - OptionalFinegrainedCountryCode
 # While the annotation is subjective with many unclear cases, it may provide useful insights
 # when applied on large data (TODO: annotate all documents from recent WMT years, at least for origlang=en, consider renaming "world" to "other").
-SUBSETS = {
+_SUBSETS = {
     'wmt18': 'rt.com.68098=US-crime guardian.181611=US-politics bbc.310963=GB-sport washpost.116881=US-politics scotsman.104228=GB-sport timemagazine.75207=OTHER-world-ID '
         'euronews-en.117981=OTHER-crime-AE smh.com.au.242810=US-crime msnbc.53726=US-politics euronews-en.117983=US-politics msnbc.53894=US-crime theglobeandmail.com.62700=US-business '
         'bbc.310870=OTHER-world-AF reuters.196698=US-politics latimes.231739=US-sport thelocal.51929=OTHER-world-SE cbsnews.198694=US-politics reuters.196718=OTHER-sport-RU '
@@ -654,6 +844,32 @@ SUBSETS = {
         'bbc.381736=OTHER-politics-KP cbsnews.248394=US-politics nytimes.184822=US-world telegraph.405408=US-politics euronews-en.153799=OTHER-politics-SY '
         'euronews-en.153826=EU-sport cnn.304400=US-world'
 }
-SUBSETS = {k:{d.split('=')[0]:d.split('=')[1] for d in v.split()} for (k,v) in SUBSETS.items()}
+SUBSETS = {k: {d.split('=')[0]: d.split('=')[1] for d in v.split()} for (k, v) in _SUBSETS.items()}
 COUNTRIES = sorted(list({v.split('-')[0] for v in SUBSETS['wmt19'].values()}))
 DOMAINS = sorted(list({v.split('-')[1] for v in SUBSETS['wmt19'].values()}))
+
+
+if __name__ == '__main__':
+    # check downloading of files and MD5 hashsums
+    import urllib.request
+    import hashlib
+    url_md5 = {}
+
+    for key, value in DATASETS.items():
+        md5_hashes = value.get('md5', None)
+        if md5_hashes is not None:
+            assert len(value['data']) == len(md5_hashes)
+            pairs = zip(value['data'], md5_hashes)
+            for url, md5_hash in pairs:
+                url_md5[url] = md5_hash
+
+    for url, md5_hash in url_md5.items():
+        try:
+            print('Downloading ', url)
+            with urllib.request.urlopen(url) as f:
+                data = f.read()
+        except Exception as exc:
+            raise(exc)
+
+        if hashlib.md5(data).hexdigest() != md5_hash:
+            print('MD5 check failed for', url)

@@ -12,14 +12,25 @@ Why use this version of BLEU?
 - It produces the same values as official script (`mteval-v13a.pl`) used by WMT
 - It outputs the BLEU score without the comma, so you don't have to remove it with `sed` (Looking at you, `multi-bleu.perl`)
 
+The official version is hosted at <https://github.com/mjpost/sacrebleu>.
+
 # QUICK START
 
 Install the Python module (Python 3 only)
 
     pip3 install sacrebleu
 
+In order to install Japanese tokenizer support through `mecab-python3`, you need to run the
+following command instead, to perform a full installation with dependencies:
+
+    pip3 install sacrebleu[ja]
+
+Alternately, you can install from the source:
+
+    python3 setup.py install
+
 This installs a shell script, `sacrebleu`.
-(You can also run `python3 -m sacrebleu` ).
+(You can also run `python3 -m sacrebleu`, so long as this root directory is in your `$PYTHONPATH`).
 
 Get a list of available test sets:
 
@@ -102,7 +113,7 @@ SacreBLEU is licensed under the Apache 2.0 License.
 
 This was all Rico Sennrich's idea.
 Originally written by Matt Post.
-The official version can be found at <https://github.com/mjpost/sacrebleu>.
+New features and ongoing support provided by Martin Popel (@martinpopel) and Ozan Caglayan (@ozancaglayan).
 
 If you use SacreBLEU, please cite the following:
 
