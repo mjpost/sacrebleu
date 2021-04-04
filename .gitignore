@@ -3,3 +3,6 @@ data/
 build
 dist
 __pycache__
+
+.sacrebleu
+.idea
