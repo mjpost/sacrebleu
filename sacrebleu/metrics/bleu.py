@@ -122,7 +122,7 @@ class BLEU:
         return ngrams
 
     @staticmethod
-    def reference_stats(refs, output_len):
+    def reference_stats(refs, output_len, max_order=NGRAM_ORDER):
         """Extracts reference statistics for a given segment.
 
         :param refs: A list of segment tokens.
@@ -145,7 +145,7 @@ class BLEU:
                 if reflen < closest_len:
                     closest_len = reflen
 
-            ngrams_ref = BLEU.extract_ngrams(ref)
+            ngrams_ref = BLEU.extract_ngrams(ref, max_order=max_order)
             for ngram in ngrams_ref.keys():
                 ngrams[ngram] = max(ngrams[ngram], ngrams_ref[ngram])
 
