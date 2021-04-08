@@ -4,6 +4,9 @@ from .. import __version__
 
 class BaseScore:
     """A base score class to derive from."""
+
+    __slots__ = ('score',)
+
     def __init__(self, score):
         self.score = score
 
@@ -56,3 +59,4 @@ class Signature:
 
     def __repr__(self):
         return self.__str__()
+

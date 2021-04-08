@@ -37,7 +37,7 @@ if __package__ is None and __name__ == '__main__':
 
 from .tokenizers import TOKENIZERS, DEFAULT_TOKENIZER
 from .dataset import DATASETS, DOMAINS, COUNTRIES, SUBSETS
-from .metrics import METRICS
+from .metrics import METRICS, DEF_F_BETA
 
 from .utils import smart_open, filter_subset, get_available_origlangs, SACREBLEU_DIR
 from .utils import get_langpairs_for_testset, get_available_testsets
@@ -63,6 +63,7 @@ def parse_args():
         description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
                     'Quick usage: score your detokenized output against WMT\'14 EN-DE:\n'
                     '    cat output.detok.de | sacrebleu -t wmt14 -l en-de',
+        epilog='\n\033[93m You are using v{v} from {f}\033[0m'.format(v=VERSION, f=__file__),
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     arg_parser.add_argument('--citation', '--cite', default=False, action='store_true',
@@ -94,7 +95,7 @@ def parse_args():
 
     # Metric selection
     arg_parser.add_argument('--metrics', '-m', choices=METRICS.keys(), nargs='+', default=['bleu'],
-                            help='metrics to compute (default: bleu)')
+                            metavar='METRIC', help='Metrics to compute. Known metrics: {known} (default: bleu)'.format(known=list(METRICS)))
     arg_parser.add_argument('--sentence-level', '-sl', action='store_true', help='Output metric on each sentence.')
 
     # BLEU-related arguments
@@ -110,12 +111,22 @@ def parse_args():
                             help='insist that your tokenized input is actually detokenized')
 
     # ChrF-related arguments
-    arg_parser.add_argument('--chrf-order', type=int, default=METRICS['chrf'].ORDER,
+    chrf_p = arg_parser.add_argument_group(title='CHRF args')
+    chrf_p.add_argument('--chrf-order', type=int, default=METRICS['chrf'].ORDER,
                             help='chrf character order (default: %(default)s)')
-    arg_parser.add_argument('--chrf-beta', type=int, default=METRICS['chrf'].BETA,
+    chrf_p.add_argument('--chrf-beta', type=int, default=METRICS['chrf'].BETA,
                             help='chrf BETA parameter (default: %(default)s)')
-    arg_parser.add_argument('--chrf-whitespace', action='store_true', default=False,
+    chrf_p.add_argument('--chrf-whitespace', action='store_true', default=False,
                             help='include whitespace in chrF calculation (default: %(default)s)')
+
+    # Classifier eval related args
+    clseval_p = arg_parser.add_argument_group(title="Args specifically for macrof and microf")
+    clseval_p.add_argument('-fb', '--f-beta', metavar='β', type=float,
+                             default=DEF_F_BETA,
+                             help='F-measure β param that weighs recall (default: %(default)s)')
+    clseval_p.add_argument('--report',  type=str,
+                           help='Path to write detailed performance report of individual classes.'
+                                ' (optional)')
 
     # Reporting related arguments
     arg_parser.add_argument('--quiet', '-q', default=False, action='store_true',
@@ -161,6 +172,10 @@ def main():
     if args.sentence_level and len(args.metrics) > 1:
         sacrelogger.error('Only one metric can be used with Sentence-level reporting.')
         sys.exit(1)
+
+    if args.report and len(args.metrics) > 1:
+        sacrelogger.error('Only one metric can be used with --report argument.')
+        sys.exit(2)
 
     if args.citation:
         if not args.test_set:
@@ -302,7 +317,7 @@ def main():
         sys.exit(0)
 
     # Else, handle system level
-    for metric in metrics:
+    for metric_name, metric in zip(args.metrics, metrics):
         try:
             score = metric.corpus_score(system, refs)
         except EOFError:
@@ -318,6 +333,9 @@ def main():
             sys.exit(1)
         else:
             print(score.format(args.width, args.score_only, metric.signature))
+            if args.report and hasattr(score, 'write_report'):
+                score.write_report(args.report)
+
 
     if args.detail:
         width = args.width

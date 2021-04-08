@@ -130,3 +130,17 @@ If you use SacreBLEU, please cite the following:
   pages = "186--191",
 }
 ```
+
+----
+# SacreBLEU Extended
+
+SacreBLEU, in its recent versions, has been extended to include additional evaluation metrics:
+
+* ChrF : https://www.aclweb.org/anthology/W16-2341/ 
+* TER :  https://github.com/jhclark/tercom
+* MacroF and MicroF : (TODO: update link)  
+
+
+Example: 
+
+    sacrebleu REF.txt -m bleu chrf ter macrof microf < HYP.detok.txt   
