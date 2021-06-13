@@ -6,6 +6,7 @@ from .tokenizer_intl import TokenizerV14International
 from .tokenizer_zh import TokenizerZh
 from .tokenizer_ja_mecab import TokenizerJaMecab
 from .tokenizer_char import TokenizerChar
+from .tokenizer_th import TokenizerThWord, TokenizerThSyllable
 
 
 DEFAULT_TOKENIZER = '13a'
@@ -18,4 +19,6 @@ TOKENIZERS = {
     'zh': TokenizerZh,
     'ja-mecab': TokenizerJaMecab,
     'char': TokenizerChar,
+    'th_word': TokenizerThWord,
+    'th_syllable': TokenizerThSyllable,
 }
