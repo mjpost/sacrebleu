@@ -169,8 +169,11 @@ def print_results_table(results: dict, signatures: dict, args: Namespace):
 def print_single_results(results: List[str], args: Namespace):
     """Re-process metric strings to align them nicely."""
     if args.format == 'json':
-        for line in results:
-            print(line)
+        if len(results) > 1:
+            proper_json = '[\n' + ',\n'.join(results) + '\n]'
+            print(proper_json)
+        else:
+            print(results[0])
         return
 
     # Color confidence strings for emphasis
