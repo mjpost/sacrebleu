@@ -180,18 +180,28 @@ def parse_args():
                              help='Print only the computed score.')
     report_args.add_argument('--width', '-w', type=int, default=1,
                              help='Floating point width (Default: %(default)s).')
-    report_args.add_argument('--format', '-f', default='text',
-                             choices=['text', 'json', 'latex', 'rst', 'html'],
-                             help='Sets the output format. `json` is only valid for single-system mode. `latex, rst, html` are valid for multi-system mode (Default: %(default)s).')
     report_args.add_argument('--detail', '-d', default=False, action='store_true',
                              help='Print detailed information (split test sets based on origlang).')
     report_args.add_argument('--no-color', '-nc', action='store_true',
                              help='Disable the occasional use of terminal colors.')
 
+    output_formats = ['json', 'text', 'latex', 'rst', 'html']
+    report_args.add_argument('--format', '-f', default='json', choices=output_formats,
+                             help='Sets the output format. `latex, rst, html` are only valid for multi-system mode whereas '
+                                  '`json` and `text` only apply to single-system mode. This flag is overridden if the '
+                                  'SACREBLEU_FORMAT environment variable is set to one of the valid choices (Default: %(default)s).')
+
     arg_parser.add_argument('--version', '-V', action='version',
                             version='%(prog)s {}'.format(VERSION))
 
     args = arg_parser.parse_args()
+
+    # Override the format from the environment, if any
+    if 'SACREBLEU_FORMAT' in os.environ:
+        _new_value = os.environ['SACREBLEU_FORMAT'].lower()
+        if _new_value in output_formats:
+            args.format = _new_value
+
     return args
 
 

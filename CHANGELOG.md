@@ -1,6 +1,6 @@
 # Release Notes
 
-- 2.0.0 (2021-04-01)
+- 2.0.0 (2021-07-01)
   - Build: Add Windows and OS X testing to Travis CI.
   - Improve documentation and type annotations.
   - Drop `Python < 3.6` support and migrate to f-strings.
@@ -46,9 +46,9 @@
   - CLI: Prefix metric-specific arguments with --chrf and --ter. To maintain compatibility,
     BLEU argument names are kept the same.
   - CLI: Separate metric-specific arguments for clarity when `--help` is printed.
-  - CLI: Added `--format/-f` flag. If single system is evaluated, `-f json` will
-    print the results in a parseable JSON format. Arguments such as `--short, --score-only`
-    are ignored and full information is dumped when `-f json` is given.
+  - CLI: Added `--format/-f` flag. The single-system output mode is now `json` by default.
+    If you want to keep the old text format persistently, you can export `SACREBLEU_FORMAT=text` into your
+    shell.
   - CLI: For multi-system mode, `json` falls back to plain text. Other options exist
     in this mode such as `latex, rst, html`.
   - CLI: sacreBLEU now supports evaluating multiple systems for a given test set

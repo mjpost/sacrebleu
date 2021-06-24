@@ -39,6 +39,21 @@ Sacre BLEU.
 - It produces the same values as official script (`mteval-v13a.pl`) used by WMT
 - It outputs the BLEU score without the comma, so you don't have to remove it with `sed` (Looking at you, `multi-bleu.perl`)
 
+# Breaking Changes
+
+## v2.0.0
+
+As of v2.0.0, the default output format is `json` for the CLI utility. This means that software which assumes the old output format of `sacreBLEU` utility will fail when parsing the metric scores. You can easily install and use the `jq` utility to parse the JSON-formatted
+`sacreBLEU` outputs:
+
+```
+$ sacrebleu -i system -t wmt17 -l en-de | jq -r '.score'
+20.8
+```
+
+To preserve the old behavior, you can either pass `-f text` when running the utility or export
+`SACREBLEU_FORMAT=text` environment variable for the setting to persist.
+
 # Installation
 
 Install the official Python module from PyPI (**Python>=3.6 only**):
