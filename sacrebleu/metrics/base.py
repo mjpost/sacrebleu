@@ -61,14 +61,15 @@ class Score:
             full_score += f' {self._verbose}'
             d['verbose_score'] = self._verbose
 
+        if score_only:
+            return sc
+
         if is_json:
             for param in signature.split('|'):
                 key, value = param.split(':')
                 d[key] = value
             return json.dumps(d, indent=1, ensure_ascii=False)
 
-        if score_only:
-            return sc
         return full_score
 
     def estimate_ci(self, scores: List['Score']):
