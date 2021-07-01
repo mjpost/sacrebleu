@@ -158,15 +158,26 @@ def parse_args():
 
     # Paired significance testing
     pair_args = arg_parser.add_argument_group('Paired significance testing for multi-system evaluation')
-    pair_args.add_argument('--paired', '-pa', default=None, choices=[None, 'ar', 'bs'],
-                           help='Select between approximate randomization (ar) or bootstrap resampling (bs) for paired significance test (Default: %(default)s).')
-    pair_args.add_argument('--paired-n', '-pan', type=int, default=0,
-                           help='Number of bootstrap resamples (for `bs`) or approximate randomization trials (for `ar`). '
-                                'If 0, a default of 2000 or 10000 is used for `bs` or `ar`, respectively.')
-    pair_args.add_argument('--paired-ar-confidence-n', '-pacin', type=int, default=-1,
-                           help='If >= 0, enables confidence interval estimation for paired AR test and sets the '
-                                'number of bootstrap resamples. A value of 0 will use the default value of 2000.')
-    pair_args.add_argument('--paired-jobs', '-paj', type=int, default=1,
+    pair_args_choice = pair_args.add_mutually_exclusive_group()
+
+    pair_args_choice.add_argument('--paired-ar', '-par', action='store_true',
+                                  help='Perform paired test using approximate randomization (AR). This option is '
+                                       'mutually exclusive with --paired-bs (Default: %(default)s).')
+    pair_args_choice.add_argument('--paired-bs', '-pbs', action='store_true',
+                                  help='Perform paired test using bootstrap resampling. This option is '
+                                       'mutually exclusive with --paired-ar (Default: %(default)s).')
+
+    pair_args.add_argument('--paired-ar-n', '-part', type=int, default=10000,
+                           help='Number of trials for approximate randomization test (Default: %(default)s).')
+
+    pair_args.add_argument('--paired-ar-ci', '-parci', action='store_true',
+                           help='If given, computes confidence interval for each system using bootstrap resampling '
+                                'in addition to the approximate randomization. The number of resamples is set to 2000.')
+
+    pair_args.add_argument('--paired-bs-n', '-pbsn', type=int, default=2000,
+                           help='Number of bootstrap resamples for paired bootstrap resampling test (Default: %(default)s).')
+
+    pair_args.add_argument('--paired-jobs', '-j', type=int, default=1,
                            help='If 0, launches as many workers as the number of systems. If > 0, sets the number of workers manually. '
                                 'This feature is currently not supported on Windows.')
 
@@ -185,9 +196,9 @@ def parse_args():
     report_args.add_argument('--no-color', '-nc', action='store_true',
                              help='Disable the occasional use of terminal colors.')
 
-    output_formats = ['json', 'text', 'latex', 'rst', 'html']
+    output_formats = ['json', 'text', 'latex']
     report_args.add_argument('--format', '-f', default='json', choices=output_formats,
-                             help='Set the output format. `latex, rst, html` are only valid for multi-system mode whereas '
+                             help='Set the output format. `latex` is only valid for multi-system mode whereas '
                                   '`json` and `text` apply to single-system mode only. This flag is overridden if the '
                                   'SACREBLEU_FORMAT environment variable is set to one of the valid choices (Default: %(default)s).')
 
@@ -206,6 +217,9 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    # Is paired test requested?
+    paired_test_mode = args.paired_bs or args.paired_ar
 
     # Explicitly set the encoding
     sys.stdin = open(sys.stdin.fileno(), mode='r', encoding='utf-8', buffering=True, newline="\n")
@@ -379,11 +393,10 @@ def main():
         # Separate files are given for each system output
         # Ex: --input smt.txt nmt.txt
         for fname in args.input:
-            # Base name is assumed to be system ID
-            sys_name = pathlib.Path(fname).name
+            sys_name = fname
 
             if sys_name in sys_names:
-                if args.paired and sys_name == sys_names[0]:
+                if paired_test_mode and sys_name == sys_names[0]:
                     # We skip loading a system, if it was already the baseline
                     sacrelogger.info(f'Ignoring {sys_name!r} as it was also given as the baseline.')
                     continue
@@ -404,7 +417,7 @@ def main():
         num_sys = len(sys_names)
 
     # Add baseline prefix to the first system for clarity
-    if args.paired:
+    if paired_test_mode:
         if args.input is None:
             # STDIN mode, no explicit system names
             sys_names = ['Baseline'] + [f'System {i + 1}' for i in range(num_sys - 1)]
@@ -416,7 +429,7 @@ def main():
         if num_sys > 1:
             sacrelogger.error('Only one system can be evaluated in sentence-level mode.')
             sys.exit(1)
-        if args.confidence or args.paired:
+        if args.confidence or paired_test_mode:
             sacrelogger.error('Statistical tests are unavailable in sentence-level mode.')
             sys.exit(1)
 
@@ -425,7 +438,7 @@ def main():
         # for backward compatibility.
         args.bleu_effective_order = True
 
-    if args.paired and num_sys == 1:
+    if paired_test_mode and num_sys == 1:
         sacrelogger.error('Paired tests require multiple input systems given to --input (-i).')
         sys.exit(1)
 
@@ -515,7 +528,7 @@ def main():
         named_systems = [(sys_names[i], systems[i]) for i in range(num_sys)]
         sacrelogger.info(f'Found {num_sys} systems.')
 
-        if not args.paired:
+        if not paired_test_mode:
             # Bootstrap resampling or the usual single score computation mode
             sigs = {}
             scores = defaultdict(list)
@@ -530,10 +543,20 @@ def main():
         else:
             # Paired significance testing mode
             from .significance import PairedTest
+
+            # Set params
+            test_type = 'bs' if args.paired_bs else 'ar'
+            n_samples = args.paired_bs_n if args.paired_bs else args.paired_ar_n
+
+            # If requested, report CI estimations as well with AR
+            # NOTE: For simplicity, # of bs resamples in this case is fixed to 2000
+            n_ar_confidence = 2000 if args.paired_ar_ci else -1
+
             ps = PairedTest(named_systems, metrics, references=None,
-                            test_type=args.paired, n_samples=args.paired_n,
-                            n_ar_confidence=args.paired_ar_confidence_n,
+                            test_type=test_type, n_samples=n_samples,
+                            n_ar_confidence=n_ar_confidence,
                             n_jobs=args.paired_jobs)
+
             # Set back the number of trials
             args.paired_n = ps.n_samples
 
