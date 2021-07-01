@@ -1,6 +1,6 @@
 # Release Notes
 
-- 2.0.0 (2021-07-01)
+- 2.0.0 (2021-07-10)
   - Build: Add Windows and OS X testing to Travis CI.
   - Improve documentation and type annotations.
   - Drop `Python < 3.6` support and migrate to f-strings.
@@ -49,8 +49,8 @@
   - CLI: Added `--format/-f` flag. The single-system output mode is now `json` by default.
     If you want to keep the old text format persistently, you can export `SACREBLEU_FORMAT=text` into your
     shell.
-  - CLI: For multi-system mode, `json` falls back to plain text. Other options exist
-    in this mode such as `latex, rst, html`.
+  - CLI: For multi-system mode, `json` falls back to plain text. `latex` output can only
+    be generated for multi-system mode.
   - CLI: sacreBLEU now supports evaluating multiple systems for a given test set
     in an efficient way. Through the use of `tabulate` package, the results are
     nicely rendered into a plain text table, LaTeX, HTML or RST (cf. --format/-f argument).
@@ -59,8 +59,8 @@
     the basenames of the files will be automatically used as system names.
   - Statistical tests: sacreBLEU now supports confidence interval estimation
     through bootstrap resampling for single-system evaluation (`--confidence` flag)
-    as well as paired bootstrap resampling (`--paired bs`) and paired approximate
-    randomization tests (`--paired ar`) when evaluating multiple systems (#40 and #78).
+    as well as paired bootstrap resampling (`--paired-bs`) and paired approximate
+    randomization tests (`--paired-ar`) when evaluating multiple systems (#40 and #78).
 
 - 1.5.1 (2021-03-05)
   - Fix extraction error for WMT18 extra test sets (test-ts) (#142)
