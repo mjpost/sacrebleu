@@ -354,7 +354,7 @@ $ sacrebleu ref1 -i system -m bleu chrf --confidence -w 4 --short
    BLEU|#:1|bs:2000|rs:12345|c:mixed|e:no|tok:13a|s:exp|v:2.0.0 = 44.5101 (μ = 44.5081 ± 0.724) <stripped>
 chrF2|#:1|bs:2000|rs:12345|c:mixed|e:yes|nc:6|nw:0|s:no|v:2.0.0 = 68.8338 (μ = 68.8337 ± 0.496)
 
-# Verify that the first numbers above to the actual scores
+# Verify that the first numbers above are the actual scores
 $ sacrebleu/sacrebleu.py ref1 -i system -m bleu chrf -w 4 --score-only
 44.5101
 68.8338
@@ -379,24 +379,20 @@ SacreBLEU offers two different paired significance tests that are widely used in
 
 ### Paired bootstrap resampling (--paired bs)
 
-- This is an efficient implementation of the paper [Statistical Significance Tests for Machine Translation Evaluation](https://www.aclweb.org/anthology/W04-3250.pdf) and is result-compliant with the [reference Moses implementation](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/analysis/bootstrap-hypothesis-difference-significance.pl).
-
-- Unlike the Moses' implementation that defaults to 1000 bootstrap resamples, SacreBLEU uses a default of 2000 to produce more stable
+This is an efficient implementation of the paper [Statistical Significance Tests for Machine Translation Evaluation](https://www.aclweb.org/anthology/W04-3250.pdf) and is result-compliant with the [reference Moses implementation](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/analysis/bootstrap-hypothesis-difference-significance.pl). Unlike the Moses' implementation that defaults to 1000 bootstrap resamples, SacreBLEU uses a default of 2000 to produce more stable
 estimations. This can be changed with the `--paired-n` flag.
 
-- When launched, paired bootstrap resampling will perform:
-   - Bootstrap resampling to estimate 95% CI for all systems and the baseline (similar to `--confidence` in single-system mode)
-   - A significance test between the **baseline** and each **system** to compute a [p value](https://en.wikipedia.org/wiki/P-value).
-  
+When launched, paired bootstrap resampling will perform:
+ - Bootstrap resampling to estimate 95% CI for all systems and the baseline
+ - A significance test between the **baseline** and each **system** to compute a [p-value](https://en.wikipedia.org/wiki/P-value).
+
 ### Paired approximate randomization (--paired ar)
 
-- Paired approximate randomization (AR) is another type of paired significance test that is claimed to be more accurate than paired bootstrap resampling when it comes to Type-I errors ([Riezler and Maxwell III, 2005](https://www.aclweb.org/anthology/W05-0908.pdf)). Type-I errors
-indicate failures to reject the null hypothesis when it is true. In other words, AR should in theory be more robust to subtle changes across systems.
+Paired approximate randomization (AR) is another type of paired significance test that is claimed to be more accurate than paired bootstrap resampling when it comes to Type-I errors ([Riezler and Maxwell III, 2005](https://www.aclweb.org/anthology/W05-0908.pdf)). Type-I errors indicate failures to reject the null hypothesis when it is true. In other words, AR should in theory be more robust to subtle changes across systems.
 
-- Our implementation is verified to be result-compliant with the [Multeval toolkit](https://github.com/jhclark/multeval) that also uses paired AR test for pairwise comparison.
+Our implementation is verified to be result-compliant with the [Multeval toolkit](https://github.com/jhclark/multeval) that also uses paired AR test for pairwise comparison.
 
 - The number of approximate randomization trials is set to 10,000 by default. This can be changed with the `--paired-n` flag.
-  
 - This method will only compute the p-values for each pairwise comparison. If you also want to get confidence intervals similar to **paired bootstrap resampling**, you need to manually enable it through `--paired-ar-confidence-n <value>`. If `<value>` is 0, the default
 of 2000 bootstrap resamples will be used, otherwise `<value>` resamples will be used.
 

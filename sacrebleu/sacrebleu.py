@@ -150,25 +150,25 @@ def parse_args():
                           help='Applies basic normalization and tokenization. (Default: %(default)s)')
 
     # Bootstrap resampling for confidence intervals
-    sign_args = arg_parser.add_argument_group('Single-system confidence interval estimation')
+    sign_args = arg_parser.add_argument_group('Confidence interval (CI) estimation for single-system evaluation')
     sign_args.add_argument('--confidence', '-ci', action='store_true',
-                           help='Report confidence interval through bootstrap resampling.')
+                           help='Report confidence interval using bootstrap resampling.')
     sign_args.add_argument('--confidence-n', '-cin', type=int, default=2000,
-                           help='Number of bootstrap resamples for confidence interval estimation (Default: %(default)s).')
+                           help='Set the number of bootstrap resamples for CI estimation (Default: %(default)s).')
 
     # Paired significance testing
-    pair_args = arg_parser.add_argument_group('Multi-system paired significance testing')
+    pair_args = arg_parser.add_argument_group('Paired significance testing for multi-system evaluation')
     pair_args.add_argument('--paired', '-pa', default=None, choices=[None, 'ar', 'bs'],
-                           help='Perform paired statistical test across multiple systems (Default: %(default)s).')
+                           help='Select between approximate randomization (ar) or bootstrap resampling (bs) for paired significance test (Default: %(default)s).')
     pair_args.add_argument('--paired-n', '-pan', type=int, default=0,
-                           help='Number of bootstrap resamples (for `bs`) or approximate randomization trials (for `ar). '
+                           help='Number of bootstrap resamples (for `bs`) or approximate randomization trials (for `ar`). '
                                 'If 0, a default of 2000 or 10000 is used for `bs` or `ar`, respectively.')
     pair_args.add_argument('--paired-ar-confidence-n', '-pacin', type=int, default=-1,
-                           help='If >= 0, enables confidence interval estimation for paired AR test and sets the'
+                           help='If >= 0, enables confidence interval estimation for paired AR test and sets the '
                                 'number of bootstrap resamples. A value of 0 will use the default value of 2000.')
     pair_args.add_argument('--paired-jobs', '-paj', type=int, default=1,
-                           help='If 0, launches as many workers as the number of systems. If > 0, sets the number of workers manually.'
-                                'This option is currently not supported on Windows.')
+                           help='If 0, launches as many workers as the number of systems. If > 0, sets the number of workers manually. '
+                                'This feature is currently not supported on Windows.')
 
     # Reporting related arguments
     report_args = arg_parser.add_argument_group('Reporting related arguments')
@@ -187,12 +187,11 @@ def parse_args():
 
     output_formats = ['json', 'text', 'latex', 'rst', 'html']
     report_args.add_argument('--format', '-f', default='json', choices=output_formats,
-                             help='Sets the output format. `latex, rst, html` are only valid for multi-system mode whereas '
-                                  '`json` and `text` only apply to single-system mode. This flag is overridden if the '
+                             help='Set the output format. `latex, rst, html` are only valid for multi-system mode whereas '
+                                  '`json` and `text` apply to single-system mode only. This flag is overridden if the '
                                   'SACREBLEU_FORMAT environment variable is set to one of the valid choices (Default: %(default)s).')
 
-    arg_parser.add_argument('--version', '-V', action='version',
-                            version='%(prog)s {}'.format(VERSION))
+    arg_parser.add_argument('--version', '-V', action='version', version='%(prog)s {}'.format(VERSION))
 
     args = arg_parser.parse_args()
 
