@@ -27,6 +27,9 @@ if [[ $(echo $BASH_VERSION | cut -d. -f1) -lt 4 ]]; then
   exit 1
 fi
 
+# Switch from JSON output to text
+export SACREBLEU_FORMAT="text"
+
 # Cleanup temporary files
 trap "rm -f .tmp* data/.tmp*" EXIT INT TERM
 
