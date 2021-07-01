@@ -165,7 +165,7 @@ def _paired_ar_test(baseline_info: Dict[str, Tuple[np.ndarray, Result]],
         # original test statistic: absolute difference between baseline and the system
         diff = abs(bl_result.score - sys_score.score)
 
-        sacrelogger.info(' > Performing approximate randomization test')
+        sacrelogger.info(f' > Performing approximate randomization test (# trials: {n_samples})')
         # get shuffled pseudo systems
         shuf_a = pos_sel @ bl_stats + neg_sel @ sys_stats
         shuf_b = neg_sel @ bl_stats + pos_sel @ sys_stats
@@ -183,7 +183,7 @@ def _paired_ar_test(baseline_info: Dict[str, Tuple[np.ndarray, Result]],
         res = Result(sys_score.score, p)
 
         if n_ar_confidence > 0:
-            sacrelogger.info(' > Performing bootstrap resampling for confidence interval')
+            sacrelogger.info(f' > Performing bootstrap resampling for confidence interval (# resamples: {n_ar_confidence})')
             sys_stats = np.array(sys_stats, dtype='float32')
             # recompute scores for all resamples
             sys_scores = [
@@ -251,7 +251,7 @@ def _paired_bs_test(baseline_info: Dict[str, Tuple[np.ndarray, Result]],
         # original test statistic: absolute difference between baseline and the system
         diff = abs(bl_result.score - sys_score.score)
 
-        sacrelogger.info(' > Performing paired bootstrap resampling test')
+        sacrelogger.info(f' > Performing paired bootstrap resampling test (# resamples: {n_samples})')
         scores_bl = np.array(
             [metric._compute_score_from_stats(_s.sum(0)).score for _s in bl_stats[idxs]])
         scores_sys = np.array(
