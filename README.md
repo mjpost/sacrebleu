@@ -317,7 +317,7 @@ Metric signatures
  - chrF2      nrefs:1|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0
 ```
 
-You can also change the output format from `text` to one of `latex, rst, html`:
+You can also change the output format from `text` to `latex`:
 ```
 # Prints a LaTeX table
 $ sacrebleu -t wmt17 -l en-de -i newstest2017.online-* -m bleu chrf -f latex
