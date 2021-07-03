@@ -1,6 +1,6 @@
 # Release Notes
 
-- 2.0.0 (2021-07-10)
+- 2.0.0 (2021-07-XX)
   - Build: Add Windows and OS X testing to Travis CI.
   - Improve documentation and type annotations.
   - Drop `Python < 3.6` support and migrate to f-strings.
