@@ -44,7 +44,7 @@ As of v2.0.0, the default output format is changed to `json` for less painful pa
 Here's an example of parsing the `score` key of the JSON output using `jq`:
 
 ```
-$ sacrebleu -i system -t wmt17 -l en-de | jq -r '.score'
+$ sacrebleu -i output.detok.txt -t wmt17 -l en-de | jq -r .score
 20.8
 ```
 
@@ -61,50 +61,38 @@ following command instead, to perform a full installation with dependencies:
 
 # Command-line Usage
 
-## Basics
-
-Get a list of available test sets with `sacrebleu --list`. Please see [DATASETS.md](DATASETS.md)
+You can get a list of available test sets with `sacrebleu --list`. Please see [DATASETS.md](DATASETS.md)
 for an up-to-date list of supported datasets.
 
-Download the source for one of the pre-defined test sets:
+## Basics
+
+### Downloading test sets
+
+Download the **source** for one of the pre-defined test sets:
 
 ```
-$ sacrebleu -t wmt17 -l en-de --echo src | head -n2
+$ sacrebleu -t wmt17 -l en-de --echo src | head -n1
 28-Year-Old Chef Found Dead at San Francisco Mall
-A 28-year-old chef who had recently moved to San Francisco was found dead in the stairwell of a local mall this week.
-
-# you can also use long parameter names for readability
-$ sacrebleu --test-set wmt17 --language-pair en-de --echo src | head -n2
 ```
 
-Let's say that you just translated the `en-de` test set of WMT17 with your fancy MT system and the **detokenized** translations are in a file called `output.detok.txt`:
+Download the **reference** for one of the pre-defined test sets:
+```
+$ sacrebleu -t wmt17 -l en-de --echo ref | head -n1
+28-jähriger Koch in San Francisco Mall tot aufgefunden
+```
+
+### JSON output
+
+As of version `>=2.0.0`, sacreBLEU prints the computed scores in JSON format to make parsing less painful:
 
 ```
-# Option 1: Redirect system output to STDIN
-$ cat output.detok.txt | sacrebleu -t wmt17 -l en-de
-BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 54.4/26.6/14.9/8.7 (BP = 1.000 ratio = 1.026 hyp_len = 62880 ref_len = 61287)
+$ sacrebleu -i output.detok.txt -t wmt17 -l en-de
+```
 
-# Option 2: Using the --input/-i argument
-$ sacrebleu -t wmt17 -l en-de -i output.detok.txt
-BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 54.4/26.6/14.9/8.7 (BP = 1.000 ratio = 1.026 hyp_len = 62880 ref_len = 61287)
-
-# You can obtain a short version of the signature with --short/-sh
-$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -sh
-BLEU|#:1|c:mixed|e:no|tok:13a|s:exp|v:2.0.0 = 20.8 54.4/26.6/14.9/8.7 (BP = 1.000 ratio = 1.026 hyp_len = 62880 ref_len = 61287)
-
-# You can also let it print the score only with --score-only/-b
-$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -b
-20.8
-
-# Add more precision to the score with --width/-w
-$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -b -w 4
-20.7965
-
-# Finally you can dump the information as JSON with --format/-f json
-$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -f json
+```json
 {
  "name": "BLEU",
- "score": 20.796506153855994,
+ "score": 20.8,
  "signature": "nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0",
  "verbose_score": "54.4/26.6/14.9/8.7 (BP = 1.000 ratio = 1.026 hyp_len = 62880 ref_len = 61287)",
  "nrefs": "1",
@@ -116,66 +104,51 @@ $ sacrebleu -t wmt17 -l en-de -i output.detok.txt -f json
 }
 ```
 
-Let's now compute **multiple metrics** for the same system:
+If you want to keep the old behavior, you can pass `-f text` or export `SACREBLEU_FORMAT=text`:
 
 ```
-# Let's first compute BLEU, chrF and TER with the default settings
-$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -m bleu chrf ter
-        BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 <stripped>
-      chrF2|nrefs:1|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0 = 52.0
-TER|nrefs:1|case:lc|tok:tercom|norm:no|punct:yes|asian:no|version:2.0.0 = 69.0
-
-# Let's enable chrF++ which is a revised version of chrF that takes into account word n-grams
-# Observe how the nw:0 gets changed into nw:2 for chrF in line 2
-$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -m bleu chrf ter --chrf-word-order 2
-        BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 <stripped>
-    chrF2++|nrefs:1|case:mixed|eff:yes|nc:6|nw:2|space:no|version:2.0.0 = 49.0
-TER|nrefs:1|case:lc|tok:tercom|norm:no|punct:yes|asian:no|version:2.0.0 = 69.0
+$ sacrebleu -i output.detok.txt -t wmt17 -l en-de -f text
+BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 54.4/26.6/14.9/8.7 (BP = 1.000 ratio = 1.026 hyp_len = 62880 ref_len = 61287)
 ```
 
-Metric-specific arguments are detailed in `--help` output:
+### Scoring
+
+(All examples below assume old-style text output for a compact representation that save space)
+
+Let's say that you just translated the `en-de` test set of WMT17 with your fancy MT system and the **detokenized** translations are in a file called `output.detok.txt`:
 
 ```
-BLEU related arguments:
-  --smooth-method {none,floor,add-k,exp}, -s {none,floor,add-k,exp}
-                        Smoothing method: exponential decay, floor (increment
-                        zero counts), add-k (increment num/denom by k for
-                        n>1), or none. (Default: exp)
-  --smooth-value BLEU_SMOOTH_VALUE, -sv BLEU_SMOOTH_VALUE
-                        The smoothing value. Only valid for floor and add-k.
-                        (Defaults: floor: 0.1, add-k: 1)
-  --tokenize {none,zh,13a,char,intl,ja-mecab}, -tok {none,zh,13a,char,intl,ja-mecab}
-                        Tokenization method to use for BLEU. If not provided,
-                        defaults to `zh` for Chinese, `ja-mecab` for Japanese
-                        and `13a` (mteval) otherwise.
-  --lowercase, -lc      If True, enables case-insensitivity. (Default: False)
-  --force               Insist that your tokenized input is actually
-                        detokenized.
+# Option 1: Redirect system output to STDIN
+$ cat output.detok.txt | sacrebleu -t wmt17 -l en-de
+BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 54.4/26.6/14.9/8.7 (BP = 1.000 ratio = 1.026 hyp_len = 62880 ref_len = 61287)
 
-chrF related arguments:
-  --chrf-char-order CHRF_CHAR_ORDER, -cc CHRF_CHAR_ORDER
-                        Character n-gram order. (Default: 6)
-  --chrf-word-order CHRF_WORD_ORDER, -cw CHRF_WORD_ORDER
-                        Word n-gram order (Default: 0). If equals to 2, the
-                        metric is referred to as chrF++.
-  --chrf-beta CHRF_BETA
-                        Determine the importance of recall w.r.t precision.
-                        (Default: 2)
-  --chrf-whitespace     Include whitespaces when extracting character n-grams.
-                        (Default: False)
-  --chrf-lowercase      Enable case-insensitivity. (Default: False)
-  --chrf-eps-smoothing  Enables epsilon smoothing similar to chrF++.py, NLTK
-                        and Moses; instead of effective order smoothing.
-                        (Default: False)
-
-TER related arguments (The defaults replicate TERCOM's behavior):
-  --ter-case-sensitive  Enables case sensitivity (Default: False)
-  --ter-asian-support   Enables special treatment of Asian characters
-                        (Default: False)
-  --ter-no-punct        Removes punctuation. (Default: False)
-  --ter-normalized      Applies basic normalization and tokenization.
-                        (Default: False)
+# Option 2: Use the --input/-i argument
+$ sacrebleu -t wmt17 -l en-de -i output.detok.txt
+BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 54.4/26.6/14.9/8.7 (BP = 1.000 ratio = 1.026 hyp_len = 62880 ref_len = 61287)
 ```
+
+You can obtain a short version of the signature with `--short/-sh`:
+
+```
+$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -sh
+BLEU|#:1|c:mixed|e:no|tok:13a|s:exp|v:2.0.0 = 20.8 54.4/26.6/14.9/8.7 (BP = 1.000 ratio = 1.026 hyp_len = 62880 ref_len = 61287)
+```
+
+If you only want the score to be printed, you can use the `--score-only/-b` flag:
+
+```
+$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -b
+20.8
+```
+
+The precision of the scores can be configured via the `--width/-w` flag:
+
+```
+$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -b -w 4
+20.7965
+```
+
+### Using your own reference file
 
 SacreBLEU knows about common test sets (as detailed in the `--list` example above), but you can also use it to score system outputs with arbitrary references. In this case, do not forget to provide **detokenized** reference and hypotheses files:
 
@@ -192,7 +165,59 @@ $ cat output.detok.txt | sacrebleu ref.detok.txt -m bleu -b -w 4
 20.7965
 ```
 
-## Version Signatures
+### Using multiple metrics
+
+Let's first compute BLEU, chrF and TER with the default settings:
+
+```
+$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -m bleu chrf ter
+        BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 <stripped>
+      chrF2|nrefs:1|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0 = 52.0
+TER|nrefs:1|case:lc|tok:tercom|norm:no|punct:yes|asian:no|version:2.0.0 = 69.0
+```
+
+Let's now enable `chrF++` which is a revised version of chrF that takes into account word n-grams.
+Observe how the `nw:0` gets changed into `nw:2` in the signature:
+
+```
+$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -m bleu chrf ter --chrf-word-order 2
+        BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 20.8 <stripped>
+    chrF2++|nrefs:1|case:mixed|eff:yes|nc:6|nw:2|space:no|version:2.0.0 = 49.0
+TER|nrefs:1|case:lc|tok:tercom|norm:no|punct:yes|asian:no|version:2.0.0 = 69.0
+```
+
+Metric-specific arguments are detailed in the output of `--help`:
+
+```
+BLEU related arguments:
+  --smooth-method {none,floor,add-k,exp}, -s {none,floor,add-k,exp}
+                        Smoothing method: exponential decay, floor (increment zero counts), add-k (increment num/denom by k for n>1), or none. (Default: exp)
+  --smooth-value BLEU_SMOOTH_VALUE, -sv BLEU_SMOOTH_VALUE
+                        The smoothing value. Only valid for floor and add-k. (Defaults: floor: 0.1, add-k: 1)
+  --tokenize {none,zh,13a,char,intl,ja-mecab}, -tok {none,zh,13a,char,intl,ja-mecab}
+                        Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `ja-mecab` for Japanese and `13a` (mteval) otherwise.
+  --lowercase, -lc      If True, enables case-insensitivity. (Default: False)
+  --force               Insist that your tokenized input is actually detokenized.
+
+chrF related arguments:
+  --chrf-char-order CHRF_CHAR_ORDER, -cc CHRF_CHAR_ORDER
+                        Character n-gram order. (Default: 6)
+  --chrf-word-order CHRF_WORD_ORDER, -cw CHRF_WORD_ORDER
+                        Word n-gram order (Default: 0). If equals to 2, the metric is referred to as chrF++.
+  --chrf-beta CHRF_BETA
+                        Determine the importance of recall w.r.t precision. (Default: 2)
+  --chrf-whitespace     Include whitespaces when extracting character n-grams. (Default: False)
+  --chrf-lowercase      Enable case-insensitivity. (Default: False)
+  --chrf-eps-smoothing  Enables epsilon smoothing similar to chrF++.py, NLTK and Moses; instead of effective order smoothing. (Default: False)
+
+TER related arguments (The defaults replicate TERCOM's behavior):
+  --ter-case-sensitive  Enables case sensitivity (Default: False)
+  --ter-asian-support   Enables special treatment of Asian characters (Default: False)
+  --ter-no-punct        Removes punctuation. (Default: False)
+  --ter-normalized      Applies basic normalization and tokenization. (Default: False)
+```
+
+### Version Signatures
 As you may have noticed, sacreBLEU generates version strings such as `BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0` for reproducibility reasons. It's strongly recommended to share these signatures in your papers!
 
 ## Translationese Support
@@ -207,7 +232,7 @@ and to evaluate against the complement (in this case `origlang` en, fr, cs, ru, 
 
     $ sacrebleu -t wmt13 -l de-en --origlang=non-de -i my-wmt13-output.txt
 
-*Please note* that the evaluator will return a BLEU score only on the requested subset,
+**Please note** that the evaluator will return a BLEU score only on the requested subset,
 but it expects that you pass through the entire translated test set.
 
 ## Languages & Preprocessing
@@ -227,16 +252,23 @@ but it expects that you pass through the entire translated test set.
 - **Note that** there's no automatic language detection from the hypotheses so you need to make sure that you are correctly
   selecting the tokenizer for **Japanese** and **Chinese**.
 
+
+Default 13a tokenizer will produce poor results for Japanese:
+
 ```
-# Default 13a tokenizer will produce poor results for Japanese
 $ sacrebleu kyoto-test.ref.ja -i kyoto-test.hyp.ja -b
 2.1
+```
 
-# Use the ja-mecab tokenizer
+Let's use the `ja-mecab` tokenizer:
+```
 $ sacrebleu kyoto-test.ref.ja -i kyoto-test.hyp.ja --tokenize ja-mecab -b
 14.5
+```
 
-# Alternatively, if you provide the language-pair, sacreBLEU will use ja-mecab automatically
+If you provide the language-pair, sacreBLEU will use ja-mecab automatically:
+
+```
 $ sacrebleu kyoto-test.ref.ja -i kyoto-test.hyp.ja -l en-ja -b
 14.5
 ```
@@ -264,9 +296,8 @@ behavior through the command-line:
 
 ## Multi-reference Evaluation
 
-All three metrics support the use of multiple references during evaluation:
+All three metrics support the use of multiple references during evaluation. Let's first pass all references as positional arguments:
 
-**Pass all references as positional arguments:**
 ```
 $ sacrebleu ref1 ref2 -i system -m bleu chrf ter
         BLEU|nrefs:2|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 61.8 <stripped>
@@ -274,35 +305,35 @@ $ sacrebleu ref1 ref2 -i system -m bleu chrf ter
 TER|nrefs:2|case:lc|tok:tercom|norm:no|punct:yes|asian:no|version:2.0.0 = 31.2
 ```
 
-**Alternative (less recommended): Concatenate references using tabs as delimiters:**
+Alternatively (less recommended), we can concatenate references using tabs as delimiters as well. Don't forget to pass `--num-refs/-nr` in this case!
+
 ```
 $ paste ref1 ref2 > refs.tsv
 
-# Don't forget to provide --num-refs/-nr !
 $ sacrebleu refs.tsv --num-refs 2 -i system -m bleu
 BLEU|nrefs:2|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0 = 61.8 <stripped>
 ```
 
 ## Multi-system Evaluation
-SacreBLEU supports evaluation of an arbitrary number of systems for a particular
+As of version `>=2.0.0`, SacreBLEU supports evaluation of an arbitrary number of systems for a particular
 test set and language-pair. This has the advantage of seeing all results in a
-nicely formatted table:
+nicely formatted table.
+
+Let's pass all system output files that match the shell glob `newstest2017.online-*` to sacreBLEU for evaluation:
 
 ```
-# Pass multiple systems to --input/-i
 $ sacrebleu -t wmt17 -l en-de -i newstest2017.online-* -m bleu chrf
-sacreBLEU: Found 4 systems.
-+-------------------------------+--------+---------+
-|                        System |  BLEU  |  chrF2  |
-+===============================+========+=========+
-| newstest2017.online-A.0.en-de |  20.8  |  52.0   |
-+-------------------------------+--------+---------+
-| newstest2017.online-B.0.en-de |  26.7  |  56.3   |
-+-------------------------------+--------+---------+
-| newstest2017.online-F.0.en-de |  15.5  |  49.3   |
-+-------------------------------+--------+---------+
-| newstest2017.online-G.0.en-de |  18.2  |  51.6   |
-+-------------------------------+--------+---------+
+╒═══════════════════════════════╤════════╤═════════╕
+│                        System │  BLEU  │  chrF2  │
+╞═══════════════════════════════╪════════╪═════════╡
+│ newstest2017.online-A.0.en-de │  20.8  │  52.0   │
+├───────────────────────────────┼────────┼─────────┤
+│ newstest2017.online-B.0.en-de │  26.7  │  56.3   │
+├───────────────────────────────┼────────┼─────────┤
+│ newstest2017.online-F.0.en-de │  15.5  │  49.3   │
+├───────────────────────────────┼────────┼─────────┤
+│ newstest2017.online-G.0.en-de │  18.2  │  51.6   │
+╘═══════════════════════════════╧════════╧═════════╛
 
 -----------------
 Metric signatures
@@ -311,11 +342,10 @@ Metric signatures
  - chrF2      nrefs:1|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0
 ```
 
-You can also change the output format from `text` to `latex`:
+You can also change the output format to `latex`:
+
 ```
-# Prints a LaTeX table
 $ sacrebleu -t wmt17 -l en-de -i newstest2017.online-* -m bleu chrf -f latex
-sacreBLEU: Found 4 systems.
 \begin{tabular}{rcc}
 \toprule
                         System &  BLEU  &  chrF2  \\
@@ -327,11 +357,7 @@ sacreBLEU: Found 4 systems.
 \bottomrule
 \end{tabular}
 
------------------
-Metric signatures
------------------
- - BLEU       nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0
- - chrF2      nrefs:1|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0
+...
 ```
 
 ## Confidence Intervals for Single System Evaluation
