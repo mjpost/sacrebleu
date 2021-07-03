@@ -286,17 +286,17 @@ class PairedTest:
     will be used through each metric's internal cache.
     :param test_type: `ar` for approximate randomization, `bs` for paired bootstrap.
     :param n_samples: The number of AR trials (for `ar`) or bootstrap resamples (for `bs`).
-    The defaults (10000 or 2000 respectively) will be used if 0 is passed.
+    The defaults (10000 or 1000 respectively) will be used if 0 is passed.
     :param n_ar_confidence: If `approximate randomization` is selected, the number
     of bootstrap resamples to use for confidence estimation. A value of -1 disables
-    confidence estimation. 0 will use the default of 2000.
+    confidence estimation. 0 will use the default of 1000.
     :param n_jobs: If 0, a worker process will be spawned for each system variant.
     If > 0, the number of workers will be set accordingly. The default of 1
     does not use multi-processing.
     """
     _DEFAULT_SAMPLES = {
         'ar': 10000,
-        'bs': 2000,
+        'bs': 1000,
     }
 
     def __init__(self, named_systems: List[Tuple[str, Sequence[str]]],

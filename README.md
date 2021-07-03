@@ -43,7 +43,7 @@ Sacre BLEU.
 
 ## v2.0.0
 
-As of v2.0.0, the default output format is `json` for the CLI utility. This means that software which assumes the old output format of `sacreBLEU` utility will fail when parsing the metric scores. You can easily install and use the `jq` utility to parse the JSON-formatted
+As of v2.0.0, the default output format is `json` for the CLI utility. This means that software which assumes the old output format of `sacreBLEU`, will fail when parsing the scores. You can easily install and use the `jq` utility to parse the JSON-formatted
 `sacreBLEU` outputs:
 
 ```
@@ -51,7 +51,7 @@ $ sacrebleu -i system -t wmt17 -l en-de | jq -r '.score'
 20.8
 ```
 
-To preserve the old behavior, you can either pass `-f text` when running the utility or export
+To preserve the old behavior, you can either pass `-f text` argument or export
 `SACREBLEU_FORMAT=text` environment variable for the setting to persist.
 
 # Installation
@@ -346,13 +346,13 @@ Metric signatures
 (1) the actual system score, (2) the true mean estimated from bootstrap resampling and (3),
 the 95% [confidence interval](https://en.wikipedia.org/wiki/Confidence_interval) around the mean.
 
-- By default, the number of bootstrap resamples is 2000 (`bs:2000` in the signature)
+- By default, the number of bootstrap resamples is 1000 (`bs:1000` in the signature)
 and can be changed with `--confidence-n`.
 
 ```
 $ sacrebleu ref1 -i system -m bleu chrf --confidence -w 4 --short
-   BLEU|#:1|bs:2000|rs:12345|c:mixed|e:no|tok:13a|s:exp|v:2.0.0 = 44.5101 (μ = 44.5081 ± 0.724) <stripped>
-chrF2|#:1|bs:2000|rs:12345|c:mixed|e:yes|nc:6|nw:0|s:no|v:2.0.0 = 68.8338 (μ = 68.8337 ± 0.496)
+   BLEU|#:1|bs:1000|rs:12345|c:mixed|e:no|tok:13a|s:exp|v:2.0.0 = 44.5101 (μ = 44.5081 ± 0.724) <stripped>
+chrF2|#:1|bs:1000|rs:12345|c:mixed|e:yes|nc:6|nw:0|s:no|v:2.0.0 = 68.8338 (μ = 68.8337 ± 0.496)
 
 # Verify that the first numbers above are the actual scores
 $ sacrebleu/sacrebleu.py ref1 -i system -m bleu chrf -w 4 --score-only
@@ -377,24 +377,19 @@ whether a newly added feature yields significantly different scores than the sys
 
 SacreBLEU offers two different paired significance tests that are widely used in MT research.
 
-### Paired bootstrap resampling (--paired bs)
+### Paired bootstrap resampling (--paired-bs)
 
-This is an efficient implementation of the paper [Statistical Significance Tests for Machine Translation Evaluation](https://www.aclweb.org/anthology/W04-3250.pdf) and is result-compliant with the [reference Moses implementation](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/analysis/bootstrap-hypothesis-difference-significance.pl). Unlike the Moses' implementation that defaults to 1000 bootstrap resamples, SacreBLEU uses a default of 2000 to produce more stable
-estimations. This can be changed with the `--paired-n` flag.
+This is an efficient implementation of the paper [Statistical Significance Tests for Machine Translation Evaluation](https://www.aclweb.org/anthology/W04-3250.pdf) and is result-compliant with the [reference Moses implementation](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/analysis/bootstrap-hypothesis-difference-significance.pl). The number of bootstrap resamples can be changed with the `--paired-bs-n` flag and its default is 1000.
 
 When launched, paired bootstrap resampling will perform:
  - Bootstrap resampling to estimate 95% CI for all systems and the baseline
  - A significance test between the **baseline** and each **system** to compute a [p-value](https://en.wikipedia.org/wiki/P-value).
 
-### Paired approximate randomization (--paired ar)
+### Paired approximate randomization (--paired-ar)
 
 Paired approximate randomization (AR) is another type of paired significance test that is claimed to be more accurate than paired bootstrap resampling when it comes to Type-I errors ([Riezler and Maxwell III, 2005](https://www.aclweb.org/anthology/W05-0908.pdf)). Type-I errors indicate failures to reject the null hypothesis when it is true. In other words, AR should in theory be more robust to subtle changes across systems.
 
-Our implementation is verified to be result-compliant with the [Multeval toolkit](https://github.com/jhclark/multeval) that also uses paired AR test for pairwise comparison.
-
-- The number of approximate randomization trials is set to 10,000 by default. This can be changed with the `--paired-n` flag.
-- This method will only compute the p-values for each pairwise comparison. If you also want to get confidence intervals similar to **paired bootstrap resampling**, you need to manually enable it through `--paired-ar-confidence-n <value>`. If `<value>` is 0, the default
-of 2000 bootstrap resamples will be used, otherwise `<value>` resamples will be used.
+Our implementation is verified to be result-compliant with the [Multeval toolkit](https://github.com/jhclark/multeval) that also uses paired AR test for pairwise comparison. The number of approximate randomization trials is set to 10,000 by default. This can be changed with the `--paired-ar-n` flag.
 
 ### Running the tests
 
@@ -414,7 +409,7 @@ In the example below, we set `newstest2017.LIUM-NMT.4900.en-de` as the baseline 
 
 ```
 $ sacrebleu -t wmt17 -l en-de -i newstest2017.LIUM-NMT.4900.en-de newstest2017.* \
-        -m bleu chrf --paired bs --quiet
+        -m bleu chrf --paired-bs --paired-bs-n 2000 --quiet
 +--------------------------------------------+-----------------------+------------------------+
 |                                     System |  BLEU / μ / ± 95% CI  |  chrF2 / μ / ± 95% CI  |
 +============================================+=======================+========================+
@@ -463,11 +458,11 @@ Metric signatures
 
 #### Example: Paired approximate randomization
 
-Let's now run the paired approximate randomization test for the same systems. According to the results, the findings are compatible with the paired bootstrap resampling test. However, the p-values here are much more higher (i.e. the test is much more confident that the deltas between the baseline and the FBK/KIT/online-B systems are due to chance). 
+Let's now run the paired approximate randomization test for the same systems. According to the results, the findings are compatible with the paired bootstrap resampling test. However, the p-values here are much more higher (i.e. the test is much more confident that the deltas between the baseline and the FBK/KIT/online-B systems are due to chance).
 
 ```
 $ sacrebleu -t wmt17 -l en-de -i newstest2017.LIUM-NMT.4900.en-de newstest2017.* \
-        -m bleu chrf --paired ar --quiet
+        -m bleu chrf --paired-ar --quiet
 +--------------------------------------------+---------------+---------------+
 |                                     System |     BLEU      |     chrF2     |
 +============================================+===============+===============+

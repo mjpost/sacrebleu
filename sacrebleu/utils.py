@@ -144,7 +144,7 @@ def print_results_table(results: dict, signatures: dict, args: Namespace):
         # Print fancy header
         print('-' * len(msg) + '\n' + msg + '\n' + '-' * len(msg))
         print(f' - Each system is pairwise compared to {bline_name}.')
-        if args.paired_bs or args.paired_ar_ci != -1:
+        if args.paired_bs:
             print('   Actual system score / bootstrap estimated true mean / 95% CI are provided for each metric.')
         else:
             print('   Actual system score is provided for each metric.')

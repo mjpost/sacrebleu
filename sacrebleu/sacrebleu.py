@@ -153,7 +153,7 @@ def parse_args():
     sign_args = arg_parser.add_argument_group('Confidence interval (CI) estimation for single-system evaluation')
     sign_args.add_argument('--confidence', '-ci', action='store_true',
                            help='Report confidence interval using bootstrap resampling.')
-    sign_args.add_argument('--confidence-n', '-cin', type=int, default=2000,
+    sign_args.add_argument('--confidence-n', '-cin', type=int, default=1000,
                            help='Set the number of bootstrap resamples for CI estimation (Default: %(default)s).')
 
     # Paired significance testing
@@ -167,14 +167,10 @@ def parse_args():
                                   help='Perform paired test using bootstrap resampling. This option is '
                                        'mutually exclusive with --paired-ar (Default: %(default)s).')
 
-    pair_args.add_argument('--paired-ar-n', '-part', type=int, default=10000,
+    pair_args.add_argument('--paired-ar-n', '-parn', type=int, default=10000,
                            help='Number of trials for approximate randomization test (Default: %(default)s).')
 
-    pair_args.add_argument('--paired-ar-ci', '-parci', action='store_true',
-                           help='If given, computes confidence interval for each system using bootstrap resampling '
-                                'in addition to the approximate randomization. The number of resamples is set to 2000.')
-
-    pair_args.add_argument('--paired-bs-n', '-pbsn', type=int, default=2000,
+    pair_args.add_argument('--paired-bs-n', '-pbsn', type=int, default=1000,
                            help='Number of bootstrap resamples for paired bootstrap resampling test (Default: %(default)s).')
 
     pair_args.add_argument('--paired-jobs', '-j', type=int, default=1,
@@ -548,13 +544,8 @@ def main():
             test_type = 'bs' if args.paired_bs else 'ar'
             n_samples = args.paired_bs_n if args.paired_bs else args.paired_ar_n
 
-            # If requested, report CI estimations as well with AR
-            # NOTE: For simplicity, # of bs resamples in this case is fixed to 2000
-            n_ar_confidence = 2000 if args.paired_ar_ci else -1
-
             ps = PairedTest(named_systems, metrics, references=None,
                             test_type=test_type, n_samples=n_samples,
-                            n_ar_confidence=n_ar_confidence,
                             n_jobs=args.paired_jobs)
 
             # Set back the number of trials
