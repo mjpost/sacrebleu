@@ -362,37 +362,31 @@ $ sacrebleu -t wmt17 -l en-de -i newstest2017.online-* -m bleu chrf -f latex
 
 ## Confidence Intervals for Single System Evaluation
 
-- When enabled with the `--confidence` flag, SacreBLEU will print
+When enabled with the `--confidence` flag, SacreBLEU will print
 (1) the actual system score, (2) the true mean estimated from bootstrap resampling and (3),
 the 95% [confidence interval](https://en.wikipedia.org/wiki/Confidence_interval) around the mean.
-
-- By default, the number of bootstrap resamples is 1000 (`bs:1000` in the signature)
-and can be changed with `--confidence-n`.
+By default, the number of bootstrap resamples is 1000 (`bs:1000` in the signature)
+and can be changed with `--confidence-n`:
 
 ```
-$ sacrebleu ref1 -i system -m bleu chrf --confidence -w 4 --short
-   BLEU|#:1|bs:1000|rs:12345|c:mixed|e:no|tok:13a|s:exp|v:2.0.0 = 44.5101 (μ = 44.5081 ± 0.724) <stripped>
-chrF2|#:1|bs:1000|rs:12345|c:mixed|e:yes|nc:6|nw:0|s:no|v:2.0.0 = 68.8338 (μ = 68.8337 ± 0.496)
-
-# Verify that the first numbers above are the actual scores
-$ sacrebleu/sacrebleu.py ref1 -i system -m bleu chrf -w 4 --score-only
-44.5101
-68.8338
+$ sacrebleu -t wmt17 -l en-de -i output.detok.txt -m bleu chrf --confidence -f text --short
+   BLEU|#:1|bs:1000|rs:12345|c:mixed|e:no|tok:13a|s:exp|v:2.0.0 = 22.675 (μ = 22.669 ± 0.598) ...
+chrF2|#:1|bs:1000|rs:12345|c:mixed|e:yes|nc:6|nw:0|s:no|v:2.0.0 = 51.953 (μ = 51.953 ± 0.462)
 ```
 
 **NOTE:** Although provided as a functionality, having access to confidence intervals for just one system
-may not reveal much information about the underlying model. It often makes much more sense to perform
+may not reveal much information about the underlying model. It often makes more sense to perform
 **paired statistical tests** using multiple systems.
 
-**NOTE:** For all the resampling functionality, the seed of the `numpy`'s random number generator (RNG)
-is fixed to `12345`. If you want to relax this and set your own seed, you can make this by
-exporting the environment variable `SACREBLEU_SEED` to an integer. Alternatively, you can export
+**NOTE:** When resampling, the seed of the `numpy`'s random number generator (RNG)
+is fixed to `12345`. If you want to relax this and set your own seed, you can
+export the environment variable `SACREBLEU_SEED` to an integer. Alternatively, you can export
 `SACREBLEU_SEED=None` to skip initializing the RNG's seed and allow for non-deterministic
 behavior.
 
-## Paired Significance Tests for Multi-system Evaluation
+## Paired Significance Tests for Multi System Evaluation
 Ideally, one would have access to many systems in cases such as (1) investigating
-whether a newly added feature yields significantly different scores than the system without that feature or
+whether a newly added feature yields significantly different scores than the baseline or
 (2) evaluating submissions for a particular shared task.
 
 SacreBLEU offers two different paired significance tests that are widely used in MT research.
@@ -401,9 +395,7 @@ SacreBLEU offers two different paired significance tests that are widely used in
 
 This is an efficient implementation of the paper [Statistical Significance Tests for Machine Translation Evaluation](https://www.aclweb.org/anthology/W04-3250.pdf) and is result-compliant with the [reference Moses implementation](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/analysis/bootstrap-hypothesis-difference-significance.pl). The number of bootstrap resamples can be changed with the `--paired-bs-n` flag and its default is 1000.
 
-When launched, paired bootstrap resampling will perform:
- - Bootstrap resampling to estimate 95% CI for all systems and the baseline
- - A significance test between the **baseline** and each **system** to compute a [p-value](https://en.wikipedia.org/wiki/P-value).
+When launched, paired bootstrap resampling will perform: (i) bootstrap resampling to estimate 95% CI for all systems and the baseline, (ii) a significance test between the **baseline** and each **system** to compute a [p-value](https://en.wikipedia.org/wiki/P-value).
 
 ### Paired approximate randomization (--paired-ar)
 
