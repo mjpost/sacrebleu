@@ -45,14 +45,24 @@ class Score:
         :param is_json: If `True`, will output the score in JSON string.
         :return: A plain or JSON-formatted string representation.
         """
-        d = {'name': self.name, 'score': float(f'{self.score:.{width}f}'), 'signature': signature}
+        d = {
+            'name': self.name,
+            'score': float(f'{self.score:.{width}f}'),
+            'signature': signature,
+        }
+
         sc = f'{self.score:.{width}f}'
 
         if self._mean > 0:
-            confidence_info = f'(μ = {self._mean:.{width}f} ± {self._ci:.{width}f})'
+            confidence_mean = f'{self._mean:.{width}f}'
+            confidence_var = f'{self._ci:.{width}f}'
+            confidence_str = f'μ = {confidence_mean} ± {confidence_var}'
 
-            sc += ' ' + confidence_info
-            d['confidence'] = confidence_info
+            sc += f' ({confidence_str})'
+            if is_json:
+                d['confidence_mean'] = float(confidence_mean)
+                d['confidence_var'] = float(confidence_var)
+                d['confidence'] = confidence_str
 
         # Construct full score line
         full_score = f"{self.name}|{signature}" if signature else self.name
