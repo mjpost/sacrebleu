@@ -8,13 +8,6 @@ SacreBLEU ([Post, 2018](http://aclweb.org/anthology/W18-6319)) provides hassle-f
 Inspired by Rico Sennrich's `multi-bleu-detok.perl`, it produces the official WMT scores but works with plain text.
 It also knows all the standard test sets and handles downloading, processing, and tokenization for you.
 
-In recent versions, sacreBLEU also provides:
-
-- Different tokenizers for BLEU including support for Japanese and Chinese
-- Support for **chrF, chrF++** and **Translation error rate (TER)** metrics
-- An object-oriented API for all metrics
-- Paired bootstrap resampling and approximate randomization tests for significance
-
 The official version is hosted at <https://github.com/mjpost/sacrebleu>.
 
 # Motivation
@@ -36,23 +29,24 @@ Sacre BLEU.
 - It automatically downloads common WMT test sets and processes them to plain text
 - It produces a short version string that facilitates cross-paper comparisons
 - It properly computes scores on detokenized outputs, using WMT ([Conference on Machine Translation](http://statmt.org/wmt17)) standard tokenization
-- It produces the same values as official script (`mteval-v13a.pl`) used by WMT
+- It produces the same values as the official script (`mteval-v13a.pl`) used by WMT
 - It outputs the BLEU score without the comma, so you don't have to remove it with `sed` (Looking at you, `multi-bleu.perl`)
+- It supports different tokenizers for BLEU including support for Japanese and Chinese
+- It supports **chrF, chrF++** and **Translation error rate (TER)** metrics
+- It performs paired bootstrap resampling and paired approximate randomization tests for statistical significance reporting
 
 # Breaking Changes
 
 ## v2.0.0
 
-As of v2.0.0, the default output format is `json` for the CLI utility. This means that software which assumes the old output format of `sacreBLEU`, will fail when parsing the scores. You can easily install and use the `jq` utility to parse the JSON-formatted
-`sacreBLEU` outputs:
+As of v2.0.0, the default output format is changed to `json` for less painful parsing experience. This means that software that parse the output of sacreBLEU should be modified to either (i) parse the JSON using for example the `jq` utility or (ii) pass `-f text` to sacreBLEU to preserve the old textual output. The latter change can also be made **persistently** by exporting `SACREBLEU_FORMAT=text` in relevant shell configuration files.
+
+Here's an example of parsing the `score` key of the JSON output using `jq`:
 
 ```
 $ sacrebleu -i system -t wmt17 -l en-de | jq -r '.score'
 20.8
 ```
-
-To preserve the old behavior, you can either pass `-f text` argument or export
-`SACREBLEU_FORMAT=text` environment variable for the setting to persist.
 
 # Installation
 
