@@ -376,7 +376,7 @@ chrF2|#:1|bs:1000|rs:12345|c:mixed|e:yes|nc:6|nw:0|s:no|v:2.0.0 = 51.953 (μ = 5
 
 **NOTE:** Although provided as a functionality, having access to confidence intervals for just one system
 may not reveal much information about the underlying model. It often makes more sense to perform
-**paired statistical tests** using multiple systems.
+**paired statistical tests** across multiple systems.
 
 **NOTE:** When resampling, the seed of the `numpy`'s random number generator (RNG)
 is fixed to `12345`. If you want to relax this and set your own seed, you can
@@ -387,15 +387,15 @@ behavior.
 ## Paired Significance Tests for Multi System Evaluation
 Ideally, one would have access to many systems in cases such as (1) investigating
 whether a newly added feature yields significantly different scores than the baseline or
-(2) evaluating submissions for a particular shared task.
-
-SacreBLEU offers two different paired significance tests that are widely used in MT research.
+(2) evaluating submissions for a particular shared task. SacreBLEU offers two different paired significance tests that are widely used in MT research.
 
 ### Paired bootstrap resampling (--paired-bs)
 
 This is an efficient implementation of the paper [Statistical Significance Tests for Machine Translation Evaluation](https://www.aclweb.org/anthology/W04-3250.pdf) and is result-compliant with the [reference Moses implementation](https://github.com/moses-smt/mosesdecoder/blob/master/scripts/analysis/bootstrap-hypothesis-difference-significance.pl). The number of bootstrap resamples can be changed with the `--paired-bs-n` flag and its default is 1000.
 
-When launched, paired bootstrap resampling will perform: (i) bootstrap resampling to estimate 95% CI for all systems and the baseline, (ii) a significance test between the **baseline** and each **system** to compute a [p-value](https://en.wikipedia.org/wiki/P-value).
+When launched, paired bootstrap resampling will perform:
+ - Bootstrap resampling to estimate 95% CI for all systems and the baseline
+ - A significance test between the **baseline** and each **system** to compute a [p-value](https://en.wikipedia.org/wiki/P-value).
 
 ### Paired approximate randomization (--paired-ar)
 
@@ -405,55 +405,48 @@ Our implementation is verified to be result-compliant with the [Multeval toolkit
 
 ### Running the tests
 
-- The **first system** provided to `--input/-i` will be automatically taken as the **baseline system** against which you want to compare the **other systems.**
-The systems will also be automatically named by the provided filename (more specifically, the `basename` of the filenames). (SacreBLEU will automatically discard the baseline system if it appears more than one time. This is a useful trick when you run the tool with something like the following: `-i systems/baseline.txt systems/*.txt`. Here, the `baseline.txt` file will not be also considered as a candidate system.)
-
-- A similar logic applies when tab-separated input file is redirected into SacreBLEU i.e. the first column hypotheses will be taken as the **baseline system**. However, this method is **not recommended** as it won't allow naming your systems in a human-readable way. It will instead enumerate them from 1 to N following the column order in the tab-separated input.
-
-- On Linux and Mac OS X, you can also launch the tests on multiple CPU's by passing the flag `--paired-jobs N`. If equals to 0, SacreBLEU will launch one worker for each pairwise comparison. If > 0, the number of worker processes in the pool will be `N`. This will substantially speed up the runtime especially if you ask **TER** to be computed.
+- The **first system** provided to `--input/-i` will be automatically taken as the **baseline system** against which you want to compare **other systems.**
+- When `--input/-i` is used, the system output files will be automatically named according to the file paths. For the sake of simplicity, SacreBLEU will automatically discard the **baseline system** if it also appears amongst **other systems**. This is useful if you would like to run the tool by passing `-i systems/baseline.txt systems/*.txt`. Here, the `baseline.txt` file will not be also considered as a candidate system.
+- Alternatively, you can also use a tab-separated input file redirected to SacreBLEU. In this case, the first column hypotheses will be taken as the **baseline system**. However, this method is **not recommended** as it won't allow naming your systems in a human-readable way. It will instead enumerate the systems from 1 to N following the column order in the tab-separated input.
+- On Linux and Mac OS X, you can launch the tests on multiple CPU's by passing the flag `--paired-jobs N`. If `N == 0`, SacreBLEU will launch one worker for each pairwise comparison. If `N > 0`, `N` worker processes will be spawned. This feature will substantially speed up the runtime especially if you want the **TER** metric to be computed.
 
 #### Example: Paired bootstrap resampling
-In the example below, we set `newstest2017.LIUM-NMT.4900.en-de` as the baseline and compare it to 5 other WMT17 submissions using paired bootstrap resampling. According to the results, the null hypothesis (i.e. the two systems being essentially the same) could not be rejected (at the significance level of 0.05) for the following comparisons:
+In the example below, we select `newstest2017.LIUM-NMT.4900.en-de` as the baseline and compare it to 4 other WMT17 submissions using paired bootstrap resampling. According to the results, the null hypothesis (i.e. the two systems being essentially the same) could not be rejected (at the significance level of 0.05) for the following comparisons:
 
-- 0.3 BLEU difference between the baseline and the FBK system (p = 0.0945)
-- 0.1 chrF2 difference between the baseline and the KIT system (p = 0.1089)
-- 0.1 BLEU difference between the baseline and the online-B system (p = 0.3073)
+- 0.1 BLEU difference between the baseline and the online-B system (p = 0.3077)
 
 ```
-$ sacrebleu -t wmt17 -l en-de -i newstest2017.LIUM-NMT.4900.en-de newstest2017.* \
-        -m bleu chrf --paired-bs --paired-bs-n 2000 --quiet
-+--------------------------------------------+-----------------------+------------------------+
-|                                     System |  BLEU / μ / ± 95% CI  |  chrF2 / μ / ± 95% CI  |
-+============================================+=======================+========================+
-| Baseline: newstest2017.LIUM-NMT.4900.en-de |  26.6 / 26.6 / 0.65   |   55.9 / 55.9 / 0.47   |
-+--------------------------------------------+-----------------------+------------------------+
-|                newstest2017.FBK.4870.en-de |  26.3 / 26.3 / 0.65   |   54.7 / 54.7 / 0.48   |
-|                                            |     (p = 0.0945)      |     (p = 0.0005)*      |
-+--------------------------------------------+-----------------------+------------------------+
-|                newstest2017.KIT.4950.en-de |  26.1 / 26.1 / 0.66   |   55.8 / 55.8 / 0.46   |
-|                                            |     (p = 0.0105)*     |      (p = 0.1089)      |
-+--------------------------------------------+-----------------------+------------------------+
-|              newstest2017.online-A.0.en-de |  20.8 / 20.8 / 0.59   |   52.0 / 52.0 / 0.43   |
-|                                            |     (p = 0.0005)*     |     (p = 0.0005)*      |
-+--------------------------------------------+-----------------------+------------------------+
-|              newstest2017.online-B.0.en-de |  26.7 / 26.7 / 0.67   |   56.3 / 56.3 / 0.45   |
-|                                            |     (p = 0.3073)      |     (p = 0.0240)*      |
-+--------------------------------------------+-----------------------+------------------------+
-|   newstest2017.PROMT-Rule-based.4735.en-de |  16.6 / 16.6 / 0.51   |   50.4 / 50.4 / 0.40   |
-|                                            |     (p = 0.0005)*     |     (p = 0.0005)*      |
-+--------------------------------------------+-----------------------+------------------------+
+$ sacrebleu -t wmt17 -l en-de -i newstest2017.LIUM-NMT.4900.en-de newstest2017.online-* -m bleu chrf --paired-bs
+╒════════════════════════════════════════════╤═════════════════════╤══════════════════════╕
+│                                     System │  BLEU (μ ± 95% CI)  │  chrF2 (μ ± 95% CI)  │
+╞════════════════════════════════════════════╪═════════════════════╪══════════════════════╡
+│ Baseline: newstest2017.LIUM-NMT.4900.en-de │  26.6 (26.6 ± 0.6)  │  55.9 (55.9 ± 0.5)   │
+├────────────────────────────────────────────┼─────────────────────┼──────────────────────┤
+│              newstest2017.online-A.0.en-de │  20.8 (20.8 ± 0.6)  │  52.0 (52.0 ± 0.4)   │
+│                                            │    (p = 0.0010)*    │    (p = 0.0010)*     │
+├────────────────────────────────────────────┼─────────────────────┼──────────────────────┤
+│              newstest2017.online-B.0.en-de │  26.7 (26.6 ± 0.7)  │  56.3 (56.3 ± 0.5)   │
+│                                            │    (p = 0.3077)     │    (p = 0.0240)*     │
+├────────────────────────────────────────────┼─────────────────────┼──────────────────────┤
+│              newstest2017.online-F.0.en-de │  15.5 (15.4 ± 0.5)  │  49.3 (49.3 ± 0.4)   │
+│                                            │    (p = 0.0010)*    │    (p = 0.0010)*     │
+├────────────────────────────────────────────┼─────────────────────┼──────────────────────┤
+│              newstest2017.online-G.0.en-de │  18.2 (18.2 ± 0.5)  │  51.6 (51.6 ± 0.4)   │
+│                                            │    (p = 0.0010)*    │    (p = 0.0010)*     │
+╘════════════════════════════════════════════╧═════════════════════╧══════════════════════╛
 
 ------------------------------------------------------------
-Paired bootstrap resampling test with 2000 resampling trials
+Paired bootstrap resampling test with 1000 resampling trials
 ------------------------------------------------------------
  - Each system is pairwise compared to Baseline: newstest2017.LIUM-NMT.4900.en-de.
-   Actual system score / estimated true mean / 95% CI are provided for each metric.
+   Actual system score / bootstrap estimated true mean / 95% CI are provided for each metric.
 
  - Null hypothesis: the system and the baseline translations are essentially
-   generated by the same underlying process. The p-value is roughly the probability
-   of the absolute score difference (delta) between a system and the {bline} occurring due to chance.
+   generated by the same underlying process. For a given system and the baseline,
+   the p-value is roughly the probability of the absolute score difference (delta)
+   or higher occurring due to chance, under the assumption that the null hypothesis is correct.
 
- - Assuming a significance threshold of 0.05, the Null hypothesis can be rejected
+ - Assuming a significance threshold of 0.05, the null hypothesis can be rejected
    for p-values < 0.05 (marked with "*"). This means that the delta is unlikely to be attributed
    to chance, hence the system is significantly "different" than the baseline.
    Otherwise, the p-values are highlighted in red.
@@ -464,39 +457,60 @@ Paired bootstrap resampling test with 2000 resampling trials
 -----------------
 Metric signatures
 -----------------
- - BLEU       nrefs:1|bs:2000|seed:12345|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0
- - chrF2      nrefs:1|bs:2000|seed:12345|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0
+ - BLEU       nrefs:1|bs:1000|seed:12345|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0
+ - chrF2      nrefs:1|bs:1000|seed:12345|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0
 ```
 
 #### Example: Paired approximate randomization
 
-Let's now run the paired approximate randomization test for the same systems. According to the results, the findings are compatible with the paired bootstrap resampling test. However, the p-values here are much more higher (i.e. the test is much more confident that the deltas between the baseline and the FBK/KIT/online-B systems are due to chance).
+Let's now run the paired approximate randomization test for the same comparison. According to the results, the findings are compatible with the paired bootstrap resampling test. However, the p-value for the `baseline vs. online-B` comparison is much higher (`0.8066`) than the paired bootstrap resampling test.
+
+(**Note that** the AR test does not provide confidence intervals around the true mean as it does not perform bootstrap resampling.)
 
 ```
-$ sacrebleu -t wmt17 -l en-de -i newstest2017.LIUM-NMT.4900.en-de newstest2017.* \
-        -m bleu chrf --paired-ar --quiet
-+--------------------------------------------+---------------+---------------+
-|                                     System |     BLEU      |     chrF2     |
-+============================================+===============+===============+
-| Baseline: newstest2017.LIUM-NMT.4900.en-de |     26.6      |     55.9      |
-+--------------------------------------------+---------------+---------------+
-|                newstest2017.FBK.4870.en-de |     26.3      |     54.7      |
-|                                            | (p = 0.1887)  | (p = 0.0001)* |
-+--------------------------------------------+---------------+---------------+
-|                newstest2017.KIT.4950.en-de |     26.1      |     55.8      |
-|                                            | (p = 0.0193)* | (p = 0.2511)  |
-+--------------------------------------------+---------------+---------------+
-|              newstest2017.online-A.0.en-de |     20.8      |     52.0      |
-|                                            | (p = 0.0001)* | (p = 0.0001)* |
-+--------------------------------------------+---------------+---------------+
-|              newstest2017.online-B.0.en-de |     26.7      |     56.3      |
-|                                            | (p = 0.8066)  | (p = 0.0385)* |
-+--------------------------------------------+---------------+---------------+
-|   newstest2017.PROMT-Rule-based.4735.en-de |     16.6      |     50.4      |
-|                                            | (p = 0.0001)* | (p = 0.0001)* |
-+--------------------------------------------+---------------+---------------+
+$ sacrebleu -t wmt17 -l en-de -i newstest2017.LIUM-NMT.4900.en-de newstest2017.online-* -m bleu chrf --paired-ar
+╒════════════════════════════════════════════╤═══════════════╤═══════════════╕
+│                                     System │     BLEU      │     chrF2     │
+╞════════════════════════════════════════════╪═══════════════╪═══════════════╡
+│ Baseline: newstest2017.LIUM-NMT.4900.en-de │     26.6      │     55.9      │
+├────────────────────────────────────────────┼───────────────┼───────────────┤
+│              newstest2017.online-A.0.en-de │     20.8      │     52.0      │
+│                                            │ (p = 0.0001)* │ (p = 0.0001)* │
+├────────────────────────────────────────────┼───────────────┼───────────────┤
+│              newstest2017.online-B.0.en-de │     26.7      │     56.3      │
+│                                            │ (p = 0.8066)  │ (p = 0.0385)* │
+├────────────────────────────────────────────┼───────────────┼───────────────┤
+│              newstest2017.online-F.0.en-de │     15.5      │     49.3      │
+│                                            │ (p = 0.0001)* │ (p = 0.0001)* │
+├────────────────────────────────────────────┼───────────────┼───────────────┤
+│              newstest2017.online-G.0.en-de │     18.2      │     51.6      │
+│                                            │ (p = 0.0001)* │ (p = 0.0001)* │
+╘════════════════════════════════════════════╧═══════════════╧═══════════════╛
 
- <stripped>
+-------------------------------------------------------
+Paired approximate randomization test with 10000 trials
+-------------------------------------------------------
+ - Each system is pairwise compared to Baseline: newstest2017.LIUM-NMT.4900.en-de.
+   Actual system score is provided for each metric.
+
+ - Null hypothesis: the system and the baseline translations are essentially
+   generated by the same underlying process. For a given system and the baseline,
+   the p-value is roughly the probability of the absolute score difference (delta)
+   or higher occurring due to chance, under the assumption that the null hypothesis is correct.
+
+ - Assuming a significance threshold of 0.05, the null hypothesis can be rejected
+   for p-values < 0.05 (marked with "*"). This means that the delta is unlikely to be attributed
+   to chance, hence the system is significantly "different" than the baseline.
+   Otherwise, the p-values are highlighted in red.
+
+ - NOTE: Significance does not tell whether a system is "better" than the baseline but rather
+   emphasizes the "difference" of the systems in terms of the replicability of the delta.
+
+-----------------
+Metric signatures
+-----------------
+ - BLEU       nrefs:1|ar:10000|seed:12345|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0
+ - chrF2      nrefs:1|ar:10000|seed:12345|case:mixed|eff:yes|nc:6|nw:0|space:no|version:2.0.0
 ```
 
 # Using SacreBLEU from Python
