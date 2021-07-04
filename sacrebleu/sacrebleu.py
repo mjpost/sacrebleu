@@ -141,9 +141,9 @@ def parse_args():
     # TER related arguments
     ter_args = arg_parser.add_argument_group("TER related arguments (The defaults replicate TERCOM's behavior)")
     ter_args.add_argument('--ter-case-sensitive', action='store_true',
-                          help='Enables case sensitivity (Default: %(default)s)')
+                          help='Enables case sensitivity. (Default: %(default)s)')
     ter_args.add_argument('--ter-asian-support', action='store_true',
-                          help='Enables special treatment of Asian characters (Default: %(default)s)')
+                          help='Enables special treatment of Asian characters. (Default: %(default)s)')
     ter_args.add_argument('--ter-no-punct', action='store_true',
                           help='Removes punctuation. (Default: %(default)s)')
     ter_args.add_argument('--ter-normalized', action='store_true',
