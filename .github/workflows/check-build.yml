@@ -9,12 +9,9 @@ jobs:
     steps:
     - name: update
       run: sudo apt-get -y update
-    - name: setup
-      run: python3 setup.py install
     - name: install pytest-cov
       run: pip install pytest-cov
-    - name: install
-      run: pip install .[ja]
+    - usees: actions/checkout@v1
     - name: pytest
       run: python3 -m pytest
     - name: test
