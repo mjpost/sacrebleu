@@ -13,9 +13,9 @@ jobs:
       run: pip install pytest-cov
     - uses: actions/checkout@v1
     - name: install
-      run: python3 setup.py install
+      run: sudo python3 setup.py install
     - name: install-ja
-      run: pip install .[ja]
+      run: sudo pip install .[ja]
     - name: pytest
       run: python3 -m pytest
     - name: test
