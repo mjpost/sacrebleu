@@ -12,6 +12,8 @@ jobs:
     - name: install pytest-cov
       run: pip install pytest-cov
     - uses: actions/checkout@v1
+    - name: install
+      run: python3 setup.py install
     - name: pytest
       run: python3 -m pytest
     - name: test
