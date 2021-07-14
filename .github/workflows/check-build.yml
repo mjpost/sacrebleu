@@ -11,7 +11,7 @@ jobs:
       run: sudo apt-get -y update
     - name: install pytest-cov
       run: pip install pytest-cov
-    - usees: actions/checkout@v1
+    - uses: actions/checkout@v1
     - name: pytest
       run: python3 -m pytest
     - name: test
