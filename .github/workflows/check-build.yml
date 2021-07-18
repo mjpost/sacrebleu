@@ -8,9 +8,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # os: [ubuntu-latest, macos-latest, windows-latest]
-        os: [ubuntu-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.6, 3.9]
+        # python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
       - name: update
         run: sudo apt-get -y update
@@ -19,7 +19,15 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+      - if: matrix.os == 'macos-latest'
+        name: Install Mac OS requirements
+        run: brew install bash
+      - if: matrix.os == 'windows-latest'
+        name: Install Windows requirements
+        run: choco install wget unzip
+        env:
+          PYTHONUTF8: 1
+      - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pytest-cov
