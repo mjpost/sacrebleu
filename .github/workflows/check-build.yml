@@ -1,0 +1,22 @@
+name: check-build
+
+on:
+  pull_request
+
+jobs:
+  check-build:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: update
+      run: sudo apt-get -y update
+    - name: install pytest-cov
+      run: pip install pytest-cov
+    - uses: actions/checkout@v1
+    - name: install
+      run: sudo python3 setup.py install
+    - name: install-ja
+      run: sudo pip install .[ja]
+    - name: pytest
+      run: python3 -m pytest
+    - name: test
+      run: ./test.sh
