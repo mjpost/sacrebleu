@@ -12,8 +12,8 @@ jobs:
         python-version: [3.6, 3.9]
         # python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
-      - name: update
-        run: sudo apt-get -y update
+      # - name: update
+      #  run: sudo apt-get -y update
       - uses: actions/checkout@v2
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
