@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-class NoneTokenizer:
+class BaseTokenizer:
     """A base dummy tokenizer to derive from."""
 
     def signature(self):

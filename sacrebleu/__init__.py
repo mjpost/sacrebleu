@@ -14,22 +14,18 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__version__ = '1.5.1'
+__version__ = '2.0.0'
 __description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU, chrF, and TER scores'
 
 
-from .utils import smart_open, SACREBLEU_DIR, download_test_set
-from .utils import get_source_file, get_reference_files
-from .utils import get_available_testsets, get_langpairs_for_testset
-from .dataset import DATASETS
-from .tokenizers import TOKENIZERS, DEFAULT_TOKENIZER
-from .metrics import BLEU, CHRF
+from .utils import smart_open, SACREBLEU_DIR, download_test_set  # noqa: F401
+from .utils import get_source_file, get_reference_files  # noqa: F401
+from .utils import get_available_testsets, get_langpairs_for_testset  # noqa: F401
+from .metrics.helpers import extract_word_ngrams, extract_char_ngrams  # noqa: F401
+from .dataset import DATASETS  # noqa: F401
+from .metrics import BLEU, CHRF, TER  # noqa: F401
 
 # Backward compatibility functions for old style API access (<= 1.4.10)
-from .compat import *
-
-# Other shorthands for backward-compatibility with <= 1.4.10
-extract_ngrams = BLEU.extract_ngrams
-extract_char_ngrams = CHRF.extract_char_ngrams
-ref_stats = BLEU.reference_stats
-compute_bleu = BLEU.compute_bleu
+from .compat import corpus_bleu, raw_corpus_bleu, sentence_bleu  # noqa: F401
+from .compat import corpus_chrf, sentence_chrf  # noqa: F401
+from .compat import corpus_ter, sentence_ter  # noqa: F401

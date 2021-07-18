@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
+from functools import lru_cache
+from .tokenizer_base import BaseTokenizer
 
-from .tokenizer_none import NoneTokenizer
 
-
-class TokenizerChar(NoneTokenizer):
+class TokenizerChar(BaseTokenizer):
     def signature(self):
         return 'char'
 
     def __init__(self):
         pass
 
+    @lru_cache(maxsize=None)
     def __call__(self, line):
         """Tokenizes all the characters in the input line.
 

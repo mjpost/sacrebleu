@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
-
-from .tokenizer_none import NoneTokenizer
+from functools import lru_cache
+from .tokenizer_base import BaseTokenizer
 from .tokenizer_re import TokenizerRegexp
 
 
-class Tokenizer13a(NoneTokenizer):
+class Tokenizer13a(BaseTokenizer):
 
     def signature(self):
         return '13a'
@@ -12,6 +11,7 @@ class Tokenizer13a(NoneTokenizer):
     def __init__(self):
         self._post_tokenizer = TokenizerRegexp()
 
+    @lru_cache(maxsize=None)
     def __call__(self, line):
         """Tokenizes an input line using a relatively minimal tokenization
         that is however equivalent to mteval-v13a, used by WMT.
@@ -24,10 +24,11 @@ class Tokenizer13a(NoneTokenizer):
         line = line.replace('<skipped>', '')
         line = line.replace('-\n', '')
         line = line.replace('\n', ' ')
-        line = line.replace('&quot;', '"')
-        line = line.replace('&amp;', '&')
-        line = line.replace('&lt;', '<')
-        line = line.replace('&gt;', '>')
 
-        line = " {} ".format(line)
-        return self._post_tokenizer(line)
+        if '&' in line:
+            line = line.replace('&quot;', '"')
+            line = line.replace('&amp;', '&')
+            line = line.replace('&lt;', '<')
+            line = line.replace('&gt;', '>')
+
+        return self._post_tokenizer(f' {line} ')
