@@ -63,7 +63,7 @@ def parse_args():
         description='sacreBLEU: Hassle-free computation of shareable BLEU scores.\n'
                     'Quick usage: score your detokenized output against WMT\'14 EN-DE:\n'
                     '    cat output.detok.de | sacrebleu -t wmt14 -l en-de',
-        epilog='\n\033[93m You are using v{v} from {f}\033[0m'.format(v=VERSION, f=__file__),
+        epilog=f'\n\033[93m You are using v{VERSION} from {__file__}\033[0m',
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     arg_parser.add_argument('--citation', '--cite', default=False, action='store_true',
@@ -95,7 +95,8 @@ def parse_args():
 
     # Metric selection
     arg_parser.add_argument('--metrics', '-m', choices=METRICS.keys(), nargs='+', default=['bleu'],
-                            metavar='METRIC', help='Metrics to compute. Known metrics: {known} (default: bleu)'.format(known=list(METRICS)))
+                            metavar='METRIC',
+                            help=f'Metrics to compute. Known metrics: {list(METRICS)} (default: bleu)')
     arg_parser.add_argument('--sentence-level', '-sl', action='store_true', help='Output metric on each sentence.')
 
     # BLEU-related arguments

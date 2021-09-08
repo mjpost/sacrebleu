@@ -17,7 +17,7 @@
 This work is based on:
   Macro-average: Rare Types Are Important Too
     Gowda et al (NAACL 2021)
-    TODO: update the link to paper
+    https://aclanthology.org/2021.naacl-main.90/
 """
 
 import copy
@@ -76,15 +76,19 @@ class ClassMeasure(BaseScore):
             beta = float(measure_name[1:])
             return self.f_measure(beta=beta)
         else:
-            raise Exception('Unknown measure name : {m}'.format(m=measure_name))
+            raise Exception(f'Unknown measure name : {measure_name}')
+
+    def __str__(self):
+        return f'ClassMeasure[{self.name}, pred/cor/ref={self.preds}/{self.correct}/{self.refs} ' \
+               f'P/R/F1={self.precision:g}/{self.recall:g}/{self.f1:g}]'
 
     def format(self, width=4, score_only=False, signature='') -> str:
         if score_only:
-            return '{score:.{width}f}'.format(score=self.score, width=width)
+            return f'{self.score:.{width}f}'
         prefix = self.name
         if signature:
-            prefix += str(signature)
-        return '{prefix} {score:.{width}f}'.format(prefix=prefix, score=self.score, width=width)
+            prefix += f'+{signature}'
+        return f'{prefix} {self.score:.{width}f}'
 
 AVG_TYPES = {
     'macro': lambda _: 1,
@@ -163,8 +167,7 @@ class MultiClassMeasure(BaseScore):
         def format_class_stat(class_: ClassMeasure):
             row = [" ".join(class_.name).ljust(ljust), f"{class_.score * scaler:.{width}f}"]
             row += [str(x) for x in [class_.refs, class_.preds, class_.correct]]
-            row += ['{score:.{width}f}'.format(score=class_.measure(measure_name=x) * scaler,
-                                               width=width)
+            row += [f'{class_.measure(measure_name=x) * scaler:.{width}f}'
                     for x in 'f1 precision recall'.split()]
             return delim.join(row)
 
@@ -250,8 +253,7 @@ class ClassifierEval(BLEU):
         assert self.max_order == 1  # only unigrams are used for now; n > 1 is for future work
         self.smooth_value = args.smooth_value
         self.f_beta = override_args.get('f_beta', args.f_beta)
-        assert args.average in AVG_TYPES, '{a} is invalid; use:{l}'.format(
-            a=args.average, l=list(AVG_TYPES.keys()))
+        assert args.average in AVG_TYPES, f'{args.average} is invalid; use:{list(AVG_TYPES.keys())}'
         self.average = args.average
         self.weight_func = AVG_TYPES[args.average]
 
