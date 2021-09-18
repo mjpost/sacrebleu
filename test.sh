@@ -56,6 +56,7 @@ SKIP_TER=${SKIP_TER:-}
 SKIP_MECAB=${SKIP_MECAB:-}
 SKIP_MTEVAL13=${SKIP_MTEVAL13:-}
 SKIP_MTEVAL14=${SKIP_MTEVAL14:-}
+SKIP_MACROF=${SKIP_MACROF:-}
 
 # test case counter
 declare -i i=0
@@ -863,14 +864,16 @@ zh-en,xmunmt.5160,33.5,53.8"
 if [ -z $SKIP_MACROF ]; then
   wmt17dir=wmt17-submitted-data/txt/system-outputs/newstest2017
   echo "$MACF1_WMT17" |
-    # shuf | head -30 |   # running random 30 tests only
+    # shuf | head -30 |   # uncomment to run random 30 tests only
     tr ',' ' ' |
     while read pair name macf1_tru micf1_tru; do
       hyp=$wmt17dir/$pair/newstest2017.$name.$pair
+      
+      if [[ ! -z $limit_test && "$limit_test" != "$pair $name" ]]; then continue; fi
+
       #for chinese, use chinese tokenizer
       [[ "$pair" =~ .*-zh ]] && tokr='--tokenize zh' || tokr=''
       macf1_got=$(${CMD} -m macrof -l $pair -t wmt17 -b $tokr < $hyp)
-
       python -c "import sys; sys.exit(1 if abs(${macf1_got}-${macf1_tru}) > 0.01 else 0)"
       if [[ $? -eq 1 ]]; then
           echo "FAILED MacroF1 test $hyp (wanted ${macf1_tru} got $macf1_got)"
