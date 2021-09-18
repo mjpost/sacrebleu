@@ -862,6 +862,9 @@ zh-en,uedin-nmt.5112,33.8,53.4
 zh-en,xmunmt.5160,33.5,53.8"
 
 if [ -z $SKIP_MACROF ]; then
+  echo "----------------------------"
+  echo "Testing MacroF1 and MicroF1"
+  echo "----------------------------"
   wmt17dir=wmt17-submitted-data/txt/system-outputs/newstest2017
   echo "$MACF1_WMT17" |
     # shuf | head -30 |   # uncomment to run random 30 tests only
@@ -889,9 +892,7 @@ if [ -z $SKIP_MACROF ]; then
       echo "Pass: wmt17/$pair/$name MacroF1: $macf1_got == $macf1_tru || MicroF1 $micf1_got == $micf1_tru"
       let i++
     done
-  ####=============
-
-  echo "Passed $i tests."
-  exit 0
-
 fi
+####=============
+echo "Passed $i tests."
+exit 0
