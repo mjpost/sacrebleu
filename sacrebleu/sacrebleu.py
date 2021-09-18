@@ -38,7 +38,7 @@ if __package__ is None and __name__ == '__main__':
     __package__ = 'sacrebleu'
 
 from .dataset import DATASETS
-from .metrics import METRICS
+from .metrics import METRICS, ClassifierEval
 from .utils import smart_open, filter_subset, get_langpairs_for_testset, get_available_testsets
 from .utils import print_test_set, print_subset_results, get_reference_files, download_test_set
 from .utils import args_to_dict, sanity_check_lengths, print_results_table, print_single_results
@@ -149,6 +149,16 @@ def parse_args():
     ter_args.add_argument('--ter-normalized', action='store_true',
                           help='Applies basic normalization and tokenization. (Default: %(default)s)')
 
+    fmeas_args = arg_parser.add_argument_group("MacroF and MicroF related arguments (the defaults replicate Gowda et al NAACL 2021)")
+    fmeas_args.add_argument('--f-beta', type=int, default=ClassifierEval.DEF_F_BETA,
+                           help='Determine the importance of recall w.r.t precision. (Default: %(default)s)')
+    fmeas_args.add_argument('--f-lowercase', action='store_true', default=False,
+                           help='Enable case-insensitivity. (Default: %(default)s)')
+    fmeas_args.add_argument('--f-tokenize', choices=ClassifierEval.TOKENIZERS, default=None,
+                           help='Tokenization method to use for Macro and MicroF, same as BLEU --tokenize. (Default: %(default)s)')
+    fmeas_args.add_argument('--f-smooth-value', type=float, default=ClassifierEval.DEF_SMOOTH_VAL,
+            help='The smoothing value. only add-k smoothing method is supported for MacroF and MicroF (Default: %(default)s)')
+
     # Bootstrap resampling for confidence intervals
     sign_args = arg_parser.add_argument_group('Confidence interval (CI) estimation for single-system evaluation')
     sign_args.add_argument('--confidence', '-ci', action='store_true',
@@ -197,6 +207,8 @@ def parse_args():
                              help='Set the output format. `latex` is only valid for multi-system mode whereas '
                                   '`json` and `text` apply to single-system mode only. This flag is overridden if the '
                                   'SACREBLEU_FORMAT environment variable is set to one of the valid choices (Default: %(default)s).')
+    report_args.add_argument('--report-file', help="Write a performance breakdown to this file." +
+                             "Supported metrics: macrof, microf")
 
     arg_parser.add_argument('--version', '-V', action='version', version='%(prog)s {}'.format(VERSION))
 
@@ -309,6 +321,7 @@ def main():
     # select the tokenizer based on it
     if args.langpair:
         args.bleu_trg_lang = args.langpair.split('-')[1]
+        args.f_trg_lang = args.bleu_trg_lang
 
     if args.test_set is not None and args.bleu_tokenize == 'none':
         sacrelogger.warning(
@@ -472,7 +485,10 @@ def main():
         # Each metric's specific arguments are prefixed with `metricname_`
         # for grouping. Filter accordingly and strip the prefixes prior to
         # metric object construction.
-        metric_args = args_to_dict(args, name.lower(), strip_prefix=True)
+        prefix = name
+        if name.lower() in ('macrof', 'microf'):
+            prefix = 'f'
+        metric_args = args_to_dict(args, prefix=prefix, strip_prefix=True)
 
         # This will cache reference stats for faster re-computation if required
         metric_args['references'] = refs
@@ -514,6 +530,9 @@ def main():
             results.append(
                 score.format(args.width, args.score_only, sig, args.format == 'json'))
 
+            if args.report_file and getattr(score, 'write_report', None):
+                file = args.report_file + (f'.{name}.tsv' if len(metrics) > 1 else '')
+                score.write_report(file)
         print_single_results(results, args)
 
         # Prints detailed information for translationese effect experiments
