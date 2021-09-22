@@ -176,14 +176,16 @@ class MultiClassMeasure(Score):
                      len_ratio=round(self.hyp_len / self.ref_len, max(width, 3)) if self.ref_len else -1,
                      hyp_len=self.hyp_len,
                      ref_len=self.ref_len)
+        verbose_score = ' '.join(f'{k} = {v}' for k, v in extra.items())
         if score_only:
             pass
         elif is_json:
             res = json.loads(res)
             res.update(extra)
+            res['verbose_score'] = verbose_score
             res = json.dumps(res, indent=1, ensure_ascii=False)
         else:
-            res += ' ' + ' '.join(f'{k} = {v}' for k, v in extra.items())
+            res += ' ' + verbose_score
         return res
 
     def write_report(self, path):
