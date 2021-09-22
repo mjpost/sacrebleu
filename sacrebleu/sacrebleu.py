@@ -149,13 +149,10 @@ def parse_args():
     ter_args.add_argument('--ter-normalized', action='store_true',
                           help='Applies basic normalization and tokenization. (Default: %(default)s)')
 
-    fmeas_args = arg_parser.add_argument_group("MacroF and MicroF related arguments (the defaults replicate Gowda et al NAACL 2021)")
+    fmeas_args = arg_parser.add_argument_group("MacroF and MicroF related arguments (the defaults replicate Gowda et al NAACL 2021).\
+                        --tokenize, --force, and --lowercase options are same as BLEU")
     fmeas_args.add_argument('--f-beta', type=int, default=ClassifierEval.DEF_F_BETA,
                            help='Determine the importance of recall w.r.t precision. (Default: %(default)s)')
-    fmeas_args.add_argument('--f-lowercase', action='store_true', default=False,
-                           help='Enable case-insensitivity. (Default: %(default)s)')
-    fmeas_args.add_argument('--f-tokenize', choices=ClassifierEval.TOKENIZERS, default=None,
-                           help='Tokenization method to use for Macro and MicroF, same as BLEU --tokenize. (Default: %(default)s)')
     fmeas_args.add_argument('--f-smooth-value', type=float, default=ClassifierEval.DEF_SMOOTH_VAL,
             help='The smoothing value. only add-k smoothing method is supported for MacroF and MicroF (Default: %(default)s)')
 
@@ -213,6 +210,11 @@ def parse_args():
     arg_parser.add_argument('--version', '-V', action='version', version='%(prog)s {}'.format(VERSION))
 
     args = arg_parser.parse_args()
+
+    # Reuse CLI BLEU for F-measures
+    args.f_tokenize = args.bleu_tokenize
+    args.f_lowercase = args.bleu_lowercase
+    args.f_force = args.bleu_force
 
     # Override the format from the environment, if any
     if 'SACREBLEU_FORMAT' in os.environ:
