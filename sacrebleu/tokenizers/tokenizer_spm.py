@@ -3,9 +3,11 @@
 import os
 import urllib.request
 
-from .tokenizer_none import NoneTokenizer
+from functools import lru_cache
+from .tokenizer_base import BaseTokenizer
 
-class TokenizerSPM(NoneTokenizer):
+
+class TokenizerSPM(BaseTokenizer):
     def signature(self):
         return 'spm'
 
@@ -23,6 +25,7 @@ class TokenizerSPM(NoneTokenizer):
             urllib.request.urlretrieve(url, 'sacrebleu_tokenizer_spm.model')
         self.sp.Load("sacrebleu_tokenizer_spm.model")
 
+    @lru_cache(maxsize=None)
     def __call__(self, line):
         """Tokenizes all the characters in the input line.
 
