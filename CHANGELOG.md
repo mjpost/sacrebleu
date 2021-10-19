@@ -1,5 +1,8 @@
 # Release Notes
 
+- 2.0.1 (2021-XX-XX)
+  - Handle potential memory usage issues due to LRU caching in tokenizers (#167)
+
 - 2.0.0 (2021-07-XX)
   - Build: Add Windows and OS X testing to Travis CI.
   - Improve documentation and type annotations.

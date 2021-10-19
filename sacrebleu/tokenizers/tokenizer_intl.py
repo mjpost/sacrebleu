@@ -42,7 +42,7 @@ class TokenizerV14International(BaseTokenizer):
             (regex.compile(r'(\p{S})'), r' \1 '),
         ]
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2**16)
     def __call__(self, line: str) -> str:
         for (_re, repl) in self._re:
             line = _re.sub(repl, line)
