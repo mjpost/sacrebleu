@@ -30,7 +30,7 @@ class TokenizerJaMecab(BaseTokenizer):
         # This asserts that no user dictionary has been loaded
         assert d.next is None
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2**16)
     def __call__(self, line):
         """
         Tokenizes an Japanese input line using MeCab morphological analyzer.

@@ -136,7 +136,7 @@ class TercomTokenizer(BaseTokenizer):
         self._asian_support = asian_support
         self._case_sensitive = case_sensitive
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2**16)
     # Although the cache is shared across different instances, same sentence
     # queries do not return invalid returns across different instances since
     # `self` becomes part of the query as well.

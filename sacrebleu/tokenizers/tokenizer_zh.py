@@ -78,7 +78,7 @@ class TokenizerZh(BaseTokenizer):
         self._post_tokenizer = TokenizerRegexp()
 
     @staticmethod
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2**16)
     def _is_chinese_char(uchar):
         """
         :param uchar: input char in unicode
@@ -89,7 +89,7 @@ class TokenizerZh(BaseTokenizer):
                 return True
         return False
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2**16)
     def __call__(self, line):
         """The tokenization of Chinese text in this script contains two
         steps: separate each Chinese characters (by utf-8 encoding); tokenize

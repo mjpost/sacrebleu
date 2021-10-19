@@ -11,7 +11,7 @@ class Tokenizer13a(BaseTokenizer):
     def __init__(self):
         self._post_tokenizer = TokenizerRegexp()
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2**16)
     def __call__(self, line):
         """Tokenizes an input line using a relatively minimal tokenization
         that is however equivalent to mteval-v13a, used by WMT.
