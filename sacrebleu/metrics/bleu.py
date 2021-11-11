@@ -300,7 +300,9 @@ class BLEU(Metric):
             total=stats[2 + self.max_ngram_order:],
             sys_len=int(stats[0]), ref_len=int(stats[1]),
             smooth_method=self.smooth_method, smooth_value=self.smooth_value,
-            effective_order=self.effective_order)
+            effective_order=self.effective_order,
+            max_ngram_order=self.max_ngram_order
+        )
 
     def _aggregate_and_compute(self, stats: List[List[int]]) -> BLEUScore:
         """Computes the final BLEU score given the pre-computed corpus statistics.
