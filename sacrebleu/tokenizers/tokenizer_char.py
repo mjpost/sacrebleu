@@ -9,7 +9,7 @@ class TokenizerChar(BaseTokenizer):
     def __init__(self):
         pass
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2**16)
     def __call__(self, line):
         """Tokenizes all the characters in the input line.
 
