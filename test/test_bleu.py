@@ -133,3 +133,19 @@ def test_degenerate_statistics(statistics, offset, expected_score):
         statistics[2],
         smooth_method='floor', smooth_value=offset).score / 100
     assert score == expected_score
+
+
+test_bleu_max_order = [
+    (1, _hyps, _refs, "77.65"),
+    (2, _hyps, _refs, "60.50"),
+    (3, _hyps, _refs, "53.93"),
+    (4, _hyps, _refs, "48.53"),
+    (5, _hyps, _refs, "46.14"),
+    (6, _hyps, _refs, "43.28"),
+]
+
+
+@pytest.mark.parametrize("order, hyps, refs, expected_bleu", test_bleu_max_order)
+def test_max_ngram_order(order, hyps, refs, expected_bleu):
+    bleu = BLEU(max_ngram_order=order).corpus_score(hyps, refs)
+    assert f"{bleu.score:.2f}" == expected_bleu

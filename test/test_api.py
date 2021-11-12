@@ -28,7 +28,6 @@ test_api_get_data = [
 def test_api_get_source(testset, langpair, sentno, source, reference):
     with open(get_source_file(testset, langpair)) as fh:
         line = fh.readlines()[sentno - 1].strip()
-
         assert line == source
 
 
