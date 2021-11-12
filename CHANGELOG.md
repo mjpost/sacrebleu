@@ -1,9 +1,10 @@
 # Release Notes
 
-- 2.0.1 (2021-XX-XX)
+- 2.0.1 (TBD)
   - Handle potential memory usage issues due to LRU caching in tokenizers (#167)
+  - Bugfix: BLEU.corpus_score() now using max_ngram_order (#173)
 
-- 2.0.0 (2021-07-XX)
+- 2.0.0 (2021-07-18)
   - Build: Add Windows and OS X testing to Travis CI.
   - Improve documentation and type annotations.
   - Drop `Python < 3.6` support and migrate to f-strings.

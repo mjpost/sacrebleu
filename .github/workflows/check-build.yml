@@ -33,7 +33,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest-cov
+          pip install pytest
           pip install .[ja]
       - name: Python pytest test suite
         run: python3 -m pytest
