@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import os
+import logging
 import urllib.request
 
 from functools import lru_cache
-from ..utils import SACREBLEU_DIR
+from ..utils import SACREBLEU_DIR, download_file
 from .tokenizer_base import BaseTokenizer
+
+sacrelogger = logging.getLogger('sacrebleu')
 
 
 class TokenizerSPM(BaseTokenizer):
@@ -22,10 +25,10 @@ class TokenizerSPM(BaseTokenizer):
             )
         self.sp = spm.SentencePieceProcessor()
 
-        tokenizer_path = os.path.join(SACREBLEU_DIR, "sacrebleu_tokenizer_spm.model")
+        tokenizer_path = os.path.join(SACREBLEU_DIR, "models", "flores_sacrebleu_tokenizer_spm.model")
         if not os.path.exists(tokenizer_path):
             url = "https://dl.fbaipublicfiles.com/fairseq/models/flores/sacrebleu_tokenizer_spm.model"
-            urllib.request.urlretrieve(url, tokenizer_path)
+            download_file(url, tokenizer_path)
         self.sp.Load(tokenizer_path)
 
     @lru_cache(maxsize=None)
