@@ -247,6 +247,7 @@ but it expects that you pass through the entire translated test set.
    - `intl` applies international tokenization and mimics the `mteval-v14` script from Moses
    - `zh` separates out **Chinese** characters and tokenizes the non-Chinese parts using `13a` tokenizer
    - `ja-mecab` tokenizes **Japanese** inputs using the [MeCab](https://pypi.org/project/mecab-python3) morphological analyzer
+   - `spm` uses the SentencePiece model built from the Flores-101 dataset (https://github.com/facebookresearch/flores#list-of-languages). Note: the canonical .spm file will be automatically fetched if not found locally.
 - You can switch tokenizers using the `--tokenize` flag of sacreBLEU. Alternatively, if you provide language-pair strings
   using `--language-pair/-l`, `zh` and `ja-mecab` tokenizers will be used if the target language is `zh` or `ja`, respectively.
 - **Note that** there's no automatic language detection from the hypotheses so you need to make sure that you are correctly

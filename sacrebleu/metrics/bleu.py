@@ -22,6 +22,7 @@ _TOKENIZERS = {
     'intl': 'tokenizer_intl.TokenizerV14International',
     'char': 'tokenizer_char.TokenizerChar',
     'ja-mecab': 'tokenizer_ja_mecab.TokenizerJaMecab',
+    'spm': 'tokenizer_spm.TokenizerSPM',
 }
 
 
@@ -132,7 +133,7 @@ class BLEU(Metric):
         'exp': None,    # No value is required
     }
 
-    TOKENIZERS = ['none', 'zh', '13a', 'char', 'intl', 'ja-mecab']
+    TOKENIZERS = ['none', 'zh', '13a', 'char', 'intl', 'ja-mecab', 'spm']
 
     # mteval-v13a.pl tokenizer unless Chinese or Japanese is provided
     TOKENIZER_DEFAULT = '13a'
