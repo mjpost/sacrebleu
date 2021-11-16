@@ -2,7 +2,8 @@
 
 - 2.1.0 (TBD)
   Features:
-  - Added `-tok spm` for multilingual SPM tokenization (thanks to James Cross / Facebook)
+  - Added `-tok spm` for multilingual SPM tokenization
+    (thanks to Naman Goyal and James Cross at Facebook)
 
   Fixes:
   - Handle potential memory usage issues due to LRU caching in tokenizers (#167)
