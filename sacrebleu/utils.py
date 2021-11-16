@@ -5,11 +5,11 @@ import gzip
 import math
 import hashlib
 import logging
+import portalocker
 from collections import defaultdict
 from typing import List, Optional, Sequence, Dict
 from argparse import Namespace
 
-import portalocker
 from tabulate import tabulate
 import colorama
 
@@ -399,6 +399,74 @@ def get_files(test_set, langpair) -> List[str]:
     return all_files
 
 
+def extract_tarball(filepath, destdir):
+    sacrelogger.info(f'Extracting {filepath} to {destdir}')
+    if filepath.endswith('.tar.gz') or filepath.endswith('.tgz'):
+        import tarfile
+        with tarfile.open(filepath) as tar:
+            tar.extractall(path=destdir)
+    elif filepath.endswith('.zip'):
+        import zipfile
+        with zipfile.ZipFile(filepath, 'r') as zipfile:
+            zipfile.extractall(path=destdir)
+
+
+def check_md5sum(dest_path, expected_md5):
+    # Check md5sum
+    if expected_md5 is not None:
+        md5 = hashlib.md5()
+        with open(dest_path, 'rb') as infile:
+            for line in infile:
+                md5.update(line)
+            cur_md5 = md5.hexdigest()
+        if cur_md5 != expected_md5:
+            sacrelogger.error(f'Fatal: MD5 sum of downloaded file was incorrect (got {cur_md5}, expected {expected_md5}).')
+            sacrelogger.error(f'Please manually delete {tarball!r} and rerun the command.')
+            sacrelogger.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
+            sys.exit(1)
+        else:
+            sacrelogger.info(f'Checksum passed: {cur_md5}')
+
+
+def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
+    """Downloading utility.
+
+    Downloads the specified test to the system location specified by the SACREBLEU environment variable.
+
+    :param source_path: the remote uri to download
+    :param dest_path: where to save the file
+    :param extract_to: for tarballs, where to extract to
+    :param expected_md5: the MD5 sum
+    :return: the set of processed file names
+    """
+    import urllib.request
+    import ssl
+
+    outdir = os.path.dirname(dest_path)
+    os.makedirs(outdir, exist_ok=True)
+
+    lockfile = os.path.join(outdir, f'{os.path.basename(dest_path)}.lock')
+    with portalocker.Lock(lockfile, 'w', timeout=60):
+        if os.path.exists(dest_path):
+            check_md5sum(dest_path, expected_md5)
+        else:
+            sacrelogger.info(f"Downloading {source_path} to {dest_path}")
+            try:
+                with urllib.request.urlopen(source_path) as f, open(dest_path, 'wb') as out:
+                    out.write(f.read())
+            except ssl.SSLError:
+                sacrelogger.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
+                                    'you may need to run the "Install Certificates.command" file located in the '
+                                    '"Python 3" folder, often found under /Applications')
+                sys.exit(1)
+
+            check_md5sum(dest_path, expected_md5)
+
+            # Extract the tarball
+            if extract_to is not None:
+                extract_tarball(dest_path, extract_to)
+
+
 def download_test_set(test_set, langpair=None):
     """Downloads the specified test to the system location specified by the SACREBLEU environment variable.
 
@@ -406,12 +474,8 @@ def download_test_set(test_set, langpair=None):
     :param langpair: the language pair (needed for some datasets)
     :return: the set of processed file names
     """
-
     if test_set not in DATASETS:
         raise Exception(f"No such test set {test_set}")
-
-    import urllib.request
-    import ssl
 
     outdir = os.path.join(SACREBLEU_DIR, test_set)
     os.makedirs(outdir, exist_ok=True)
@@ -421,44 +485,7 @@ def download_test_set(test_set, langpair=None):
         tarball = os.path.join(outdir, os.path.basename(dataset))
         rawdir = os.path.join(outdir, 'raw')
 
-        lockfile = f'{tarball}.lock'
-        with portalocker.Lock(lockfile, 'w', timeout=60):
-            if not os.path.exists(tarball) or os.path.getsize(tarball) == 0:
-                sacrelogger.info(f"Downloading {dataset} to {tarball}")
-                try:
-                    with urllib.request.urlopen(dataset) as f, open(tarball, 'wb') as out:
-                        out.write(f.read())
-                except ssl.SSLError:
-                    sacrelogger.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
-                                        'you may need to run the "Install Certificates.command" file located in the '
-                                        '"Python 3" folder, often found under /Applications')
-                    sys.exit(1)
-
-                # Check md5sum
-                if expected_md5 is not None:
-                    md5 = hashlib.md5()
-                    with open(tarball, 'rb') as infile:
-                        for line in infile:
-                            md5.update(line)
-                    cur_md5 = md5.hexdigest()
-                    if cur_md5 != expected_md5:
-                        sacrelogger.error(f'Fatal: MD5 sum of downloaded file was incorrect (got {cur_md5}, expected {expected_md5}).')
-                        sacrelogger.error(f'Please manually delete {tarball!r} and rerun the command.')
-                        sacrelogger.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
-                        sys.exit(1)
-                    else:
-                        sacrelogger.info(f'Checksum passed: {cur_md5}')
-
-                # Extract the tarball
-                sacrelogger.info(f'Extracting {tarball}')
-                if tarball.endswith('.tar.gz') or tarball.endswith('.tgz'):
-                    import tarfile
-                    with tarfile.open(tarball) as tar:
-                        tar.extractall(path=rawdir)
-                elif tarball.endswith('.zip'):
-                    import zipfile
-                    with zipfile.ZipFile(tarball, 'r') as zipfile:
-                        zipfile.extractall(path=rawdir)
+        download_file(dataset, tarball, extract_to=rawdir, expected_md5=expected_md5)
 
     file_paths = []
 
