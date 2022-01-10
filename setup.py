@@ -151,7 +151,8 @@ setup(
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-    extras_require={'ja': ['mecab-python3==1.0.3', 'ipadic>=1.0,<2.0']},
+    extras_require={'ja': ['mecab-python3==1.0.3', 'ipadic>=1.0,<2.0'],
+                    'ko': ['mecab-ko==0.0.1a1', 'mecab-ko-dic>=1.0,<2.0']},
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow

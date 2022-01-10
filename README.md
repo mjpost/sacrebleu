@@ -59,6 +59,11 @@ following command instead, to perform a full installation with dependencies:
 
     pip install sacrebleu[ja]
 
+In order to install Korean tokenizer support through `pymecab-ko`, you need to run the
+following command instead, to perform a full installation with dependencies:
+
+    pip install sacrebleu[ko]
+
 # Command-line Usage
 
 You can get a list of available test sets with `sacrebleu --list`. Please see [DATASETS.md](DATASETS.md)
@@ -194,8 +199,8 @@ BLEU related arguments:
                         Smoothing method: exponential decay, floor (increment zero counts), add-k (increment num/denom by k for n>1), or none. (Default: exp)
   --smooth-value BLEU_SMOOTH_VALUE, -sv BLEU_SMOOTH_VALUE
                         The smoothing value. Only valid for floor and add-k. (Defaults: floor: 0.1, add-k: 1)
-  --tokenize {none,zh,13a,char,intl,ja-mecab}, -tok {none,zh,13a,char,intl,ja-mecab}
-                        Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `ja-mecab` for Japanese and `13a` (mteval) otherwise.
+  --tokenize {none,zh,13a,char,intl,ja-mecab,ko-mecab}, -tok {none,zh,13a,char,intl,ja-mecab,ko-mecab}
+                        Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `ja-mecab` for Japanese, `ko-mecab` for Korean and `13a` (mteval) otherwise.
   --lowercase, -lc      If True, enables case-insensitivity. (Default: False)
   --force               Insist that your tokenized input is actually detokenized.
 
@@ -247,11 +252,12 @@ but it expects that you pass through the entire translated test set.
    - `intl` applies international tokenization and mimics the `mteval-v14` script from Moses
    - `zh` separates out **Chinese** characters and tokenizes the non-Chinese parts using `13a` tokenizer
    - `ja-mecab` tokenizes **Japanese** inputs using the [MeCab](https://pypi.org/project/mecab-python3) morphological analyzer
+   - `ko-mecab` tokenizes **Korean** inputs using the [MeCab-ko](https://pypi.org/project/mecab-ko) morphological analyzer
    - `spm` uses the SentencePiece model built from the Flores-101 dataset (https://github.com/facebookresearch/flores#list-of-languages). Note: the canonical .spm file will be automatically fetched if not found locally.
 - You can switch tokenizers using the `--tokenize` flag of sacreBLEU. Alternatively, if you provide language-pair strings
-  using `--language-pair/-l`, `zh` and `ja-mecab` tokenizers will be used if the target language is `zh` or `ja`, respectively.
+  using `--language-pair/-l`, `zh`, `ja-mecab` and `ko-mecab` tokenizers will be used if the target language is `zh` or `ja` or `ko`, respectively.
 - **Note that** there's no automatic language detection from the hypotheses so you need to make sure that you are correctly
-  selecting the tokenizer for **Japanese** and **Chinese**.
+  selecting the tokenizer for **Japanese**, **Korean** and **Chinese**.
 
 
 Default 13a tokenizer will produce poor results for Japanese:
