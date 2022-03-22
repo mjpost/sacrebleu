@@ -57,7 +57,7 @@ Install the official Python module from PyPI (**Python>=3.6 only**):
 In order to install Japanese tokenizer support through `mecab-python3`, you need to run the
 following command instead, to perform a full installation with dependencies:
 
-    pip install sacrebleu[ja]
+    pip install "sacrebleu[ja]"
 
 # Command-line Usage
 
