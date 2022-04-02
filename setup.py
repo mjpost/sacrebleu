@@ -146,6 +146,10 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['portalocker', 'regex', 'tabulate>=0.8.9', 'numpy>=1.17', 'colorama'],
+    # Sometimes you’ll want to use packages that are properly arranged with setuptools,
+    # but aren’t published to PyPI. In those cases, you can specify a list of one or more dependency_links URLs where the package can be downloaded,
+    # along with some additional hints, and setuptools will find and install the package correctly.
+    dependency_links=['https://github.com/wmt-conference/wmt-format-tools.git'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

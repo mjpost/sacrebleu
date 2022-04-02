@@ -10,6 +10,7 @@ from collections import defaultdict
 from typing import List, Optional, Sequence, Dict
 from argparse import Namespace
 
+from wmtformat import unwrap
 from tabulate import tabulate
 import colorama
 
@@ -274,13 +275,14 @@ def args_to_dict(args, prefix: str, strip_prefix: bool = False):
     return d
 
 
-def process_to_text(rawfile, txtfile, field: int = None):
+def process_to_text(rawfile, txtfile, field: int = None, translator: str = 'A'):
     """Processes raw files to plain text files. Can handle SGML, XML, TSV files, and plain text.
     Called after downloading datasets.
 
     :param rawfile: the input file (possibly SGML)
     :param txtfile: the plaintext file
-    :param field: For TSV files, which field to extract.
+    :param field: For TSV files and XML files from wmt21 or later, which field to extract.
+    :param translator: For files from wmt21 or later, many files have multiple translators. This param determines which one to use.
     """
     def _clean(s):
         """
@@ -298,6 +300,17 @@ def process_to_text(rawfile, txtfile, field: int = None):
                 for line in fin:
                     if line.startswith('<seg '):
                         print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
+        # wmt21 or later, use WMT Format Tools to process
+        # view details at https://github.com/wmt-conference/wmt-format-tools
+        elif re.match(r'.*[a-z]{2}-[a-z]{2}.xml', rawfile):
+            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
+                _, src, _, ref, _, _ = unwrap(fin)
+                if field == 0:
+                    for line in src:
+                        print(line.rstrip(), file=fout)
+                else:
+                    for line in ref[translator]:
+                        print(line.rstrip(), file=fout)
         # IWSLT
         elif rawfile.endswith('.xml'):
             with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
@@ -509,12 +522,15 @@ def download_test_set(test_set, langpair=None):
             if ref.endswith('.tsv'):
                 field, ref = ref.split(':', maxsplit=1)
                 field = int(field)
+            translator = ''
+            if re.match(r'.*[a-z]{2}-[a-z]{2}.xml', rawfile):
+                translator = 'A' if i == 0 else 'B'
             rawpath = os.path.join(rawdir, ref)
             if len(refs) >= 2:
                 outpath = os.path.join(outdir, f'{pair}.{tgt}.{i}')
             else:
                 outpath = os.path.join(outdir, f'{pair}.{tgt}')
-            process_to_text(rawpath, outpath, field=field)
+            process_to_text(rawpath, outpath, field=field, translator=translator)
             file_paths.append(outpath)
 
     return file_paths
