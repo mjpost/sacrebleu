@@ -90,6 +90,15 @@ DATASETS = {
         'en-ru': ['test/newstest2021.en-ru.xml', 'test/newstest2021.en-ru.xml', 'test/newstest2021.en-ru.xml'],
         'ru-en': ['test/newstest2021.ru-en.xml', 'test/newstest2021.ru-en.xml', 'test/newstest2021.ru-en.xml'],
     },
+    "wmt21/dev": {
+        'data': ['http://data.statmt.org/wmt21/translation-task/dev.tgz'],
+        'description': 'Development data for WMT21',
+        'md5': ['165da59ac8dfb5b7cafd7e90b1cac672'],
+        "en-ha": ['dev/xml/newsdev2021.en-ha.xml', 'dev/xml/newsdev2021.en-ha.xml'],
+        "ha-en": ['dev/xml/newsdev2021.ha-en.xml', 'dev/xml/newsdev2021.ha-en.xml'],
+        "en-is": ['dev/xml/newsdev2021.en-is.xml', 'dev/xml/newsdev2021.en-is.xml'],
+        "is-en": ['dev/xml/newsdev2021.is-en.xml', 'dev/xml/newsdev2021.is-en.xml'],
+    },
     "wmt20/robust/set1": {
         "data": ["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
         'description': "WMT20 robustness task, set 1",
