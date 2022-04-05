@@ -10,7 +10,7 @@ from collections import defaultdict
 from typing import List, Optional, Sequence, Dict
 from argparse import Namespace
 
-from wmtformat import unwrap
+import lxml.etree as ET
 from tabulate import tabulate
 import colorama
 
@@ -275,7 +275,7 @@ def args_to_dict(args, prefix: str, strip_prefix: bool = False):
     return d
 
 
-def process_to_text(rawfile, txtfile, field: int = None, translator: str = 'A'):
+def process_to_text(rawfile, txtfile, field: int = None, translator: str = "src"):
     """Processes raw files to plain text files. Can handle SGML, XML, TSV files, and plain text.
     Called after downloading datasets.
 
@@ -283,6 +283,7 @@ def process_to_text(rawfile, txtfile, field: int = None, translator: str = 'A'):
     :param txtfile: the plaintext file
     :param field: For TSV files and XML files from wmt21 or later, which field to extract.
     :param translator: For files from wmt21 or later, many files have multiple translators. This param determines which one to use.
+                       'src' means use the source text, "first" means use the first one, 'A', 'B', etc. for the different translator.
     """
     def _clean(s):
         """
@@ -293,6 +294,63 @@ def process_to_text(rawfile, txtfile, field: int = None, translator: str = 'A'):
         """
         return re.sub(r'\s+', ' ', s.strip())
 
+    def _unwrap_wmt21_or_later(raw_file, translator_name):
+        """
+        Unwraps the XML file from wmt21 or later.
+        This script is adapted from https://github.com/wmt-conference/wmt-format-tools
+        """
+        tree = ET.parse(raw_file)
+        # Find and check  the documents (src, ref, hyp)
+        src_langs, ref_langs, translators = set(), set(), set()
+        for src_doc in tree.getroot().findall(".//src"):
+            src_langs.add(src_doc.get("lang"))
+
+        for ref_doc in tree.getroot().findall(".//ref"):
+            ref_langs.add(ref_doc.get("lang"))
+            translator = ref_doc.get("translator")
+            translators.add(translator)
+
+        assert len(src_langs) == 1, f"Multiple source languages found in the file: {raw_file}"
+        assert len(ref_langs) == 1, f"Multiple reference languages found in the file: {raw_file}"
+        src = []
+
+        ref = {translator: [] for translator in translators}
+
+        src_sent_count,doc_count = 0,0
+        for doc in tree.getroot().findall(".//doc"):
+            doc_count += 1
+            src_sents = {int(seg.get("id")): seg.text for seg in doc.findall(".//src//seg")}
+            def get_sents(doc):
+                return {int(seg.get("id")): seg.text if seg.text else ""  for seg in doc.findall(f".//seg")}
+
+            ref_docs = doc.findall(".//ref")
+
+            trans_to_ref  = {ref_doc.get("translator"): get_sents(ref_doc) for ref_doc in ref_docs}
+            
+            for seg_id in sorted(src_sents.keys()):
+                # no ref translation is avaliable for this segment
+                if not any([value.get(seg_id, "") for value in trans_to_ref.values()]):
+                    continue
+                for translator in translators:
+                    ref[translator].append(trans_to_ref.get(translator, {translator: {}}).get(seg_id, ""))
+                src.append(src_sents[seg_id])
+                src_sent_count += 1
+            
+        if translator_name == "src":
+            return src
+        elif translator_name == "first":
+            # take the first translation as the reference
+            joint_ref = []
+            for key in sorted(ref.keys(), key=lambda x: str(x)):  # sort by translator name. None, "A", "B", etc.
+                for i, sent in enumerate(ref[key]):
+                    if i >= len(joint_ref):
+                        joint_ref.append(sent)
+                    elif not joint_ref[i]:
+                        joint_ref[i] = sent
+            return joint_ref
+        else:
+            return ref[translator_name]
+
     if not os.path.exists(txtfile) or os.path.getsize(txtfile) == 0:
         sacrelogger.info(f"Processing {rawfile} to {txtfile}")
         if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
@@ -300,17 +358,12 @@ def process_to_text(rawfile, txtfile, field: int = None, translator: str = 'A'):
                 for line in fin:
                     if line.startswith('<seg '):
                         print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
-        # wmt21 or later, use WMT Format Tools to process
-        # view details at https://github.com/wmt-conference/wmt-format-tools
-        elif re.match(r'.*[a-z]{2}-[a-z]{2}.xml', rawfile):
+        # wmt21 or later, special xml format used
+        elif re.match(r'.*(news|flores)(dev|test)20[2-9][1-9]\.[a-z]{2}-[a-z]{2}.xml', rawfile):
             with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                _, src, _, ref, _, _ = unwrap(fin)
-                if field == 0:
-                    for line in src:
-                        print(line.rstrip(), file=fout)
-                else:
-                    for line in ref[translator]:
-                        print(line.rstrip(), file=fout)
+                lines = _unwrap_wmt21_or_later(fin, translator)
+                for line in lines:
+                    print(line.rstrip(), file=fout)
         # IWSLT
         elif rawfile.endswith('.xml'):
             with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
@@ -511,6 +564,13 @@ def download_test_set(test_set, langpair=None):
         if rawfile.endswith('.tsv'):
             field, rawfile = rawfile.split(':', maxsplit=1)
             field = int(field)
+
+        translator = "first"  # use for wmt21 or later
+        if re.match(r'.*(news|flores)(dev|test)20[2-9][1-9]\.[a-z]{2}-[a-z]{2}.xml', rawfile):
+            tmp = rawfile.split(':', maxsplit=1)
+            if len(tmp) == 2:
+                translator, rawfile = tmp
+
         rawpath = os.path.join(rawdir, rawfile)
         outpath = os.path.join(outdir, f'{pair}.{src}')
         process_to_text(rawpath, outpath, field=field)
@@ -522,9 +582,10 @@ def download_test_set(test_set, langpair=None):
             if ref.endswith('.tsv'):
                 field, ref = ref.split(':', maxsplit=1)
                 field = int(field)
-            translator = ''
-            if re.match(r'.*[a-z]{2}-[a-z]{2}.xml', rawfile):
-                translator = 'A' if i == 0 else 'B'
+            if re.match(r'.*(news|flores)(dev|test)20[2-9][1-9]\.[a-z]{2}-[a-z]{2}.xml', rawfile):
+                tmp = ref.split(':', maxsplit=1)
+                if len(tmp) == 2:
+                    translator, ref = tmp
             rawpath = os.path.join(rawdir, ref)
             if len(refs) >= 2:
                 outpath = os.path.join(outdir, f'{pair}.{tgt}.{i}')
