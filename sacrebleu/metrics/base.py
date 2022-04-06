@@ -126,7 +126,7 @@ class Signature:
         }
 
         if 'num_refs' not in args:
-            raise RuntimeError(
+            raise ValueError(
                 'Number of references unknown, please evaluate the metric first.')
 
         num_refs = args['num_refs']
@@ -224,7 +224,7 @@ class Metric(metaclass=ABCMeta):
             err_msg = 'Each element of `refs` should be a string.'
 
         if err_msg:
-            raise RuntimeError(f'{prefix}: {err_msg}')
+            raise TypeError(f'{prefix}: {err_msg}')
 
     def _check_corpus_score_args(self, hyps: Sequence[str],
                                  refs: Optional[Sequence[Sequence[str]]]):
@@ -255,7 +255,7 @@ class Metric(metaclass=ABCMeta):
                 err_msg = "`refs` should be a sequence of sequence of strings."
 
         if err_msg:
-            raise RuntimeError(f'{prefix}: {err_msg}')
+            raise TypeError(f'{prefix}: {err_msg}')
 
     @abstractmethod
     def _aggregate_and_compute(self, stats: List[List[Any]]) -> Any:
