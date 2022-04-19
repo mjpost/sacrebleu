@@ -15,6 +15,79 @@
 # permissions and limitations under the License.
 
 
+class Dataset:
+    def __init__(self, **kwargs):
+        """
+        Params come from the values in DATASETS.
+        """
+        pass
+
+    def fieldnames(self) -> List[str]:
+        """
+        Return a list of all the field names. For most source, this is just
+        the source and the reference. For others, it might include the document
+        ID for each line, or the original language (origLang).
+
+        get_files() should return the same number of items as this.
+        """
+        raise NotImplementedException()
+
+    def __iter__(self):
+        """
+        Iterates over all fields (source, references, and other metadata) defined
+        by the dataset.
+        """
+        raise NotImplementedException()
+
+    def source(self):
+        """
+        Return an iterable over the source lines.
+        """
+        raise NotImplementedException()
+
+    def references(self):
+        """
+        Return an iterable over the references.
+        """
+        raise NotImplementedException()
+
+    def get_source_file(self):
+        """
+        """
+        raise NotImplementedException()
+
+    def get_files(self):
+        """
+        """
+        raise NotImplementedException()
+
+
+class WMTXMLDataset(Dataset):
+    """
+    The 2021+ WMT dataset format. Everything is contained in a single file.
+    Can be parsed with the lxml parser.
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+class FakeSGMLDataset(Dataset):
+    """
+    The fake SGML format used by WMT prior to 2021. Can't be properly parsed.
+    Source and reference(s) in separate files.
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+class TSVDataset(Dataset):
+    """
+    The format used by the MTNT datasets. Data is in a single TSV file.
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
 # This defines data locations.
 # At the top level are test sets.
 # Beneath each test set, we define the location to download the test data.
