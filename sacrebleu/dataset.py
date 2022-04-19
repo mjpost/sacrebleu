@@ -16,11 +16,26 @@
 
 
 class Dataset:
-    def __init__(self, **kwargs):
+    def __init__(self,
+                 name,
+                 data=None,
+                 description=None,
+                 citation=None,
+                 md5=None,
+                 langpairs=None,
+                 **kwargs):
         """
         Params come from the values in DATASETS.
         """
-        pass
+        self.name = name
+        self.data = data
+        self.description = description
+        self.citation = citation
+        self.md5 = md5
+        self.langpairs = langpairs
+
+        # Don't do any downloading or further processing now.
+        # Only do that lazily, when asked.
 
     def is_downloaded(self):
         """
@@ -115,25 +130,26 @@ class TSVDataset(Dataset):
 # Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
 # The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
 DATASETS = {
-    "mtedx/valid": {
-        "data": ['https://raw.githubusercontent.com/esalesky/mtedx-eval/main/valid.tar.gz'],
-        "description": 'mTEDx evaluation data, valid: http://openslr.org/100',
-        "citation": "@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
-        "md5": ['40618171614c50e6cbb5e5bbceee0635'],
-        "el-en": ['valid/mtedx-valid-elen.el', 'valid/mtedx-valid-elen.en'],
-        "es-en": ['valid/mtedx-valid-esen.es', 'valid/mtedx-valid-esen.en'],
-        "es-fr": ['valid/mtedx-valid-esfr.es', 'valid/mtedx-valid-esfr.fr'],
-        "es-it": ['valid/mtedx-valid-esit.es', 'valid/mtedx-valid-esit.it'],
-        "es-pt": ['valid/mtedx-valid-espt.es', 'valid/mtedx-valid-espt.pt'],
-        "fr-en": ['valid/mtedx-valid-fren.fr', 'valid/mtedx-valid-fren.en'],
-        "fr-es": ['valid/mtedx-valid-fres.fr', 'valid/mtedx-valid-fres.es'],
-        "fr-pt": ['valid/mtedx-valid-frpt.fr', 'valid/mtedx-valid-frpt.pt'],
-        "it-en": ['valid/mtedx-valid-iten.it', 'valid/mtedx-valid-iten.en'],
-        "it-es": ['valid/mtedx-valid-ites.it', 'valid/mtedx-valid-ites.es'],
-        "pt-en": ['valid/mtedx-valid-pten.pt', 'valid/mtedx-valid-pten.en'],
-        "pt-es": ['valid/mtedx-valid-ptes.pt', 'valid/mtedx-valid-ptes.es'],
-        "ru-en": ['valid/mtedx-valid-ruen.ru', 'valid/mtedx-valid-ruen.en']
-    },
+    "mtedx/valid": FakeSGMLDataset("mtedx/valid",
+                                   data=['https://raw.githubusercontent.com/esalesky/mtedx-eval/main/valid.tar.gz'],
+                                   description='mTEDx evaluation data, valid: http://openslr.org/100',
+                                   citation="@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
+                                   md5=['40618171614c50e6cbb5e5bbceee0635'],
+                                   langpairs={
+                                       "el-en": ['valid/mtedx-valid-elen.el', 'valid/mtedx-valid-elen.en'],
+                                       "es-en": ['valid/mtedx-valid-esen.es', 'valid/mtedx-valid-esen.en'],
+                                       "es-fr": ['valid/mtedx-valid-esfr.es', 'valid/mtedx-valid-esfr.fr'],
+                                       "es-it": ['valid/mtedx-valid-esit.es', 'valid/mtedx-valid-esit.it'],
+                                       "es-pt": ['valid/mtedx-valid-espt.es', 'valid/mtedx-valid-espt.pt'],
+                                       "fr-en": ['valid/mtedx-valid-fren.fr', 'valid/mtedx-valid-fren.en'],
+                                       "fr-es": ['valid/mtedx-valid-fres.fr', 'valid/mtedx-valid-fres.es'],
+                                       "fr-pt": ['valid/mtedx-valid-frpt.fr', 'valid/mtedx-valid-frpt.pt'],
+                                       "it-en": ['valid/mtedx-valid-iten.it', 'valid/mtedx-valid-iten.en'],
+                                       "it-es": ['valid/mtedx-valid-ites.it', 'valid/mtedx-valid-ites.es'],
+                                       "pt-en": ['valid/mtedx-valid-pten.pt', 'valid/mtedx-valid-pten.en'],
+                                       "pt-es": ['valid/mtedx-valid-ptes.pt', 'valid/mtedx-valid-ptes.es'],
+                                       "ru-en": ['valid/mtedx-valid-ruen.ru', 'valid/mtedx-valid-ruen.en']
+                                   }),
     "mtedx/test": {
         "data": ['https://raw.githubusercontent.com/esalesky/mtedx-eval/main/test.tar.gz'],
         "description": 'mTEDx evaluation data, test: http://openslr.org/100',
