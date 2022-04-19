@@ -314,19 +314,25 @@ def process_to_text(rawfile, txtfile, field: int = None, translator: str = "src"
         assert len(ref_langs) == 1, f"Multiple reference languages found in the file: {raw_file}"
         src = []
 
-        ref = {translator: [] for translator in translators}
+        ref = { translator: [] for translator in translators }
 
-        src_sent_count,doc_count = 0,0
+        src_sent_count, doc_count = 0, 0
         for doc in tree.getroot().findall(".//doc"):
+            docid = doc.attrib["id"]
+
+            # Skip the testsuite
+            if "testsuite" in doc.attrib:
+                continue
+
             doc_count += 1
-            src_sents = {int(seg.get("id")): seg.text for seg in doc.findall(".//src//seg")}
+            src_sents = { int(seg.get("id")): seg.text for seg in doc.findall(".//src//seg") }
             def get_sents(doc):
-                return {int(seg.get("id")): seg.text if seg.text else ""  for seg in doc.findall(f".//seg")}
+                return { int(seg.get("id")): seg.text if seg.text else ""  for seg in doc.findall(f".//seg") }
 
             ref_docs = doc.findall(".//ref")
 
-            trans_to_ref  = {ref_doc.get("translator"): get_sents(ref_doc) for ref_doc in ref_docs}
-            
+            trans_to_ref  = { ref_doc.get("translator"): get_sents(ref_doc) for ref_doc in ref_docs }
+
             for seg_id in sorted(src_sents.keys()):
                 # no ref translation is avaliable for this segment
                 if not any([value.get(seg_id, "") for value in trans_to_ref.values()]):
@@ -335,7 +341,7 @@ def process_to_text(rawfile, txtfile, field: int = None, translator: str = "src"
                     ref[translator].append(trans_to_ref.get(translator, {translator: {}}).get(seg_id, ""))
                 src.append(src_sents[seg_id])
                 src_sent_count += 1
-            
+
         if translator_name == "src":
             return src
         elif translator_name == "first":
