@@ -22,6 +22,26 @@ class Dataset:
         """
         pass
 
+    def is_downloaded(self):
+        """
+        If the dataset isn't downloaded, use utils/download_file()
+        This can be implemented here in the base class. It should write
+        to ~/.sacreleu/DATASET/raw exactly as it does now.
+
+        :return: True if the file has already been downloaded.
+        """
+        raise NotImplementedException()
+
+    def process_to_text(self):
+        """
+        Class method that essentially does what utils/process_to_text() does.
+
+        This should be implemented by subclasses. Note: process_to_text should write the
+        fields in a different format: ~/.sacrebleu/DATASET/DATASET.LANGPAIR.FIELDNAME
+        (instead of the current ~/.sacrebleu/DATASET/LANGPAIR.{SRC,REF})
+        """
+        raise NotImplementedException()
+
     def fieldnames(self) -> List[str]:
         """
         Return a list of all the field names. For most source, this is just
