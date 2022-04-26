@@ -23,7 +23,7 @@ class TokenizerKoMecab(BaseTokenizer):
             raise RuntimeError(FAIL_MESSAGE)
         self.tagger = MeCab.Tagger(mecab_ko_dic.MECAB_ARGS + " -Owakati")
 
-        # make sure the dictionary is IPA
+        # make sure the dictionary is mecab-ko-dic
         d = self.tagger.dictionary_info()
         assert d.size == 811795, \
             "Please make sure to use the mecab-ko-dic for MeCab-ko"
