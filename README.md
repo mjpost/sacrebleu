@@ -62,7 +62,7 @@ following command instead, to perform a full installation with dependencies:
 In order to install Korean tokenizer support through `pymecab-ko`, you need to run the
 following command instead, to perform a full installation with dependencies:
 
-    pip install sacrebleu[ko]
+    pip install "sacrebleu[ko]"
 
 # Command-line Usage
 
