@@ -13,7 +13,7 @@ class TSVDataset(Dataset):
 TSV_DATASETS = {
     "mtnt2019": TSVDataset(
         "mtnt2019",
-        data=["http://www.cs.cmu.edu/~pmichel1/hosting/MTNT2019.tar.gz"],
+        data=["https://pmichel31415.github.io/hosting/MTNT2019.tar.gz"],
         description="Test set for the WMT 19 robustness shared task",
         md5=["78a672e1931f106a8549023c0e8af8f6"],
         langpairs={
