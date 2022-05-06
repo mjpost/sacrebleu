@@ -10,6 +10,51 @@ class FakeSGMLDataset(Dataset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def process_to_text(self):
+        """
+        Class method that essentially does what utils/process_to_text() does.
+
+        This should be implemented by subclasses. Note: process_to_text should write the
+        fields in a different format: ~/.sacrebleu/DATASET/DATASET.LANGPAIR.FIELDNAME
+        (instead of the current ~/.sacrebleu/DATASET/LANGPAIR.{SRC,REF})
+        """
+        pass
+
+    def fieldnames(self):
+        """
+        Return a list of all the field names. For most source, this is just
+        the source and the reference. For others, it might include the document
+        ID for each line, or the original language (origLang).
+
+        get_files() should return the same number of items as this.
+        """
+        pass
+
+    def __iter__(self):
+        """
+        Iterates over all fields (source, references, and other metadata) defined
+        by the dataset.
+        """
+        pass
+
+    def source(self):
+        """
+        Return an iterable over the source lines.
+        """
+        pass
+
+    def references(self):
+        """
+        Return an iterable over the references.
+        """
+        pass
+
+    def get_source_file(self):
+        pass
+
+    def get_files(self):
+        pass
+
 
 FAKE_SGML_DATASETS = {
     "mtedx/valid": FakeSGMLDataset(
@@ -58,7 +103,6 @@ FAKE_SGML_DATASETS = {
             "ru-en": ["test/mtedx-test-ruen.ru", "test/mtedx-test-ruen.en"],
         },
     ),
-
     "wmt20/tworefs": FakeSGMLDataset(
         "wmt20/tworefs",
         data=["http://data.statmt.org/wmt20/translation-task/test.tgz"],
@@ -188,7 +232,6 @@ FAKE_SGML_DATASETS = {
             ],
         },
     ),
-
     "wmt20/dev": FakeSGMLDataset(
         "wmt20/dev",
         data=["http://data.statmt.org/wmt20/translation-task/dev.tgz"],
@@ -1079,5 +1122,4 @@ FAKE_SGML_DATASETS = {
             "en-fr": ["test/test2008-src.en.sgm", "test/test2008-src.fr.sgm"],
         },
     ),
-
 }

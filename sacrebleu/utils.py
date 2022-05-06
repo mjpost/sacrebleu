@@ -14,7 +14,6 @@ import lxml.etree as ET
 from tabulate import tabulate
 import colorama
 
-from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
@@ -714,3 +713,6 @@ def print_subset_results(metrics, full_system, full_refs, args):
         key = Color.format(f'{key:<{max_left_width}}', 'yellow')
         for n_system, score in scores:
             print(f'{key}: sentences={n_system:<6} {score.name:<{max_metric_width}} = {score.score:.{w}f}')
+
+# import at the end to avoid circular import
+from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES

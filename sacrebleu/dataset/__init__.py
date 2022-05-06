@@ -75,10 +75,10 @@ from .iwslt_xml import IWSLT_XML_DATASETS
 from .tsv import TSV_DATASETS
 
 for item in [
-    FAKE_SGML_DATASETS,
-    PLAIN_TEXT_DATASETS,
+#    FAKE_SGML_DATASETS,
+#    PLAIN_TEXT_DATASETS,
     WMT_XML_DATASETS,
-    IWSLT_XML_DATASETS,
-    TSV_DATASETS,
+#    IWSLT_XML_DATASETS,
+#    TSV_DATASETS,
 ]:
     DATASETS.update(item)

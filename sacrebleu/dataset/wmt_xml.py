@@ -1,3 +1,9 @@
+import os
+import re
+
+import lxml.etree as ET
+
+from ..utils import smart_open
 from .base import Dataset
 
 
@@ -7,8 +13,201 @@ class WMTXMLDataset(Dataset):
     Can be parsed with the lxml parser.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @staticmethod
+    def _unwrap_wmt21_or_later(raw_file):
+        """
+        Unwraps the XML file from wmt21 or later.
+        This script is adapted from https://github.com/wmt-conference/wmt-format-tools
+
+        :param raw_file: The raw xml file to unwrap.
+        :return: Dictionary which contains the following fields:
+            - `src`: The source sentences.
+            - `docid`: ID indicating which document the sentences belong to.
+            - `ref`: The reference sentences unknown translator.
+            - `ref:A`: Reference from translator A.
+            - `ref:B`: Reference from translator B.
+            - `ref:C`: Reference from translator C.
+            - `ref:D`: Reference from translator D.
+        """
+        tree = ET.parse(raw_file)
+        # Find and check  the documents (src, ref, hyp)
+        src_langs, ref_langs, translators = set(), set(), set()
+        for src_doc in tree.getroot().findall(".//src"):
+            src_langs.add(src_doc.get("lang"))
+
+        for ref_doc in tree.getroot().findall(".//ref"):
+            ref_langs.add(ref_doc.get("lang"))
+            translator = ref_doc.get("translator")
+            translators.add(translator)
+
+        assert (
+            len(src_langs) == 1
+        ), f"Multiple source languages found in the file: {raw_file}"
+        assert (
+            len(ref_langs) == 1
+        ), f"Multiple reference languages found in the file: {raw_file}"
+        src = []
+        docids = []
+
+        def get_field_by_translator(translator):
+            if not translator:
+                return "ref"
+            else:
+                return f"ref:{translator}"
+
+        refs = {get_field_by_translator(translator): [] for translator in translators}
+
+        src_sent_count, doc_count = 0, 0
+        for doc in tree.getroot().findall(".//doc"):
+            docid = doc.attrib["id"]
+
+            # Skip the testsuite
+            if "testsuite" in doc.attrib:
+                continue
+
+            doc_count += 1
+            src_sents = {
+                int(seg.get("id")): seg.text for seg in doc.findall(".//src//seg")
+            }
+
+            def get_sents(doc):
+                return {
+                    int(seg.get("id")): seg.text if seg.text else ""
+                    for seg in doc.findall(f".//seg")
+                }
+
+            ref_docs = doc.findall(".//ref")
+
+            trans_to_ref = {
+                ref_doc.get("translator"): get_sents(ref_doc) for ref_doc in ref_docs
+            }
+
+            for seg_id in sorted(src_sents.keys()):
+                # no ref translation is avaliable for this segment
+                if not any([value.get(seg_id, "") for value in trans_to_ref.values()]):
+                    continue
+                for translator in translators:
+                    refs[get_field_by_translator(translator)].append(
+                        trans_to_ref.get(translator, {translator: {}}).get(seg_id, "")
+                    )
+                src.append(src_sents[seg_id])
+                docids.append(docid)
+                src_sent_count += 1
+
+        return {"src": src, "docid": docids, **refs}
+
+    def process_to_text(self, langpair=None):
+        """
+        Class method that essentially does what utils/process_to_text() does.
+
+        This should be implemented by subclasses. Note: process_to_text should write the
+        fields in a different format: ~/.sacrebleu/DATASET/DATASET.LANGPAIR.FIELDNAME
+        (instead of the current ~/.sacrebleu/DATASET/LANGPAIR.{SRC,REF})
+
+        :param langpair: The language pair (e.g., "de-en"). If None, all language pairs are processed.
+        """
+        # ensure that the dataset is downloaded
+        self.maybe_download()
+
+        if langpair is None:
+            langpairs = self.langpairs
+        elif langpair not in self.langpairs:
+            raise Exception(f"No such language pair {self.name}/{langpair}")
+        else:
+            langpairs = {langpair: self.langpairs[langpair]}
+
+        for langpair, files in langpairs.items():
+            rawfile = os.path.join(
+                self._rawdir, files[0]
+            )  # all source and reference data in one file for wmt21 and later
+
+            with smart_open(rawfile) as fin:
+                fields = self._unwrap_wmt21_or_later(fin)
+
+            for fieldname in fields:
+                textfile = self._get_txt_file_path(langpair, fieldname)
+
+                # skip if the file already exists
+                if os.path.exists(textfile) and os.path.getsize(textfile) > 0:
+                    continue
+
+                with smart_open(textfile, "w") as fout:
+                    for line in fields[fieldname]:
+                        print(self._clean(line), file=fout)
+
+    def fieldnames(self, langpair):
+        """
+        Return a list of all the field names. For most source, this is just
+        the source and the reference. For others, it might include the document
+        ID for each line, or the original language (origLang).
+
+        get_files() should return the same number of items as this.
+
+        :param langpair: The language pair (e.g., "de-en")
+        :return: a list of field names
+        """
+        if langpair not in self.langpairs:
+            raise Exception(f"No such language pair {self.name}/{langpair}")
+
+        self.process_to_text(langpair)
+        all_file = os.listdir(self._outdir)
+
+        regex = f".*\\.{langpair}\\.(.*)$"
+        fields = []
+        for file in all_file:
+            match = re.match(regex, file)
+            if match:
+                fields.append(match.group(1))
+
+        return fields
+
+    def __iter__(self, langpair):
+        """
+        Iterates over all fields (source, references, and other metadata) defined
+        by the dataset.
+        """
+        all_files = self.get_files(langpair)
+        all_fins = [smart_open(f) for f in all_files]
+
+        for item in zip(*all_fins):
+            yield item
+
+    def source(self, langpair):
+        """
+        Return an iterable over the source lines.
+        """
+        source_file = self.get_source_file(langpair)
+        with smart_open(source_file) as fin:
+            for line in fin:
+                yield line.strip()
+
+    def references(self, langpair):
+        """
+        Return an iterable over the references.
+        """
+        all_fields = self.fieldnames(langpair)
+        ref_fields = [field for field in all_fields if field.startswith("ref")]
+        ref_files = [self._get_txt_file_path(langpair, field) for field in ref_fields]
+        ref_fins = [smart_open(f) for f in ref_files]
+
+        for item in zip(*ref_fins):
+            yield item
+
+    def get_source_file(self, langpair):
+        return self.get_files(langpair)[0]
+
+    def get_files(self, langpair):
+        """
+        Returns the path of the source file and all reference files for
+        the provided test set / language pair.
+        Downloads the references first if they are not already local.
+
+        :param langpair: The language pair (e.g., "de-en")
+        :return: a list of the source file and all reference files
+        """
+        fields = self.fieldnames(langpair)
+        files = [self._get_txt_file_path(langpair, field) for field in fields]
+        return files
 
 
 WMT_XML_DATASETS = {
