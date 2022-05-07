@@ -1,3 +1,6 @@
+import os
+
+from ..utils import smart_open
 from .base import Dataset
 
 
@@ -6,53 +9,54 @@ class TSVDataset(Dataset):
     The format used by the MTNT datasets. Data is in a single TSV file.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @staticmethod
+    def _split_index_and_filename(meta, field):
+        """
+        Splits the index and filename from a metadata string.
 
-    def process_to_text(self):
+        e.g. meta="3:en-de.tsv", filed=[Any value] -> (3, "en-de.tsv")
+             "en-de.tsv", filed="src" -> (1, "en-de.tsv")
+             "en-de.tsv", filed="tgt" -> (2, "en-de.tsv")
         """
-        Class method that essentially does what utils/process_to_text() does.
+        arr = meta.split(":")
+        if len(arr) == 2:
+            try:
+                index = int(arr[0]) - 1
+            except ValueError:
+                raise Exception(f"Invalid meta for TSVDataset: {meta}")
+            return index, arr[1]
 
-        This should be implemented by subclasses. Note: process_to_text should write the
-        fields in a different format: ~/.sacrebleu/DATASET/DATASET.LANGPAIR.FIELDNAME
-        (instead of the current ~/.sacrebleu/DATASET/LANGPAIR.{SRC,REF})
-        """
-        pass
+        else:
+            index = 0 if field == "src" else 1
+            return index, meta
 
-    def fieldnames(self):
-        """
-        Return a list of all the field names. For most source, this is just
-        the source and the reference. For others, it might include the document
-        ID for each line, or the original language (origLang).
+    def process_to_text(self, langpair=None):
+        """Processes raw files to plain text files.
 
-        get_files() should return the same number of items as this.
+        :param langpair: The language pair to process. e.g. "en-de". If None, all files will be processed.
         """
-        pass
+        # ensure that the dataset is downloaded
+        self.maybe_download()
+        langpairs = self._get_langpair_metadata(langpair)
 
-    def __iter__(self):
-        """
-        Iterates over all fields (source, references, and other metadata) defined
-        by the dataset.
-        """
-        pass
+        for langpair in langpairs:
+            fieldnames = self.fieldnames(langpair)
+            origin_files = [
+                os.path.join(self._rawdir, path) for path in langpairs[langpair]
+            ]
 
-    def source(self):
-        """
-        Return an iterable over the source lines.
-        """
-        pass
+            for field, origin_file, meta in zip(fieldnames, origin_files, langpairs[langpair]):
+                index, origin_file = self._split_index_and_filename(meta, field)
 
-    def references(self):
-        """
-        Return an iterable over the references.
-        """
-        pass
+                origin_file = os.path.join(self._rawdir, origin_file)
+                output_file = self._get_txt_file_path(langpair, field)
 
-    def get_source_file(self):
-        pass
-
-    def get_files(self):
-        pass
+                with smart_open(origin_file) as fin:
+                    with smart_open(output_file, "wt") as fout:
+                        for line in fin:
+                            # be careful with empty source or reference lines
+                            # MTNT2019/ja-en.final.tsv:632 `'1033\t718\t\t\n'`
+                            print(line.rstrip("\n").split("\t")[index], file=fout)
 
 
 TSV_DATASETS = {
@@ -83,8 +87,8 @@ TSV_DATASETS = {
             "ja-en": ["1:MTNT/test/test.ja-en.tsv", "2:MTNT/test/test.ja-en.tsv"],
         },
     ),
-    "mtnt1.1/train": TSVDataset(
-        "mtnt1.1/train",
+    "mtnt1.1/valid": TSVDataset(
+        "mtnt1.1/valid",
         data=[
             "https://github.com/pmichel31415/mtnt/releases/download/v1.1/MTNT.1.1.tar.gz"
         ],
@@ -103,14 +107,14 @@ TSV_DATASETS = {
         data=[
             "https://github.com/pmichel31415/mtnt/releases/download/v1.1/MTNT.1.1.tar.gz"
         ],
-        description="Training data for the Machine Translation of Noisy Text task: http://www.cs.cmu.edu/~pmichel1/mtnt/",
+        description="Validation data for the Machine Translation of Noisy Text task: http://www.cs.cmu.edu/~pmichel1/mtnt/",
         citation='@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
         md5=["8ce1831ac584979ba8cdcd9d4be43e1d"],
         langpairs={
-            "en-fr": ["1:MTNT/train/train.en-fr.tsv", "2:MTNT/train/train.en-fr.tsv"],
-            "fr-en": ["1:MTNT/train/train.fr-en.tsv", "2:MTNT/train/train.fr-en.tsv"],
-            "en-ja": ["1:MTNT/train/train.en-ja.tsv", "2:MTNT/train/train.en-ja.tsv"],
-            "ja-en": ["1:MTNT/train/train.ja-en.tsv", "2:MTNT/train/train.ja-en.tsv"],
+            "en-fr": ["1:MTNT/valid/valid.en-fr.tsv", "2:MTNT/valid/valid.en-fr.tsv"],
+            "fr-en": ["1:MTNT/valid/valid.fr-en.tsv", "2:MTNT/valid/valid.fr-en.tsv"],
+            "en-ja": ["1:MTNT/valid/valid.en-ja.tsv", "2:MTNT/valid/valid.en-ja.tsv"],
+            "ja-en": ["1:MTNT/valid/valid.ja-en.tsv", "2:MTNT/valid/valid.ja-en.tsv"],
         },
     ),
 }

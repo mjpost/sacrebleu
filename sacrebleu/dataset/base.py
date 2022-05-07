@@ -109,7 +109,6 @@ class Dataset(metaclass=ABCMeta):
         """
         pass
 
-    @abstractmethod
     def fieldnames(self, langpair) -> List[str]:
         """
         Return a list of all the field names. For most source, this is just
@@ -121,7 +120,7 @@ class Dataset(metaclass=ABCMeta):
         :param langpair: The language pair (e.g., "de-en")
         :return: a list of field names
         """
-        pass
+        return ["src", "ref"]
 
     def __iter__(self, langpair):
         """

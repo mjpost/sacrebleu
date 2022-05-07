@@ -1,56 +1,11 @@
-from .base import Dataset
+from .fake_sgml import FakeSGMLDataset
 
 
-class IWSLTXMLDataset(Dataset):
+class IWSLTXMLDataset(FakeSGMLDataset):
     """IWSLT dataset format. Can be parsed with the lxml parser."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def process_to_text(self):
-        """
-        Class method that essentially does what utils/process_to_text() does.
-
-        This should be implemented by subclasses. Note: process_to_text should write the
-        fields in a different format: ~/.sacrebleu/DATASET/DATASET.LANGPAIR.FIELDNAME
-        (instead of the current ~/.sacrebleu/DATASET/LANGPAIR.{SRC,REF})
-        """
-        pass
-
-    def fieldnames(self):
-        """
-        Return a list of all the field names. For most source, this is just
-        the source and the reference. For others, it might include the document
-        ID for each line, or the original language (origLang).
-
-        get_files() should return the same number of items as this.
-        """
-        pass
-
-    def __iter__(self):
-        """
-        Iterates over all fields (source, references, and other metadata) defined
-        by the dataset.
-        """
-        pass
-
-    def source(self):
-        """
-        Return an iterable over the source lines.
-        """
-        pass
-
-    def references(self):
-        """
-        Return an iterable over the references.
-        """
-        pass
-
-    def get_source_file(self):
-        pass
-
-    def get_files(self):
-        pass
+    # Same as FakeSGMLDataset. Nothing to do here.
+    pass
 
 
 IWSLT_XML_DATASETS = {

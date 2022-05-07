@@ -1,3 +1,7 @@
+import os
+import re
+
+from ..utils import smart_open
 from .base import Dataset
 
 
@@ -7,102 +11,82 @@ class FakeSGMLDataset(Dataset):
     Source and reference(s) in separate files.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def process_to_text(self):
+    def _convert_format(self, input_file_path, output_filep_path):
         """
-        Class method that essentially does what utils/process_to_text() does.
-
-        This should be implemented by subclasses. Note: process_to_text should write the
-        fields in a different format: ~/.sacrebleu/DATASET/DATASET.LANGPAIR.FIELDNAME
-        (instead of the current ~/.sacrebleu/DATASET/LANGPAIR.{SRC,REF})
+        Extract data from raw file and convert to raw txt format.
         """
-        pass
+        with smart_open(input_file_path) as fin, smart_open(
+            output_filep_path, "wt"
+        ) as fout:
+            for line in fin:
+                if line.startswith("<seg "):
+                    line = self._clean(re.sub(r"<seg.*?>(.*)</seg>.*?", "\\1", line))
+                    print(line, file=fout)
 
-    def fieldnames(self):
+    def process_to_text(self, langpair=None):
+        """Processes raw files to plain text files.
+
+        :param langpair: The language pair to process. e.g. "en-de". If None, all files will be processed.
+        """
+        # ensure that the dataset is downloaded
+        self.maybe_download()
+        langpairs = self._get_langpair_metadata(langpair)
+
+        for langpair in langpairs:
+            fieldnames = self.fieldnames(langpair)
+            origin_files = [
+                os.path.join(self._rawdir, path) for path in langpairs[langpair]
+            ]
+
+            for field, origin_file in zip(fieldnames, origin_files):
+
+                origin_file = os.path.join(self._rawdir, origin_file)
+                output_file = self._get_txt_file_path(langpair, field)
+                self._convert_format(origin_file, output_file)
+
+    def fieldnames(self, langpair):
         """
         Return a list of all the field names. For most source, this is just
         the source and the reference. For others, it might include the document
         ID for each line, or the original language (origLang).
 
         get_files() should return the same number of items as this.
-        """
-        pass
 
-    def __iter__(self):
+        TODO genre, docid
         """
-        Iterates over all fields (source, references, and other metadata) defined
-        by the dataset.
-        """
-        pass
+        meta = self._get_langpair_metadata(langpair)
+        length = len(meta[langpair])
 
-    def source(self):
-        """
-        Return an iterable over the source lines.
-        """
-        pass
+        assert (
+            length >= 2
+        ), f"Each language pair in {self.name} must have at least 2 fileds."
 
-    def references(self):
-        """
-        Return an iterable over the references.
-        """
-        pass
+        if length == 2:
+            return ["src", "ref"]
+        else:
+            fields = ["src"]
+            for i, _ in enumerate(meta[langpair][1:]):
+                fields.append(f"ref:{i}")
 
-    def get_source_file(self):
-        pass
+            return fields
 
-    def get_files(self):
-        pass
+
+class WMTAdditionDataset(FakeSGMLDataset):
+    """
+    Handle special case of WMT Google addition dataset.
+    """
+
+    def _convert_format(self, input_file_path, output_filep_path):
+        if input_file_path.endswith(".sgm"):
+            return super()._convert_format(input_file_path, output_filep_path)
+        else:
+            with smart_open(input_file_path) as fin:
+                with smart_open(output_filep_path, "wt") as fout:
+                    for line in fin:
+                        print(line.rstrip(), file=fout)
 
 
 FAKE_SGML_DATASETS = {
-    "mtedx/valid": FakeSGMLDataset(
-        "mtedx/valid",
-        data=[
-            "https://raw.githubusercontent.com/esalesky/mtedx-eval/main/valid.tar.gz"
-        ],
-        description="mTEDx evaluation data, valid: http://openslr.org/100",
-        citation="@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
-        md5=["40618171614c50e6cbb5e5bbceee0635"],
-        langpairs={
-            "el-en": ["valid/mtedx-valid-elen.el", "valid/mtedx-valid-elen.en"],
-            "es-en": ["valid/mtedx-valid-esen.es", "valid/mtedx-valid-esen.en"],
-            "es-fr": ["valid/mtedx-valid-esfr.es", "valid/mtedx-valid-esfr.fr"],
-            "es-it": ["valid/mtedx-valid-esit.es", "valid/mtedx-valid-esit.it"],
-            "es-pt": ["valid/mtedx-valid-espt.es", "valid/mtedx-valid-espt.pt"],
-            "fr-en": ["valid/mtedx-valid-fren.fr", "valid/mtedx-valid-fren.en"],
-            "fr-es": ["valid/mtedx-valid-fres.fr", "valid/mtedx-valid-fres.es"],
-            "fr-pt": ["valid/mtedx-valid-frpt.fr", "valid/mtedx-valid-frpt.pt"],
-            "it-en": ["valid/mtedx-valid-iten.it", "valid/mtedx-valid-iten.en"],
-            "it-es": ["valid/mtedx-valid-ites.it", "valid/mtedx-valid-ites.es"],
-            "pt-en": ["valid/mtedx-valid-pten.pt", "valid/mtedx-valid-pten.en"],
-            "pt-es": ["valid/mtedx-valid-ptes.pt", "valid/mtedx-valid-ptes.es"],
-            "ru-en": ["valid/mtedx-valid-ruen.ru", "valid/mtedx-valid-ruen.en"],
-        },
-    ),
-    "mtedx/test": FakeSGMLDataset(
-        "mtedx/test",
-        data=["https://raw.githubusercontent.com/esalesky/mtedx-eval/main/test.tar.gz"],
-        description="mTEDx evaluation data, test: http://openslr.org/100",
-        citation="@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
-        md5=["fa4cb1548c210ec424d7d6bc9a3675a7"],
-        langpairs={
-            "el-en": ["test/mtedx-test-elen.el", "test/mtedx-test-elen.en"],
-            "es-en": ["test/mtedx-test-esen.es", "test/mtedx-test-esen.en"],
-            "es-fr": ["test/mtedx-test-esfr.es", "test/mtedx-test-esfr.fr"],
-            "es-it": ["test/mtedx-test-esit.es", "test/mtedx-test-esit.it"],
-            "es-pt": ["test/mtedx-test-espt.es", "test/mtedx-test-espt.pt"],
-            "fr-en": ["test/mtedx-test-fren.fr", "test/mtedx-test-fren.en"],
-            "fr-es": ["test/mtedx-test-fres.fr", "test/mtedx-test-fres.es"],
-            "fr-pt": ["test/mtedx-test-frpt.fr", "test/mtedx-test-frpt.pt"],
-            "it-en": ["test/mtedx-test-iten.it", "test/mtedx-test-iten.en"],
-            "it-es": ["test/mtedx-test-ites.it", "test/mtedx-test-ites.es"],
-            "pt-en": ["test/mtedx-test-pten.pt", "test/mtedx-test-pten.en"],
-            "pt-es": ["test/mtedx-test-ptes.pt", "test/mtedx-test-ptes.es"],
-            "ru-en": ["test/mtedx-test-ruen.ru", "test/mtedx-test-ruen.en"],
-        },
-    ),
     "wmt20/tworefs": FakeSGMLDataset(
         "wmt20/tworefs",
         data=["http://data.statmt.org/wmt20/translation-task/test.tgz"],
@@ -413,7 +397,7 @@ FAKE_SGML_DATASETS = {
             ],
         },
     ),
-    "wmt19/google/ar": FakeSGMLDataset(
+    "wmt19/google/ar": WMTAdditionDataset(
         "wmt19/google/ar",
         data=[
             "http://data.statmt.org/wmt19/translation-task/test.tgz",
@@ -423,10 +407,10 @@ FAKE_SGML_DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "d66d9e91548ced0ac476f2390e32e2de"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "../wmt19-ende-ar.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-ar.ref"],
         },
     ),
-    "wmt19/google/arp": FakeSGMLDataset(
+    "wmt19/google/arp": WMTAdditionDataset(
         "wmt19/google/arp",
         data=[
             "http://data.statmt.org/wmt19/translation-task/test.tgz",
@@ -434,12 +418,12 @@ FAKE_SGML_DATASETS = {
         ],
         description="Additional paraphrase of wmt19/google/ar.",
         md5=["84de7162d158e28403103b01aeefc39a", "c70ea808cf2bff621ad7a8fddd4deca9"],
+        citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "../wmt19-ende-arp.ref"],
-            "citation": "@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-arp.ref"],
         },
     ),
-    "wmt19/google/wmtp": FakeSGMLDataset(
+    "wmt19/google/wmtp": WMTAdditionDataset(
         "wmt19/google/wmtp",
         data=[
             "http://data.statmt.org/wmt19/translation-task/test.tgz",
@@ -449,10 +433,10 @@ FAKE_SGML_DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "587c660ee5fd44727f0db025b71c6a82"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "../wmt19-ende-wmtp.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-wmtp.ref"],
         },
     ),
-    "wmt19/google/hqr": FakeSGMLDataset(
+    "wmt19/google/hqr": WMTAdditionDataset(
         "wmt19/google/hqr",
         data=[
             "http://data.statmt.org/wmt19/translation-task/test.tgz",
@@ -462,10 +446,10 @@ FAKE_SGML_DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "d9221135f62d7152de041f5bfc8efaea"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "../wmt19-ende-hqr.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-hqr.ref"],
         },
     ),
-    "wmt19/google/hqp": FakeSGMLDataset(
+    "wmt19/google/hqp": WMTAdditionDataset(
         "wmt19/google/hqp",
         data=[
             "http://data.statmt.org/wmt19/translation-task/test.tgz",
@@ -475,10 +459,10 @@ FAKE_SGML_DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "b7c3a07a59c8eccea5367e9ec5417a8a"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "../wmt19-ende-hqp.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-hqp.ref"],
         },
     ),
-    "wmt19/google/hqall": FakeSGMLDataset(
+    "wmt19/google/hqall": WMTAdditionDataset(
         "wmt19/google/hqall",
         data=[
             "http://data.statmt.org/wmt19/translation-task/test.tgz",
@@ -488,7 +472,7 @@ FAKE_SGML_DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "edecf10ced59e10b703a6fbcf1fa9dfa"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "../wmt19-ende-hqall.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-hqall.ref"],
         },
     ),
     "wmt18": FakeSGMLDataset(
@@ -562,20 +546,20 @@ FAKE_SGML_DATASETS = {
         md5=["5c621a34d512cc2dd74162ae7d00b320"],
         description="Official evaluation sources with extra test sets interleaved.",
         langpairs={
-            "cs-en": ["test-ts/newstest2018-csen-src-ts.cs.sgm"],
-            "de-en": ["test-ts/newstest2018-deen-src-ts.de.sgm"],
-            "en-cs": ["test-ts/newstest2018-encs-src-ts.en.sgm"],
-            "en-de": ["test-ts/newstest2018-ende-src-ts.en.sgm"],
-            "en-et": ["test-ts/newstest2018-enet-src-ts.en.sgm"],
-            "en-fi": ["test-ts/newstest2018-enfi-src-ts.en.sgm"],
-            "en-ru": ["test-ts/newstest2018-enru-src-ts.en.sgm"],
-            "et-en": ["test-ts/newstest2018-eten-src-ts.et.sgm"],
-            "fi-en": ["test-ts/newstest2018-fien-src-ts.fi.sgm"],
-            "ru-en": ["test-ts/newstest2018-ruen-src-ts.ru.sgm"],
-            "en-tr": ["test-ts/newstest2018-entr-src-ts.en.sgm"],
-            "tr-en": ["test-ts/newstest2018-tren-src-ts.tr.sgm"],
-            "en-zh": ["test-ts/newstest2018-enzh-src-ts.en.sgm"],
-            "zh-en": ["test-ts/newstest2018-zhen-src-ts.zh.sgm"],
+            "cs-en": ["test-ts/newstest2018-csen-src-ts.cs.sgm", "test-ts/newstest2018-csen-ref-ts.en.sgm"],
+            "de-en": ["test-ts/newstest2018-deen-src-ts.de.sgm", "test-ts/newstest2018-deen-ref-ts.en.sgm"],
+            "en-cs": ["test-ts/newstest2018-encs-src-ts.en.sgm", "test-ts/newstest2018-encs-ref-ts.cs.sgm"],
+            "en-de": ["test-ts/newstest2018-ende-src-ts.en.sgm", "test-ts/newstest2018-ende-ref-ts.de.sgm"],
+            "en-et": ["test-ts/newstest2018-enet-src-ts.en.sgm", "test-ts/newstest2018-enet-ref-ts.et.sgm"],
+            "en-fi": ["test-ts/newstest2018-enfi-src-ts.en.sgm", "test-ts/newstest2018-enfi-ref-ts.fi.sgm"],
+            "en-ru": ["test-ts/newstest2018-enru-src-ts.en.sgm", "test-ts/newstest2018-enru-ref-ts.ru.sgm"],
+            "et-en": ["test-ts/newstest2018-eten-src-ts.et.sgm", "test-ts/newstest2018-eten-ref-ts.en.sgm"],
+            "fi-en": ["test-ts/newstest2018-fien-src-ts.fi.sgm", "test-ts/newstest2018-fien-ref-ts.en.sgm"],
+            "ru-en": ["test-ts/newstest2018-ruen-src-ts.ru.sgm", "test-ts/newstest2018-ruen-ref-ts.en.sgm"],
+            "en-tr": ["test-ts/newstest2018-entr-src-ts.en.sgm", "test-ts/newstest2018-entr-ref-ts.tr.sgm"],
+            "tr-en": ["test-ts/newstest2018-tren-src-ts.tr.sgm", "test-ts/newstest2018-tren-ref-ts.en.sgm"],
+            "en-zh": ["test-ts/newstest2018-enzh-src-ts.en.sgm", "test-ts/newstest2018-enzh-ref-ts.zh.sgm"],
+            "zh-en": ["test-ts/newstest2018-zhen-src-ts.zh.sgm", "test-ts/newstest2018-zhen-ref-ts.en.sgm"],
         },
     ),
     "wmt18/dev": FakeSGMLDataset(
@@ -718,7 +702,7 @@ FAKE_SGML_DATASETS = {
             ],
         },
     ),
-    "wmt17/ms": FakeSGMLDataset(
+    "wmt17/ms": WMTAdditionDataset(
         "wmt17/ms",
         data=[
             "https://github.com/MicrosoftTranslator/Translator-HumanParityData/archive/master.zip",

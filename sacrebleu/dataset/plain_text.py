@@ -35,26 +35,54 @@ class PlainTextDataset(Dataset):
                         for line in fin:
                             print(line.rstrip(), file=fout)
 
-    def fieldnames(self, langpair):
-        """
-        Return a list of all the field names. For most source, this is just
-        the source and the reference. For others, it might include the document
-        ID for each line, or the original language (origLang).
-
-        get_files() should return the same number of items as this.
-
-        :param langpair: The language pair to get the field names for. e.g. "en-de".
-        :return: A list of field names.
-        """
-        meta = self._get_langpair_metadata(langpair)
-        length = max(meta.values(), key=len)
-        if length == 1:
-            return ["src"]
-        else:
-            return ["src", "ref"]
-
 
 PLAIN_TEXT_DATASETS = {
+    "mtedx/valid": PlainTextDataset(
+        "mtedx/valid",
+        data=[
+            "https://raw.githubusercontent.com/esalesky/mtedx-eval/main/valid.tar.gz"
+        ],
+        description="mTEDx evaluation data, valid: http://openslr.org/100",
+        citation="@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
+        md5=["40618171614c50e6cbb5e5bbceee0635"],
+        langpairs={
+            "el-en": ["valid/mtedx-valid-elen.el", "valid/mtedx-valid-elen.en"],
+            "es-en": ["valid/mtedx-valid-esen.es", "valid/mtedx-valid-esen.en"],
+            "es-fr": ["valid/mtedx-valid-esfr.es", "valid/mtedx-valid-esfr.fr"],
+            "es-it": ["valid/mtedx-valid-esit.es", "valid/mtedx-valid-esit.it"],
+            "es-pt": ["valid/mtedx-valid-espt.es", "valid/mtedx-valid-espt.pt"],
+            "fr-en": ["valid/mtedx-valid-fren.fr", "valid/mtedx-valid-fren.en"],
+            "fr-es": ["valid/mtedx-valid-fres.fr", "valid/mtedx-valid-fres.es"],
+            "fr-pt": ["valid/mtedx-valid-frpt.fr", "valid/mtedx-valid-frpt.pt"],
+            "it-en": ["valid/mtedx-valid-iten.it", "valid/mtedx-valid-iten.en"],
+            "it-es": ["valid/mtedx-valid-ites.it", "valid/mtedx-valid-ites.es"],
+            "pt-en": ["valid/mtedx-valid-pten.pt", "valid/mtedx-valid-pten.en"],
+            "pt-es": ["valid/mtedx-valid-ptes.pt", "valid/mtedx-valid-ptes.es"],
+            "ru-en": ["valid/mtedx-valid-ruen.ru", "valid/mtedx-valid-ruen.en"],
+        },
+    ),
+    "mtedx/test": PlainTextDataset(
+        "mtedx/test",
+        data=["https://raw.githubusercontent.com/esalesky/mtedx-eval/main/test.tar.gz"],
+        description="mTEDx evaluation data, test: http://openslr.org/100",
+        citation="@misc{salesky2021multilingual,\n      title={The Multilingual TEDx Corpus for Speech Recognition and Translation}, \n      author={Elizabeth Salesky and Matthew Wiesner and Jacob Bremerman and Roldano Cattoni and Matteo Negri and Marco Turchi and Douglas W. Oard and Matt Post},\n      year={2021},\n      eprint={2102.01757},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL}\n}",
+        md5=["fa4cb1548c210ec424d7d6bc9a3675a7"],
+        langpairs={
+            "el-en": ["test/mtedx-test-elen.el", "test/mtedx-test-elen.en"],
+            "es-en": ["test/mtedx-test-esen.es", "test/mtedx-test-esen.en"],
+            "es-fr": ["test/mtedx-test-esfr.es", "test/mtedx-test-esfr.fr"],
+            "es-it": ["test/mtedx-test-esit.es", "test/mtedx-test-esit.it"],
+            "es-pt": ["test/mtedx-test-espt.es", "test/mtedx-test-espt.pt"],
+            "fr-en": ["test/mtedx-test-fren.fr", "test/mtedx-test-fren.en"],
+            "fr-es": ["test/mtedx-test-fres.fr", "test/mtedx-test-fres.es"],
+            "fr-pt": ["test/mtedx-test-frpt.fr", "test/mtedx-test-frpt.pt"],
+            "it-en": ["test/mtedx-test-iten.it", "test/mtedx-test-iten.en"],
+            "it-es": ["test/mtedx-test-ites.it", "test/mtedx-test-ites.es"],
+            "pt-en": ["test/mtedx-test-pten.pt", "test/mtedx-test-pten.en"],
+            "pt-es": ["test/mtedx-test-ptes.pt", "test/mtedx-test-ptes.es"],
+            "ru-en": ["test/mtedx-test-ruen.ru", "test/mtedx-test-ruen.en"],
+        },
+    ),
     "wmt20/robust/set1": PlainTextDataset(
         "wmt20/robust/set1",
         data=["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
@@ -140,9 +168,9 @@ PLAIN_TEXT_DATASETS = {
         description="2018 flickr test set of Multi30k dataset. See https://competitions.codalab.org/competitions/19917 for evaluation.",
         citation='@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}\n\n@InProceedings{barrault-etal-2018-findings,\n    title = "Findings of the Third Shared Task on Multimodal Machine Translation",\n    author = {Barrault, Lo{\\"\\i}c  and Bougares, Fethi  and Specia, Lucia  and Lala, Chiraag  and Elliott, Desmond  and Frank, Stella},\n    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",\n    month = oct,\n    year = "2018",\n    address = "Belgium, Brussels",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W18-6402",\n    doi = "10.18653/v1/W18-6402",\n    pages = "304--323",\n}\n',
         langpairs={
-            "en-fr": ["test_2018_flickr.en", "test_2018_flickr.fr"],
-            "en-de": ["test_2018_flickr.en", "test_2018_flickr.de"],
-            "en-cs": ["test_2018_flickr.en", "test_2018_flickr.cs"],
+            "en-fr": ["test_2018_flickr.en", "test_2018_flickr.fr.gz"],
+            "en-de": ["test_2018_flickr.en", "test_2018_flickr.de.gz"],
+            "en-cs": ["test_2018_flickr.en", "test_2018_flickr.cs.gz"],
         },
     ),
 }
