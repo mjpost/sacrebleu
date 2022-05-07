@@ -6,6 +6,7 @@ import math
 import hashlib
 import logging
 import portalocker
+import shutil
 from collections import defaultdict
 from typing import List, Optional, Sequence, Dict
 from argparse import Namespace
@@ -476,6 +477,11 @@ def extract_tarball(filepath, destdir):
         import tarfile
         with tarfile.open(filepath) as tar:
             tar.extractall(path=destdir)
+    elif filepath.endswith('.gz'):
+        import gzip
+        with gzip.open(filepath, 'rb') as f_in:
+            with open(filepath[:-3], 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
     elif filepath.endswith('.zip'):
         import zipfile
         with zipfile.ZipFile(filepath, 'r') as zipfile:

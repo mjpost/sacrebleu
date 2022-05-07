@@ -97,24 +97,13 @@ class WMTXMLDataset(Dataset):
         return {"src": src, "docid": docids, **refs}
 
     def process_to_text(self, langpair=None):
-        """
-        Class method that essentially does what utils/process_to_text() does.
+        """Processes raw files to plain text files.
 
-        This should be implemented by subclasses. Note: process_to_text should write the
-        fields in a different format: ~/.sacrebleu/DATASET/DATASET.LANGPAIR.FIELDNAME
-        (instead of the current ~/.sacrebleu/DATASET/LANGPAIR.{SRC,REF})
-
-        :param langpair: The language pair (e.g., "de-en"). If None, all language pairs are processed.
+        :param langpair: The language pair to process. e.g. "en-de". If None, all files will be processed.
         """
         # ensure that the dataset is downloaded
         self.maybe_download()
-
-        if langpair is None:
-            langpairs = self.langpairs
-        elif langpair not in self.langpairs:
-            raise Exception(f"No such language pair {self.name}/{langpair}")
-        else:
-            langpairs = {langpair: self.langpairs[langpair]}
+        langpairs = self._get_langpair_metadata(langpair)
 
         for langpair, files in langpairs.items():
             rawfile = os.path.join(
@@ -160,54 +149,6 @@ class WMTXMLDataset(Dataset):
                 fields.append(match.group(1))
 
         return fields
-
-    def __iter__(self, langpair):
-        """
-        Iterates over all fields (source, references, and other metadata) defined
-        by the dataset.
-        """
-        all_files = self.get_files(langpair)
-        all_fins = [smart_open(f) for f in all_files]
-
-        for item in zip(*all_fins):
-            yield item
-
-    def source(self, langpair):
-        """
-        Return an iterable over the source lines.
-        """
-        source_file = self.get_source_file(langpair)
-        with smart_open(source_file) as fin:
-            for line in fin:
-                yield line.strip()
-
-    def references(self, langpair):
-        """
-        Return an iterable over the references.
-        """
-        all_fields = self.fieldnames(langpair)
-        ref_fields = [field for field in all_fields if field.startswith("ref")]
-        ref_files = [self._get_txt_file_path(langpair, field) for field in ref_fields]
-        ref_fins = [smart_open(f) for f in ref_files]
-
-        for item in zip(*ref_fins):
-            yield item
-
-    def get_source_file(self, langpair):
-        return self.get_files(langpair)[0]
-
-    def get_files(self, langpair):
-        """
-        Returns the path of the source file and all reference files for
-        the provided test set / language pair.
-        Downloads the references first if they are not already local.
-
-        :param langpair: The language pair (e.g., "de-en")
-        :return: a list of the source file and all reference files
-        """
-        fields = self.fieldnames(langpair)
-        files = [self._get_txt_file_path(langpair, field) for field in fields]
-        return files
 
 
 WMT_XML_DATASETS = {

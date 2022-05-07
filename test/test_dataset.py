@@ -13,7 +13,7 @@ def test_maybe_download():
     """
     # ensure all file has been downloaded
     for ds in dataset.DATASETS.values():
-        shutil.rmtree(ds._rawdir, ignore_errors=True)
+        # shutil.rmtree(ds._rawdir, ignore_errors=True)
         ds.maybe_download()
 
         all_file = os.listdir(ds._rawdir)

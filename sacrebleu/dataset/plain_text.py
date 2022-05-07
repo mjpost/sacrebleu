@@ -1,3 +1,6 @@
+import os
+
+from ..utils import smart_open
 from .base import Dataset
 
 
@@ -7,53 +10,48 @@ class PlainTextDataset(Dataset):
     Each line of the two files is aligned.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def process_to_text(self, langpair=None):
+        """Processes raw files to plain text files.
 
-    def process_to_text(self):
+        :param langpair: The language pair to process. e.g. "en-de". If None, all files will be processed.
         """
-        Class method that essentially does what utils/process_to_text() does.
+        # ensure that the dataset is downloaded
+        self.maybe_download()
+        langpairs = self._get_langpair_metadata(langpair)
 
-        This should be implemented by subclasses. Note: process_to_text should write the
-        fields in a different format: ~/.sacrebleu/DATASET/DATASET.LANGPAIR.FIELDNAME
-        (instead of the current ~/.sacrebleu/DATASET/LANGPAIR.{SRC,REF})
-        """
-        pass
+        for langpair in langpairs:
+            fieldnames = self.fieldnames(langpair)
+            origin_files = [
+                os.path.join(self._rawdir, path) for path in langpairs[langpair]
+            ]
 
-    def fieldnames(self):
+            for field, origin_file in zip(fieldnames, origin_files):
+
+                origin_file = os.path.join(self._rawdir, origin_file)
+                output_file = self._get_txt_file_path(langpair, field)
+
+                with smart_open(origin_file) as fin:
+                    with smart_open(output_file, "wt") as fout:
+                        for line in fin:
+                            print(line.rstrip(), file=fout)
+
+    def fieldnames(self, langpair):
         """
         Return a list of all the field names. For most source, this is just
         the source and the reference. For others, it might include the document
         ID for each line, or the original language (origLang).
 
         get_files() should return the same number of items as this.
-        """
-        pass
 
-    def __iter__(self):
+        :param langpair: The language pair to get the field names for. e.g. "en-de".
+        :return: A list of field names.
         """
-        Iterates over all fields (source, references, and other metadata) defined
-        by the dataset.
-        """
-        pass
-
-    def source(self):
-        """
-        Return an iterable over the source lines.
-        """
-        pass
-
-    def references(self):
-        """
-        Return an iterable over the references.
-        """
-        pass
-
-    def get_source_file(self):
-        pass
-
-    def get_files(self):
-        pass
+        meta = self._get_langpair_metadata(langpair)
+        length = max(meta.values(), key=len)
+        if length == 1:
+            return ["src"]
+        else:
+            return ["src", "ref"]
 
 
 PLAIN_TEXT_DATASETS = {
@@ -128,14 +126,23 @@ PLAIN_TEXT_DATASETS = {
     "multi30k/2018": PlainTextDataset(
         "multi30k/2018",
         data=[
-            "https://raw.githubusercontent.com/multi30k/dataset/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz"
+            "https://raw.githubusercontent.com/multi30k/dataset/master/data/task1/multi30k_test_sets_d3ec2a38.tar.gz",
+            "https://raw.githubusercontent.com/multi30k/dataset/master/data/task1/raw/test_2018_flickr.cs.gz",
+            "https://raw.githubusercontent.com/multi30k/dataset/master/data/task1/raw/test_2018_flickr.de.gz",
+            "https://raw.githubusercontent.com/multi30k/dataset/master/data/task1/raw/test_2018_flickr.fr.gz",
         ],
-        md5=["9cf8f22d57fee2ca2af3c682dfdc525b"],
+        md5=[
+            "9cf8f22d57fee2ca2af3c682dfdc525b",
+            "4c6b6490e58107b2e397c5e3e1690abc",
+            "87e00327083dd69feaa029a8f7c1a047",
+            "a64563e986438ed731a6713027c36bfd",
+        ],
         description="2018 flickr test set of Multi30k dataset. See https://competitions.codalab.org/competitions/19917 for evaluation.",
         citation='@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}\n\n@InProceedings{barrault-etal-2018-findings,\n    title = "Findings of the Third Shared Task on Multimodal Machine Translation",\n    author = {Barrault, Lo{\\"\\i}c  and Bougares, Fethi  and Specia, Lucia  and Lala, Chiraag  and Elliott, Desmond  and Frank, Stella},\n    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",\n    month = oct,\n    year = "2018",\n    address = "Belgium, Brussels",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W18-6402",\n    doi = "10.18653/v1/W18-6402",\n    pages = "304--323",\n}\n',
         langpairs={
-            "en-fr": ["test_2018_flickr.en"],
-            "en-de": ["test_2018_flickr.en"],
+            "en-fr": ["test_2018_flickr.en", "test_2018_flickr.fr"],
+            "en-de": ["test_2018_flickr.en", "test_2018_flickr.de"],
+            "en-cs": ["test_2018_flickr.en", "test_2018_flickr.cs"],
         },
     ),
 }

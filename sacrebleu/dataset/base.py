@@ -6,7 +6,7 @@ import re
 from abc import ABCMeta, abstractmethod
 from typing import Dict, List
 
-from ..utils import SACREBLEU_DIR, download_file
+from ..utils import SACREBLEU_DIR, download_file, smart_open
 
 
 class Dataset(metaclass=ABCMeta):
@@ -80,58 +80,93 @@ class Dataset(metaclass=ABCMeta):
         :param fieldname: The fieldname.
         :return: The path to the text file.
         """
-        # handle the special case of subsets. e.g.> "wmt21/dev"
+        # handle the special case of subsets. e.g. "wmt21/dev" > "wmt21_dev"
         name = self.name.replace("/", "_")
         return os.path.join(self._outdir, f"{name}.{langpair}.{fieldname}")
 
-    @abstractmethod
-    def process_to_text(self):
+    def _get_langpair_metadata(self, langpair):
         """
-        Class method that essentially does what utils/process_to_text() does.
+        Given a language pair, return the metadata for that language pair.
+        Deal with errors if the language pair is not available.
 
-        This should be implemented by subclasses. Note: process_to_text should write the
-        fields in a different format: ~/.sacrebleu/DATASET/DATASET.LANGPAIR.FIELDNAME
-        (instead of the current ~/.sacrebleu/DATASET/LANGPAIR.{SRC,REF})
+        :param langpair: The language pair. e.g. "en-de"
+        :return: Dict format which is same as self.langpairs.
+        """
+        if langpair is None:
+            langpairs = self.langpairs
+        elif langpair not in self.langpairs:
+            raise Exception(f"No such language pair {self.name}/{langpair}")
+        else:
+            langpairs = {langpair: self.langpairs[langpair]}
+
+        return langpairs
+
+    @abstractmethod
+    def process_to_text(self, langpair=None) -> None:
+        """Processes raw files to plain text files.
+
+        :param langpair: The language pair to process. e.g. "en-de". If None, all files will be processed.
         """
         pass
 
     @abstractmethod
-    def fieldnames(self) -> List[str]:
+    def fieldnames(self, langpair) -> List[str]:
         """
         Return a list of all the field names. For most source, this is just
         the source and the reference. For others, it might include the document
         ID for each line, or the original language (origLang).
 
         get_files() should return the same number of items as this.
+
+        :param langpair: The language pair (e.g., "de-en")
+        :return: a list of field names
         """
         pass
 
-    @abstractmethod
-    def __iter__(self):
+    def __iter__(self, langpair):
         """
         Iterates over all fields (source, references, and other metadata) defined
         by the dataset.
         """
-        pass
+        all_files = self.get_files(langpair)
+        all_fins = [smart_open(f) for f in all_files]
 
-    @abstractmethod
-    def source(self):
+        for item in zip(*all_fins):
+            yield item
+
+    def source(self, langpair):
         """
         Return an iterable over the source lines.
         """
-        pass
+        source_file = self.get_source_file(langpair)
+        with smart_open(source_file) as fin:
+            for line in fin:
+                yield line.strip()
 
-    @abstractmethod
-    def references(self):
+    def references(self, langpair):
         """
         Return an iterable over the references.
         """
-        pass
+        all_fields = self.fieldnames(langpair)
+        ref_fields = [field for field in all_fields if field.startswith("ref")]
+        ref_files = [self._get_txt_file_path(langpair, field) for field in ref_fields]
+        ref_fins = [smart_open(f) for f in ref_files]
 
-    @abstractmethod
-    def get_source_file(self):
-        pass
+        for item in zip(*ref_fins):
+            yield item
 
-    @abstractmethod
-    def get_files(self):
-        pass
+    def get_source_file(self, langpair):
+        return self.get_files(langpair)[0]
+
+    def get_files(self, langpair):
+        """
+        Returns the path of the source file and all reference files for
+        the provided test set / language pair.
+        Downloads the references first if they are not already local.
+
+        :param langpair: The language pair (e.g., "de-en")
+        :return: a list of the source file and all reference files
+        """
+        fields = self.fieldnames(langpair)
+        files = [self._get_txt_file_path(langpair, field) for field in fields]
+        return files
