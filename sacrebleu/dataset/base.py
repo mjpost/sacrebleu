@@ -168,4 +168,8 @@ class Dataset(metaclass=ABCMeta):
         """
         fields = self.fieldnames(langpair)
         files = [self._get_txt_file_path(langpair, field) for field in fields]
+
+        for file in files:
+            if not os.path.exists(file):
+                self.process_to_text(langpair)
         return files

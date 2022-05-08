@@ -6,7 +6,6 @@ import math
 import hashlib
 import logging
 import portalocker
-import shutil
 from collections import defaultdict
 from typing import List, Optional, Sequence, Dict
 from argparse import Namespace
@@ -275,119 +274,6 @@ def args_to_dict(args, prefix: str, strip_prefix: bool = False):
     return d
 
 
-def process_to_text(rawfile, txtfile, field: int = None, translator: str = "src"):
-    """Processes raw files to plain text files. Can handle SGML, XML, TSV files, and plain text.
-    Called after downloading datasets.
-
-    :param rawfile: the input file (possibly SGML)
-    :param txtfile: the plaintext file
-    :param field: For TSV files and XML files from wmt21 or later, which field to extract.
-    :param translator: For files from wmt21 or later, many files have multiple translators. This param determines which one to use.
-                       'src' means use the source text, "first" means use the first one, 'A', 'B', etc. for the different translator.
-    """
-    def _clean(s):
-        """
-        Removes trailing and leading spaces and collapses multiple consecutive internal spaces to a single one.
-
-        :param s: The string.
-        :return: A cleaned-up string.
-        """
-        return re.sub(r'\s+', ' ', s.strip())
-
-    def _unwrap_wmt21_or_later(raw_file, translator_name):
-        """
-        Unwraps the XML file from wmt21 or later.
-        This script is adapted from https://github.com/wmt-conference/wmt-format-tools
-        """
-        tree = ET.parse(raw_file)
-        # Find and check  the documents (src, ref, hyp)
-        src_langs, ref_langs, translators = set(), set(), set()
-        for src_doc in tree.getroot().findall(".//src"):
-            src_langs.add(src_doc.get("lang"))
-
-        for ref_doc in tree.getroot().findall(".//ref"):
-            ref_langs.add(ref_doc.get("lang"))
-            translator = ref_doc.get("translator")
-            translators.add(translator)
-
-        assert len(src_langs) == 1, f"Multiple source languages found in the file: {raw_file}"
-        assert len(ref_langs) == 1, f"Multiple reference languages found in the file: {raw_file}"
-        src = []
-
-        ref = { translator: [] for translator in translators }
-
-        src_sent_count, doc_count = 0, 0
-        for doc in tree.getroot().findall(".//doc"):
-            docid = doc.attrib["id"]
-
-            # Skip the testsuite
-            if "testsuite" in doc.attrib:
-                continue
-
-            doc_count += 1
-            src_sents = { int(seg.get("id")): seg.text for seg in doc.findall(".//src//seg") }
-            def get_sents(doc):
-                return { int(seg.get("id")): seg.text if seg.text else ""  for seg in doc.findall(f".//seg") }
-
-            ref_docs = doc.findall(".//ref")
-
-            trans_to_ref  = { ref_doc.get("translator"): get_sents(ref_doc) for ref_doc in ref_docs }
-
-            for seg_id in sorted(src_sents.keys()):
-                # no ref translation is avaliable for this segment
-                if not any([value.get(seg_id, "") for value in trans_to_ref.values()]):
-                    continue
-                for translator in translators:
-                    ref[translator].append(trans_to_ref.get(translator, {translator: {}}).get(seg_id, ""))
-                src.append(src_sents[seg_id])
-                src_sent_count += 1
-
-        if translator_name == "src":
-            return src
-        elif translator_name == "first":
-            # take the first translation as the reference
-            joint_ref = []
-            for key in sorted(ref.keys(), key=lambda x: str(x)):  # sort by translator name. None, "A", "B", etc.
-                for i, sent in enumerate(ref[key]):
-                    if i >= len(joint_ref):
-                        joint_ref.append(sent)
-                    elif not joint_ref[i]:
-                        joint_ref[i] = sent
-            return joint_ref
-        else:
-            return ref[translator_name]
-
-    if not os.path.exists(txtfile) or os.path.getsize(txtfile) == 0:
-        sacrelogger.info(f"Processing {rawfile} to {txtfile}")
-        if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
-            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                for line in fin:
-                    if line.startswith('<seg '):
-                        print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
-        # wmt21 or later, special xml format used
-        elif re.match(r'.*(news|flores)(dev|test)20[2-9][1-9]\.[a-z]{2}-[a-z]{2}.xml', rawfile):
-            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                lines = _unwrap_wmt21_or_later(fin, translator)
-                for line in lines:
-                    print(line.rstrip(), file=fout)
-        # IWSLT
-        elif rawfile.endswith('.xml'):
-            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                for line in fin:
-                    if line.startswith('<seg '):
-                        print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
-        # MTNT
-        elif rawfile.endswith('.tsv'):
-            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                for line in fin:
-                    print(line.rstrip().split('\t')[field], file=fout)
-        # PLAIN TEXT
-        else:
-            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                for line in fin:
-                    print(line.rstrip(), file=fout)
-
-
 def print_test_set(test_set, langpair, side, origlang=None, subset=None):
     """Prints to STDOUT the specified side of the specified test set.
 
@@ -419,7 +305,10 @@ def get_source_file(test_set: str, langpair: str) -> str:
     :param langpair: The language pair (e.g., "de-en")
     :return: the path to the requested source file
     """
-    return get_files(test_set, langpair)[0]
+    if test_set not in DATASETS:
+        raise Exception(f"No such test set {test_set}")
+
+    return DATASETS[test_set].get_source_file(langpair)
 
 
 def get_reference_files(test_set: str, langpair: str) -> List[str]:
@@ -431,7 +320,9 @@ def get_reference_files(test_set: str, langpair: str) -> List[str]:
     :param langpair: The language pair (e.g., "de-en")
     :return: a list of one or more reference file paths
     """
-    return get_files(test_set, langpair)[1:]
+    if test_set not in DATASETS:
+        raise Exception(f"No such test set {test_set}")
+    return DATASETS[test_set].get_reference_files(langpair)
 
 
 def get_files(test_set, langpair) -> List[str]:
@@ -447,28 +338,7 @@ def get_files(test_set, langpair) -> List[str]:
 
     if test_set not in DATASETS:
         raise Exception(f"No such test set {test_set}")
-    if langpair not in DATASETS[test_set]:
-        raise Exception(f"No such language pair {test_set}/{langpair}")
-
-    cachedir = os.path.join(SACREBLEU_DIR, test_set)
-    source, target = langpair.split("-")
-
-    source_path = os.path.join(cachedir, f"{langpair}.{source}")
-
-    num_refs = len(DATASETS[test_set][langpair]) - 1
-    if num_refs == 1:
-        reference_paths = [os.path.join(cachedir, f"{langpair}.{target}")]
-    else:
-        reference_paths = [os.path.join(cachedir, f"{langpair}.{target}.{num}") for num in range(num_refs)]
-
-    all_files = [source_path] + reference_paths
-
-    for fname in all_files:
-        if not os.path.exists(fname):
-            download_test_set(test_set, langpair)
-            break
-
-    return all_files
+    return DATASETS[test_set].get_files(langpair)
 
 
 def extract_tarball(filepath, destdir):
@@ -493,7 +363,7 @@ def check_md5sum(dest_path, expected_md5):
             cur_md5 = md5.hexdigest()
         if cur_md5 != expected_md5:
             sacrelogger.error(f'Fatal: MD5 sum of downloaded file was incorrect (got {cur_md5}, expected {expected_md5}).')
-            sacrelogger.error(f'Please manually delete {tarball!r} and rerun the command.')
+            sacrelogger.error(f'Please manually delete {dest_path!r} and rerun the command.')
             sacrelogger.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
             sys.exit(1)
         else:
@@ -548,64 +418,16 @@ def download_test_set(test_set, langpair=None):
     """
     if test_set not in DATASETS:
         raise Exception(f"No such test set {test_set}")
-
-    outdir = os.path.join(SACREBLEU_DIR, test_set)
-    os.makedirs(outdir, exist_ok=True)
-
-    expected_checksums = DATASETS[test_set].get('md5', [None] * len(DATASETS[test_set]))
-    for dataset, expected_md5 in zip(DATASETS[test_set]['data'], expected_checksums):
-        tarball = os.path.join(outdir, os.path.basename(dataset))
-        rawdir = os.path.join(outdir, 'raw')
-
-        download_file(dataset, tarball, extract_to=rawdir, expected_md5=expected_md5)
-
-    file_paths = []
-
-    # Process the files into plain text
-    languages = get_langpairs_for_testset(test_set) if langpair is None else [langpair]
-    for pair in languages:
-        src, tgt = pair.split('-')
-        rawfile = DATASETS[test_set][pair][0]
-        field = None  # used for TSV files
-        if rawfile.endswith('.tsv'):
-            field, rawfile = rawfile.split(':', maxsplit=1)
-            field = int(field)
-
-        translator = "first"  # use for wmt21 or later
-        if re.match(r'.*(news|flores)(dev|test)20[2-9][1-9]\.[a-z]{2}-[a-z]{2}.xml', rawfile):
-            tmp = rawfile.split(':', maxsplit=1)
-            if len(tmp) == 2:
-                translator, rawfile = tmp
-
-        rawpath = os.path.join(rawdir, rawfile)
-        outpath = os.path.join(outdir, f'{pair}.{src}')
-        process_to_text(rawpath, outpath, field=field)
-        file_paths.append(outpath)
-
-        refs = DATASETS[test_set][pair][1:]
-        for i, ref in enumerate(refs):
-            field = None
-            if ref.endswith('.tsv'):
-                field, ref = ref.split(':', maxsplit=1)
-                field = int(field)
-            if re.match(r'.*(news|flores)(dev|test)20[2-9][1-9]\.[a-z]{2}-[a-z]{2}.xml', rawfile):
-                tmp = ref.split(':', maxsplit=1)
-                if len(tmp) == 2:
-                    translator, ref = tmp
-            rawpath = os.path.join(rawdir, ref)
-            if len(refs) >= 2:
-                outpath = os.path.join(outdir, f'{pair}.{tgt}.{i}')
-            else:
-                outpath = os.path.join(outdir, f'{pair}.{tgt}')
-            process_to_text(rawpath, outpath, field=field, translator=translator)
-            file_paths.append(outpath)
-
+    dataset = DATASETS[test_set]
+    file_paths = dataset.get_files(langpair)
     return file_paths
 
 
 def get_langpairs_for_testset(testset: str) -> List[str]:
     """Return a list of language pairs for a given test set."""
-    return list(filter(lambda x: re.match(r'\w\w\-\w\w', x), DATASETS.get(testset, {}).keys()))
+    if testset not in DATASETS:
+        return []
+    return list(DATASETS[testset].langpairs.keys())
 
 
 def get_available_testsets() -> List[str]:
@@ -620,7 +442,8 @@ def get_available_origlangs(test_sets, langpair) -> List[str]:
 
     origlangs = set()
     for test_set in test_sets.split(','):
-        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
+        dataset = DATASETS[test_set]
+        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', dataset.langpairs[langpair][0])
         if rawfile.endswith('.sgm'):
             with smart_open(rawfile) as fin:
                 for line in fin:
@@ -643,7 +466,8 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
     indices_to_keep = []
 
     for test_set in test_sets.split(','):
-        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
+        dataset = DATASETS[test_set]
+        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', dataset.langpairs[langpair][0])
         if not rawfile.endswith('.sgm'):
             raise Exception(f'--origlang and --subset supports only *.sgm files, not {rawfile!r}')
         if subset is not None:

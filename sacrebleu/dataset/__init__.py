@@ -69,10 +69,10 @@ DOMAINS = sorted(list({v.split("-")[1] for v in SUBSETS["wmt19"].values()}))
 DATASETS = {}
 
 from .fake_sgml import FAKE_SGML_DATASETS
-from .plain_text import PLAIN_TEXT_DATASETS
-from .wmt_xml import WMT_XML_DATASETS
 from .iwslt_xml import IWSLT_XML_DATASETS
+from .plain_text import PLAIN_TEXT_DATASETS
 from .tsv import TSV_DATASETS
+from .wmt_xml import WMT_XML_DATASETS
 
 for item in [
     FAKE_SGML_DATASETS,

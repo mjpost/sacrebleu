@@ -242,7 +242,7 @@ def main():
         else:
             print('The available test sets are:')
             for testset in sorted(get_available_testsets()):
-                desc = DATASETS[testset].get('description', '').strip()
+                desc = DATASETS[testset].description.strip()
                 print(f'{testset:<30}: {desc}')
         sys.exit(0)
 
@@ -258,7 +258,7 @@ def main():
             if 'citation' not in DATASETS[test_set]:
                 sacrelogger.error(f'No citation found for {test_set}')
             else:
-                print(DATASETS[test_set]['citation'])
+                print(DATASETS[test_set].citation)
         sys.exit(0)
 
     if args.num_refs != 1 and (args.test_set is not None or len(args.refs) > 1):
