@@ -23,6 +23,7 @@ class WMTXMLDataset(Dataset):
         :return: Dictionary which contains the following fields:
             - `src`: The source sentences.
             - `docid`: ID indicating which document the sentences belong to.
+            - `origlang`: The original language of the document.
             - `ref`: The reference sentences unknown translator.
             - `ref:A`: Reference from translator A.
             - `ref:B`: Reference from translator B.
@@ -48,6 +49,7 @@ class WMTXMLDataset(Dataset):
         ), f"Multiple reference languages found in the file: {raw_file}"
         src = []
         docids = []
+        orig_langs = []
 
         def get_field_by_translator(translator):
             if not translator:
@@ -60,6 +62,7 @@ class WMTXMLDataset(Dataset):
         src_sent_count, doc_count = 0, 0
         for doc in tree.getroot().findall(".//doc"):
             docid = doc.attrib["id"]
+            origlang = doc.attrib["origlang"]
 
             # Skip the testsuite
             if "testsuite" in doc.attrib:
@@ -92,9 +95,10 @@ class WMTXMLDataset(Dataset):
                     )
                 src.append(src_sents[seg_id])
                 docids.append(docid)
+                orig_langs.append(origlang)
                 src_sent_count += 1
 
-        return {"src": src, "docid": docids, **refs}
+        return {"src": src, "docid": docids, "origlang": orig_langs, **refs}
 
     def process_to_text(self, langpair=None):
         """Processes raw files to plain text files.
@@ -135,9 +139,6 @@ class WMTXMLDataset(Dataset):
         :param langpair: The language pair (e.g., "de-en")
         :return: a list of field names
         """
-        if langpair not in self.langpairs:
-            raise Exception(f"No such language pair {self.name}/{langpair}")
-
         self.process_to_text(langpair)
         all_file = os.listdir(self._outdir)
 
@@ -186,10 +187,10 @@ WMT_XML_DATASETS = {
         description="Development data for WMT21，if multiple references are available, the first one is used.",
         md5=["165da59ac8dfb5b7cafd7e90b1cac672"],
         langpairs={
-            "en-ha": ["dev/xml/newsdev2021.en-ha.xml", "dev/xml/newsdev2021.en-ha.xml"],
-            "ha-en": ["dev/xml/newsdev2021.ha-en.xml", "dev/xml/newsdev2021.ha-en.xml"],
-            "en-is": ["dev/xml/newsdev2021.en-is.xml", "dev/xml/newsdev2021.en-is.xml"],
-            "is-en": ["dev/xml/newsdev2021.is-en.xml", "dev/xml/newsdev2021.is-en.xml"],
+            "en-ha": ["dev/xml/newsdev2021.en-ha.xml"],
+            "ha-en": ["dev/xml/newsdev2021.ha-en.xml"],
+            "en-is": ["dev/xml/newsdev2021.en-is.xml"],
+            "is-en": ["dev/xml/newsdev2021.is-en.xml"],
         },
     ),
 }
