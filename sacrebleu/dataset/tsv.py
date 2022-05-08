@@ -21,7 +21,7 @@ class TSVDataset(Dataset):
         arr = meta.split(":")
         if len(arr) == 2:
             try:
-                index = int(arr[0]) - 1
+                index = int(arr[0])
             except ValueError:
                 raise Exception(f"Invalid meta for TSVDataset: {meta}")
             return index, arr[1]
@@ -45,7 +45,9 @@ class TSVDataset(Dataset):
                 os.path.join(self._rawdir, path) for path in langpairs[langpair]
             ]
 
-            for field, origin_file, meta in zip(fieldnames, origin_files, langpairs[langpair]):
+            for field, origin_file, meta in zip(
+                fieldnames, origin_files, langpairs[langpair]
+            ):
                 index, origin_file = self._split_index_and_filename(meta, field)
 
                 origin_file = os.path.join(self._rawdir, origin_file)
@@ -111,10 +113,10 @@ TSV_DATASETS = {
         citation='@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
         md5=["8ce1831ac584979ba8cdcd9d4be43e1d"],
         langpairs={
-            "en-fr": ["1:MTNT/valid/valid.en-fr.tsv", "2:MTNT/valid/valid.en-fr.tsv"],
-            "fr-en": ["1:MTNT/valid/valid.fr-en.tsv", "2:MTNT/valid/valid.fr-en.tsv"],
-            "en-ja": ["1:MTNT/valid/valid.en-ja.tsv", "2:MTNT/valid/valid.en-ja.tsv"],
-            "ja-en": ["1:MTNT/valid/valid.ja-en.tsv", "2:MTNT/valid/valid.ja-en.tsv"],
+            "en-fr": ["1:MTNT/train/train.en-fr.tsv", "2:MTNT/train/train.en-fr.tsv"],
+            "fr-en": ["1:MTNT/train/train.fr-en.tsv", "2:MTNT/train/train.fr-en.tsv"],
+            "en-ja": ["1:MTNT/train/train.en-ja.tsv", "2:MTNT/train/train.en-ja.tsv"],
+            "ja-en": ["1:MTNT/train/train.ja-en.tsv", "2:MTNT/train/train.ja-en.tsv"],
         },
     ),
 }

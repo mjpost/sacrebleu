@@ -146,9 +146,7 @@ class Dataset(metaclass=ABCMeta):
         """
         Return an iterable over the references.
         """
-        all_fields = self.fieldnames(langpair)
-        ref_fields = [field for field in all_fields if field.startswith("ref")]
-        ref_files = [self._get_txt_file_path(langpair, field) for field in ref_fields]
+        ref_files = self.get_reference_files(langpair)
         ref_fins = [smart_open(f) for f in ref_files]
 
         for item in zip(*ref_fins):
@@ -156,6 +154,14 @@ class Dataset(metaclass=ABCMeta):
 
     def get_source_file(self, langpair):
         return self.get_files(langpair)[0]
+
+    def get_reference_files(self, langpair):
+        all_files = self.get_files(langpair)
+        all_fields = self.fieldnames(langpair)
+        ref_files = [
+            f for f, field in zip(all_files, all_fields) if field.startswith("ref")
+        ]
+        return ref_files
 
     def get_files(self, langpair):
         """
