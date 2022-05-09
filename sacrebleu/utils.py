@@ -10,7 +10,6 @@ from collections import defaultdict
 from typing import List, Optional, Sequence, Dict
 from argparse import Namespace
 
-import lxml.etree as ET
 from tabulate import tabulate
 import colorama
 
@@ -274,21 +273,27 @@ def args_to_dict(args, prefix: str, strip_prefix: bool = False):
     return d
 
 
-def print_test_set(test_set, langpair, side, origlang=None, subset=None):
+def print_test_set(test_set, langpair, fields, origlang=None, subset=None):
     """Prints to STDOUT the specified side of the specified test set.
 
     :param test_set: the test set to print
     :param langpair: the language pair
-    :param side: 'src' for source, 'ref' for reference
+    :param fields: the fields to print
     :param origlang: print only sentences with a given original language (2-char ISO639-1 code), "non-" prefix means negation
     :param subset: print only sentences whose document annotation matches a given regex
     """
-    if side == 'src':
-        files = [get_source_file(test_set, langpair)]
-    elif side == 'ref':
-        files = get_reference_files(test_set, langpair)
-    elif side == "both":
-        files = [get_source_file(test_set, langpair)] + get_reference_files(test_set, langpair)
+    if test_set not in DATASETS:
+        raise Exception(f"No such test set {test_set}")
+
+    fieldnames = DATASETS[test_set].fieldnames(langpair)
+    all_files = DATASETS[test_set].get_files(langpair)
+
+    files = []
+    for field in fields:
+        if field not in fieldnames:
+            raise Exception(f"No such field {field} in test set {test_set} for language pair {langpair}.")
+        index = fieldnames.index(field)
+        files.append(all_files[index])
 
     streams = [smart_open(file) for file in files]
     streams = filter_subset(streams, test_set, langpair, origlang, subset)

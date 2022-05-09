@@ -1,5 +1,4 @@
 import os
-import re
 
 import lxml.etree as ET
 
@@ -139,17 +138,14 @@ class WMTXMLDataset(Dataset):
         :param langpair: The language pair (e.g., "de-en")
         :return: a list of field names
         """
-        self.process_to_text(langpair)
-        all_file = os.listdir(self._outdir)
+        self.maybe_download()
+        meta = self._get_langpair_metadata(langpair)[langpair]
+        rawfile = os.path.join(self._rawdir, meta[0])
 
-        regex = f".*\\.{langpair}\\.(.*)$"
-        fields = []
-        for file in all_file:
-            match = re.match(regex, file)
-            if match:
-                fields.append(match.group(1))
+        with smart_open(rawfile) as fin:
+            fields = self._unwrap_wmt21_or_later(fin)
 
-        return fields
+        return list(fields.keys())
 
 
 WMT_XML_DATASETS = {

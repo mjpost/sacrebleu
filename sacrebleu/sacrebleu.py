@@ -80,8 +80,10 @@ def parse_args():
                             help='Use a subset of sentences whose document annotation matches a given regex (see SUBSETS in the source code).')
     arg_parser.add_argument('--download', type=str, default=None,
                             help='Download a test set and quit.')
-    arg_parser.add_argument('--echo', choices=['src', 'ref', 'both'], type=str, default=None,
-                            help='Output the source (src), reference (ref), or both (both, pasted) to STDOUT and quit.')
+    arg_parser.add_argument('--echo', nargs="*", type=str, default=None,
+                            help='Output the source (src), reference (ref), or other avaliable field (docid, ref:A, ref:1 for example) to STDOUT and quit. '
+                                 'You can get avaliable fields with options `--list` and `-t`' 'For example: `sacrebleu -t wmt21 --list`. '
+                                 'If multiple fields are given, they are outputted with tsv format in the order they are given.')
 
     # I/O related arguments
     # Multiple input files can be provided for significance testing for example
@@ -238,7 +240,10 @@ def main():
 
     if args.list:
         if args.test_set:
-            print(' '.join(get_langpairs_for_testset(args.test_set)))
+            langpairs = get_langpairs_for_testset(args.test_set)
+            for pair in langpairs:
+                fields = DATASETS[args.test_set].fieldnames(pair)
+                print(f'{pair}: {", ".join(fields)}')
         else:
             print('The available test sets are:')
             for testset in sorted(get_available_testsets()):
