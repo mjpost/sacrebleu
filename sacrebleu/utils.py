@@ -289,14 +289,17 @@ def print_test_set(test_set, langpair, fields, origlang=None, subset=None):
     all_files = DATASETS[test_set].get_files(langpair)
 
     if "all" in fields and len(fields) != 1:
-        raise Exception("Cannot use --echo all with other fields")
+        sacrelogger.error("Cannot use --echo all with other fields")
+        sys.exit(1)
     elif "all" in fields:
         fields = fieldnames
 
     files = []
     for field in fields:
         if field not in fieldnames:
-            raise Exception(f"No such field {field} in test set {test_set} for language pair {langpair}.")
+            sacrelogger.error(f"No such field {field} in test set {test_set} for language pair {langpair}.")
+            sacrelogger.error(f"available fields for {test_set}/{langpair}: {', '.join(fieldnames)}")
+            sys.exit(1)
         index = fieldnames.index(field)
         files.append(all_files[index])
 
