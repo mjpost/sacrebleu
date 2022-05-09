@@ -153,7 +153,10 @@ class Dataset(metaclass=ABCMeta):
             yield item
 
     def get_source_file(self, langpair):
-        return self.get_files(langpair)[0]
+        all_files = self.get_files(langpair)
+        all_fields = self.fieldnames(langpair)
+        index = all_fields.index("src")
+        return all_files[index]
 
     def get_reference_files(self, langpair):
         all_files = self.get_files(langpair)
