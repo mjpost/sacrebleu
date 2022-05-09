@@ -288,6 +288,11 @@ def print_test_set(test_set, langpair, fields, origlang=None, subset=None):
     fieldnames = DATASETS[test_set].fieldnames(langpair)
     all_files = DATASETS[test_set].get_files(langpair)
 
+    if "all" in fields and len(fields) != 1:
+        raise Exception("Cannot use --echo all with other fields")
+    elif "all" in fields:
+        fields = fieldnames
+
     files = []
     for field in fields:
         if field not in fieldnames:

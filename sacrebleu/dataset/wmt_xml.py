@@ -97,7 +97,7 @@ class WMTXMLDataset(Dataset):
                 orig_langs.append(origlang)
                 src_sent_count += 1
 
-        return {"src": src, "docid": docids, "origlang": orig_langs, **refs}
+        return {"src": src, **refs, "docid": docids, "origlang": orig_langs,}
 
     def process_to_text(self, langpair=None):
         """Processes raw files to plain text files.

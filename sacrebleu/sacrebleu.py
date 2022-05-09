@@ -83,7 +83,8 @@ def parse_args():
     arg_parser.add_argument('--echo', nargs="*", type=str, default=None,
                             help='Output the source (src), reference (ref), or other avaliable field (docid, ref:A, ref:1 for example) to STDOUT and quit. '
                                  'You can get avaliable fields with options `--list` and `-t`' 'For example: `sacrebleu -t wmt21 --list`. '
-                                 'If multiple fields are given, they are outputted with tsv format in the order they are given.')
+                                 'If multiple fields are given, they are outputted with tsv format in the order they are given.'
+                                 'You can also use `--echo all` to output all avaliable fields.')
 
     # I/O related arguments
     # Multiple input files can be provided for significance testing for example
