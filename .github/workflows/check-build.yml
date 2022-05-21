@@ -35,6 +35,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           pip install .[ja]
+          pip install .[ko]
       - name: Python pytest test suite
         run: python3 -m pytest
       - name: CLI bash test suite
