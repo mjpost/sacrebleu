@@ -61,7 +61,7 @@ def test_api_get_langpairs_for_testset():
     for testset in DATASETS.keys():
         available = get_langpairs_for_testset(testset)
         assert type(available) is list
-        for langpair in DATASETS[testset].keys():
+        for langpair in DATASETS[testset].langpairs.keys():
             # skip non-language keys
             if "-" not in langpair:
                 assert langpair not in available
