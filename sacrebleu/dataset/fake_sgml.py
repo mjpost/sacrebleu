@@ -23,6 +23,24 @@ class FakeSGMLDataset(Dataset):
                     line = self._clean(re.sub(r"<seg.*?>(.*)</seg>.*?", "\\1", line))
                     print(line, file=fout)
 
+    def _convert_meta(self, input_file_path, field, output_filep_path):
+        """
+        Extract metadata from document tags, projects across segments.
+        """
+        with smart_open(input_file_path) as fin, smart_open(
+            output_filep_path, "wt"
+        ) as fout:
+            value = ""
+            for line in fin:
+                if line.startswith("<doc "):
+                    match = re.search(rf'{field}="(.*?)"', line)
+                    if match is not None:
+                        value = match.group(1)
+
+                elif line.startswith("<seg "):
+                    # print the current value once for each field
+                    print(value, file=fout)
+
     def process_to_text(self, langpair=None):
         """Processes raw files to plain text files.
 
@@ -38,11 +56,21 @@ class FakeSGMLDataset(Dataset):
                 os.path.join(self._rawdir, path) for path in langpairs[langpair]
             ]
 
+            # Add the source file three more times for docid, genre, origlang
+            origin_files += [
+                os.path.join(self._rawdir, langpairs[langpair][0]) for _ in range(3)
+            ]
+
             for field, origin_file in zip(fieldnames, origin_files):
 
                 origin_file = os.path.join(self._rawdir, origin_file)
                 output_file = self._get_txt_file_path(langpair, field)
-                self._convert_format(origin_file, output_file)
+
+                if field.startswith("src") or field.startswith("ref"):
+                    self._convert_format(origin_file, output_file)
+                else:
+                    # document metadata keys
+                    self._convert_meta(origin_file, field, output_file)
 
     def fieldnames(self, langpair):
         """
@@ -51,24 +79,26 @@ class FakeSGMLDataset(Dataset):
         ID for each line, or the original language (origLang).
 
         get_files() should return the same number of items as this.
-
-        TODO genre, docid
         """
         meta = self._get_langpair_metadata(langpair)
         length = len(meta[langpair])
 
         assert (
             length >= 2
-        ), f"Each language pair in {self.name} must have at least 2 fileds."
+        ), f"Each language pair in {self.name} must have at least 2 fields."
+
+        fields = ["src"]
 
         if length == 2:
-            return ["src", "ref"]
+            fields.append("ref")
         else:
-            fields = ["src"]
             for i, _ in enumerate(meta[langpair][1:]):
                 fields.append(f"ref:{i}")
 
-            return fields
+        if not self.name.startswith("wmt08"):
+            fields += ["docid", "genre", "origlang"]
+
+        return fields
 
 
 class WMTAdditionDataset(FakeSGMLDataset):

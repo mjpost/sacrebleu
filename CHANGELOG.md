@@ -3,7 +3,7 @@
 - 2.2.0 (2022-07-22)
   Features:
   - Added WMT21 datasets
-  - `--echo` now exposes document metadata where available (e.g., docid, origlang)
+  - `--echo` now exposes document metadata where available (e.g., docid, genre, origlang)
 
   Under the hood:
   - Moderate code refactoring
