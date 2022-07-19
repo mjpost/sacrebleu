@@ -4,6 +4,7 @@
   Features:
   - Added WMT21 datasets
   - `--echo` now exposes document metadata where available (e.g., docid, genre, origlang)
+  - Bugfix: allow empty references (#161)
 
   Under the hood:
   - Moderate code refactoring

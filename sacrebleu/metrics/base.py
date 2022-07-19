@@ -325,12 +325,8 @@ class Metric(metaclass=ABCMeta):
         num_refs = set()
 
         for refs in zip(*references):
-            # remove undefined / empty references
-            # i.e. we have fewer references for this particular sentence
-            lines = [x for x in refs if x is not None and x != ""]
-
-            if len(lines) == 0:
-                raise RuntimeError("Empty or `None` reference sentence found.")
+            # Remove undefined references
+            lines = [x for x in refs if x is not None]
 
             # Keep track of reference counts to allow variable reference
             # info in the signature
