@@ -379,8 +379,6 @@ def check_md5sum(dest_path, expected_md5):
             sacrelogger.error(f'Please manually delete {dest_path!r} and rerun the command.')
             sacrelogger.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
             sys.exit(1)
-        else:
-            sacrelogger.info(f'Checksum passed: {cur_md5}')
 
 
 def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
