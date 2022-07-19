@@ -134,7 +134,7 @@ if [ -z $SKIP_INITIAL ]; then
       exit 1
   fi
   ${CMD} -t wmt17/ms -l zh-en --echo ref:2 | tr -d '\015' > .tmp.echo
-  diff .tmp.echo $SACREBLEU/wmt17/ms/wmt17_ms.zh-en.ref:2 > /dev/null
+  diff .tmp.echo $SACREBLEU/wmt17/ms/wmt17_ms.zh-en.ref-2 > /dev/null
   if [[ $? -ne 0 ]]; then
       echo "Source echo failed."
       pwd
