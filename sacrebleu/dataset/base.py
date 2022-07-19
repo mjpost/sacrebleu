@@ -82,6 +82,8 @@ class Dataset(metaclass=ABCMeta):
         """
         # handle the special case of subsets. e.g. "wmt21/dev" > "wmt21_dev"
         name = self.name.replace("/", "_")
+        # Colons are used to distinguish multiple references, but are not supported in Windows filenames
+        fieldname = fieldname.replace(":", "-")
         return os.path.join(self._outdir, f"{name}.{langpair}.{fieldname}")
 
     def _get_langpair_metadata(self, langpair):
