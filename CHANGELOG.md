@@ -1,13 +1,14 @@
 # Release Notes
 
-- 2.1.0 (TBD)
+- 2.1.0 (2022-05-19)
   Features:
-  - Added `-tok spm` for multilingual SPM tokenization
+  - Added `-tok spm` for multilingual SPM tokenization (#168)
     (thanks to Naman Goyal and James Cross at Facebook)
 
   Fixes:
   - Handle potential memory usage issues due to LRU caching in tokenizers (#167)
   - Bugfix: BLEU.corpus_score() now using max_ngram_order (#173)
+  - Upgraded ja-mecab to 1.0.5 (#196)
 
 - 2.0.0 (2021-07-18)
   - Build: Add Windows and OS X testing to Travis CI.
