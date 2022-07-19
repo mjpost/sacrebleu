@@ -128,15 +128,16 @@ if [ -z $SKIP_INITIAL ]; then
   # Test echoing of source, reference, and both
   # Replace \r\n with \n for Windows compatibility
   ${CMD} -t wmt17/ms -l zh-en --echo src | tr -d '\015' > .tmp.echo
-  diff .tmp.echo $SACREBLEU/wmt17/ms/zh-en.zh
+  diff .tmp.echo $SACREBLEU/wmt17/ms/wmt17_ms.zh-en.src
   if [[ $? -ne 0 ]]; then
       echo "Source echo failed."
       exit 1
   fi
-  ${CMD} -t wmt17/ms -l zh-en --echo ref | tr -d '\015' | cut -f3 > .tmp.echo
-  diff .tmp.echo $SACREBLEU/wmt17/ms/zh-en.en.2
+  ${CMD} -t wmt17/ms -l zh-en --echo ref:2 | tr -d '\015' > .tmp.echo
+  diff .tmp.echo $SACREBLEU/wmt17/ms/wmt17_ms.zh-en.ref:2 > /dev/null
   if [[ $? -ne 0 ]]; then
       echo "Source echo failed."
+      pwd
       exit 1
   fi
 
@@ -273,7 +274,7 @@ if [ -z $SKIP_CHRF ]; then
           # Test chrF
           score=$(cat $txt | ${CMD} -w 4 -t wmt17 -l $source-$target -b --metrics chrf --chrf-eps-smoothing)
           expected_score=${CHRF[$name]}
-          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | python
+          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | python3
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED chrF test $pair/$sys (wanted $expected_score got $score)"
@@ -286,7 +287,7 @@ if [ -z $SKIP_CHRF ]; then
           score=$(cat $txt | ${CMD} -w 4 -t wmt17 -l $source-$target -b --metrics chrf --chrf-word-order 2 --chrf-eps-smoothing)
           expected_score=${CHRFPP[$name]}
 
-          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | python
+          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | python3
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED chrF++ test $pair/$sys (wanted $expected_score got $score)"
@@ -480,7 +481,7 @@ if [ -z $SKIP_MTEVAL13 ]; then
           # mteval=$(echo "print($bleu1 * 100)" | python)
           score=$(cat $txt | ${CMD} -w 2 -t wmt17 -l $source-$target -b)
 
-          echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
+          echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python3
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
@@ -536,7 +537,7 @@ if [ -z $SKIP_MTEVAL14 ]; then
 
           score=$(cat $txt | ${CMD} -w 2 -t wmt17 -l $source-$target -b --tokenize intl)
 
-          echo "import sys; sys.exit(1 if abs($score-${MTEVAL14[$name]}) > 0.01 else 0)" | python
+          echo "import sys; sys.exit(1 if abs($score-${MTEVAL14[$name]}) > 0.01 else 0)" | python3
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED test $pair/$sys (wanted ${MTEVAL14[$name]} got $score)"
@@ -659,7 +660,7 @@ if [ -z $SKIP_TER ]; then
 
           expected_score="${TER[$name]}"
 
-          echo "import sys; sys.exit(1 if abs(0.01 * ${score}-${expected_score}) > 0.01 else 0)" | python
+          echo "import sys; sys.exit(1 if abs(0.01 * ${score}-${expected_score}) > 0.01 else 0)" | python3
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED test $pair/$sys (wanted $expected_score got $score)"
@@ -691,7 +692,7 @@ if [[ -z $SKIP_MECAB ]]; then
         ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
         score=$(cat $txt | ${CMD} -w 2 -l $source-$target -b $ref)
 
-        echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
+        echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python3
 
         if [[ $? -eq 1 ]]; then
             echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
