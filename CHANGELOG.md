@@ -1,5 +1,17 @@
 # Release Notes
 
+- 2.2.0 (2022-07-22)
+  Features:
+  - Added WMT21 datasets
+  - `--echo` now exposes document metadata where available (e.g., docid, origlang)
+
+  Under the hood:
+  - Moderate code refactoring
+  - Processed files have adopted a more sensible internal naming scheme under ~/.sacrebleu
+
+  Many thanks to @BrightXiaoHan (https://github.com/BrightXiaoHan) for the bulk of
+  the code contributions in this release.
+
 - 2.1.0 (2022-05-19)
   Features:
   - Added `-tok spm` for multilingual SPM tokenization (#168)
