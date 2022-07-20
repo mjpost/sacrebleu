@@ -35,12 +35,15 @@ trap "rm -f .tmp* data/.tmp*" EXIT INT TERM
 
 # For Travis CI to work on Windows/Mac OS X
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  CMD="python -m sacrebleu"
+  PYTHON="python"
+  CMD="$PYTHON -m sacrebleu"
 elif [[ "$OSTYPE" == "msys" ]]; then
-  CMD="python -m sacrebleu"
+  PYTHON="python"
+  CMD="$PYTHON -m sacrebleu"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   # OS X ships python -> python2 by default, be explicit
-  CMD="python3 -m sacrebleu"
+  PYTHON=python3
+  CMD="$PYTHON -m sacrebleu"
 fi
 
 export SACREBLEU=$(pwd)/.sacrebleu
@@ -274,7 +277,7 @@ if [ -z $SKIP_CHRF ]; then
           # Test chrF
           score=$(cat $txt | ${CMD} -w 4 -t wmt17 -l $source-$target -b --metrics chrf --chrf-eps-smoothing)
           expected_score=${CHRF[$name]}
-          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | python3
+          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | $PYTHON
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED chrF test $pair/$sys (wanted $expected_score got $score)"
@@ -287,7 +290,7 @@ if [ -z $SKIP_CHRF ]; then
           score=$(cat $txt | ${CMD} -w 4 -t wmt17 -l $source-$target -b --metrics chrf --chrf-word-order 2 --chrf-eps-smoothing)
           expected_score=${CHRFPP[$name]}
 
-          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | python3
+          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | $PYTHON
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED chrF++ test $pair/$sys (wanted $expected_score got $score)"
@@ -481,7 +484,7 @@ if [ -z $SKIP_MTEVAL13 ]; then
           # mteval=$(echo "print($bleu1 * 100)" | python)
           score=$(cat $txt | ${CMD} -w 2 -t wmt17 -l $source-$target -b)
 
-          echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python3
+          echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | $PYTHON
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
@@ -537,7 +540,7 @@ if [ -z $SKIP_MTEVAL14 ]; then
 
           score=$(cat $txt | ${CMD} -w 2 -t wmt17 -l $source-$target -b --tokenize intl)
 
-          echo "import sys; sys.exit(1 if abs($score-${MTEVAL14[$name]}) > 0.01 else 0)" | python3
+          echo "import sys; sys.exit(1 if abs($score-${MTEVAL14[$name]}) > 0.01 else 0)" | $PYTHON
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED test $pair/$sys (wanted ${MTEVAL14[$name]} got $score)"
@@ -660,7 +663,7 @@ if [ -z $SKIP_TER ]; then
 
           expected_score="${TER[$name]}"
 
-          echo "import sys; sys.exit(1 if abs(0.01 * ${score}-${expected_score}) > 0.01 else 0)" | python3
+          echo "import sys; sys.exit(1 if abs(0.01 * ${score}-${expected_score}) > 0.01 else 0)" | $PYTHON
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED test $pair/$sys (wanted $expected_score got $score)"
@@ -692,7 +695,7 @@ if [[ -z $SKIP_MECAB ]]; then
         ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
         score=$(cat $txt | ${CMD} -w 2 -l $source-$target -b $ref)
 
-        echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python3
+        echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | $PYTHON
 
         if [[ $? -eq 1 ]]; then
             echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
