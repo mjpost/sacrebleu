@@ -36,6 +36,7 @@ class Dataset(metaclass=ABCMeta):
         self.citation = citation
         self.md5 = md5
         self.langpairs = langpairs
+        self.kwargs = kwargs
 
         # Don't do any downloading or further processing now.
         # Only do that lazily, when asked.

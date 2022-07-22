@@ -13,7 +13,7 @@ class WMTXMLDataset(Dataset):
     """
 
     @staticmethod
-    def _unwrap_wmt21_or_later(raw_file):
+    def _unwrap_wmt21_or_later(raw_file, allowed_refs=[]):
         """
         Unwraps the XML file from wmt21 or later.
         This script is adapted from https://github.com/wmt-conference/wmt-format-tools
@@ -30,7 +30,7 @@ class WMTXMLDataset(Dataset):
             - `ref:D`: Reference from translator D.
         """
         tree = ET.parse(raw_file)
-        # Find and check  the documents (src, ref, hyp)
+        # Find and check the documents (src, ref, hyp)
         src_langs, ref_langs, translators = set(), set(), set()
         for src_doc in tree.getroot().findall(".//src"):
             src_langs.add(src_doc.get("lang"))
@@ -38,7 +38,8 @@ class WMTXMLDataset(Dataset):
         for ref_doc in tree.getroot().findall(".//ref"):
             ref_langs.add(ref_doc.get("lang"))
             translator = ref_doc.get("translator")
-            translators.add(translator)
+            if len(allowed_refs) == 0 or translator in allowed_refs:
+                translators.add(translator)
 
         assert (
             len(src_langs) == 1
@@ -98,7 +99,7 @@ class WMTXMLDataset(Dataset):
                 src_sent_count += 1
 
         # For backward compatibility, if "ref" is not in the fields,
-        # add reference seneteces from the first translator as "ref" field
+        # add reference sentences from the first translator as "ref" field
         if "ref" not in refs:
             refs["ref"] = refs[min(refs.keys())]
 
@@ -119,7 +120,7 @@ class WMTXMLDataset(Dataset):
             )  # all source and reference data in one file for wmt21 and later
 
             with smart_open(rawfile) as fin:
-                fields = self._unwrap_wmt21_or_later(fin)
+                fields = self._unwrap_wmt21_or_later(fin, allowed_refs=self.kwargs.get("refs", []))
 
             for fieldname in fields:
                 textfile = self._get_txt_file_path(langpair, fieldname)
@@ -148,6 +149,6 @@ class WMTXMLDataset(Dataset):
         rawfile = os.path.join(self._rawdir, meta[0])
 
         with smart_open(rawfile) as fin:
-            fields = self._unwrap_wmt21_or_later(fin)
+            fields = self._unwrap_wmt21_or_later(fin, allowed_refs=self.kwargs.get("refs", []))
 
         return list(fields.keys())
