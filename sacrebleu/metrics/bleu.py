@@ -149,7 +149,7 @@ class BLEU(Metric):
 
     def __init__(self, lowercase: bool = False,
                  force: bool = False,
-                 tokenize: Optional[str] = '13a',
+                 tokenize: Optional[str] = None,
                  smooth_method: str = 'exp',
                  smooth_value: Optional[float] = None,
                  max_ngram_order: int = MAX_NGRAM_ORDER,
@@ -171,7 +171,10 @@ class BLEU(Metric):
         assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
             "Unknown smooth_method {self.smooth_method!r}"
 
-        # Default tokenizer logic
+        # If the tokenizer wasn't specified, choose it according to the
+        # following logic. We use 'v13a' except for ZH and JA. Note that
+        # this logic can only be applied when sacrebleu knows the target
+        # language, which is only the case for builtin datasets.
         if tokenize is None:
             best_tokenizer = self.TOKENIZER_DEFAULT
 
