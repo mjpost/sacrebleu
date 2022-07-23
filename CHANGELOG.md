@@ -1,14 +1,18 @@
 # Release Notes
 
-- 2.2.0 (2022-07-22)
+- 2.2.0 (2022-07-23)
   Features:
-  - Added WMT21 datasets
+  - Added WMT21 datasets (thanks to @BrighXiaoHan)
   - `--echo` now exposes document metadata where available (e.g., docid, genre, origlang)
   - Bugfix: allow empty references (#161)
+  - Adds a Korean tokenizer (thanks to @NoUnique)
 
   Under the hood:
   - Moderate code refactoring
   - Processed files have adopted a more sensible internal naming scheme under ~/.sacrebleu
+    (e.g., wmt17_ms.zh-en.src instead of zh-en.zh)
+  - Processed file extensions correspond to the values passed to `--echo` (e.g., "src")
+  - Now explicitly representing NoneTokenizer
 
   Many thanks to @BrightXiaoHan (https://github.com/BrightXiaoHan) for the bulk of
   the code contributions in this release.
