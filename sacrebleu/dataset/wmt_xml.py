@@ -23,11 +23,8 @@ class WMTXMLDataset(Dataset):
             - `src`: The source sentences.
             - `docid`: ID indicating which document the sentences belong to.
             - `origlang`: The original language of the document.
-            - `ref`: The reference sentences unknown translator.
-            - `ref:A`: Reference from translator A.
-            - `ref:B`: Reference from translator B.
-            - `ref:C`: Reference from translator C.
-            - `ref:D`: Reference from translator D.
+            - `ref:{translator}`: The references produced by each translator.
+            - `ref`: An alias for the references from the first translator.
         """
         tree = ET.parse(raw_file)
         # Find and check the documents (src, ref, hyp)
