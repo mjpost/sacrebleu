@@ -187,13 +187,13 @@ class BLEU(Metric):
             best_tokenizer = tokenize
             if self.trg_lang == 'zh' and best_tokenizer != 'zh':
                 sacrelogger.warning(
-                    "You should use the 'zh' tokenizer for Chinese.")
+                    "Consider using the 'zh' or 'spm' tokenizer for Chinese.")
             if self.trg_lang == 'ja' and best_tokenizer != 'ja-mecab':
                 sacrelogger.warning(
-                    "You should use the 'ja-mecab' tokenizer for Japanese.")
+                    "Consider using the 'ja-mecab' or 'spm' tokenizer for Japanese.")
             if self.trg_lang == 'ko' and best_tokenizer != 'ko-mecab':
                 sacrelogger.warning(
-                    "You should use the 'ko-mecab' tokenizer for Korean.")
+                    "Consider using the 'ko-mecab' or 'spm' tokenizer for Korean.")
 
         # Create the tokenizer
         self.tokenizer = _get_tokenizer(best_tokenizer)()
