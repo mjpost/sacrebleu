@@ -22,6 +22,7 @@ _TOKENIZERS = {
     'intl': 'tokenizer_intl.TokenizerV14International',
     'char': 'tokenizer_char.TokenizerChar',
     'ja-mecab': 'tokenizer_ja_mecab.TokenizerJaMecab',
+    'ko-mecab': 'tokenizer_ko_mecab.TokenizerKoMecab',
     'spm': 'tokenizer_spm.TokenizerSPM',
 }
 
@@ -133,7 +134,7 @@ class BLEU(Metric):
         'exp': None,    # No value is required
     }
 
-    TOKENIZERS = ['none', 'zh', '13a', 'char', 'intl', 'ja-mecab', 'spm']
+    TOKENIZERS = ['none', 'zh', '13a', 'char', 'intl', 'ja-mecab', 'ko-mecab', 'spm']
 
     # mteval-v13a.pl tokenizer unless Chinese or Japanese is provided
     TOKENIZER_DEFAULT = '13a'
@@ -143,6 +144,7 @@ class BLEU(Metric):
     _TOKENIZER_MAP = {
         'zh': 'zh',
         'ja': 'ja-mecab',
+        'ko': 'ko-mecab',
     }
 
     _SIGNATURE_TYPE = BLEUSignature
@@ -178,7 +180,7 @@ class BLEU(Metric):
         if tokenize is None:
             best_tokenizer = self.TOKENIZER_DEFAULT
 
-            # Set `zh` or `ja-mecab` if target language is provided
+            # Set `zh` or `ja-mecab` or `ko-mecab` if target language is provided
             if self.trg_lang in self._TOKENIZER_MAP:
                 best_tokenizer = self._TOKENIZER_MAP[self.trg_lang]
         else:
@@ -189,6 +191,9 @@ class BLEU(Metric):
             if self.trg_lang == 'ja' and best_tokenizer != 'ja-mecab':
                 sacrelogger.warning(
                     "You should use the 'ja-mecab' tokenizer for Japanese.")
+            if self.trg_lang == 'ko' and best_tokenizer != 'ko-mecab':
+                sacrelogger.warning(
+                    "You should use the 'ko-mecab' tokenizer for Korean.")
 
         # Create the tokenizer
         self.tokenizer = _get_tokenizer(best_tokenizer)()

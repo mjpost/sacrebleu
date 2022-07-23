@@ -120,7 +120,8 @@ def parse_args():
                                 f"add-k: {METRICS['BLEU'].SMOOTH_DEFAULTS['add-k']})")
     bleu_args.add_argument('--tokenize', '-tok', choices=METRICS['BLEU'].TOKENIZERS, default=None,
                            dest='bleu_tokenize',
-                           help='Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `ja-mecab` for Japanese and `13a` (mteval) otherwise.')
+                           help='Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, '
+                                '`ja-mecab` for Japanese, `ko-mecab` for Korean and `13a` (mteval) otherwise.')
     bleu_args.add_argument('--lowercase', '-lc', dest='bleu_lowercase', action='store_true', default=False,
                            help='If True, enables case-insensitivity. (Default: %(default)s)')
     bleu_args.add_argument('--force', default=False, action='store_true',

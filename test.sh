@@ -57,6 +57,7 @@ SKIP_INITIAL=${SKIP_INITIAL:-}
 SKIP_CHRF=${SKIP_CHRF:-}
 SKIP_TER=${SKIP_TER:-}
 SKIP_MECAB=${SKIP_MECAB:-}
+SKIP_MECAB_KO=${SKIP_MECAB_KO:-}
 SKIP_MTEVAL13=${SKIP_MTEVAL13:-}
 SKIP_MTEVAL14=${SKIP_MTEVAL14:-}
 
@@ -103,6 +104,14 @@ if [[ ! -d en-ja-translation-example-master ]]; then
    echo "Downloading and unpacking English-Japanese test data..."
    wget -q https://github.com/MorinoseiMorizo/en-ja-translation-example/archive/master.zip
    unzip master.zip
+   rm master.zip
+fi
+
+if [[ ! -d en-ko-translation-example-master ]]; then
+   echo "Downloading and unpacking English-Korean test data..."
+   wget -q https://github.com/NoUnique/en-ko-translation-example/archive/master.zip
+   unzip master.zip
+   rm master.zip
 fi
 
 if [ -z $SKIP_INITIAL ]; then
@@ -463,6 +472,7 @@ declare -A MTEVAL=( ["newstest2017.PJATK.4760.cs-en.sgm"]=23.15
                     ["newstest2017.uedin-nmt.5112.zh-en.sgm"]=25.7
                     ["newstest2017.xmunmt.5160.zh-en.sgm"]=26.0
                     ["kyoto-test"]=14.48
+                    ["flores101.devtest.en-ko"]=33.18
                   )
 
 if [ -z $SKIP_MTEVAL13 ]; then
@@ -696,6 +706,37 @@ if [[ -z $SKIP_MECAB ]]; then
         score=$(cat $txt | ${CMD} -w 2 -l $source-$target -b $ref)
 
         echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | $PYTHON
+
+        if [[ $? -eq 1 ]]; then
+            echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
+            exit 1
+        fi
+        echo "Passed $source-$target $sys mteval-v13a.pl: ${MTEVAL[$name]} sacreBLEU: $score"
+
+        let i++
+    done
+fi
+
+#############
+# Mecab-ko tests
+#############
+if [[ -z $SKIP_MECAB_KO ]]; then
+  echo "-----------------------"
+  echo "Testing Mecab-ko tokenizer"
+  echo "-----------------------"
+    pair="en-ko"
+    source=$(echo $pair | cut -d- -f1)
+    target=$(echo $pair | cut -d- -f2)
+    for txt in en-ko-translation-example-master/*.hyp.$target; do
+        name=$(basename $txt .hyp.$target)
+
+        if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
+
+        sys=$(basename $txt .hyp.$target)
+        ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
+        score=$(cat $txt | ${CMD} -w 2 -l $source-$target -b $ref)
+
+        echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
 
         if [[ $? -eq 1 ]]; then
             echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
