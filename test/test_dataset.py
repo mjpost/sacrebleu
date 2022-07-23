@@ -31,10 +31,11 @@ def test_process_to_text():
     Ensure each field of specified language pair have the same length.
     """
     for ds in dataset.DATASETS.values():
-        for filename in os.listdir(ds._outdir):
-            filepath = os.path.join(ds._outdir, filename)
-            if os.path.isfile(filepath):
-                os.remove(filepath)
+        if os.path.exists(ds._outdir):
+            for filename in os.listdir(ds._outdir):
+                filepath = os.path.join(ds._outdir, filename)
+                if os.path.isfile(filepath):
+                    os.remove(filepath)
 
         ds.process_to_text()
 
