@@ -56,7 +56,8 @@ class Dataset(metaclass=ABCMeta):
         expected_checksums = self.md5 if self.md5 else [None] * len(self.data)
 
         for dataset, expected_md5 in zip(self.data, expected_checksums):
-            tarball = os.path.join(self._rawdir, os.path.basename(dataset))
+            filename = self.name.replace("/", "_") + "." + os.path.basename(dataset)
+            tarball = os.path.join(self._rawdir, filename)
 
             download_file(
                 dataset, tarball, extract_to=self._rawdir, expected_md5=expected_md5
