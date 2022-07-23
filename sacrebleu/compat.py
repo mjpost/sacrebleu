@@ -15,6 +15,8 @@ def corpus_bleu(hypotheses: Sequence[str],
                 tokenize=BLEU.TOKENIZER_DEFAULT,
                 use_effective_order=False) -> BLEUScore:
     """Computes BLEU for a corpus against a single (or multiple) reference(s).
+    This is the main CLI entry point for computing BLEU between a system output
+    and a reference sentence.
 
     :param hypotheses: A sequence of hypothesis strings.
     :param references: A sequence of reference documents with document being
@@ -42,11 +44,16 @@ def raw_corpus_bleu(hypotheses: Sequence[str],
     This convenience function assumes a particular set of arguments i.e.
     it disables tokenization and applies a `floor` smoothing with value `0.1`.
 
+    This convenience call does not apply any tokenization at all,
+    neither to the system output nor the reference. It just computes
+    BLEU on the "raw corpus" (hence the name).
+
     :param hypotheses: A sequence of hypothesis strings.
     :param references: A sequence of reference documents with document being
         defined as a sequence of reference strings.
     :param smooth_value: The smoothing value for `floor`. If not given, the default of 0.1 is used.
     :return: Returns a `BLEUScore` object.
+
     """
     return corpus_bleu(
         hypotheses, references, smooth_method='floor',

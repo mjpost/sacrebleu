@@ -16,7 +16,7 @@ sacrelogger = logging.getLogger('sacrebleu')
 MAX_NGRAM_ORDER = 4
 
 _TOKENIZERS = {
-    'none': 'tokenizer_base.BaseTokenizer',
+    'none': 'tokenizer_none.NoneTokenizer',
     'zh': 'tokenizer_zh.TokenizerZh',
     '13a': 'tokenizer_13a.Tokenizer13a',
     'intl': 'tokenizer_intl.TokenizerV14International',
