@@ -398,7 +398,8 @@ def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
     outdir = os.path.dirname(dest_path)
     os.makedirs(outdir, exist_ok=True)
 
-    with portalocker.Lock(dest_path, timeout=60):
+    lockfile = f"{dest_path}.lock"
+    with portalocker.Lock(lockfile, timeout=60):
         if os.path.getsize(dest_path) == 0:
             sacrelogger.info(f"Downloading {source_path} to {dest_path}")
             try:
