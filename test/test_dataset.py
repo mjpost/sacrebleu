@@ -10,7 +10,7 @@ def test_maybe_download():
     """
     Test the maybe_download function in Dataset class.
 
-    Randomly select 5 datasets for downloading and correct file placement.
+    Check a few random datasets for downloading and correct file placement.
     """
     # ensure all file have been downloaded
     selected_datasets = random.choices(list(dataset.DATASETS.values()), k=10)

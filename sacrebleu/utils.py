@@ -400,7 +400,7 @@ def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
 
     lockfile = f"{dest_path}.lock"
     with portalocker.Lock(lockfile, timeout=60):
-        if os.path.getsize(dest_path) == 0:
+        if not os.path.exists(dest_path) or os.path.getsize(dest_path) == 0:
             sacrelogger.info(f"Downloading {source_path} to {dest_path}")
             try:
                 with urllib.request.urlopen(source_path) as f, open(dest_path, 'wb') as out:
