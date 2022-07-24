@@ -6,6 +6,11 @@ on:
 env:
   PYTHONUTF8: "1"
 
+# only run one at a time per branch
+concurrency:
+  group: check-build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check-build:
     runs-on: ${{ matrix.os }}
