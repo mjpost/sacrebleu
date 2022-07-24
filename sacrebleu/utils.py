@@ -398,11 +398,11 @@ def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
     outdir = os.path.dirname(dest_path)
     os.makedirs(outdir, exist_ok=True)
 
-    with portalocker.Lock(dest_path, timeout=60):
+    with portalocker.Lock(dest_path, "wb", timeout=60) as out:
         if not os.path.exists(dest_path) or os.path.getsize(dest_path) == 0:
             sacrelogger.info(f"Downloading {source_path} to {dest_path}")
             try:
-                with urllib.request.urlopen(source_path) as f, open(dest_path, 'wb') as out:
+                with urllib.request.urlopen(source_path) as f:
                     out.write(f.read())
             except ssl.SSLError:
                 sacrelogger.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
