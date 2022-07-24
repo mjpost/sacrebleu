@@ -55,12 +55,11 @@ class Dataset(metaclass=ABCMeta):
 
         expected_checksums = self.md5 if self.md5 else [None] * len(self.data)
 
-        for dataset, expected_md5 in zip(self.data, expected_checksums):
-            filename = self.name.replace("/", "_") + "." + os.path.basename(dataset)
-            tarball = os.path.join(self._rawdir, filename)
+        for url, expected_md5 in zip(self.data, expected_checksums):
+            tarball = os.path.join(self._rawdir, self._get_tarball_filename(url))
 
             download_file(
-                dataset, tarball, extract_to=self._rawdir, expected_md5=expected_md5
+                url, tarball, extract_to=self._rawdir, expected_md5=expected_md5
             )
 
     @staticmethod
@@ -72,6 +71,14 @@ class Dataset(metaclass=ABCMeta):
         :return: A cleaned-up string.
         """
         return re.sub(r"\s+", " ", s.strip())
+
+    def _get_tarball_filename(self, url):
+        """
+        Produces a local filename for tarball.
+        :param url: The url to download.
+        :return: A name produced from the dataset identifier and the URL basename.
+        """
+        return self.name.replace("/", "_") + "." + os.path.basename(url)
 
     def _get_txt_file_path(self, langpair, fieldname):
         """

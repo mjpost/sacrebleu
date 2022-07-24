@@ -543,7 +543,7 @@ DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "d66d9e91548ced0ac476f2390e32e2de"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-ar.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19_google_ar.wmt19-ende-ar.ref"],
         },
     ),
     "wmt19/google/arp": WMTAdditionDataset(
@@ -556,7 +556,7 @@ DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "c70ea808cf2bff621ad7a8fddd4deca9"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-arp.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19_google_arp.wmt19-ende-arp.ref"],
         },
     ),
     "wmt19/google/wmtp": WMTAdditionDataset(
@@ -569,7 +569,7 @@ DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "587c660ee5fd44727f0db025b71c6a82"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-wmtp.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19_google_wmtp.wmt19-ende-wmtp.ref"],
         },
     ),
     "wmt19/google/hqr": WMTAdditionDataset(
@@ -582,7 +582,7 @@ DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "d9221135f62d7152de041f5bfc8efaea"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-hqr.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19_google_hqr.wmt19-ende-hqr.ref"],
         },
     ),
     "wmt19/google/hqp": WMTAdditionDataset(
@@ -595,7 +595,7 @@ DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "b7c3a07a59c8eccea5367e9ec5417a8a"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-hqp.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19_google_hqp.wmt19-ende-hqp.ref"],
         },
     ),
     "wmt19/google/hqall": WMTAdditionDataset(
@@ -608,7 +608,7 @@ DATASETS = {
         md5=["84de7162d158e28403103b01aeefc39a", "edecf10ced59e10b703a6fbcf1fa9dfa"],
         citation="@misc{freitag2020bleu,\n    title={{BLEU} might be Guilty but References are not Innocent},\n    author={Markus Freitag and David Grangier and Isaac Caswell},\n    year={2020},\n    eprint={2004.06063},\n    archivePrefix={arXiv},\n    primaryClass={cs.CL}",
         langpairs={
-            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19-ende-hqall.ref"],
+            "en-de": ["sgm/newstest2019-ende-src.en.sgm", "wmt19_google_hqall.wmt19-ende-hqall.ref"],
         },
     ),
     "wmt18": FakeSGMLDataset(
@@ -1786,9 +1786,9 @@ DATASETS = {
         description="2018 flickr test set of Multi30k dataset. See https://competitions.codalab.org/competitions/19917 for evaluation.",
         citation='@InProceedings{elliott-etal-2016-multi30k,\n    title = "{M}ulti30{K}: Multilingual {E}nglish-{G}erman Image Descriptions",\n    author = "Elliott, Desmond  and Frank, Stella  and Sima{\'}an, Khalil  and Specia, Lucia",\n    booktitle = "Proceedings of the 5th Workshop on Vision and Language",\n    month = aug,\n    year = "2016",\n    address = "Berlin, Germany",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W16-3210",\n    doi = "10.18653/v1/W16-3210",\n    pages = "70--74",\n}\n\n@InProceedings{barrault-etal-2018-findings,\n    title = "Findings of the Third Shared Task on Multimodal Machine Translation",\n    author = {Barrault, Lo{\\"\\i}c  and Bougares, Fethi  and Specia, Lucia  and Lala, Chiraag  and Elliott, Desmond  and Frank, Stella},\n    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",\n    month = oct,\n    year = "2018",\n    address = "Belgium, Brussels",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W18-6402",\n    doi = "10.18653/v1/W18-6402",\n    pages = "304--323",\n}\n',
         langpairs={
-            "en-fr": ["test_2018_flickr.en", "test_2018_flickr.fr.gz"],
-            "en-de": ["test_2018_flickr.en", "test_2018_flickr.de.gz"],
-            "en-cs": ["test_2018_flickr.en", "test_2018_flickr.cs.gz"],
+            "en-fr": ["test_2018_flickr.en", "multi30k_2018.test_2018_flickr.fr.gz"],
+            "en-de": ["test_2018_flickr.en", "multi30k_2018.test_2018_flickr.de.gz"],
+            "en-cs": ["test_2018_flickr.en", "multi30k_2018.test_2018_flickr.cs.gz"],
         },
     ),
     # mtnt

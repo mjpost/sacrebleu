@@ -1,5 +1,6 @@
 import os
 import shutil
+import random
 
 import sacrebleu.dataset as dataset
 from sacrebleu.utils import smart_open
@@ -9,17 +10,18 @@ def test_maybe_download():
     """
     Test the maybe_download function in Dataset class.
 
-    Ensure all raw data files are downloaded and placed in the correct location.
+    Randomly select 5 datasets for downloading and correct file placement.
     """
-    # ensure all file has been downloaded
-    for ds in dataset.DATASETS.values():
+    # ensure all file have been downloaded
+    selected_datasets = random.choices(list(dataset.DATASETS.values()), k=10)
+    for ds in selected_datasets:
         shutil.rmtree(ds._rawdir, ignore_errors=True)
         ds.maybe_download()
 
-        all_file = os.listdir(ds._rawdir)
+        all_files = os.listdir(ds._rawdir)
         for url in ds.data:
-            filename = os.path.basename(url)
-            assert filename in all_file
+            filename = ds._get_tarball_filename(url)
+            assert filename in all_files
             filepath = os.path.join(ds._rawdir, filename)
             assert os.path.getsize(filepath) > 0
 
