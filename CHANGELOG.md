@@ -1,6 +1,6 @@
 # Release Notes
 
-- 2.2.0 (2022-07-23)
+- 2.2.0 (2022-07-25)
   Features:
   - Added WMT21 datasets (thanks to @BrighXiaoHan)
   - `--echo` now exposes document metadata where available (e.g., docid, genre, origlang)
@@ -13,6 +13,7 @@
     (e.g., wmt17_ms.zh-en.src instead of zh-en.zh)
   - Processed file extensions correspond to the values passed to `--echo` (e.g., "src")
   - Now explicitly representing NoneTokenizer
+  - Got rid of the ".lock" lockfile for downloading (using the tarball itself)
 
   Many thanks to @BrightXiaoHan (https://github.com/BrightXiaoHan) for the bulk of
   the code contributions in this release.
