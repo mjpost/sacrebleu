@@ -366,16 +366,13 @@ def extract_tarball(filepath, destdir):
             zipfile.extractall(path=destdir)
 
 
-def check_md5sum(dest_path, expected_md5):
+def get_md5sum(dest_path):
     # Check md5sum
-    if expected_md5 is not None:
-        md5 = hashlib.md5()
-        with open(dest_path, 'rb') as infile:
-            for line in infile:
-                md5.update(line)
-            cur_md5 = md5.hexdigest()
-        if cur_md5 != expected_md5:
-            raise Exception(f"md5sum({dest_path}) = {cur_md5}, expected {expected_md5}")
+    md5 = hashlib.md5()
+    with open(dest_path, 'rb') as infile:
+        for line in infile:
+            md5.update(line)
+    return md5.hexdigest()
 
 
 def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
@@ -396,29 +393,30 @@ def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
     os.makedirs(outdir, exist_ok=True)
 
     # Make sure to open in mode "a"
-    with portalocker.Lock(dest_path, "ab", timeout=60) as out:
+    lockfile = f"{dest_path}.lock"
+    with portalocker.Lock(lockfile, timeout=60):
+
         if not os.path.exists(dest_path) or os.path.getsize(dest_path) == 0:
 
             sacrelogger.info(f"Downloading {source_path} to {dest_path}")
             md5 = hashlib.md5()
 
             try:
-                with urllib.request.urlopen(source_path) as f:
-                    data = f.read()
-                    md5.update(data)
-                    out.write(data)
+                with urllib.request.urlopen(source_path) as f, open(dest_path, 'wb') as out:
+                    out.write(f.read())
             except ssl.SSLError:
                 sacrelogger.error('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
                                     'you may need to run the "Install Certificates.command" file located in the '
                                     '"Python 3" folder, often found under /Applications')
                 sys.exit(1)
 
-            cur_md5 = md5.hexdigest()
-            if expected_md5 is not None and cur_md5 != expected_md5:
-                sacrelogger.error(f'Fatal: MD5 sum of downloaded file was incorrect (got {cur_md5}, expected {expected_md5}).')
-                sacrelogger.error(f'Please manually delete {dest_path!r} and rerun the command.')
-                sacrelogger.error(f'If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
-                sys.exit(1)
+            if expected_md5 is not None:
+                cur_md5 = get_md5sum(dest_path)
+                if cur_md5 != expected_md5:
+                    sacrelogger.error(f'Fatal: MD5 sum of downloaded file was incorrect (got {cur_md5}, expected {expected_md5}).')
+                    sacrelogger.error(f'Please manually delete {dest_path!r} and rerun the command.')
+                    sacrelogger.error(f'If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
+                    sys.exit(1)
 
             # Extract the tarball
             if extract_to is not None:
