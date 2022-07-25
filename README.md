@@ -59,6 +59,11 @@ following command instead, to perform a full installation with dependencies:
 
     pip install "sacrebleu[ja]"
 
+In order to install Korean tokenizer support through `pymecab-ko`, you need to run the
+following command instead, to perform a full installation with dependencies:
+
+    pip install "sacrebleu[ko]"
+
 # Command-line Usage
 
 You can get a list of available test sets with `sacrebleu --list`. Please see [DATASETS.md](DATASETS.md)
@@ -68,17 +73,15 @@ for an up-to-date list of supported datasets.
 
 ### Downloading test sets
 
-Download the **source** for one of the pre-defined test sets:
+Downloading is triggered when you request a test set. If the dataset is not available, it is downloaded
+and unpacked.
+
+E.g., you can use the following commands to download the source, pass it through your translation system
+in `translate.sh`, and then score it:
 
 ```
-$ sacrebleu -t wmt17 -l en-de --echo src | head -n1
-28-Year-Old Chef Found Dead at San Francisco Mall
-```
-
-Download the **reference** for one of the pre-defined test sets:
-```
-$ sacrebleu -t wmt17 -l en-de --echo ref | head -n1
-28-jähriger Koch in San Francisco Mall tot aufgefunden
+$ sacrebleu -t wmt17 -l en-de --echo src > wmt17.en-de.en
+$ cat wmt17.en-de.en | translate.sh | sacrebleu -t wmt17 -l en-de
 ```
 
 ### JSON output
@@ -194,8 +197,8 @@ BLEU related arguments:
                         Smoothing method: exponential decay, floor (increment zero counts), add-k (increment num/denom by k for n>1), or none. (Default: exp)
   --smooth-value BLEU_SMOOTH_VALUE, -sv BLEU_SMOOTH_VALUE
                         The smoothing value. Only valid for floor and add-k. (Defaults: floor: 0.1, add-k: 1)
-  --tokenize {none,zh,13a,char,intl,ja-mecab}, -tok {none,zh,13a,char,intl,ja-mecab}
-                        Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `ja-mecab` for Japanese and `13a` (mteval) otherwise.
+  --tokenize {none,zh,13a,char,intl,ja-mecab,ko-mecab}, -tok {none,zh,13a,char,intl,ja-mecab,ko-mecab}
+                        Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `ja-mecab` for Japanese, `ko-mecab` for Korean and `13a` (mteval) otherwise.
   --lowercase, -lc      If True, enables case-insensitivity. (Default: False)
   --force               Insist that your tokenized input is actually detokenized.
 
@@ -219,6 +222,26 @@ TER related arguments (The defaults replicate TERCOM's behavior):
 
 ### Version Signatures
 As you may have noticed, sacreBLEU generates version strings such as `BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0` for reproducibility reasons. It's strongly recommended to share these signatures in your papers!
+
+### Outputting other metadata
+
+Sacrebleu knows about metadata for some test sets, and you can output it like this:
+
+```
+$ sacrebleu -t wmt21 -l en-de --echo src docid ref | head 2
+Couple MACED at California dog park for not wearing face masks while having lunch (VIDEO) - RT USA News	rt.com.131279	Paar in Hundepark in Kalifornien mit Pfefferspray besprüht, weil es beim Mittagessen keine Masken trug (VIDEO) - RT USA News
+There's mask-shaming and then there's full on assault.	rt.com.131279	Masken-Shaming ist eine Sache, Körperverletzung eine andere.
+```
+
+If multiple fields are requested, they are output as tab-separated columns (a TSV).
+
+To see the available fields, add `--echo asdf` (or some other garbage data):
+
+```
+$ sacrebleu -t wmt21 -l en-de --echo asdf
+sacreBLEU: No such field asdf in test set wmt21 for language pair en-de.
+sacreBLEU: available fields for wmt21/en-de: src, ref:A, ref, docid, origlang
+```
 
 ## Translationese Support
 
@@ -247,11 +270,12 @@ but it expects that you pass through the entire translated test set.
    - `intl` applies international tokenization and mimics the `mteval-v14` script from Moses
    - `zh` separates out **Chinese** characters and tokenizes the non-Chinese parts using `13a` tokenizer
    - `ja-mecab` tokenizes **Japanese** inputs using the [MeCab](https://pypi.org/project/mecab-python3) morphological analyzer
+   - `ko-mecab` tokenizes **Korean** inputs using the [MeCab-ko](https://pypi.org/project/mecab-ko) morphological analyzer
    - `spm` uses the SentencePiece model built from the Flores-101 dataset (https://github.com/facebookresearch/flores#list-of-languages). Note: the canonical .spm file will be automatically fetched if not found locally.
 - You can switch tokenizers using the `--tokenize` flag of sacreBLEU. Alternatively, if you provide language-pair strings
-  using `--language-pair/-l`, `zh` and `ja-mecab` tokenizers will be used if the target language is `zh` or `ja`, respectively.
+  using `--language-pair/-l`, `zh`, `ja-mecab` and `ko-mecab` tokenizers will be used if the target language is `zh` or `ja` or `ko`, respectively.
 - **Note that** there's no automatic language detection from the hypotheses so you need to make sure that you are correctly
-  selecting the tokenizer for **Japanese** and **Chinese**.
+  selecting the tokenizer for **Japanese**, **Korean** and **Chinese**.
 
 
 Default 13a tokenizer will produce poor results for Japanese:

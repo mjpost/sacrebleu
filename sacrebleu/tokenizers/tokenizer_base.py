@@ -7,7 +7,7 @@ class BaseTokenizer:
 
         :return: signature string
         """
-        return 'none'
+        raise NotImplementedError()
 
     def __call__(self, line):
         """
@@ -16,4 +16,4 @@ class BaseTokenizer:
         :param line: a segment to tokenize
         :return: the tokenized line
         """
-        return line
+        raise NotImplementedError()

@@ -35,12 +35,15 @@ trap "rm -f .tmp* data/.tmp*" EXIT INT TERM
 
 # For Travis CI to work on Windows/Mac OS X
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  CMD="python -m sacrebleu"
+  PYTHON="python"
+  CMD="$PYTHON -m sacrebleu"
 elif [[ "$OSTYPE" == "msys" ]]; then
-  CMD="python -m sacrebleu"
+  PYTHON="python"
+  CMD="$PYTHON -m sacrebleu"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   # OS X ships python -> python2 by default, be explicit
-  CMD="python3 -m sacrebleu"
+  PYTHON=python3
+  CMD="$PYTHON -m sacrebleu"
 fi
 
 export SACREBLEU=$(pwd)/.sacrebleu
@@ -54,6 +57,7 @@ SKIP_INITIAL=${SKIP_INITIAL:-}
 SKIP_CHRF=${SKIP_CHRF:-}
 SKIP_TER=${SKIP_TER:-}
 SKIP_MECAB=${SKIP_MECAB:-}
+SKIP_MECAB_KO=${SKIP_MECAB_KO:-}
 SKIP_MTEVAL13=${SKIP_MTEVAL13:-}
 SKIP_MTEVAL14=${SKIP_MTEVAL14:-}
 
@@ -100,6 +104,14 @@ if [[ ! -d en-ja-translation-example-master ]]; then
    echo "Downloading and unpacking English-Japanese test data..."
    wget -q https://github.com/MorinoseiMorizo/en-ja-translation-example/archive/master.zip
    unzip master.zip
+   rm master.zip
+fi
+
+if [[ ! -d en-ko-translation-example-master ]]; then
+   echo "Downloading and unpacking English-Korean test data..."
+   wget -q https://github.com/NoUnique/en-ko-translation-example/archive/master.zip
+   unzip master.zip
+   rm master.zip
 fi
 
 if [ -z $SKIP_INITIAL ]; then
@@ -128,15 +140,16 @@ if [ -z $SKIP_INITIAL ]; then
   # Test echoing of source, reference, and both
   # Replace \r\n with \n for Windows compatibility
   ${CMD} -t wmt17/ms -l zh-en --echo src | tr -d '\015' > .tmp.echo
-  diff .tmp.echo $SACREBLEU/wmt17/ms/zh-en.zh
+  diff .tmp.echo $SACREBLEU/wmt17/ms/wmt17_ms.zh-en.src
   if [[ $? -ne 0 ]]; then
       echo "Source echo failed."
       exit 1
   fi
-  ${CMD} -t wmt17/ms -l zh-en --echo ref | tr -d '\015' | cut -f3 > .tmp.echo
-  diff .tmp.echo $SACREBLEU/wmt17/ms/zh-en.en.2
+  ${CMD} -t wmt17/ms -l zh-en --echo ref:2 | tr -d '\015' > .tmp.echo
+  diff .tmp.echo $SACREBLEU/wmt17/ms/wmt17_ms.zh-en.ref-2 > /dev/null
   if [[ $? -ne 0 ]]; then
       echo "Source echo failed."
+      pwd
       exit 1
   fi
 
@@ -273,7 +286,7 @@ if [ -z $SKIP_CHRF ]; then
           # Test chrF
           score=$(cat $txt | ${CMD} -w 4 -t wmt17 -l $source-$target -b --metrics chrf --chrf-eps-smoothing)
           expected_score=${CHRF[$name]}
-          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | python
+          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | $PYTHON
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED chrF test $pair/$sys (wanted $expected_score got $score)"
@@ -286,7 +299,7 @@ if [ -z $SKIP_CHRF ]; then
           score=$(cat $txt | ${CMD} -w 4 -t wmt17 -l $source-$target -b --metrics chrf --chrf-word-order 2 --chrf-eps-smoothing)
           expected_score=${CHRFPP[$name]}
 
-          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | python
+          echo "import sys; sys.exit(1 if abs(${score}-${expected_score}) > 1e-6 else 0)" | $PYTHON
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED chrF++ test $pair/$sys (wanted $expected_score got $score)"
@@ -459,6 +472,7 @@ declare -A MTEVAL=( ["newstest2017.PJATK.4760.cs-en.sgm"]=23.15
                     ["newstest2017.uedin-nmt.5112.zh-en.sgm"]=25.7
                     ["newstest2017.xmunmt.5160.zh-en.sgm"]=26.0
                     ["kyoto-test"]=14.48
+                    ["flores101.devtest.en-ko"]=33.18
                   )
 
 if [ -z $SKIP_MTEVAL13 ]; then
@@ -480,7 +494,7 @@ if [ -z $SKIP_MTEVAL13 ]; then
           # mteval=$(echo "print($bleu1 * 100)" | python)
           score=$(cat $txt | ${CMD} -w 2 -t wmt17 -l $source-$target -b)
 
-          echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | python
+          echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | $PYTHON
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
@@ -536,7 +550,7 @@ if [ -z $SKIP_MTEVAL14 ]; then
 
           score=$(cat $txt | ${CMD} -w 2 -t wmt17 -l $source-$target -b --tokenize intl)
 
-          echo "import sys; sys.exit(1 if abs($score-${MTEVAL14[$name]}) > 0.01 else 0)" | python
+          echo "import sys; sys.exit(1 if abs($score-${MTEVAL14[$name]}) > 0.01 else 0)" | $PYTHON
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED test $pair/$sys (wanted ${MTEVAL14[$name]} got $score)"
@@ -659,7 +673,7 @@ if [ -z $SKIP_TER ]; then
 
           expected_score="${TER[$name]}"
 
-          echo "import sys; sys.exit(1 if abs(0.01 * ${score}-${expected_score}) > 0.01 else 0)" | python
+          echo "import sys; sys.exit(1 if abs(0.01 * ${score}-${expected_score}) > 0.01 else 0)" | $PYTHON
 
           if [[ $? -eq 1 ]]; then
               echo "FAILED test $pair/$sys (wanted $expected_score got $score)"
@@ -683,6 +697,37 @@ if [[ -z $SKIP_MECAB ]]; then
     source=$(echo $pair | cut -d- -f1)
     target=$(echo $pair | cut -d- -f2)
     for txt in en-ja-translation-example-master/*.hyp.$target; do
+        name=$(basename $txt .hyp.$target)
+
+        if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi
+
+        sys=$(basename $txt .hyp.$target)
+        ref=$(dirname $txt)/$(basename $txt .hyp.$target).ref.$target
+        score=$(cat $txt | ${CMD} -w 2 -l $source-$target -b $ref)
+
+        echo "import sys; sys.exit(1 if abs($score-${MTEVAL[$name]}) > 0.01 else 0)" | $PYTHON
+
+        if [[ $? -eq 1 ]]; then
+            echo "FAILED test $pair/$sys (wanted ${MTEVAL[$name]} got $score)"
+            exit 1
+        fi
+        echo "Passed $source-$target $sys mteval-v13a.pl: ${MTEVAL[$name]} sacreBLEU: $score"
+
+        let i++
+    done
+fi
+
+#############
+# Mecab-ko tests
+#############
+if [[ -z $SKIP_MECAB_KO ]]; then
+  echo "-----------------------"
+  echo "Testing Mecab-ko tokenizer"
+  echo "-----------------------"
+    pair="en-ko"
+    source=$(echo $pair | cut -d- -f1)
+    target=$(echo $pair | cut -d- -f2)
+    for txt in en-ko-translation-example-master/*.hyp.$target; do
         name=$(basename $txt .hyp.$target)
 
         if [[ ! -z $limit_test && $limit_test != $name ]]; then continue; fi

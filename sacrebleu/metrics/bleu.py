@@ -16,12 +16,13 @@ sacrelogger = logging.getLogger('sacrebleu')
 MAX_NGRAM_ORDER = 4
 
 _TOKENIZERS = {
-    'none': 'tokenizer_base.BaseTokenizer',
+    'none': 'tokenizer_none.NoneTokenizer',
     'zh': 'tokenizer_zh.TokenizerZh',
     '13a': 'tokenizer_13a.Tokenizer13a',
     'intl': 'tokenizer_intl.TokenizerV14International',
     'char': 'tokenizer_char.TokenizerChar',
     'ja-mecab': 'tokenizer_ja_mecab.TokenizerJaMecab',
+    'ko-mecab': 'tokenizer_ko_mecab.TokenizerKoMecab',
     'spm': 'tokenizer_spm.TokenizerSPM',
 }
 
@@ -133,7 +134,7 @@ class BLEU(Metric):
         'exp': None,    # No value is required
     }
 
-    TOKENIZERS = ['none', 'zh', '13a', 'char', 'intl', 'ja-mecab', 'spm']
+    TOKENIZERS = ['none', 'zh', '13a', 'char', 'intl', 'ja-mecab', 'ko-mecab', 'spm']
 
     # mteval-v13a.pl tokenizer unless Chinese or Japanese is provided
     TOKENIZER_DEFAULT = '13a'
@@ -143,13 +144,14 @@ class BLEU(Metric):
     _TOKENIZER_MAP = {
         'zh': 'zh',
         'ja': 'ja-mecab',
+        'ko': 'ko-mecab',
     }
 
     _SIGNATURE_TYPE = BLEUSignature
 
     def __init__(self, lowercase: bool = False,
                  force: bool = False,
-                 tokenize: Optional[str] = '13a',
+                 tokenize: Optional[str] = None,
                  smooth_method: str = 'exp',
                  smooth_value: Optional[float] = None,
                  max_ngram_order: int = MAX_NGRAM_ORDER,
@@ -171,21 +173,27 @@ class BLEU(Metric):
         assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
             "Unknown smooth_method {self.smooth_method!r}"
 
-        # Default tokenizer logic
+        # If the tokenizer wasn't specified, choose it according to the
+        # following logic. We use 'v13a' except for ZH and JA. Note that
+        # this logic can only be applied when sacrebleu knows the target
+        # language, which is only the case for builtin datasets.
         if tokenize is None:
             best_tokenizer = self.TOKENIZER_DEFAULT
 
-            # Set `zh` or `ja-mecab` if target language is provided
+            # Set `zh` or `ja-mecab` or `ko-mecab` if target language is provided
             if self.trg_lang in self._TOKENIZER_MAP:
                 best_tokenizer = self._TOKENIZER_MAP[self.trg_lang]
         else:
             best_tokenizer = tokenize
             if self.trg_lang == 'zh' and best_tokenizer != 'zh':
                 sacrelogger.warning(
-                    "You should use the 'zh' tokenizer for Chinese.")
+                    "Consider using the 'zh' or 'spm' tokenizer for Chinese.")
             if self.trg_lang == 'ja' and best_tokenizer != 'ja-mecab':
                 sacrelogger.warning(
-                    "You should use the 'ja-mecab' tokenizer for Japanese.")
+                    "Consider using the 'ja-mecab' or 'spm' tokenizer for Japanese.")
+            if self.trg_lang == 'ko' and best_tokenizer != 'ko-mecab':
+                sacrelogger.warning(
+                    "Consider using the 'ko-mecab' or 'spm' tokenizer for Korean.")
 
         # Create the tokenizer
         self.tokenizer = _get_tokenizer(best_tokenizer)()

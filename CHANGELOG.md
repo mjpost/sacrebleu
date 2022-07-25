@@ -1,13 +1,32 @@
 # Release Notes
 
-- 2.1.0 (TBD)
+- 2.2.0 (2022-07-25)
   Features:
-  - Added `-tok spm` for multilingual SPM tokenization
+  - Added WMT21 datasets (thanks to @BrighXiaoHan)
+  - `--echo` now exposes document metadata where available (e.g., docid, genre, origlang)
+  - Bugfix: allow empty references (#161)
+  - Adds a Korean tokenizer (thanks to @NoUnique)
+
+  Under the hood:
+  - Moderate code refactoring
+  - Processed files have adopted a more sensible internal naming scheme under ~/.sacrebleu
+    (e.g., wmt17_ms.zh-en.src instead of zh-en.zh)
+  - Processed file extensions correspond to the values passed to `--echo` (e.g., "src")
+  - Now explicitly representing NoneTokenizer
+  - Got rid of the ".lock" lockfile for downloading (using the tarball itself)
+
+  Many thanks to @BrightXiaoHan (https://github.com/BrightXiaoHan) for the bulk of
+  the code contributions in this release.
+
+- 2.1.0 (2022-05-19)
+  Features:
+  - Added `-tok spm` for multilingual SPM tokenization (#168)
     (thanks to Naman Goyal and James Cross at Facebook)
 
   Fixes:
   - Handle potential memory usage issues due to LRU caching in tokenizers (#167)
   - Bugfix: BLEU.corpus_score() now using max_ngram_order (#173)
+  - Upgraded ja-mecab to 1.0.5 (#196)
 
 - 2.0.0 (2021-07-18)
   - Build: Add Windows and OS X testing to Travis CI.

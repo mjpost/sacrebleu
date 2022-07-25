@@ -145,13 +145,14 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['portalocker', 'regex', 'tabulate>=0.8.9', 'numpy>=1.17', 'colorama'],
+    install_requires=['portalocker', 'regex', 'tabulate>=0.8.9', 'numpy>=1.17', 'colorama', 'lxml'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-    extras_require={'ja': ['mecab-python3==1.0.5', 'ipadic>=1.0,<2.0']},
+    extras_require={'ja': ['mecab-python3==1.0.5', 'ipadic>=1.0,<2.0'],
+                    'ko': ['mecab-ko==1.0.0', 'mecab-ko-dic>=1.0,<2.0']},
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow

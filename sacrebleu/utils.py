@@ -13,7 +13,6 @@ from argparse import Namespace
 from tabulate import tabulate
 import colorama
 
-from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
@@ -274,63 +273,35 @@ def args_to_dict(args, prefix: str, strip_prefix: bool = False):
     return d
 
 
-def process_to_text(rawfile, txtfile, field: int = None):
-    """Processes raw files to plain text files. Can handle SGML, XML, TSV files, and plain text.
-    Called after downloading datasets.
-
-    :param rawfile: the input file (possibly SGML)
-    :param txtfile: the plaintext file
-    :param field: For TSV files, which field to extract.
-    """
-    def _clean(s):
-        """
-        Removes trailing and leading spaces and collapses multiple consecutive internal spaces to a single one.
-
-        :param s: The string.
-        :return: A cleaned-up string.
-        """
-        return re.sub(r'\s+', ' ', s.strip())
-
-    if not os.path.exists(txtfile) or os.path.getsize(txtfile) == 0:
-        sacrelogger.info(f"Processing {rawfile} to {txtfile}")
-        if rawfile.endswith('.sgm') or rawfile.endswith('.sgml'):
-            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                for line in fin:
-                    if line.startswith('<seg '):
-                        print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
-        # IWSLT
-        elif rawfile.endswith('.xml'):
-            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                for line in fin:
-                    if line.startswith('<seg '):
-                        print(_clean(re.sub(r'<seg.*?>(.*)</seg>.*?', '\\1', line)), file=fout)
-        # MTNT
-        elif rawfile.endswith('.tsv'):
-            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                for line in fin:
-                    print(line.rstrip().split('\t')[field], file=fout)
-        # PLAIN TEXT
-        else:
-            with smart_open(rawfile) as fin, smart_open(txtfile, 'wt') as fout:
-                for line in fin:
-                    print(line.rstrip(), file=fout)
-
-
-def print_test_set(test_set, langpair, side, origlang=None, subset=None):
+def print_test_set(test_set, langpair, fields, origlang=None, subset=None):
     """Prints to STDOUT the specified side of the specified test set.
 
     :param test_set: the test set to print
     :param langpair: the language pair
-    :param side: 'src' for source, 'ref' for reference
+    :param fields: the fields to print
     :param origlang: print only sentences with a given original language (2-char ISO639-1 code), "non-" prefix means negation
     :param subset: print only sentences whose document annotation matches a given regex
     """
-    if side == 'src':
-        files = [get_source_file(test_set, langpair)]
-    elif side == 'ref':
-        files = get_reference_files(test_set, langpair)
-    elif side == "both":
-        files = [get_source_file(test_set, langpair)] + get_reference_files(test_set, langpair)
+    if test_set not in DATASETS:
+        raise Exception(f"No such test set {test_set}")
+
+    fieldnames = DATASETS[test_set].fieldnames(langpair)
+    all_files = DATASETS[test_set].get_files(langpair)
+
+    if "all" in fields and len(fields) != 1:
+        sacrelogger.error("Cannot use --echo all with other fields")
+        sys.exit(1)
+    elif "all" in fields:
+        fields = fieldnames
+
+    files = []
+    for field in fields:
+        if field not in fieldnames:
+            sacrelogger.error(f"No such field {field} in test set {test_set} for language pair {langpair}.")
+            sacrelogger.error(f"available fields for {test_set}/{langpair}: {', '.join(fieldnames)}")
+            sys.exit(1)
+        index = fieldnames.index(field)
+        files.append(all_files[index])
 
     streams = [smart_open(file) for file in files]
     streams = filter_subset(streams, test_set, langpair, origlang, subset)
@@ -347,7 +318,10 @@ def get_source_file(test_set: str, langpair: str) -> str:
     :param langpair: The language pair (e.g., "de-en")
     :return: the path to the requested source file
     """
-    return get_files(test_set, langpair)[0]
+    if test_set not in DATASETS:
+        raise Exception(f"No such test set {test_set}")
+
+    return DATASETS[test_set].get_source_file(langpair)
 
 
 def get_reference_files(test_set: str, langpair: str) -> List[str]:
@@ -359,7 +333,9 @@ def get_reference_files(test_set: str, langpair: str) -> List[str]:
     :param langpair: The language pair (e.g., "de-en")
     :return: a list of one or more reference file paths
     """
-    return get_files(test_set, langpair)[1:]
+    if test_set not in DATASETS:
+        raise Exception(f"No such test set {test_set}")
+    return DATASETS[test_set].get_reference_files(langpair)
 
 
 def get_files(test_set, langpair) -> List[str]:
@@ -375,28 +351,7 @@ def get_files(test_set, langpair) -> List[str]:
 
     if test_set not in DATASETS:
         raise Exception(f"No such test set {test_set}")
-    if langpair not in DATASETS[test_set]:
-        raise Exception(f"No such language pair {test_set}/{langpair}")
-
-    cachedir = os.path.join(SACREBLEU_DIR, test_set)
-    source, target = langpair.split("-")
-
-    source_path = os.path.join(cachedir, f"{langpair}.{source}")
-
-    num_refs = len(DATASETS[test_set][langpair]) - 1
-    if num_refs == 1:
-        reference_paths = [os.path.join(cachedir, f"{langpair}.{target}")]
-    else:
-        reference_paths = [os.path.join(cachedir, f"{langpair}.{target}.{num}") for num in range(num_refs)]
-
-    all_files = [source_path] + reference_paths
-
-    for fname in all_files:
-        if not os.path.exists(fname):
-            download_test_set(test_set, langpair)
-            break
-
-    return all_files
+    return DATASETS[test_set].get_files(langpair)
 
 
 def extract_tarball(filepath, destdir):
@@ -411,21 +366,13 @@ def extract_tarball(filepath, destdir):
             zipfile.extractall(path=destdir)
 
 
-def check_md5sum(dest_path, expected_md5):
+def get_md5sum(dest_path):
     # Check md5sum
-    if expected_md5 is not None:
-        md5 = hashlib.md5()
-        with open(dest_path, 'rb') as infile:
-            for line in infile:
-                md5.update(line)
-            cur_md5 = md5.hexdigest()
-        if cur_md5 != expected_md5:
-            sacrelogger.error(f'Fatal: MD5 sum of downloaded file was incorrect (got {cur_md5}, expected {expected_md5}).')
-            sacrelogger.error(f'Please manually delete {tarball!r} and rerun the command.')
-            sacrelogger.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
-            sys.exit(1)
-        else:
-            sacrelogger.info(f'Checksum passed: {cur_md5}')
+    md5 = hashlib.md5()
+    with open(dest_path, 'rb') as infile:
+        for line in infile:
+            md5.update(line)
+    return md5.hexdigest()
 
 
 def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
@@ -445,22 +392,31 @@ def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
     outdir = os.path.dirname(dest_path)
     os.makedirs(outdir, exist_ok=True)
 
-    lockfile = os.path.join(outdir, f'{os.path.basename(dest_path)}.lock')
-    with portalocker.Lock(lockfile, 'w', timeout=60):
-        if os.path.exists(dest_path):
-            check_md5sum(dest_path, expected_md5)
-        else:
+    # Make sure to open in mode "a"
+    lockfile = f"{dest_path}.lock"
+    with portalocker.Lock(lockfile, timeout=60):
+
+        if not os.path.exists(dest_path) or os.path.getsize(dest_path) == 0:
+
             sacrelogger.info(f"Downloading {source_path} to {dest_path}")
+            md5 = hashlib.md5()
+
             try:
                 with urllib.request.urlopen(source_path) as f, open(dest_path, 'wb') as out:
                     out.write(f.read())
             except ssl.SSLError:
-                sacrelogger.warning('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
+                sacrelogger.error('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
                                     'you may need to run the "Install Certificates.command" file located in the '
                                     '"Python 3" folder, often found under /Applications')
                 sys.exit(1)
 
-            check_md5sum(dest_path, expected_md5)
+            if expected_md5 is not None:
+                cur_md5 = get_md5sum(dest_path)
+                if cur_md5 != expected_md5:
+                    sacrelogger.error(f'Fatal: MD5 sum of downloaded file was incorrect (got {cur_md5}, expected {expected_md5}).')
+                    sacrelogger.error(f'Please manually delete {dest_path!r} and rerun the command.')
+                    sacrelogger.error(f'If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
+                    sys.exit(1)
 
             # Extract the tarball
             if extract_to is not None:
@@ -476,53 +432,16 @@ def download_test_set(test_set, langpair=None):
     """
     if test_set not in DATASETS:
         raise Exception(f"No such test set {test_set}")
-
-    outdir = os.path.join(SACREBLEU_DIR, test_set)
-    os.makedirs(outdir, exist_ok=True)
-
-    expected_checksums = DATASETS[test_set].get('md5', [None] * len(DATASETS[test_set]))
-    for dataset, expected_md5 in zip(DATASETS[test_set]['data'], expected_checksums):
-        tarball = os.path.join(outdir, os.path.basename(dataset))
-        rawdir = os.path.join(outdir, 'raw')
-
-        download_file(dataset, tarball, extract_to=rawdir, expected_md5=expected_md5)
-
-    file_paths = []
-
-    # Process the files into plain text
-    languages = get_langpairs_for_testset(test_set) if langpair is None else [langpair]
-    for pair in languages:
-        src, tgt = pair.split('-')
-        rawfile = DATASETS[test_set][pair][0]
-        field = None  # used for TSV files
-        if rawfile.endswith('.tsv'):
-            field, rawfile = rawfile.split(':', maxsplit=1)
-            field = int(field)
-        rawpath = os.path.join(rawdir, rawfile)
-        outpath = os.path.join(outdir, f'{pair}.{src}')
-        process_to_text(rawpath, outpath, field=field)
-        file_paths.append(outpath)
-
-        refs = DATASETS[test_set][pair][1:]
-        for i, ref in enumerate(refs):
-            field = None
-            if ref.endswith('.tsv'):
-                field, ref = ref.split(':', maxsplit=1)
-                field = int(field)
-            rawpath = os.path.join(rawdir, ref)
-            if len(refs) >= 2:
-                outpath = os.path.join(outdir, f'{pair}.{tgt}.{i}')
-            else:
-                outpath = os.path.join(outdir, f'{pair}.{tgt}')
-            process_to_text(rawpath, outpath, field=field)
-            file_paths.append(outpath)
-
+    dataset = DATASETS[test_set]
+    file_paths = dataset.get_files(langpair)
     return file_paths
 
 
 def get_langpairs_for_testset(testset: str) -> List[str]:
     """Return a list of language pairs for a given test set."""
-    return list(filter(lambda x: re.match(r'\w\w\-\w\w', x), DATASETS.get(testset, {}).keys()))
+    if testset not in DATASETS:
+        return []
+    return list(DATASETS[testset].langpairs.keys())
 
 
 def get_available_testsets() -> List[str]:
@@ -537,7 +456,8 @@ def get_available_origlangs(test_sets, langpair) -> List[str]:
 
     origlangs = set()
     for test_set in test_sets.split(','):
-        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
+        dataset = DATASETS[test_set]
+        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', dataset.langpairs[langpair][0])
         if rawfile.endswith('.sgm'):
             with smart_open(rawfile) as fin:
                 for line in fin:
@@ -560,7 +480,8 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
     indices_to_keep = []
 
     for test_set in test_sets.split(','):
-        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', DATASETS[test_set][langpair][0])
+        dataset = DATASETS[test_set]
+        rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', dataset.langpairs[langpair][0])
         if not rawfile.endswith('.sgm'):
             raise Exception(f'--origlang and --subset supports only *.sgm files, not {rawfile!r}')
         if subset is not None:
@@ -631,3 +552,6 @@ def print_subset_results(metrics, full_system, full_refs, args):
         key = Color.format(f'{key:<{max_left_width}}', 'yellow')
         for n_system, score in scores:
             print(f'{key}: sentences={n_system:<6} {score.name:<{max_metric_width}} = {score.score:.{w}f}')
+
+# import at the end to avoid circular import
+from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES

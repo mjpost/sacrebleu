@@ -220,7 +220,7 @@ class Metric(metaclass=ABCMeta):
             err_msg = 'The argument `hyp` should be a string.'
         elif isinstance(refs, str) or not isinstance(refs, Sequence):
             err_msg = 'The argument `refs` should be a sequence of strings.'
-        elif not isinstance(refs[0], str):
+        elif not isinstance(refs[0], str) and refs[0] is not None:
             err_msg = 'Each element of `refs` should be a string.'
 
         if err_msg:
@@ -251,7 +251,7 @@ class Metric(metaclass=ABCMeta):
                 err_msg = "`refs` should be a sequence of sequence of strings."
             elif not isinstance(refs[0], Sequence):
                 err_msg = "Each element of `refs` should be a sequence of strings."
-            elif not isinstance(refs[0][0], str):
+            elif not isinstance(refs[0][0], str) and refs[0][0] is not None:
                 err_msg = "`refs` should be a sequence of sequence of strings."
 
         if err_msg:
@@ -325,12 +325,8 @@ class Metric(metaclass=ABCMeta):
         num_refs = set()
 
         for refs in zip(*references):
-            # remove undefined / empty references
-            # i.e. we have fewer references for this particular sentence
-            lines = [x for x in refs if x is not None and x != ""]
-
-            if len(lines) == 0:
-                raise RuntimeError("Empty or `None` reference sentence found.")
+            # Remove undefined references
+            lines = [x for x in refs if x is not None]
 
             # Keep track of reference counts to allow variable reference
             # info in the signature
