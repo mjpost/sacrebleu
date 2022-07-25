@@ -354,6 +354,7 @@ DATASETS = {
     "wmt20/robust/set1": PlainTextDataset(
         "wmt20/robust/set1",
         data=["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        md5=["a12ac9ebe89b72195041518dffc4a9d5"],
         description="WMT20 robustness task, set 1",
         langpairs={
             "en-ja": [
@@ -369,6 +370,7 @@ DATASETS = {
     "wmt20/robust/set2": PlainTextDataset(
         "wmt20/robust/set2",
         data=["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        md5=["a12ac9ebe89b72195041518dffc4a9d5"],
         description="WMT20 robustness task, set 2",
         langpairs={
             "en-ja": [
@@ -384,6 +386,7 @@ DATASETS = {
     "wmt20/robust/set3": PlainTextDataset(
         "wmt20/robust/set3",
         data=["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        md5=["a12ac9ebe89b72195041518dffc4a9d5"],
         description="WMT20 robustness task, set 3",
         langpairs={
             "de-en": [
