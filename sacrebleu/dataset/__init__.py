@@ -140,7 +140,7 @@ DATASETS = {
     "wmt21/C": WMTXMLDataset(
         "wmt21/C",
         data=["http://data.statmt.org/wmt21/translation-task/test.tgz"],
-        description="Official evaluation data for WMT21 with reference C (contributed by Microsoft)",
+        description="Official evaluation data for WMT21 with reference C",
         md5=["32e7ab995bc318414375d60f0269af92"],
         langpairs={
             "en-de": ["test/newstest2021.en-de.xml"],
@@ -162,7 +162,7 @@ DATASETS = {
     "wmt21/D": WMTXMLDataset(
         "wmt21/D",
         data=["http://data.statmt.org/wmt21/translation-task/test.tgz"],
-        description="Official evaluation data for WMT21 with reference D (contributed by Google)",
+        description="Official evaluation data for WMT21 with reference D",
         md5=["32e7ab995bc318414375d60f0269af92"],
         langpairs={
             "en-de": ["test/newstest2021.en-de.xml"],
