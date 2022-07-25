@@ -73,17 +73,15 @@ for an up-to-date list of supported datasets.
 
 ### Downloading test sets
 
-Download the **source** for one of the pre-defined test sets:
+Downloading is triggered when you request a test set. If the dataset is not available, it is downloaded
+and unpacked.
+
+E.g., you can use the following commands to download the source, pass it through your translation system
+in `translate.sh`, and then score it:
 
 ```
-$ sacrebleu -t wmt17 -l en-de --echo src | head -n1
-28-Year-Old Chef Found Dead at San Francisco Mall
-```
-
-Download the **reference** for one of the pre-defined test sets:
-```
-$ sacrebleu -t wmt17 -l en-de --echo ref | head -n1
-28-jähriger Koch in San Francisco Mall tot aufgefunden
+$ sacrebleu -t wmt17 -l en-de --echo src > wmt17.en-de.en
+$ cat wmt17.en-de.en | translate.sh | sacrebleu -t wmt17 -l en-de
 ```
 
 ### JSON output
@@ -224,6 +222,26 @@ TER related arguments (The defaults replicate TERCOM's behavior):
 
 ### Version Signatures
 As you may have noticed, sacreBLEU generates version strings such as `BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0` for reproducibility reasons. It's strongly recommended to share these signatures in your papers!
+
+### Outputting other metadata
+
+Sacrebleu knows about metadata for some test sets, and you can output it like this:
+
+```
+$ sacrebleu -t wmt21 -l en-de --echo src docid ref | head 2
+Couple MACED at California dog park for not wearing face masks while having lunch (VIDEO) - RT USA News	rt.com.131279	Paar in Hundepark in Kalifornien mit Pfefferspray besprüht, weil es beim Mittagessen keine Masken trug (VIDEO) - RT USA News
+There's mask-shaming and then there's full on assault.	rt.com.131279	Masken-Shaming ist eine Sache, Körperverletzung eine andere.
+```
+
+If multiple fields are requested, they are output as tab-separated columns (a TSV).
+
+To see the available fields, add `--echo asdf` (or some other garbage data):
+
+```
+$ sacrebleu -t wmt21 -l en-de --echo asdf
+sacreBLEU: No such field asdf in test set wmt21 for language pair en-de.
+sacreBLEU: available fields for wmt21/en-de: src, ref:A, ref, docid, origlang
+```
 
 ## Translationese Support
 
