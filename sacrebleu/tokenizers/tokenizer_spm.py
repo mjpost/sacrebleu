@@ -11,11 +11,29 @@ from .tokenizer_base import BaseTokenizer
 sacrelogger = logging.getLogger('sacrebleu')
 
 
+SPM_MODELS = {
+    "spm": {
+        "url": "https://dl.fbaipublicfiles.com/fairseq/models/flores/sacrebleu_tokenizer_spm.model",
+        "signature": "spm-flores",
+    },
+    # same as the default of "spm"
+    "flores101": {
+        "url": "https://dl.fbaipublicfiles.com/fairseq/models/flores/sacrebleu_tokenizer_spm.model",
+        "signature": "flores101",
+    },
+    "flores200": {
+        "url": "https://tinyurl.com/flores200sacrebleuspm",
+        "signature": "flores200",
+    },
+}
+
 class TokenizerSPM(BaseTokenizer):
     def signature(self):
-        return 'spm-flores'
+        return self.name
 
-    def __init__(self):
+    def __init__(self, key="spm"):
+        self.name = SPM_MODELS[key]["signature"]
+
         try:
             import sentencepiece as spm
         except (ImportError, ModuleNotFoundError):
@@ -25,11 +43,11 @@ class TokenizerSPM(BaseTokenizer):
             )
         self.sp = spm.SentencePieceProcessor()
 
-        tokenizer_path = os.path.join(SACREBLEU_DIR, "models", "flores_sacrebleu_tokenizer_spm.model")
-        if not os.path.exists(tokenizer_path):
-            url = "https://dl.fbaipublicfiles.com/fairseq/models/flores/sacrebleu_tokenizer_spm.model"
-            download_file(url, tokenizer_path)
-        self.sp.Load(tokenizer_path)
+        model_path = os.path.join(SACREBLEU_DIR, "models", os.path.basename(SPM_MODELS[key]["url"]))
+        if not os.path.exists(model_path):
+            url = SPM_MODELS[self.name]["url"]
+            download_file(url, model_path)
+        self.sp.Load(model_path)
 
     @lru_cache(maxsize=None)
     def __call__(self, line):
@@ -39,3 +57,12 @@ class TokenizerSPM(BaseTokenizer):
         :return: the tokenized line
         """
         return " ".join(self.sp.EncodeAsPieces(line))
+
+
+class Flores200Tokenizer(TokenizerSPM):
+    def __init__(self):
+        super().__init__("flores200")
+
+class Flores101Tokenizer(TokenizerSPM):
+    def __init__(self):
+        super().__init__("flores101")
