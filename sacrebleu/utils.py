@@ -273,12 +273,12 @@ def args_to_dict(args, prefix: str, strip_prefix: bool = False):
     return d
 
 
-def print_test_set(test_set, langpair, fields, origlang=None, subset=None):
+def print_test_set(test_set, langpair, requested_fields, origlang=None, subset=None):
     """Prints to STDOUT the specified side of the specified test set.
 
     :param test_set: the test set to print
     :param langpair: the language pair
-    :param fields: the fields to print
+    :param requested_fields: the fields to print
     :param origlang: print only sentences with a given original language (2-char ISO639-1 code), "non-" prefix means negation
     :param subset: print only sentences whose document annotation matches a given regex
     """
@@ -288,17 +288,25 @@ def print_test_set(test_set, langpair, fields, origlang=None, subset=None):
     fieldnames = DATASETS[test_set].fieldnames(langpair)
     all_files = DATASETS[test_set].get_files(langpair)
 
-    if "all" in fields and len(fields) != 1:
+    if "all" in requested_fields and len(requested_fields) != 1:
         sacrelogger.error("Cannot use --echo all with other fields")
         sys.exit(1)
-    elif "all" in fields:
-        fields = fieldnames
+    elif "all" in requested_fields:
+        requested_fields = fieldnames
+
+    # backwards compatibility: allow "ref" even if not present (choose first)
+    if "ref" in requested_fields and "ref" not in fieldnames:
+        replacement_ref = min([f for f in fieldnames if f.startswith("ref")])
+        requested_fields = [f if f != "ref" else replacement_ref for f in requested_fields]
 
     files = []
-    for field in fields:
+    for field in requested_fields:
         if field not in fieldnames:
             sacrelogger.error(f"No such field {field} in test set {test_set} for language pair {langpair}.")
             sacrelogger.error(f"available fields for {test_set}/{langpair}: {', '.join(fieldnames)}")
+            if "ref" not in fieldnames:
+                subref = min([f for f in fieldnames if f.startswith("ref")])
+                sacrelogger.error(f"'ref' also allowed for backwards compatibility (will return {subref})")
             sys.exit(1)
         index = fieldnames.index(field)
         files.append(all_files[index])

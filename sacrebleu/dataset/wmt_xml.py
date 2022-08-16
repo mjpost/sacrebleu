@@ -95,11 +95,6 @@ class WMTXMLDataset(Dataset):
                 orig_langs.append(origlang)
                 src_sent_count += 1
 
-        # For backward compatibility, if "ref" is not in the fields,
-        # add reference sentences from the first translator as "ref" field
-        if "ref" not in refs:
-            refs["ref"] = refs[min(refs.keys())]
-
         return {"src": src, **refs, "docid": docids, "origlang": orig_langs,}
 
     def process_to_text(self, langpair=None):
