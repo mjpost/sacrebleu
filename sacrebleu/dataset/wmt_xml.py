@@ -95,11 +95,6 @@ class WMTXMLDataset(Dataset):
                 orig_langs.append(origlang)
                 src_sent_count += 1
 
-        # For backward compatibility, if "ref" is not in the fields,
-        # add reference sentences from the first translator as "ref" field
-        if "ref" not in refs:
-            refs["ref"] = refs[min(refs.keys())]
-
         return {"src": src, **refs, "docid": docids, "origlang": orig_langs,}
 
     def process_to_text(self, langpair=None):
@@ -129,6 +124,14 @@ class WMTXMLDataset(Dataset):
                 with smart_open(textfile, "w") as fout:
                     for line in fields[fieldname]:
                         print(self._clean(line), file=fout)
+
+    def get_reference_files(self, langpair):
+        all_files = self.get_files(langpair)
+        all_fields = self.fieldnames(langpair)
+        ref_files = [
+            f for f, field in zip(all_files, all_fields) if field.startswith("ref")
+        ]
+        return ref_files
 
     def fieldnames(self, langpair):
         """
