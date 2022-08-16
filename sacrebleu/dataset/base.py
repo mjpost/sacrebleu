@@ -193,3 +193,15 @@ class Dataset(metaclass=ABCMeta):
             if not os.path.exists(file):
                 self.process_to_text(langpair)
         return files
+
+    def doc_align(self, langpair, sentences, field):
+        """
+        If the dataset is "doc aligned" instead of "sentence aligned",
+        merge the sentences from the same document into a single line.
+
+        :param: langpair: The language pair (e.g., "de-en")
+        :param sentences: an iterable object, sentence level corpus.
+        :param field: one of "src" and "ref".
+        :return a list of merged docs.
+        """
+        return sentences

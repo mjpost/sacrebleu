@@ -62,81 +62,44 @@ class WMTBiomedicalDataset(TSVDataset):
     The format used by the WMT Biomedical datasets. Data is not aligned sent by sent.
     """
 
-    def process_to_text(self, langpair=None):
-        """Processes raw files to plain text files.
+    def doc_align(self, langpair, sentences, field):
+        """
+        If the dataset is "doc aligned" instead of "sentence aligned",
+        merge the sentences from the same document into a single line.
 
-        :param langpair: The language pair to process. e.g. "en-de". If None, all files will be processed.
+        :param: langpair: The language pair (e.g., "de-en")
+        :param sentences: an iterable object, sentence level corpus.
+        :param field: one of "src" and "ref".
+        :return a list of merged docs.
         """
         # ensure that the dataset is downloaded
         self.maybe_download()
         langpairs = self._get_langpair_metadata(langpair)
 
-        for langpair in langpairs:
+        corpus_dict = {}
+        for meta in langpairs[langpair]:
+            index, origin_file, field = self._split_index_and_filename(meta)
 
-            corpus_dict = {}
-            for meta in langpairs[langpair]:
-                index, origin_file, field = self._split_index_and_filename(meta)
+            origin_file = os.path.join(self._rawdir, origin_file)
+            corpus_dict[field] = []
 
-                origin_file = os.path.join(self._rawdir, origin_file)
-                corpus_dict[field] = []
+            with smart_open(origin_file) as fin:
+                for line in fin:
+                    corpus_dict[field].append(line.rstrip("\n").split("\t")[index])
 
-                with smart_open(origin_file) as fin:
-                    for line in fin:
-                        corpus_dict[field].append(line.rstrip("\n").split("\t")[index])
+        docs = []
+        docids = corpus_dict["docid_src"] if field == "src" else corpus_dict["docid_ref"]
 
-            src_lines = []
-            src_docids = []
+        prev_docid = None
+        doc = ""
+        for docid, sent in zip(docids, sentences):
+            if docid == prev_docid:
+                doc += sent
+            elif prev_docid:
+                docs.append(doc)
+                doc = sent
 
-            prev_docid = None
-            doc = ""
-            for docid, sent in zip(corpus_dict["docid_src"], corpus_dict["src"]):
-                if docid == prev_docid:
-                    doc += sent
-                elif prev_docid:
-                    src_lines.append(doc)
-                    src_docids.append(prev_docid)
-                    doc = sent
+            prev_docid = docid
 
-                prev_docid = docid
-
-            src_lines.append(doc)
-            src_docids.append(docid)
-
-            ref_lines = []
-            ref_docids = []
-
-            prev_docid = None
-            doc = ""
-            for docid, sent in zip(corpus_dict["docid_ref"], corpus_dict["ref"]):
-                if docid == prev_docid:
-                    doc += sent
-                elif prev_docid:
-                    ref_lines.append(doc)
-                    ref_docids.append(prev_docid)
-                    doc = sent
-
-                prev_docid = docid
-
-            ref_lines.append(doc)
-            ref_docids.append(docid)
-
-            src_output = self._get_txt_file_path(langpair, "src")
-            ref_output = self._get_txt_file_path(langpair, "ref")
-            src_docid_output = self._get_txt_file_path(langpair, "docid_src")
-            ref_docid_output = self._get_txt_file_path(langpair, "docid_ref")
-
-            with smart_open(src_output, "wt") as fout:
-                for line in src_lines:
-                    print(line, file=fout)
-
-            with smart_open(ref_output, "wt") as fout:
-                for line in ref_lines:
-                    print(line, file=fout)
-
-            with smart_open(src_docid_output, "wt") as fout:
-                for line in src_docids:
-                    print(line, file=fout)
-
-            with smart_open(ref_docid_output, "wt") as fout:
-                for line in ref_docids:
-                    print(line, file=fout)
+        docs.append(doc)
+        return docs

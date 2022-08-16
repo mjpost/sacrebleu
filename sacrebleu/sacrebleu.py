@@ -462,6 +462,11 @@ def main():
     # Unpack systems & references back
     systems, refs = outputs[:num_sys], outputs[num_sys:]
 
+    # Merge sentences from same doc for doc aligned datasets.
+    if args.test_set:
+        DATASETS[args.test_set].doc_align(args.langpair, refs, "ref")
+        systems = [DATASETS[args.test_set].doc_align(args.langpair, system, "src") for system in systems]
+
     # Perform some sanity checks
     for system in systems:
         if len(system) == 0:
