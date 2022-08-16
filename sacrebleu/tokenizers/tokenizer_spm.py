@@ -14,7 +14,7 @@ sacrelogger = logging.getLogger('sacrebleu')
 SPM_MODELS = {
     "spm": {
         "url": "https://dl.fbaipublicfiles.com/fairseq/models/flores/sacrebleu_tokenizer_spm.model",
-        "signature": "spm-flores",
+        "signature": "flores101",
     },
     # same as the default of "spm"
     "flores101": {
