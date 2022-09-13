@@ -43,7 +43,7 @@ class WMTXMLDataset(Dataset):
         ), f"Multiple source languages found in the file: {raw_file}"
         assert (
             len(ref_langs) == 1
-        ), f"Multiple reference languages found in the file: {raw_file}"
+        ), f"Found {len(ref_langs)} reference languages found in the file: {raw_file}"
         src = []
         docids = []
         orig_langs = []

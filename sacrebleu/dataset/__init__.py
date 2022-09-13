@@ -74,6 +74,37 @@ from .wmt_xml import WMTXMLDataset
 
 DATASETS = {
     # wmt
+    "wmt22": WMTXMLDataset(
+        "wmt22",
+        data=["https://www.statmt.org/wmt22/wmttest2022.src.zip"],
+        description="Official evaluation data for WMT22.",
+        md5=["2c14401c79270ebad54bc70e7cf80314"],
+        langpairs={
+            "cs-en": ["wmttest2022.src.cs-en.xml"],
+            "cs-uk": ["wmttest2022.src.cs-uk.xml"],
+            "de-en": ["wmttest2022.src.de-en.xml"],
+            "de-fr": ["wmttest2022.src.de-fr.xml"],
+            "en-cs": ["wmttest2022.src.en-cs.xml"],
+            "en-de": ["wmttest2022.src.en-de.xml"],
+            "en-hr": ["wmttest2022.src.en-hr.xml"],
+            "en-ja": ["wmttest2022.src.en-ja.xml"],
+            "en-liv": ["wmttest2022.src.en-liv.xml"],
+            "en-ru": ["wmttest2022.src.en-ru.xml"],
+            "en-uk": ["wmttest2022.src.en-uk.xml"],
+            "en-zh": ["wmttest2022.src.en-zh.xml"],
+            "fr-de": ["wmttest2022.src.fr-de.xml"],
+            "ja-en": ["wmttest2022.src.ja-en.xml"],
+            "liv-en": ["wmttest2022.src.liv-en.xml"],
+            "ru-en": ["wmttest2022.src.ru-en.xml"],
+            "ru-sah": ["wmttest2022.src.ru-sah.xml"],
+            "sah-ru": ["wmttest2022.src.sah-ru.xml"],
+            "uk-cs": ["wmttest2022.src.uk-cs.xml"],
+            "uk-en": ["wmttest2022.src.uk-en.xml"],
+            "zh-en": ["wmttest2022.src.zh-en.xml"],
+        },
+        # the reference to use with this dataset
+        refs=["A"],
+    ),
     "wmt21": WMTXMLDataset(
         "wmt21",
         data=["http://data.statmt.org/wmt21/translation-task/test.tgz"],
