@@ -1,5 +1,8 @@
 # Release Notes
 
+- 2.2.1 (2022-09-13)
+  Bugfix: Standard usage was returning (and using) each reference twice.
+
 - 2.2.0 (2022-07-25)
   Features:
   - Added WMT21 datasets (thanks to @BrighXiaoHan)
