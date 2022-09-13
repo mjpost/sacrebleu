@@ -125,6 +125,14 @@ class WMTXMLDataset(Dataset):
                     for line in fields[fieldname]:
                         print(self._clean(line), file=fout)
 
+    def get_reference_files(self, langpair):
+        all_files = self.get_files(langpair)
+        all_fields = self.fieldnames(langpair)
+        ref_files = [
+            f for f, field in zip(all_files, all_fields) if field.startswith("ref")
+        ]
+        return ref_files
+
     def fieldnames(self, langpair):
         """
         Return a list of all the field names. For most source, this is just
