@@ -247,10 +247,11 @@ def main():
                 fields = DATASETS[args.test_set].fieldnames(pair)
                 print(f'{pair}: {", ".join(fields)}')
         else:
-            print('The available test sets are:')
             if args.langpair:
+                print(f'The available test sets for {args.langpair} are:')
                 testsets = get_available_testsets_for_langpair(args.langpair)
             else:
+                print('The available test sets are:')
                 testsets = get_available_testsets()
             for testset in sorted(testsets):
                 desc = DATASETS[testset].description.strip()
