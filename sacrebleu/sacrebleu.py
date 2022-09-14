@@ -42,7 +42,7 @@ from .metrics import METRICS
 from .utils import smart_open, filter_subset, get_langpairs_for_testset, get_available_testsets
 from .utils import print_test_set, print_subset_results, get_reference_files, download_test_set
 from .utils import args_to_dict, sanity_check_lengths, print_results_table, print_single_results
-from .utils import Color
+from .utils import get_available_testsets_for_langpair, Color
 
 from . import __version__ as VERSION
 
@@ -248,7 +248,11 @@ def main():
                 print(f'{pair}: {", ".join(fields)}')
         else:
             print('The available test sets are:')
-            for testset in sorted(get_available_testsets()):
+            if args.langpair:
+                testsets = get_available_testsets_for_langpair(args.langpair)
+            else:
+                testsets = get_available_testsets()
+            for testset in sorted(testsets):
                 desc = DATASETS[testset].description.strip()
                 print(f'{testset:<30}: {desc}')
         sys.exit(0)
