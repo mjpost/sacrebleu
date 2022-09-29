@@ -24,6 +24,8 @@ _TOKENIZERS = {
     'ja-mecab': 'tokenizer_ja_mecab.TokenizerJaMecab',
     'ko-mecab': 'tokenizer_ko_mecab.TokenizerKoMecab',
     'spm': 'tokenizer_spm.TokenizerSPM',
+    'flores101': 'tokenizer_spm.Flores101Tokenizer',
+    'flores200': 'tokenizer_spm.Flores200Tokenizer',
 }
 
 
@@ -134,7 +136,7 @@ class BLEU(Metric):
         'exp': None,    # No value is required
     }
 
-    TOKENIZERS = ['none', 'zh', '13a', 'char', 'intl', 'ja-mecab', 'ko-mecab', 'spm']
+    TOKENIZERS = _TOKENIZERS.keys()
 
     # mteval-v13a.pl tokenizer unless Chinese or Japanese is provided
     TOKENIZER_DEFAULT = '13a'
