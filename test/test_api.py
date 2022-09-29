@@ -53,6 +53,18 @@ def test_api_get_available_testsets():
         assert "slashdot_" + testset not in available
 
 
+def test_api_get_available_testsets_for_langpair():
+    """
+    Loop over the datasets directly, and ensure the API function returns
+    the test sets found.
+    """
+    available = get_available_testsets_for_langpair('en-it')
+    assert type(available) is list
+    assert "wmt19" in available
+    assert "wmt09" in available
+    assert "wmt15" not in available
+
+
 def test_api_get_langpairs_for_testset():
     """
     Loop over the datasets directly, and ensure the API function

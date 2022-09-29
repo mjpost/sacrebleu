@@ -456,6 +456,20 @@ def get_available_testsets() -> List[str]:
     """Return a list of available test sets."""
     return sorted(DATASETS.keys(), reverse=True)
 
+def get_available_testsets_for_langpair(langpair: str) -> List[str]:
+    """Return a list of available test sets for a given language pair"""
+    parts = langpair.split('-')
+    srclang = parts[0]
+    trglang = parts[1]
+
+    testsets = []
+    for dataset in DATASETS.values():
+        if f'{srclang}-{trglang}' in dataset.langpairs \
+                or f'{trglang}-{srclang}' in dataset.langpairs:
+            testsets.append(dataset.name)
+
+    return testsets
+
 
 def get_available_origlangs(test_sets, langpair) -> List[str]:
     """Return a list of origlang values in according to the raw SGM files."""

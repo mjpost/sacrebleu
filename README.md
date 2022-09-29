@@ -67,7 +67,8 @@ following command instead, to perform a full installation with dependencies:
 # Command-line Usage
 
 You can get a list of available test sets with `sacrebleu --list`. Please see [DATASETS.md](DATASETS.md)
-for an up-to-date list of supported datasets.
+for an up-to-date list of supported datasets. You can also list available test sets for a given language pair
+with `sacrebleu --list -l en-fr`.
 
 ## Basics
 
