@@ -1,5 +1,15 @@
 # Release Notes
 
+- 2.2.2 (2022-09-29)
+  Features:
+  - Added `-tok flores101` and `-tok flores200`,
+    a.k.a. `spbleu`. These are multilingual tokenizations that make
+    use of the multilingual SPM models released by Facebook. In the
+    future, we may recommend that these become the default
+    tokenizations.
+    - Flores-101: https://arxiv.org/abs/2106.03193
+    - Flores-200: https://arxiv.org/abs/2207.04672
+
 - 2.2.1 (2022-09-13)
   Bugfix: Standard usage was returning (and using) each reference twice.
 
