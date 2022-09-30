@@ -13,7 +13,7 @@
 
 import pytest
 
-from sacrebleu.utils import get_available_testsets, get_langpairs_for_testset
+from sacrebleu.utils import get_available_testsets, get_available_testsets_for_langpair, get_langpairs_for_testset
 from sacrebleu.utils import get_source_file, get_reference_files
 from sacrebleu.dataset import DATASETS
 
@@ -60,9 +60,14 @@ def test_api_get_available_testsets_for_langpair():
     """
     available = get_available_testsets_for_langpair('en-it')
     assert type(available) is list
-    assert "wmt19" in available
     assert "wmt09" in available
     assert "wmt15" not in available
+
+    available = get_available_testsets_for_langpair('en-fr')
+    assert type(available) is list
+    assert "wmt11" in available
+    assert "mtedx/test" in available
+    assert "wmt20" not in available
 
 
 def test_api_get_langpairs_for_testset():
