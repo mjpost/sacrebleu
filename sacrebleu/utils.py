@@ -96,7 +96,7 @@ def print_results_table(results: dict, signatures: dict, args: Namespace):
         dict_keys = list(results.keys())
         for i in range(len(results['System'])):
             value = {}
-            value['System'] = results['System'][i]
+            value['system'] = results['System'][i]
             # parse metrics
             for j in range(1, len(dict_keys)):
                 if isinstance(results[dict_keys[j]][i], str):
