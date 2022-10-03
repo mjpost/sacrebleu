@@ -297,7 +297,7 @@ def main():
         sacrelogger.error('I need exactly one of (a) a predefined test set (-t) or (b) a list of references')
         sys.exit(1)
     elif args.langpair is None:
-        sacrelogger.error('I need a language pair (-l).')
+        sacrelogger.error('I need a language pair (-l). Use --list to see available language pairs for this test set.')
         sys.exit(1)
     else:
         for test_set in args.test_set.split(','):
