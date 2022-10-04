@@ -1,6 +1,6 @@
 # Release Notes
 
-- 2.2.2 (2022-09-29)
+- 2.2.2 (2022-10-XX)
   Features:
   - Added `-tok flores101` and `-tok flores200`, a.k.a. `spbleu`.
     These are multilingual tokenizations that make use of the
@@ -8,6 +8,7 @@
     following papers:
     * Flores-101: https://arxiv.org/abs/2106.03193
     * Flores-200: https://arxiv.org/abs/2207.04672
+  - Added JSON formatting for multi-system output (thanks to Manikanta Inugurthi @me-manikanta)
 
 - 2.2.1 (2022-09-13)
   Bugfix: Standard usage was returning (and using) each reference twice.
