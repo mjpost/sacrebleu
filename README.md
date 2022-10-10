@@ -85,6 +85,21 @@ $ sacrebleu -t wmt17 -l en-de --echo src > wmt17.en-de.en
 $ cat wmt17.en-de.en | translate.sh | sacrebleu -t wmt17 -l en-de
 ```
 
+Some test sets also have the outputs of systems that were submitted to the task.
+For example, the `wmt/systems` test set.
+
+```bash
+$ sacrebleu -t wmt21/system -l zh-en --echo NiuTrans
+```
+
+This provides a convenient way to score:
+
+```bash
+$ sacrebleu -t wmt21/system -l zh-en --echo NiuTrans | sacrebleu -t wmt21/system -l zh-en
+``
+
+You can see a list of the available outputs by passing an invalid value to `--echo`.
+
 ### JSON output
 
 As of version `>=2.0.0`, sacreBLEU prints the computed scores in JSON format to make parsing less painful:
