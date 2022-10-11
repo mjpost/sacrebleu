@@ -5,6 +5,8 @@ import lxml.etree as ET
 from ..utils import smart_open
 from .base import Dataset
 
+from collections import defaultdict
+
 
 class WMTXMLDataset(Dataset):
     """
@@ -44,6 +46,7 @@ class WMTXMLDataset(Dataset):
         assert (
             len(ref_langs) == 1
         ), f"Multiple reference languages found in the file: {raw_file}"
+
         src = []
         docids = []
         orig_langs = []
@@ -55,6 +58,8 @@ class WMTXMLDataset(Dataset):
                 return f"ref:{translator}"
 
         refs = {get_field_by_translator(translator): [] for translator in translators}
+
+        systems = defaultdict(list)
 
         src_sent_count, doc_count = 0, 0
         for doc in tree.getroot().findall(".//doc"):
@@ -82,8 +87,13 @@ class WMTXMLDataset(Dataset):
                 ref_doc.get("translator"): get_sents(ref_doc) for ref_doc in ref_docs
             }
 
+            hyp_docs = doc.findall(".//hyp")
+            hyps = {
+                hyp_doc.get("system"): get_sents(hyp_doc) for hyp_doc in hyp_docs
+            }
+
             for seg_id in sorted(src_sents.keys()):
-                # no ref translation is avaliable for this segment
+                # no ref translation is available for this segment
                 if not any([value.get(seg_id, "") for value in trans_to_ref.values()]):
                     continue
                 for translator in translators:
@@ -91,11 +101,13 @@ class WMTXMLDataset(Dataset):
                         trans_to_ref.get(translator, {translator: {}}).get(seg_id, "")
                     )
                 src.append(src_sents[seg_id])
+                for system_name in hyps.keys():
+                    systems[system_name].append(hyps[system_name][seg_id])
                 docids.append(docid)
                 orig_langs.append(origlang)
                 src_sent_count += 1
 
-        return {"src": src, **refs, "docid": docids, "origlang": orig_langs,}
+        return {"src": src, **refs, "docid": docids, "origlang": orig_langs, **systems}
 
     def process_to_text(self, langpair=None):
         """Processes raw files to plain text files.

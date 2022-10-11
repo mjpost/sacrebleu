@@ -74,6 +74,35 @@ from .wmt_xml import WMTXMLDataset
 
 DATASETS = {
     # wmt
+    "wmt21/systems": WMTXMLDataset(
+        "wmt21/systems",
+        data=["https://github.com/wmt-conference/wmt21-news-systems/archive/refs/tags/v1.3.tar.gz"],
+        description="WMT21 system output.",
+        md5=["a6aee4099da58f98f71eb3fac1694237"],
+        langpairs={
+            "de-fr": ["wmt21-news-systems-1.3/xml/newstest2021.de-fr.all.xml"],
+            "en-de": ["wmt21-news-systems-1.3/xml/newstest2021.en-de.all.xml"],
+            "en-ha": ["wmt21-news-systems-1.3/xml/newstest2021.en-ha.all.xml"],
+            "en-is": ["wmt21-news-systems-1.3/xml/newstest2021.en-is.all.xml"],
+            "en-ja": ["wmt21-news-systems-1.3/xml/newstest2021.en-ja.all.xml"],
+            "fr-de": ["wmt21-news-systems-1.3/xml/newstest2021.fr-de.all.xml"],
+            "ha-en": ["wmt21-news-systems-1.3/xml/newstest2021.ha-en.all.xml"],
+            "is-en": ["wmt21-news-systems-1.3/xml/newstest2021.is-en.all.xml"],
+            "ja-en": ["wmt21-news-systems-1.3/xml/newstest2021.ja-en.all.xml"],
+            "zh-en": ["wmt21-news-systems-1.3/xml/newstest2021.zh-en.all.xml"],
+            "en-zh": ["wmt21-news-systems-1.3/xml/newstest2021.en-zh.all.xml"],
+            "cs-en": ["wmt21-news-systems-1.3/xml/newstest2021.cs-en.all.xml"],
+            "de-en": ["wmt21-news-systems-1.3/xml/newstest2021.de-en.all.xml"],
+            "en-cs": ["wmt21-news-systems-1.3/xml/newstest2021.en-cs.all.xml"],
+            "en-ru": ["wmt21-news-systems-1.3/xml/newstest2021.en-ru.all.xml"],
+            "ru-en": ["wmt21-news-systems-1.3/xml/newstest2021.ru-en.all.xml"],
+            "bn-hi": ["wmt21-news-systems-1.3/xml/florestest2021.bn-hi.all.xml"],
+            "hi-bn": ["wmt21-news-systems-1.3/xml/florestest2021.hi-bn.all.xml"],
+            "xh-zu": ["wmt21-news-systems-1.3/xml/florestest2021.xh-zu.all.xml"],
+            "zu-xh": ["wmt21-news-systems-1.3/xml/florestest2021.zu-xh.all.xml"],
+        },
+    ),
+
     "wmt21": WMTXMLDataset(
         "wmt21",
         data=["http://data.statmt.org/wmt21/translation-task/test.tgz"],

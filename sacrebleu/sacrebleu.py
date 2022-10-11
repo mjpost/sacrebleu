@@ -80,7 +80,7 @@ def parse_args():
                             help='Use a subset of sentences whose document annotation matches a given regex (see SUBSETS in the source code).')
     arg_parser.add_argument('--download', type=str, default=None,
                             help='Download a test set and quit.')
-    arg_parser.add_argument('--echo', nargs="*", type=str, default=None,
+    arg_parser.add_argument('--echo', nargs="+", type=str, default=None,
                             help='Output the source (src), reference (ref), or other available field (docid, ref:A, ref:1 for example) to STDOUT and quit. '
                                  'You can get available fields with options `--list` and `-t`' 'For example: `sacrebleu -t wmt21 --list`. '
                                  'If multiple fields are given, they are outputted with tsv format in the order they are given.'

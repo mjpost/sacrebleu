@@ -11,6 +11,7 @@
   - (#213) Added JSON formatting for multi-system output (thanks to Manikanta Inugurthi @me-manikanta)
   - (#211) You can now list all test sets for a language pair with `--list SRC-TRG`.
     Thanks to Jaume Zaragoza (@ZJaume) for adding this feature.
+  - System outputs: Added `-t wmt21/systems` which will produce WMT system outputs
 
 - 2.2.1 (2022-09-13)
   Bugfix: Standard usage was returning (and using) each reference twice.
