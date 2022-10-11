@@ -76,3 +76,37 @@ def test_source_and_references():
     for ds in dataset.DATASETS.values():
         for pair in ds.langpairs:
             assert len(list(ds.source(pair))) == len(list(ds.references(pair)))
+
+
+def test_wmt22_references():
+    """
+    WMT21 added the ability to specify which reference to use (among many in the XML).
+    The default was "A" for everything.
+    WMT22 added the ability to override this default on a per-langpair basis, by
+    replacing the langpair list of paths with a dict that had the list of paths and
+    the annotator override.
+    """
+    wmt22 = dataset.DATASETS["wmt22"]
+
+    # make sure CS-EN returns all reference fields
+    cs_en_fields = wmt22.fieldnames("cs-en")
+    for ref in ["ref:B", "ref:C"]:
+        assert ref in cs_en_fields
+    assert "ref:A" not in cs_en_fields
+
+    # make sure ref:B is the one used by default
+    assert wmt22._get_langpair_allowed_refs("cs-en") == ["ref:B"]
+
+    # similar check for another dataset: there should be no default ("A"),
+    # and the only ref found should be the unannotated one
+    assert "ref:A" not in wmt22.fieldnames("liv-en")
+    assert "ref" in wmt22.fieldnames("liv-en")
+
+    # and that ref:A is the default for all languages where it wasn't overridden
+    for langpair, langpair_data in wmt22.langpairs.items():
+        if type(langpair_data) == dict:
+            assert wmt22._get_langpair_allowed_refs(langpair) != ["ref:A"]
+        else:
+            assert wmt22._get_langpair_allowed_refs(langpair) == ["ref:A"]
+
+

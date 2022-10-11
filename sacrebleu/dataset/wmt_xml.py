@@ -156,7 +156,10 @@ class WMTXMLDataset(Dataset):
         """
         defaults = self.kwargs.get("refs", [])
         langpair_data = self._get_langpair_metadata(langpair)[langpair]
-        allowed_refs = langpair_data.get("refs", defaults)
+        if type(langpair_data) == dict:
+            allowed_refs = langpair_data.get("refs", defaults)
+        else:
+            allowed_refs = defaults
         allowed_refs = [_get_field_by_translator(ref) for ref in allowed_refs]
 
         return allowed_refs
