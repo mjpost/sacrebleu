@@ -8,14 +8,19 @@ from .base import Dataset
 from collections import defaultdict
 
 
+def _get_field_by_translator(translator):
+    if not translator:
+        return "ref"
+    else:
+        return f"ref:{translator}"
+
 class WMTXMLDataset(Dataset):
     """
     The 2021+ WMT dataset format. Everything is contained in a single file.
     Can be parsed with the lxml parser.
     """
-
     @staticmethod
-    def _unwrap_wmt21_or_later(raw_file, allowed_refs=[]):
+    def _unwrap_wmt21_or_later(raw_file):
         """
         Unwraps the XML file from wmt21 or later.
         This script is adapted from https://github.com/wmt-conference/wmt-format-tools
@@ -37,8 +42,7 @@ class WMTXMLDataset(Dataset):
         for ref_doc in tree.getroot().findall(".//ref"):
             ref_langs.add(ref_doc.get("lang"))
             translator = ref_doc.get("translator")
-            if len(allowed_refs) == 0 or translator in allowed_refs:
-                translators.add(translator)
+            translators.add(translator)
 
         assert (
             len(src_langs) == 1
@@ -51,13 +55,7 @@ class WMTXMLDataset(Dataset):
         docids = []
         orig_langs = []
 
-        def get_field_by_translator(translator):
-            if not translator:
-                return "ref"
-            else:
-                return f"ref:{translator}"
-
-        refs = {get_field_by_translator(translator): [] for translator in translators}
+        refs = { _get_field_by_translator(translator): [] for translator in translators }
 
         systems = defaultdict(list)
 
@@ -97,7 +95,7 @@ class WMTXMLDataset(Dataset):
                 if not any([value.get(seg_id, "") for value in trans_to_ref.values()]):
                     continue
                 for translator in translators:
-                    refs[get_field_by_translator(translator)].append(
+                    refs[_get_field_by_translator(translator)].append(
                         trans_to_ref.get(translator, {translator: {}}).get(seg_id, "")
                     )
                 src.append(src_sents[seg_id])
@@ -109,6 +107,16 @@ class WMTXMLDataset(Dataset):
 
         return {"src": src, **refs, "docid": docids, "origlang": orig_langs, **systems}
 
+    def _get_langpair_path(self, langpair):
+        """
+        Returns the path for this language pair.
+        This is useful because in WMT22, the language-pair data structure can be a dict,
+        in order to allow for overriding which test set to use.
+        """
+        langpair_data = self._get_langpair_metadata(langpair)[langpair]
+        rel_path = langpair_data["path"] if type(langpair_data) == dict else langpair_data[0]
+        return os.path.join(self._rawdir, rel_path)
+
     def process_to_text(self, langpair=None):
         """Processes raw files to plain text files.
 
@@ -116,15 +124,14 @@ class WMTXMLDataset(Dataset):
         """
         # ensure that the dataset is downloaded
         self.maybe_download()
-        langpairs = self._get_langpair_metadata(langpair)
 
-        for langpair, files in langpairs.items():
-            rawfile = os.path.join(
-                self._rawdir, files[0]
-            )  # all source and reference data in one file for wmt21 and later
+        for langpair in sorted(self._get_langpair_metadata(langpair).keys()):
+            # The data type can be a list of paths, or a dict, containing the "path"
+            # and an override on which labeled reference to use (key "refs")
+            rawfile = self._get_langpair_path(langpair)
 
             with smart_open(rawfile) as fin:
-                fields = self._unwrap_wmt21_or_later(fin, allowed_refs=self.kwargs.get("refs", []))
+                fields = self._unwrap_wmt21_or_later(fin)
 
             for fieldname in fields:
                 textfile = self._get_txt_file_path(langpair, fieldname)
@@ -137,11 +144,34 @@ class WMTXMLDataset(Dataset):
                     for line in fields[fieldname]:
                         print(self._clean(line), file=fout)
 
+    def _get_langpair_allowed_refs(self, langpair):
+        """
+        Returns the preferred references for this language pair.
+        This can be set in the language pair block (as in WMT22), and backs off to the
+        test-set-level default, or nothing.
+
+        There is one exception. In the metadata, sometimes there is no translator field
+        listed (e.g., wmt22:liv-en). In this case, the reference is set to "", and the
+        field "ref" is returned.
+        """
+        defaults = self.kwargs.get("refs", [])
+        langpair_data = self._get_langpair_metadata(langpair)[langpair]
+        allowed_refs = langpair_data.get("refs", defaults)
+        allowed_refs = [_get_field_by_translator(ref) for ref in allowed_refs]
+
+        return allowed_refs
+
     def get_reference_files(self, langpair):
+        """
+        Returns the requested reference files.
+        This is defined as a default at the test-set level, and can be overridden per language.
+        """
+        # Iterate through the (label, file path) pairs, looking for permitted labels
+        allowed_refs = self._get_langpair_allowed_refs(langpair)
         all_files = self.get_files(langpair)
         all_fields = self.fieldnames(langpair)
         ref_files = [
-            f for f, field in zip(all_files, all_fields) if field.startswith("ref")
+            f for f, field in zip(all_files, all_fields) if field in allowed_refs
         ]
         return ref_files
 
@@ -157,10 +187,9 @@ class WMTXMLDataset(Dataset):
         :return: a list of field names
         """
         self.maybe_download()
-        meta = self._get_langpair_metadata(langpair)[langpair]
-        rawfile = os.path.join(self._rawdir, meta[0])
+        rawfile = self._get_langpair_path(langpair)
 
         with smart_open(rawfile) as fin:
-            fields = self._unwrap_wmt21_or_later(fin, allowed_refs=self.kwargs.get("refs", []))
+            fields = self._unwrap_wmt21_or_later(fin)
 
         return list(fields.keys())

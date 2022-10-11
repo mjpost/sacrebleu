@@ -80,11 +80,17 @@ DATASETS = {
         description="Official evaluation and system data for WMT22.",
         md5=["0840978b9b50b9ac3b2b081e37d620b9"],
         langpairs={
-            "cs-en": ["wmt22-news-systems-1.1/xml/wmttest2022.cs-en.all.xml"],
+            "cs-en": {
+                "path": "wmt22-news-systems-1.1/xml/wmttest2022.cs-en.all.xml",
+                "refs": ["B"],
+            },
             "cs-uk": ["wmt22-news-systems-1.1/xml/wmttest2022.cs-uk.all.xml"],
             "de-en": ["wmt22-news-systems-1.1/xml/wmttest2022.de-en.all.xml"],
             "de-fr": ["wmt22-news-systems-1.1/xml/wmttest2022.de-fr.all.xml"],
-            "en-cs": ["wmt22-news-systems-1.1/xml/wmttest2022.en-cs.all.xml"],
+            "en-cs": {
+                "path": "wmt22-news-systems-1.1/xml/wmttest2022.en-cs.all.xml",
+                "refs": ["B"],
+            },
             "en-de": ["wmt22-news-systems-1.1/xml/wmttest2022.en-de.all.xml"],
             "en-hr": ["wmt22-news-systems-1.1/xml/wmttest2022.en-hr.all.xml"],
             "en-ja": ["wmt22-news-systems-1.1/xml/wmttest2022.en-ja.all.xml"],
@@ -94,16 +100,22 @@ DATASETS = {
             "en-zh": ["wmt22-news-systems-1.1/xml/wmttest2022.en-zh.all.xml"],
             "fr-de": ["wmt22-news-systems-1.1/xml/wmttest2022.fr-de.all.xml"],
             "ja-en": ["wmt22-news-systems-1.1/xml/wmttest2022.ja-en.all.xml"],
-            "liv-en": ["wmt22-news-systems-1.1/xml/wmttest2022.liv-en.all.xml"],
+            "liv-en": {
+                "path": "wmt22-news-systems-1.1/xml/wmttest2022.liv-en.all.xml",
+                "refs": [""],
+            },
             "ru-en": ["wmt22-news-systems-1.1/xml/wmttest2022.ru-en.all.xml"],
-            "ru-sah": ["wmt22-news-systems-1.1/xml/wmttest2022.ru-sah.all.xml"],
+            "ru-sah": {
+                "path": "wmt22-news-systems-1.1/xml/wmttest2022.ru-sah.all.xml",
+                "refs": [""],
+            },
             "sah-ru": ["wmt22-news-systems-1.1/xml/wmttest2022.sah-ru.all.xml"],
             "uk-cs": ["wmt22-news-systems-1.1/xml/wmttest2022.uk-cs.all.xml"],
             "uk-en": ["wmt22-news-systems-1.1/xml/wmttest2022.uk-en.all.xml"],
             "zh-en": ["wmt22-news-systems-1.1/xml/wmttest2022.zh-en.all.xml"],
         },
-        # the reference to use with this dataset
-#        refs=["A"],
+        # the default reference to use with this dataset
+        refs=["A"],
     ),
     "wmt21/systems": WMTXMLDataset(
         "wmt21/systems",
@@ -132,6 +144,8 @@ DATASETS = {
             "xh-zu": ["wmt21-news-systems-1.3/xml/florestest2021.xh-zu.all.xml"],
             "zu-xh": ["wmt21-news-systems-1.3/xml/florestest2021.zu-xh.all.xml"],
         },
+        # the reference to use with this dataset
+        refs=["A"],
     ),
     "wmt21": WMTXMLDataset(
         "wmt21",
