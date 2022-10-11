@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import sys
@@ -90,9 +91,26 @@ def _format_score_lines(scores: dict,
 def print_results_table(results: dict, signatures: dict, args: Namespace):
     """Prints out a nicely formatted table for multi-system evaluation mode."""
 
+    if args.format == 'json':
+        proper_json = []
+        dict_keys = list(results.keys())
+        for i in range(len(results['System'])):
+            value = {}
+            value['system'] = results['System'][i]
+            # parse metrics
+            for j in range(1, len(dict_keys)):
+                if isinstance(results[dict_keys[j]][i], str):
+                    value[dict_keys[j]] = results[dict_keys[j]][i]
+                else:
+                    # Values inside object as dict
+                    value[dict_keys[j]] = results[dict_keys[j]][i].__dict__
+            proper_json.append(value)
+
+        print(json.dumps(proper_json, indent=4))
+        return
+
     tablefmt = args.format
-    if tablefmt in ('text', 'json'):
-        # Fallback to simple table if json is given
+    if tablefmt in ('text'):
         tablefmt = 'fancy_grid'
     elif tablefmt == 'latex':
         # Use booktabs
@@ -455,6 +473,20 @@ def get_langpairs_for_testset(testset: str) -> List[str]:
 def get_available_testsets() -> List[str]:
     """Return a list of available test sets."""
     return sorted(DATASETS.keys(), reverse=True)
+
+def get_available_testsets_for_langpair(langpair: str) -> List[str]:
+    """Return a list of available test sets for a given language pair"""
+    parts = langpair.split('-')
+    srclang = parts[0]
+    trglang = parts[1]
+
+    testsets = []
+    for dataset in DATASETS.values():
+        if f'{srclang}-{trglang}' in dataset.langpairs \
+                or f'{trglang}-{srclang}' in dataset.langpairs:
+            testsets.append(dataset.name)
+
+    return testsets
 
 
 def get_available_origlangs(test_sets, langpair) -> List[str]:

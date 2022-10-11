@@ -67,7 +67,8 @@ following command instead, to perform a full installation with dependencies:
 # Command-line Usage
 
 You can get a list of available test sets with `sacrebleu --list`. Please see [DATASETS.md](DATASETS.md)
-for an up-to-date list of supported datasets.
+for an up-to-date list of supported datasets. You can also list available test sets for a given language pair
+with `sacrebleu --list -l en-fr`.
 
 ## Basics
 
@@ -83,6 +84,21 @@ in `translate.sh`, and then score it:
 $ sacrebleu -t wmt17 -l en-de --echo src > wmt17.en-de.en
 $ cat wmt17.en-de.en | translate.sh | sacrebleu -t wmt17 -l en-de
 ```
+
+Some test sets also have the outputs of systems that were submitted to the task.
+For example, the `wmt/systems` test set.
+
+```bash
+$ sacrebleu -t wmt21/systems -l zh-en --echo NiuTrans
+```
+
+This provides a convenient way to score:
+
+```bash
+$ sacrebleu -t wmt21/system -l zh-en --echo NiuTrans | sacrebleu -t wmt21/systems -l zh-en
+``
+
+You can see a list of the available outputs by passing an invalid value to `--echo`.
 
 ### JSON output
 
