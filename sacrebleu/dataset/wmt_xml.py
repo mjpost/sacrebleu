@@ -91,11 +91,9 @@ class WMTXMLDataset(Dataset):
             hyps = {
                 hyp_doc.get("system"): get_sents(hyp_doc) for hyp_doc in hyp_docs
             }
-            # print("SRC", len(src_sents))
-            # print("HYP", hyps.keys(), [len(list(hyps[key])) for key in hyps.keys()])
 
             for seg_id in sorted(src_sents.keys()):
-                # no ref translation is avalaible for this segment
+                # no ref translation is available for this segment
                 if not any([value.get(seg_id, "") for value in trans_to_ref.values()]):
                     continue
                 for translator in translators:
