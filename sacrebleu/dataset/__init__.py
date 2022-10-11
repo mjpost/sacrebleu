@@ -254,6 +254,8 @@ DATASETS = {
             "en-is": ["dev/xml/newsdev2021.en-is.xml"],
             "is-en": ["dev/xml/newsdev2021.is-en.xml"],
         },
+        # datasets are bidirectional in origin, so use both refs
+        refs=["A", ""],
     ),
     "wmt20/tworefs": FakeSGMLDataset(
         "wmt20/tworefs",

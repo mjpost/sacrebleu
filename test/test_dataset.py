@@ -75,7 +75,9 @@ def test_source_and_references():
     """
     for ds in dataset.DATASETS.values():
         for pair in ds.langpairs:
-            assert len(list(ds.source(pair))) == len(list(ds.references(pair)))
+            src_len = len(list(ds.source(pair)))
+            ref_len = len(list(ds.references(pair)))
+            assert src_len == ref_len, f"source/reference failure for {ds.name}:{pair} len(source)={src_len} len(references)={ref_len}"
 
 
 def test_wmt22_references():
