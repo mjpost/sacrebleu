@@ -102,11 +102,13 @@ DATASETS = {
             "ja-en": ["wmt22-news-systems-1.1/xml/wmttest2022.ja-en.all.xml"],
             "liv-en": {
                 "path": "wmt22-news-systems-1.1/xml/wmttest2022.liv-en.all.xml",
+                # no translator because data is English-original
                 "refs": [""],
             },
             "ru-en": ["wmt22-news-systems-1.1/xml/wmttest2022.ru-en.all.xml"],
             "ru-sah": {
                 "path": "wmt22-news-systems-1.1/xml/wmttest2022.ru-sah.all.xml",
+                # no translator because data is Yakut-original
                 "refs": [""],
             },
             "sah-ru": ["wmt22-news-systems-1.1/xml/wmttest2022.sah-ru.all.xml"],
