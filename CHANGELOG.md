@@ -1,6 +1,10 @@
 # Release Notes
 
-- 2.3.0 (2022-10-XX)
+- 2.3.0 (2022-10-18)
+  Bugfix:
+  - Set lru_cache to 2**16 for SPM tokenizer
+
+- 2.3.0 (2022-10-18)
   Features:
   - (#203) Added `-tok flores101` and `-tok flores200`, a.k.a. `spbleu`.
     These are multilingual tokenizations that make use of the
@@ -11,7 +15,9 @@
   - (#213) Added JSON formatting for multi-system output (thanks to Manikanta Inugurthi @me-manikanta)
   - (#211) You can now list all test sets for a language pair with `--list SRC-TRG`.
     Thanks to Jaume Zaragoza (@ZJaume) for adding this feature.
-  - System outputs: Added `-t wmt21/systems` which will produce WMT system outputs
+  - Added WMT22 test sets (test set `wmt22`)
+  - System outputs: include with wmt22. Also added wmt21/systems which will produce WMT21 submitted systems.
+    To see available systems, give a dummy system to `--echo`, e.g., `sacrebleu -t wmt22 -l en-de --echo ?`
 
 - 2.2.1 (2022-09-13)
   Bugfix: Standard usage was returning (and using) each reference twice.
