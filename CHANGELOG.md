@@ -1,8 +1,8 @@
 # Release Notes
 
-- 2.3.0 (2022-10-18)
+- 2.3.1 (2022-10-18)
   Bugfix:
-  - Set lru_cache to 2**16 for SPM tokenizer
+  - Set lru_cache to 2**16 for SPM tokenizer (was set to infinite)
 
 - 2.3.0 (2022-10-18)
   Features:
