@@ -51,7 +51,7 @@ class TokenizerSPM(BaseTokenizer):
             download_file(url, model_path)
         self.sp.Load(model_path)
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2**16)
     def __call__(self, line):
         """Tokenizes all the characters in the input line.
 
