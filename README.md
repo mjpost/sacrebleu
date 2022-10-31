@@ -287,7 +287,7 @@ but it expects that you pass through the entire translated test set.
    - `zh` separates out **Chinese** characters and tokenizes the non-Chinese parts using `13a` tokenizer
    - `ja-mecab` tokenizes **Japanese** inputs using the [MeCab](https://pypi.org/project/mecab-python3) morphological analyzer
    - `ko-mecab` tokenizes **Korean** inputs using the [MeCab-ko](https://pypi.org/project/mecab-ko) morphological analyzer
-   - `spm` uses the SentencePiece model built from the Flores-101 dataset (https://github.com/facebookresearch/flores#list-of-languages). Note: the canonical .spm file will be automatically fetched if not found locally.
+   - `flores101` and `flores200` uses the SentencePiece model built from the Flores-101 and [Flores-200](https://github.com/facebookresearch/flores/blob/main/flores200/README.md#languages-in-flores-200) dataset, respectively. Note: the canonical .spm file will be automatically fetched if not found locally.
 - You can switch tokenizers using the `--tokenize` flag of sacreBLEU. Alternatively, if you provide language-pair strings
   using `--language-pair/-l`, `zh`, `ja-mecab` and `ko-mecab` tokenizers will be used if the target language is `zh` or `ja` or `ko`, respectively.
 - **Note that** there's no automatic language detection from the hypotheses so you need to make sure that you are correctly
