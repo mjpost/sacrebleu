@@ -319,9 +319,9 @@ def main():
             for test_set in test_sets:
                 aligned_type = DATASETS[test_set].aligned_type
                 if aligned_type != "sentence":
-                    sacrelogger.warning("Be careful when you use --echo with multiple test sets or multiple fields unless they are all sentence aligned. \
-                        The total lines of the source and reference files of document aligned test sets may not match, which may cause problems. \
-                        {test_set} is {aligned_type} aligned.".format(test_set=test_set, aligned_type=aligned_type))
+                    sacrelogger.warning("Be careful when you use --echo with multiple test sets or multiple fields unless they are all sentence aligned. " \
+                        "The total lines of the source and reference files of document aligned test sets may not match, which may cause problems. " \
+                        f"{test_set} is {aligned_type} aligned.")
 
         for test_set in test_sets:
             print_test_set(test_set, args.langpair, args.echo, args.origlang, args.subset)
