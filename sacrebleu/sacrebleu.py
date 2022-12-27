@@ -255,7 +255,8 @@ def main():
                 testsets = get_available_testsets()
             for testset in sorted(testsets):
                 desc = DATASETS[testset].description.strip()
-                print(f'{testset:<30}: {desc}')
+                aligned_type = DATASETS[testset].aligned_type
+                print(f'{testset:<30} {aligned_type} aligned: {desc}')
         sys.exit(0)
 
     if args.sentence_level and len(args.metrics) > 1:
@@ -313,7 +314,16 @@ def main():
         if args.langpair is None or args.test_set is None:
             sacrelogger.warning("--echo requires a test set (--t) and a language pair (-l)")
             sys.exit(1)
-        for test_set in args.test_set.split(','):
+        test_sets = args.test_set.split(',')
+        if len(test_sets) > 1 or len(args.echo) > 1:
+            for test_set in test_sets:
+                aligned_type = DATASETS[test_set].aligned_type
+                if aligned_type != "sentence":
+                    sacrelogger.warning("Be careful when you use --echo with multiple test sets or multiple fields unless they are all sentence aligned. \
+                        The total lines of the source and reference files of document aligned test sets may not match, which may cause problems. \
+                        {test_set} is {aligned_type} aligned.".format(test_set=test_set, aligned_type=aligned_type))
+
+        for test_set in test_sets:
             print_test_set(test_set, args.langpair, args.echo, args.origlang, args.subset)
         sys.exit(0)
 
@@ -464,7 +474,7 @@ def main():
 
     # Merge sentences from same doc for doc aligned datasets.
     if args.test_set:
-        DATASETS[args.test_set].doc_align(args.langpair, refs, "ref")
+        refs = [DATASETS[args.test_set].doc_align(args.langpair, ref, "ref") for ref in refs]
         systems = [DATASETS[args.test_set].doc_align(args.langpair, system, "src") for system in systems]
 
     # Perform some sanity checks

@@ -204,4 +204,12 @@ class Dataset(metaclass=ABCMeta):
         :param field: one of "src" and "ref".
         :return a list of merged docs.
         """
-        return sentences
+        return list(sentences)
+    
+    @property
+    def aligned_type(self):
+        """
+        Return the alignment type of the dataset.
+        "sentence" or "documnet"
+        """
+        return "sentence"

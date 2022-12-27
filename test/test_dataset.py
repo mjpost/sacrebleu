@@ -54,16 +54,16 @@ def test_process_to_text():
 
             len_src = len(source)
             len_ref = len(references[0])
-            len_aligned = ds.doc_align(pair, source, "src")
+            len_aligned = len(ds.doc_align(pair, source, "src"))
             for lines, field in zip(all_, fields):
                 assert (
                     len(lines) == len_src or len(lines) == len_ref
                 ), f"{ds}: {pair}: {field} has different length with both src and refs."
-
-                if field != "src":
-                    assert (
-                        ds.doc_align(pair, lines, "ref") == len_aligned
-                    ), f"{ds}: {pair}: {field} can't be aligned with src."
+                
+                assert (
+                    len(ds.doc_align(pair, lines, "ref")) == len_aligned
+                    or len(ds.doc_align(pair, lines, "src")) == len_aligned
+                ), f"{ds}: {pair}: {field} can't be aligned with src or ref."
 
 
 def test_get_files_and_fieldnames():
@@ -86,16 +86,16 @@ def test_source_and_references():
     """
     for ds in dataset.DATASETS.values():
         for pair in ds.langpairs:
-            src_len = len(list(ds.source(pair)))
-            ref_len = len(list(ds.references(pair)))
+            source = ds.source(pair)
+            aligned_source = ds.doc_align(pair, source, "src")
+            # take the first reference if there are multiple
+            references = [item[0] for item in ds.references(pair)]
+            aligned_references = ds.doc_align(pair, references, "ref")
+            src_len = len(aligned_source)
+            ref_len = len(aligned_references)
             assert (
                 src_len == ref_len
             ), f"source/reference failure for {ds.name}:{pair} len(source)={src_len} len(references)={ref_len}"
-            source = ds.source(pair)
-            aligned_source = ds.doc_align(pair, source, "src")
-            references = ds.references(pair)
-            aligned_references = ds.doc_align(pair, references, "ref")
-            assert len(aligned_source) == len(aligned_references)
 
 
 def test_wmt22_references():

@@ -323,7 +323,7 @@ DATASETS = {
             ],
             "fr-en": [
                 "2:wmt21biomedical/test_sets/medline_fr2en_fr.txt:src",
-                "0:wmt21bimercialine/test_sets/medline_fr2en_fr.txt:docid_src",
+                "0:wmt21biomedical/test_sets/medline_fr2en_fr.txt:docid_src",
                 "2:wmt21biomedical/gold_sets/gold_test_files/medline_fr2en_en.txt:ref",
                 "0:wmt21biomedical/gold_sets/gold_test_files/medline_fr2en_en.txt:docid_ref",
             ],
@@ -1972,10 +1972,10 @@ DATASETS = {
         description="Test set for the WMT 19 robustness shared task",
         md5=["78a672e1931f106a8549023c0e8af8f6"],
         langpairs={
-            "en-fr": ["2:MTNT2019/en-fr.final.tsv", "3:MTNT2019/en-fr.final.tsv"],
-            "fr-en": ["2:MTNT2019/fr-en.final.tsv", "3:MTNT2019/fr-en.final.tsv"],
-            "en-ja": ["2:MTNT2019/en-ja.final.tsv", "3:MTNT2019/en-ja.final.tsv"],
-            "ja-en": ["2:MTNT2019/ja-en.final.tsv", "3:MTNT2019/ja-en.final.tsv"],
+            "en-fr": ["2:MTNT2019/en-fr.final.tsv:src", "3:MTNT2019/en-fr.final.tsv:ref"],
+            "fr-en": ["2:MTNT2019/fr-en.final.tsv:src", "3:MTNT2019/fr-en.final.tsv:ref"],
+            "en-ja": ["2:MTNT2019/en-ja.final.tsv:src", "3:MTNT2019/en-ja.final.tsv:ref"],
+            "ja-en": ["2:MTNT2019/ja-en.final.tsv:src", "3:MTNT2019/ja-en.final.tsv:ref"],
         },
     ),
     "mtnt1.1/test": TSVDataset(
@@ -1987,10 +1987,10 @@ DATASETS = {
         citation='@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
         md5=["8ce1831ac584979ba8cdcd9d4be43e1d"],
         langpairs={
-            "en-fr": ["1:MTNT/test/test.en-fr.tsv", "2:MTNT/test/test.en-fr.tsv"],
-            "fr-en": ["1:MTNT/test/test.fr-en.tsv", "2:MTNT/test/test.fr-en.tsv"],
-            "en-ja": ["1:MTNT/test/test.en-ja.tsv", "2:MTNT/test/test.en-ja.tsv"],
-            "ja-en": ["1:MTNT/test/test.ja-en.tsv", "2:MTNT/test/test.ja-en.tsv"],
+            "en-fr": ["1:MTNT/test/test.en-fr.tsv:src", "2:MTNT/test/test.en-fr.tsv:ref"],
+            "fr-en": ["1:MTNT/test/test.fr-en.tsv:src", "2:MTNT/test/test.fr-en.tsv:ref"],
+            "en-ja": ["1:MTNT/test/test.en-ja.tsv:src", "2:MTNT/test/test.en-ja.tsv:ref"],
+            "ja-en": ["1:MTNT/test/test.ja-en.tsv:src", "2:MTNT/test/test.ja-en.tsv:ref"],
         },
     ),
     "mtnt1.1/valid": TSVDataset(
@@ -2002,10 +2002,10 @@ DATASETS = {
         citation='@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
         md5=["8ce1831ac584979ba8cdcd9d4be43e1d"],
         langpairs={
-            "en-fr": ["1:MTNT/valid/valid.en-fr.tsv", "2:MTNT/valid/valid.en-fr.tsv"],
-            "fr-en": ["1:MTNT/valid/valid.fr-en.tsv", "2:MTNT/valid/valid.fr-en.tsv"],
-            "en-ja": ["1:MTNT/valid/valid.en-ja.tsv", "2:MTNT/valid/valid.en-ja.tsv"],
-            "ja-en": ["1:MTNT/valid/valid.ja-en.tsv", "2:MTNT/valid/valid.ja-en.tsv"],
+            "en-fr": ["1:MTNT/valid/valid.en-fr.tsv:src", "2:MTNT/valid/valid.en-fr.tsv:ref"],
+            "fr-en": ["1:MTNT/valid/valid.fr-en.tsv:src", "2:MTNT/valid/valid.fr-en.tsv:ref"],
+            "en-ja": ["1:MTNT/valid/valid.en-ja.tsv:src", "2:MTNT/valid/valid.en-ja.tsv:ref"],
+            "ja-en": ["1:MTNT/valid/valid.ja-en.tsv:src", "2:MTNT/valid/valid.ja-en.tsv:ref"],
         },
     ),
     "mtnt1.1/train": TSVDataset(
@@ -2017,10 +2017,10 @@ DATASETS = {
         citation='@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
         md5=["8ce1831ac584979ba8cdcd9d4be43e1d"],
         langpairs={
-            "en-fr": ["1:MTNT/train/train.en-fr.tsv", "2:MTNT/train/train.en-fr.tsv"],
-            "fr-en": ["1:MTNT/train/train.fr-en.tsv", "2:MTNT/train/train.fr-en.tsv"],
-            "en-ja": ["1:MTNT/train/train.en-ja.tsv", "2:MTNT/train/train.en-ja.tsv"],
-            "ja-en": ["1:MTNT/train/train.ja-en.tsv", "2:MTNT/train/train.ja-en.tsv"],
+            "en-fr": ["1:MTNT/train/train.en-fr.tsv:src", "2:MTNT/train/train.en-fr.tsv:ref"],
+            "fr-en": ["1:MTNT/train/train.fr-en.tsv:src", "2:MTNT/train/train.fr-en.tsv:ref"],
+            "en-ja": ["1:MTNT/train/train.en-ja.tsv:src", "2:MTNT/train/train.en-ja.tsv:ref"],
+            "ja-en": ["1:MTNT/train/train.ja-en.tsv:src", "2:MTNT/train/train.ja-en.tsv:ref"],
         },
     ),
 }

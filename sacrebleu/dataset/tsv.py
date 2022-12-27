@@ -78,14 +78,14 @@ class WMTBiomedicalDataset(TSVDataset):
 
         corpus_dict = {}
         for meta in langpairs[langpair]:
-            index, origin_file, field = self._split_index_and_filename(meta)
+            index, origin_file, field_ = self._split_index_and_filename(meta)
 
             origin_file = os.path.join(self._rawdir, origin_file)
-            corpus_dict[field] = []
+            corpus_dict[field_] = []
 
             with smart_open(origin_file) as fin:
                 for line in fin:
-                    corpus_dict[field].append(line.rstrip("\n").split("\t")[index])
+                    corpus_dict[field_].append(line.rstrip("\n").split("\t")[index])
 
         docs = []
         docids = corpus_dict["docid_src"] if field == "src" else corpus_dict["docid_ref"]
@@ -93,7 +93,7 @@ class WMTBiomedicalDataset(TSVDataset):
         prev_docid = None
         doc = ""
         for docid, sent in zip(docids, sentences):
-            if docid == prev_docid:
+            if docid == prev_docid or not prev_docid:
                 doc += sent
             elif prev_docid:
                 docs.append(doc)
@@ -103,3 +103,11 @@ class WMTBiomedicalDataset(TSVDataset):
 
         docs.append(doc)
         return docs
+    
+    @property
+    def aligned_type(self):
+        """
+        Return the alignment type of the dataset.
+        "sentence" or "documnet"
+        """
+        return "document"

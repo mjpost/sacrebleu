@@ -10,6 +10,7 @@ import portalocker
 from collections import defaultdict
 from typing import List, Optional, Sequence, Dict
 from argparse import Namespace
+from itertools import zip_longest
 
 from tabulate import tabulate
 import colorama
@@ -331,7 +332,7 @@ def print_test_set(test_set, langpair, requested_fields, origlang=None, subset=N
 
     streams = [smart_open(file) for file in files]
     streams = filter_subset(streams, test_set, langpair, origlang, subset)
-    for lines in zip(*streams):
+    for lines in zip_longest(*streams, fillvalue=''):
         print('\t'.join(map(lambda x: x.rstrip(), lines)))
 
 
