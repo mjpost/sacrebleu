@@ -89,9 +89,10 @@ class CHRF(Metric):
                  lowercase: bool = False,
                  whitespace: bool = False,
                  eps_smoothing: bool = False,
-                 references: Optional[Sequence[Sequence[str]]] = None):
+                 references: Optional[Sequence[Sequence[str]]] = None,
+                 **kwargs):
         """`CHRF` initializer."""
-        super().__init__()
+        super().__init__(**kwargs)
 
         self.beta = beta
         self.char_order = char_order

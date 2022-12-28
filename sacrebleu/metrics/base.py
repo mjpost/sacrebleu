@@ -133,6 +133,11 @@ class Signature:
         if num_refs == -1:
             # Detect variable number of refs
             num_refs = 'var'
+            
+        # Only include join if it's not the default. "sent" is the default
+        join = None
+        if args.get('join', "sent") == "doc":
+            join = "doc"
 
         # Global items that are shared across all metrics
         # None's will be ignored
@@ -146,6 +151,7 @@ class Signature:
             'lang': args.get('langpair', None),
             'origlang': args.get('origlang', None),
             'subset': args.get('subset', None),
+            'join': join,
         }
 
     def format(self, short: bool = False) -> str:
@@ -194,7 +200,7 @@ class Metric(metaclass=ABCMeta):
     # Each metric should define its Signature class' name here
     _SIGNATURE_TYPE = Signature
 
-    def __init__(self):
+    def __init__(self, join: str = 'sent'):
         """`Metric` initializer."""
         # The pre-computed reference cache
         self._ref_cache = None
@@ -206,6 +212,7 @@ class Metric(metaclass=ABCMeta):
         # Will be used by the signature when bootstrap resampling
         self.n_bootstrap = None
         self.seed = None
+        self.join = join
 
     def _check_sentence_score_args(self, hyp: str, refs: Sequence[str]):
         """Performs sanity checks on `sentence_score` method's arguments.

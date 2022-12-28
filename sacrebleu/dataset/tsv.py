@@ -108,6 +108,6 @@ class WMTBiomedicalDataset(TSVDataset):
     def aligned_type(self):
         """
         Return the alignment type of the dataset.
-        "sentence" or "documnet"
+        "sent" or "doc"
         """
-        return "document"
+        return "doc"
