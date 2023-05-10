@@ -37,7 +37,7 @@ jobs:
         run: choco install wget unzip
       - name: Install python dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --no-cache-dir --upgrade pip
           pip install pytest
           pip install .[ja]
           pip install .[ko]
