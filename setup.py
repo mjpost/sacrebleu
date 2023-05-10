@@ -152,7 +152,7 @@ setup(
     # for example:
     # $ pip install -e .[dev,test]
     extras_require={'ja': ['mecab-python3>=1.0.5,<=1.0.6', 'ipadic>=1.0,<2.0'],
-                    'ko': ['mecab-ko==1.0.0', 'mecab-ko-dic>=1.0,<2.0']},
+                    'ko': ['mecab-ko>=1.0.0,<=1.0.1', 'mecab-ko-dic>=1.0,<2.0']},
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
