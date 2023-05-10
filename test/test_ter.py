@@ -7,6 +7,8 @@ test_cases = [
     (['aaaa bbbb cccc dddd'], ['aaaa bbbb cccc dddd'], 0),  # perfect match
     (['dddd eeee ffff'], ['aaaa bbbb cccc'], 1),  # no overlap
     ([''], ['a'], 1),  # corner case, empty hypothesis
+    (['a'], [''], 1),  # corner case, empty reference
+    ([''], [''], 0),  # corner case, both reference and hypothesis empty, we define it as 0.0
     (['d e f g h a b c'], ['a b c d e f g h'], 1 / 8),  # a single shift fixes MT
     (
         [

@@ -125,7 +125,14 @@ class TER(Metric):
         :return: A `TERScore` object.
         """
         total_edits, sum_ref_lengths = stats[0], stats[1]
-        score = total_edits / sum_ref_lengths if sum_ref_lengths > 0 else 1
+
+        if sum_ref_lengths > 0:
+            score = total_edits / sum_ref_lengths
+        elif total_edits > 0:
+            score = 1.0  # empty reference(s) and non-empty hypothesis
+        else:
+            score = 0.0  # both reference(s) and hypothesis are empty
+
         return TERScore(100 * score, total_edits, sum_ref_lengths)
 
     def _aggregate_and_compute(self, stats: List[List[float]]) -> TERScore:
