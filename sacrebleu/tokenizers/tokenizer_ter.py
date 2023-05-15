@@ -128,11 +128,15 @@ class TercomTokenizer(BaseTokenizer):
 
         :param normalized: Enable character normalization. By default, normalizes a couple of things such as
             newlines being stripped, retrieving XML encoded characters, and fixing tokenization for punctuation. When
-            'asian_support' is enabled, also normalizes specific Asian (Chinese/Japanese) character sequences, i.e.
+            'asian_support' is enabled, also normalizes specific Asian (CJK) character sequences, i.e.
             split them down to the character level.
-        :param no_punct: Remove punctuation.
-        :param asian_support: Enable special treatment of Asian characters.
-        :param case_sensitive: Enable case sensitivity.
+        :param no_punct: Remove punctuation. Can be used in conjunction with 'asian_support' to also remove typical
+        pu  nctuation markers in Asian languages (CJK).
+        :param asian_support: Enable special treatment of Asian characters. This option only has an effect when
+            'normalized' and/or 'no_punct' is enabled. If 'normalized' is also enabled, then Asian (CJK)
+            characters are split down to the character level. If 'no_punct' is enabled alongside 'asian_support',
+            specific unicode ranges for CJK and full-width punctuations are also removed.
+        :param case_sensitive: Enable case sensitivity, i.e., do not lower case data.
         """
         self._normalized = normalized
         self._no_punct = no_punct

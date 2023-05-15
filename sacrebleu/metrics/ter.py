@@ -77,14 +77,18 @@ class TER(Metric):
 
     :param normalized: Enable character normalization. By default, normalizes a couple of things such as
         newlines being stripped, retrieving XML encoded characters, and fixing tokenization for punctuation. When
-        'asian_support' is enabled, also normalizes specific Asian (Chinese/Japanese) character sequences, i.e.
+        'asian_support' is enabled, also normalizes specific Asian (CJK) character sequences, i.e.
         split them down to the character level.
-    :param no_punct: If `True`, removes punctuations from sentences.
-    :param asian_support: If `True`, adds support for Asian character processing.
+    :param no_punct: Remove punctuation. Can be used in conjunction with 'asian_support' to also remove typical
+    pun ctuation markers in Asian languages (CJK).
+    :param asian_support: Enable special treatment of Asian characters. This option only has an effect when
+        'normalized' and/or 'no_punct' is enabled. If 'normalized' is also enabled, then Asian (CJK)
+        characters are split down to the character level. If 'no_punct' is enabled alongside 'asian_support',
+        specific unicode ranges for CJK and full-width punctuations are also removed.
     :param case_sensitive: If `True`, does not lowercase sentences.
     :param references: A sequence of reference documents with document being
-    defined as a sequence of reference strings. If given, the reference info
-    will be pre-computed and cached for faster re-computation across many systems.
+        defined as a sequence of reference strings. If given, the reference info
+        will be pre-computed and cached for faster re-computation across many systems.
     """
 
     _SIGNATURE_TYPE = TERSignature
