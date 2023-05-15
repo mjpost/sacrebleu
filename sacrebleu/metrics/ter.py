@@ -75,7 +75,10 @@ class TER(Metric):
     Caching in the edit distance is based partly on the PyTer package by Hiroyuki
     Tanaka (MIT license). (https://github.com/aflc/pyter)
 
-    :param normalized: If `True`, applies basic tokenization to sentences.
+    :param normalized: Enable character normalization. By default, normalizes a couple of things such as
+        newlines being stripped, retrieving XML encoded characters, and fixing tokenization for punctuation. When
+        'asian_support' is enabled, also normalizes specific Asian (Chinese/Japanese) character sequences, i.e.
+        split them down to the character level.
     :param no_punct: If `True`, removes punctuations from sentences.
     :param asian_support: If `True`, adds support for Asian character processing.
     :param case_sensitive: If `True`, does not lowercase sentences.

@@ -126,7 +126,10 @@ class TercomTokenizer(BaseTokenizer):
                  case_sensitive: bool = False):
         """Initialize the tokenizer.
 
-        :param normalized: Enable character normalization.
+        :param normalized: Enable character normalization. By default, normalizes a couple of things such as
+            newlines being stripped, retrieving XML encoded characters, and fixing tokenization for punctuation. When
+            'asian_support' is enabled, also normalizes specific Asian (Chinese/Japanese) character sequences, i.e.
+            split them down to the character level.
         :param no_punct: Remove punctuation.
         :param asian_support: Enable special treatment of Asian characters.
         :param case_sensitive: Enable case sensitivity.
