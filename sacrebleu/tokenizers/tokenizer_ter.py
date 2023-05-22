@@ -131,7 +131,7 @@ class TercomTokenizer(BaseTokenizer):
             'asian_support' is enabled, also normalizes specific Asian (CJK) character sequences, i.e.
             split them down to the character level.
         :param no_punct: Remove punctuation. Can be used in conjunction with 'asian_support' to also remove typical
-        pu  nctuation markers in Asian languages (CJK).
+            punctuation markers in Asian languages (CJK).
         :param asian_support: Enable special treatment of Asian characters. This option only has an effect when
             'normalized' and/or 'no_punct' is enabled. If 'normalized' is also enabled, then Asian (CJK)
             characters are split down to the character level. If 'no_punct' is enabled alongside 'asian_support',
