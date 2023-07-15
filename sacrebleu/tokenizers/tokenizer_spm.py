@@ -34,7 +34,7 @@ class TokenizerSPM(BaseTokenizer):
     def __init__(self, key="spm"):
         self.name = SPM_MODELS[key]["signature"]
 
-        if key == 'spm':
+        if key == "spm":
             sacrelogger.warn("Tokenizer 'spm' has been changed to 'flores101', and may be removed in the future.")
 
         try:
