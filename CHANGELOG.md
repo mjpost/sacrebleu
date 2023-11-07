@@ -1,5 +1,13 @@
 # Release Notes
 
+- 2.3.2 (2023-11-06)
+  Fixed:
+  - Special treatment of empty references in TER (#232)
+  - Bump in mecab version for JA (#234)
+
+  Added:
+  - Warning if `-tok spm` is used (use explicit `flores101` instead) (#238)
+
 - 2.3.1 (2022-10-18)
   Bugfix:
   - Set lru_cache to 2**16 for SPM tokenizer (was set to infinite)
