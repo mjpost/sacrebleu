@@ -29,3 +29,15 @@ from .metrics import BLEU, CHRF, TER  # noqa: F401
 from .compat import corpus_bleu, raw_corpus_bleu, sentence_bleu  # noqa: F401
 from .compat import corpus_chrf, sentence_chrf  # noqa: F401
 from .compat import corpus_ter, sentence_ter  # noqa: F401
+
+__all__ = [
+    'smart_open', 'SACREBLEU_DIR', 'download_test_set',
+    'get_source_file', 'get_reference_files',
+    'get_available_testsets', 'get_langpairs_for_testset',
+    'extract_word_ngrams', 'extract_char_ngrams',
+    'DATASETS',
+    'BLEU', 'CHRF', 'TER',
+    'corpus_bleu', 'raw_corpus_bleu', 'sentence_bleu',
+    'corpus_chrf', 'sentence_chrf',
+    'corpus_ter', 'sentence_ter'
+]
