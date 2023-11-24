@@ -2,7 +2,6 @@
 
 import os
 import logging
-import urllib.request
 
 from functools import lru_cache
 from ..utils import SACREBLEU_DIR, download_file

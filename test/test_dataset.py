@@ -106,7 +106,7 @@ def test_wmt22_references():
 
     # and that ref:A is the default for all languages where it wasn't overridden
     for langpair, langpair_data in wmt22.langpairs.items():
-        if type(langpair_data) == dict:
+        if isinstance(langpair_data, dict):
             assert wmt22._get_langpair_allowed_refs(langpair) != ["ref:A"]
         else:
             assert wmt22._get_langpair_allowed_refs(langpair) == ["ref:A"]

@@ -1,5 +1,7 @@
 .PHONY: test
 test:
+	ruff check .
+	mypy sacrebleu scripts test
 	python3 -m pytest
 	bash test.sh
 

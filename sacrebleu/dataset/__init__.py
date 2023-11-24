@@ -14,6 +14,19 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
+
+# This defines data locations.
+# Right below are test sets.
+# Beneath each test set, we define the location to download the test data.
+# The other keys are each language pair contained in the tarball, and the respective locations of the source and reference data within each.
+# Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
+# The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
+from .fake_sgml import FakeSGMLDataset, WMTAdditionDataset
+from .iwslt_xml import IWSLTXMLDataset
+from .plain_text import PlainTextDataset
+from .tsv import TSVDataset
+from .wmt_xml import WMTXMLDataset
+
 # Detailed document metadata annotation in form DocumentID -> CountryCode - Domain - OptionalFinegrainedCountryCode
 # While the annotation is subjective with many unclear cases, it may provide useful insights
 # when applied on large data (TODO: annotate all documents from recent WMT years, at least for origlang=en, consider renaming "world" to "other").
@@ -58,19 +71,6 @@ SUBSETS = {
 }
 COUNTRIES = sorted(list({v.split("-")[0] for v in SUBSETS["wmt19"].values()}))
 DOMAINS = sorted(list({v.split("-")[1] for v in SUBSETS["wmt19"].values()}))
-
-
-# This defines data locations.
-# At the top level are test sets.
-# Beneath each test set, we define the location to download the test data.
-# The other keys are each language pair contained in the tarball, and the respective locations of the source and reference data within each.
-# Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
-# The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
-from .fake_sgml import FakeSGMLDataset, WMTAdditionDataset
-from .iwslt_xml import IWSLTXMLDataset
-from .plain_text import PlainTextDataset
-from .tsv import TSVDataset
-from .wmt_xml import WMTXMLDataset
 
 DATASETS = {
     # wmt

@@ -16,6 +16,8 @@ if cmd == "--check":
 
     for item in DATASETS.values():
         if item.md5 is not None:
+            assert item.data
+            assert item.md5
             assert len(item.data) == len(item.md5)
             pairs = zip(item.data, item.md5)
             for url, md5_hash in pairs:
