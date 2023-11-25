@@ -255,7 +255,8 @@ def main():
                 testsets = get_available_testsets()
             for testset in sorted(testsets):
                 desc = DATASETS[testset].description.strip()
-                print(f'{testset:<30}: {desc}')
+                aligned_type = DATASETS[testset].aligned_type
+                print(f'{testset:<30} {aligned_type} aligned: {desc}')
         sys.exit(0)
 
     if args.sentence_level and len(args.metrics) > 1:
@@ -308,12 +309,30 @@ def main():
                 for lp in langpairs:
                     sacrelogger.error(f' > {lp}')
                 sys.exit(1)
+    
+    sig_aligned_type = "sent"           
+    if args.test_set is not None:
+        aligned_types = []
+        for test_set in args.test_set.split(','):
+            aligned_types.append(DATASETS[test_set].aligned_type)
+            
+        if len(set(aligned_types)) > 1:
+            sacrelogger.error('All test sets must be of the same alignment type. You can use --list to see the alignment type of each test set.')
+            sys.exit(1)
+        
+        sig_aligned_type = aligned_types[0]
 
     if args.echo:
         if args.langpair is None or args.test_set is None:
             sacrelogger.warning("--echo requires a test set (--t) and a language pair (-l)")
             sys.exit(1)
-        for test_set in args.test_set.split(','):
+        test_sets = args.test_set.split(',')
+        if (len(args.echo) > 1 or "all" in args.echo or len(test_sets) > 1) and sig_aligned_type != "sent":
+            sacrelogger.warning("Be careful when you use --echo with multiple test sets or multiple fields unless they are all sentence aligned. " \
+                "The total lines of the source and reference files of document aligned test sets may not match, which may cause problems. " \
+                f"{test_set} is {aligned_type} aligned.")
+
+        for test_set in test_sets:
             print_test_set(test_set, args.langpair, args.echo, args.origlang, args.subset)
         sys.exit(0)
 
@@ -462,6 +481,11 @@ def main():
     # Unpack systems & references back
     systems, refs = outputs[:num_sys], outputs[num_sys:]
 
+    # Merge sentences from same doc for doc aligned datasets.
+    if args.test_set:
+        refs = [DATASETS[args.test_set].doc_align(args.langpair, ref, "ref") for ref in refs]
+        systems = [DATASETS[args.test_set].doc_align(args.langpair, system, "src") for system in systems]
+
     # Perform some sanity checks
     for system in systems:
         if len(system) == 0:
@@ -485,6 +509,9 @@ def main():
         # for grouping. Filter accordingly and strip the prefixes prior to
         # metric object construction.
         metric_args = args_to_dict(args, name.lower(), strip_prefix=True)
+        
+        # Manually add signature "join" to the metric arguments
+        metric_args["join"] = sig_aligned_type
 
         # This will cache reference stats for faster re-computation if required
         metric_args['references'] = refs

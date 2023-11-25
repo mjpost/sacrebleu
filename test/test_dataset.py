@@ -1,6 +1,6 @@
 import os
-import shutil
 import random
+import shutil
 
 import sacrebleu.dataset as dataset
 from sacrebleu.utils import smart_open
@@ -44,15 +44,26 @@ def test_process_to_text():
 
         for pair in ds.langpairs:
             all_files = ds.get_files(pair)
+            source_file = ds.get_source_file(pair)
+            reference_files = ds.get_reference_files(pair)
+            fields = ds.fieldnames(pair)
 
-            # count the number of lines in each file
-            num_lines = [sum(1 for _ in smart_open(f)) for f in all_files]
+            source = smart_open(source_file).readlines()
+            references = [smart_open(f).readlines() for f in reference_files]
+            all_ = [smart_open(f).readlines() for f in all_files]
 
-            # ensure no empty file
-            assert num_lines[0] > 0
-
-            # assert each file has the same length
-            assert all(x == num_lines[0] for x in num_lines)
+            len_src = len(source)
+            len_ref = len(references[0])
+            len_aligned = len(ds.doc_align(pair, source, "src"))
+            for lines, field in zip(all_, fields):
+                assert (
+                    len(lines) == len_src or len(lines) == len_ref
+                ), f"{ds}: {pair}: {field} has different length with both src and refs."
+                
+                assert (
+                    len(ds.doc_align(pair, lines, "ref")) == len_aligned
+                    or len(ds.doc_align(pair, lines, "src")) == len_aligned
+                ), f"{ds}: {pair}: {field} can't be aligned with src or ref."
 
 
 def test_get_files_and_fieldnames():
@@ -75,9 +86,16 @@ def test_source_and_references():
     """
     for ds in dataset.DATASETS.values():
         for pair in ds.langpairs:
-            src_len = len(list(ds.source(pair)))
-            ref_len = len(list(ds.references(pair)))
-            assert src_len == ref_len, f"source/reference failure for {ds.name}:{pair} len(source)={src_len} len(references)={ref_len}"
+            source = ds.source(pair)
+            aligned_source = ds.doc_align(pair, source, "src")
+            # take the first reference if there are multiple
+            references = [item[0] for item in ds.references(pair)]
+            aligned_references = ds.doc_align(pair, references, "ref")
+            src_len = len(aligned_source)
+            ref_len = len(aligned_references)
+            assert (
+                src_len == ref_len
+            ), f"source/reference failure for {ds.name}:{pair} len(source)={src_len} len(references)={ref_len}"
 
 
 def test_wmt22_references():
@@ -110,5 +128,3 @@ def test_wmt22_references():
             assert wmt22._get_langpair_allowed_refs(langpair) != ["ref:A"]
         else:
             assert wmt22._get_langpair_allowed_refs(langpair) == ["ref:A"]
-
-

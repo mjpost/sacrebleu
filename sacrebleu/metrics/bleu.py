@@ -159,9 +159,10 @@ class BLEU(Metric):
                  max_ngram_order: int = MAX_NGRAM_ORDER,
                  effective_order: bool = False,
                  trg_lang: str = '',
-                 references: Optional[Sequence[Sequence[str]]] = None):
+                 references: Optional[Sequence[Sequence[str]]] = None,
+                 **kwargs):
         """`BLEU` initializer."""
-        super().__init__()
+        super().__init__(**kwargs)
 
         self._force = force
         self.trg_lang = trg_lang

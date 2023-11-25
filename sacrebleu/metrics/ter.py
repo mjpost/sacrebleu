@@ -97,9 +97,10 @@ class TER(Metric):
                  no_punct: bool = False,
                  asian_support: bool = False,
                  case_sensitive: bool = False,
-                 references: Optional[Sequence[Sequence[str]]] = None):
+                 references: Optional[Sequence[Sequence[str]]] = None,
+                 **kwargs):
         """`TER` initializer."""
-        super().__init__()
+        super().__init__(**kwargs)
 
         self.no_punct = no_punct
         self.normalized = normalized

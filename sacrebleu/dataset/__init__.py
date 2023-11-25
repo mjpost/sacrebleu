@@ -69,7 +69,7 @@ DOMAINS = sorted(list({v.split("-")[1] for v in SUBSETS["wmt19"].values()}))
 from .fake_sgml import FakeSGMLDataset, WMTAdditionDataset
 from .iwslt_xml import IWSLTXMLDataset
 from .plain_text import PlainTextDataset
-from .tsv import TSVDataset
+from .tsv import TSVDataset, WMTBiomedicalDataset
 from .wmt_xml import WMTXMLDataset
 
 DATASETS = {
@@ -258,6 +258,100 @@ DATASETS = {
         },
         # datasets are bidirectional in origin, so use both refs
         refs=["A", ""],
+    ),
+    "wmt21/biomedical": WMTBiomedicalDataset(
+        "wmt21/biomedical",
+        data=[
+            "https://raw.githubusercontent.com/BrightXiaoHan/wmt-biomedical-mirror/master/wmt21biomedical.zip"
+        ],
+        description="Test data for the WMT21 biomedical task: https://www.statmt.org/wmt21/biomedical-translation-task.html",
+        md5=["a8d58395d538d515a8e10129cb6b80d4"],
+        langpairs={
+            "de-en": [
+                "2:wmt21biomedical/test_sets/medline_de2en_de.txt:src",
+                "0:wmt21biomedical/test_sets/medline_de2en_de.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_de2en_en.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_de2en_en.txt:docid_ref",
+            ],
+            "en-de": [
+                "2:wmt21biomedical/test_sets/medline_en2de_en.txt:src",
+                "0:wmt21biomedical/test_sets/medline_en2de_en.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_en2de_de.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_en2de_de.txt:docid_ref",
+            ],
+            "en-es": [
+                "2:wmt21biomedical/test_sets/medline_en2es_en.txt:src",
+                "0:wmt21biomedical/test_sets/medline_en2es_en.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_en2es_es.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_en2es_es.txt:docid_ref",
+            ],
+            "en-fr": [
+                "2:wmt21biomedical/test_sets/medline_en2fr_en.txt:src",
+                "0:wmt21biomedical/test_sets/medline_en2fr_en.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_en2fr_fr.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_en2fr_fr.txt:docid_ref",
+            ],
+            "en-it": [
+                "2:wmt21biomedical/test_sets/medline_en2it_en.txt:src",
+                "0:wmt21biomedical/test_sets/medline_en2it_en.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_en2it_it.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_en2it_it.txt:docid_ref",
+            ],
+            "en-pt": [
+                "2:wmt21biomedical/test_sets/medline_en2pt_en.txt:src",
+                "0:wmt21biomedical/test_sets/medline_en2pt_en.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_en2pt_pt.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_en2pt_pt.txt:docid_ref",
+            ],
+            "en-ru": [
+                "2:wmt21biomedical/test_sets/medline_en2ru_en.txt:src",
+                "0:wmt21biomedical/test_sets/medline_en2ru_en.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_en2ru_ru.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_en2ru_ru.txt:docid_ref",
+            ],
+            "en-zh": [
+                "2:wmt21biomedical/test_sets/medline_en2zh_en.txt:src",
+                "0:wmt21biomedical/test_sets/medline_en2zh_en.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_en2zh_zh.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_en2zh_zh.txt:docid_ref",
+            ],
+            "es-en": [
+                "2:wmt21biomedical/test_sets/medline_es2en_es.txt:src",
+                "0:wmt21biomedical/test_sets/medline_es2en_es.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_es2en_en.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_es2en_en.txt:docid_ref",
+            ],
+            "fr-en": [
+                "2:wmt21biomedical/test_sets/medline_fr2en_fr.txt:src",
+                "0:wmt21biomedical/test_sets/medline_fr2en_fr.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_fr2en_en.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_fr2en_en.txt:docid_ref",
+            ],
+            "it-en": [
+                "2:wmt21biomedical/test_sets/medline_it2en_it.txt:src",
+                "0:wmt21biomedical/test_sets/medline_it2en_it.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_it2en_en.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_it2en_en.txt:docid_ref",
+            ],
+            "pt-en": [
+                "2:wmt21biomedical/test_sets/medline_pt2en_pt.txt:src",
+                "0:wmt21biomedical/test_sets/medline_pt2en_pt.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_pt2en_en.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_pt2en_en.txt:docid_ref",
+            ],
+            "ru-en": [
+                "2:wmt21biomedical/test_sets/medline_ru2en_ru.txt:src",
+                "0:wmt21biomedical/test_sets/medline_ru2en_ru.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_ru2en_en.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_ru2en_en.txt:docid_ref",
+            ],
+            "zh-en": [
+                "2:wmt21biomedical/test_sets/medline_zh2en_zh.txt:src",
+                "0:wmt21biomedical/test_sets/medline_zh2en_zh.txt:docid_src",
+                "2:wmt21biomedical/gold_sets/gold_test_files/medline_zh2en_en.txt:ref",
+                "0:wmt21biomedical/gold_sets/gold_test_files/medline_zh2en_en.txt:docid_ref",
+            ]
+        },
     ),
     "wmt20/tworefs": FakeSGMLDataset(
         "wmt20/tworefs",
@@ -1878,10 +1972,10 @@ DATASETS = {
         description="Test set for the WMT 19 robustness shared task",
         md5=["78a672e1931f106a8549023c0e8af8f6"],
         langpairs={
-            "en-fr": ["2:MTNT2019/en-fr.final.tsv", "3:MTNT2019/en-fr.final.tsv"],
-            "fr-en": ["2:MTNT2019/fr-en.final.tsv", "3:MTNT2019/fr-en.final.tsv"],
-            "en-ja": ["2:MTNT2019/en-ja.final.tsv", "3:MTNT2019/en-ja.final.tsv"],
-            "ja-en": ["2:MTNT2019/ja-en.final.tsv", "3:MTNT2019/ja-en.final.tsv"],
+            "en-fr": ["2:MTNT2019/en-fr.final.tsv:src", "3:MTNT2019/en-fr.final.tsv:ref"],
+            "fr-en": ["2:MTNT2019/fr-en.final.tsv:src", "3:MTNT2019/fr-en.final.tsv:ref"],
+            "en-ja": ["2:MTNT2019/en-ja.final.tsv:src", "3:MTNT2019/en-ja.final.tsv:ref"],
+            "ja-en": ["2:MTNT2019/ja-en.final.tsv:src", "3:MTNT2019/ja-en.final.tsv:ref"],
         },
     ),
     "mtnt1.1/test": TSVDataset(
@@ -1893,10 +1987,10 @@ DATASETS = {
         citation='@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
         md5=["8ce1831ac584979ba8cdcd9d4be43e1d"],
         langpairs={
-            "en-fr": ["1:MTNT/test/test.en-fr.tsv", "2:MTNT/test/test.en-fr.tsv"],
-            "fr-en": ["1:MTNT/test/test.fr-en.tsv", "2:MTNT/test/test.fr-en.tsv"],
-            "en-ja": ["1:MTNT/test/test.en-ja.tsv", "2:MTNT/test/test.en-ja.tsv"],
-            "ja-en": ["1:MTNT/test/test.ja-en.tsv", "2:MTNT/test/test.ja-en.tsv"],
+            "en-fr": ["1:MTNT/test/test.en-fr.tsv:src", "2:MTNT/test/test.en-fr.tsv:ref"],
+            "fr-en": ["1:MTNT/test/test.fr-en.tsv:src", "2:MTNT/test/test.fr-en.tsv:ref"],
+            "en-ja": ["1:MTNT/test/test.en-ja.tsv:src", "2:MTNT/test/test.en-ja.tsv:ref"],
+            "ja-en": ["1:MTNT/test/test.ja-en.tsv:src", "2:MTNT/test/test.ja-en.tsv:ref"],
         },
     ),
     "mtnt1.1/valid": TSVDataset(
@@ -1908,10 +2002,10 @@ DATASETS = {
         citation='@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
         md5=["8ce1831ac584979ba8cdcd9d4be43e1d"],
         langpairs={
-            "en-fr": ["1:MTNT/valid/valid.en-fr.tsv", "2:MTNT/valid/valid.en-fr.tsv"],
-            "fr-en": ["1:MTNT/valid/valid.fr-en.tsv", "2:MTNT/valid/valid.fr-en.tsv"],
-            "en-ja": ["1:MTNT/valid/valid.en-ja.tsv", "2:MTNT/valid/valid.en-ja.tsv"],
-            "ja-en": ["1:MTNT/valid/valid.ja-en.tsv", "2:MTNT/valid/valid.ja-en.tsv"],
+            "en-fr": ["1:MTNT/valid/valid.en-fr.tsv:src", "2:MTNT/valid/valid.en-fr.tsv:ref"],
+            "fr-en": ["1:MTNT/valid/valid.fr-en.tsv:src", "2:MTNT/valid/valid.fr-en.tsv:ref"],
+            "en-ja": ["1:MTNT/valid/valid.en-ja.tsv:src", "2:MTNT/valid/valid.en-ja.tsv:ref"],
+            "ja-en": ["1:MTNT/valid/valid.ja-en.tsv:src", "2:MTNT/valid/valid.ja-en.tsv:ref"],
         },
     ),
     "mtnt1.1/train": TSVDataset(
@@ -1923,10 +2017,10 @@ DATASETS = {
         citation='@InProceedings{michel2018a:mtnt,\n    author = "Michel, Paul and Neubig, Graham",\n    title = "MTNT: A Testbed for Machine Translation of Noisy Text",\n    booktitle = "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing",\n    year = "2018",\n    publisher = "Association for Computational Linguistics",\n    pages = "543--553",\n    location = "Brussels, Belgium",\n    url = "http://aclweb.org/anthology/D18-1050"\n}',
         md5=["8ce1831ac584979ba8cdcd9d4be43e1d"],
         langpairs={
-            "en-fr": ["1:MTNT/train/train.en-fr.tsv", "2:MTNT/train/train.en-fr.tsv"],
-            "fr-en": ["1:MTNT/train/train.fr-en.tsv", "2:MTNT/train/train.fr-en.tsv"],
-            "en-ja": ["1:MTNT/train/train.en-ja.tsv", "2:MTNT/train/train.en-ja.tsv"],
-            "ja-en": ["1:MTNT/train/train.ja-en.tsv", "2:MTNT/train/train.ja-en.tsv"],
+            "en-fr": ["1:MTNT/train/train.en-fr.tsv:src", "2:MTNT/train/train.en-fr.tsv:ref"],
+            "fr-en": ["1:MTNT/train/train.fr-en.tsv:src", "2:MTNT/train/train.fr-en.tsv:ref"],
+            "en-ja": ["1:MTNT/train/train.en-ja.tsv:src", "2:MTNT/train/train.en-ja.tsv:ref"],
+            "ja-en": ["1:MTNT/train/train.ja-en.tsv:src", "2:MTNT/train/train.ja-en.tsv:ref"],
         },
     ),
 }
