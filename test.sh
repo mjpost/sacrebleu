@@ -96,7 +96,7 @@ cd data
 
 if [[ ! -d wmt17-submitted-data ]]; then
    echo "Downloading and unpacking WMT'17 system submissions (46 MB)..."
-   wget -q http://data.statmt.org/wmt17/translation-task/wmt17-submitted-data-v1.0.tgz
+   wget -q https://data.statmt.org/wmt17/translation-task/wmt17-submitted-data-v1.0.tgz
    tar xzf wmt17-submitted-data-v1.0.tgz
 fi
 
