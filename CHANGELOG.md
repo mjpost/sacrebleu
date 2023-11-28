@@ -1,5 +1,10 @@
 # Release Notes
 
+- 2.3.3 (2023-11-28)
+  Fixed:
+  - Typing issues (#249, #250)
+  - Improved builds (#252)
+
 - 2.3.2 (2023-11-06)
   Fixed:
   - Special treatment of empty references in TER (#232)
