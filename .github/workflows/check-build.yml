@@ -1,7 +1,11 @@
 name: check-build
 
 on:
-  pull_request
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
 
 env:
   PYTHONUTF8: "1"
