@@ -14,6 +14,19 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
+
+# This defines data locations.
+# Right below are test sets.
+# Beneath each test set, we define the location to download the test data.
+# The other keys are each language pair contained in the tarball, and the respective locations of the source and reference data within each.
+# Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
+# The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
+from .fake_sgml import FakeSGMLDataset, WMTAdditionDataset
+from .iwslt_xml import IWSLTXMLDataset
+from .plain_text import PlainTextDataset
+from .tsv import TSVDataset
+from .wmt_xml import WMTXMLDataset
+
 # Detailed document metadata annotation in form DocumentID -> CountryCode - Domain - OptionalFinegrainedCountryCode
 # While the annotation is subjective with many unclear cases, it may provide useful insights
 # when applied on large data (TODO: annotate all documents from recent WMT years, at least for origlang=en, consider renaming "world" to "other").
@@ -58,19 +71,6 @@ SUBSETS = {
 }
 COUNTRIES = sorted(list({v.split("-")[0] for v in SUBSETS["wmt19"].values()}))
 DOMAINS = sorted(list({v.split("-")[1] for v in SUBSETS["wmt19"].values()}))
-
-
-# This defines data locations.
-# At the top level are test sets.
-# Beneath each test set, we define the location to download the test data.
-# The other keys are each language pair contained in the tarball, and the respective locations of the source and reference data within each.
-# Many of these are *.sgm files, which are processed to produced plain text that can be used by this script.
-# The canonical location of unpacked, processed data is $SACREBLEU_DIR/$TEST/$SOURCE-$TARGET.{$SOURCE,$TARGET}
-from .fake_sgml import FakeSGMLDataset, WMTAdditionDataset
-from .iwslt_xml import IWSLTXMLDataset
-from .plain_text import PlainTextDataset
-from .tsv import TSVDataset
-from .wmt_xml import WMTXMLDataset
 
 DATASETS = {
     # wmt
@@ -151,7 +151,7 @@ DATASETS = {
     ),
     "wmt21": WMTXMLDataset(
         "wmt21",
-        data=["http://data.statmt.org/wmt21/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt21/translation-task/test.tgz"],
         description="Official evaluation data for WMT21.",
         md5=["32e7ab995bc318414375d60f0269af92"],
         langpairs={
@@ -181,7 +181,7 @@ DATASETS = {
     ),
     "wmt21/B": WMTXMLDataset(
         "wmt21/B",
-        data=["http://data.statmt.org/wmt21/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt21/translation-task/test.tgz"],
         description="Official evaluation data for WMT21 with reference B.",
         md5=["32e7ab995bc318414375d60f0269af92"],
         langpairs={
@@ -197,7 +197,7 @@ DATASETS = {
     ),
     "wmt21/AB": WMTXMLDataset(
         "wmt21/AB",
-        data=["http://data.statmt.org/wmt21/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt21/translation-task/test.tgz"],
         description="Official evaluation data for WMT21 with references A and B.",
         md5=["32e7ab995bc318414375d60f0269af92"],
         langpairs={
@@ -214,7 +214,7 @@ DATASETS = {
     ),
     "wmt21/C": WMTXMLDataset(
         "wmt21/C",
-        data=["http://data.statmt.org/wmt21/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt21/translation-task/test.tgz"],
         description="Official evaluation data for WMT21 with reference C",
         md5=["32e7ab995bc318414375d60f0269af92"],
         langpairs={
@@ -225,7 +225,7 @@ DATASETS = {
     ),
     "wmt21/AC": WMTXMLDataset(
         "wmt21/AC",
-        data=["http://data.statmt.org/wmt21/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt21/translation-task/test.tgz"],
         description="Official evaluation data for WMT21 with references A and C",
         md5=["32e7ab995bc318414375d60f0269af92"],
         langpairs={
@@ -236,7 +236,7 @@ DATASETS = {
     ),
     "wmt21/D": WMTXMLDataset(
         "wmt21/D",
-        data=["http://data.statmt.org/wmt21/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt21/translation-task/test.tgz"],
         description="Official evaluation data for WMT21 with reference D",
         md5=["32e7ab995bc318414375d60f0269af92"],
         langpairs={
@@ -247,7 +247,7 @@ DATASETS = {
     ),
     "wmt21/dev": WMTXMLDataset(
         "wmt21/dev",
-        data=["http://data.statmt.org/wmt21/translation-task/dev.tgz"],
+        data=["https://data.statmt.org/wmt21/translation-task/dev.tgz"],
         description="Development data for WMT21，if multiple references are available, the first one is used.",
         md5=["165da59ac8dfb5b7cafd7e90b1cac672"],
         langpairs={
@@ -261,7 +261,7 @@ DATASETS = {
     ),
     "wmt20/tworefs": FakeSGMLDataset(
         "wmt20/tworefs",
-        data=["http://data.statmt.org/wmt20/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt20/translation-task/test.tgz"],
         description="WMT20 news test sets with two references",
         md5=["3b1f777cfd2fb15ccf66e9bfdb2b1699"],
         langpairs={
@@ -294,7 +294,7 @@ DATASETS = {
     ),
     "wmt20": FakeSGMLDataset(
         "wmt20",
-        data=["http://data.statmt.org/wmt20/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt20/translation-task/test.tgz"],
         description="Official evaluation data for WMT20",
         md5=["3b1f777cfd2fb15ccf66e9bfdb2b1699"],
         langpairs={
@@ -390,7 +390,7 @@ DATASETS = {
     ),
     "wmt20/dev": FakeSGMLDataset(
         "wmt20/dev",
-        data=["http://data.statmt.org/wmt20/translation-task/dev.tgz"],
+        data=["https://data.statmt.org/wmt20/translation-task/dev.tgz"],
         description="Development data for tasks new to 2020.",
         md5=["037f2b37aab74febbb1b2307dc2afb54"],
         langpairs={
@@ -430,7 +430,7 @@ DATASETS = {
     ),
     "wmt20/robust/set1": PlainTextDataset(
         "wmt20/robust/set1",
-        data=["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        data=["https://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
         md5=["a12ac9ebe89b72195041518dffc4a9d5"],
         description="WMT20 robustness task, set 1",
         langpairs={
@@ -446,7 +446,7 @@ DATASETS = {
     ),
     "wmt20/robust/set2": PlainTextDataset(
         "wmt20/robust/set2",
-        data=["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        data=["https://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
         md5=["a12ac9ebe89b72195041518dffc4a9d5"],
         description="WMT20 robustness task, set 2",
         langpairs={
@@ -462,7 +462,7 @@ DATASETS = {
     ),
     "wmt20/robust/set3": PlainTextDataset(
         "wmt20/robust/set3",
-        data=["http://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
+        data=["https://data.statmt.org/wmt20/robustness-task/robustness20-3-sets.zip"],
         md5=["a12ac9ebe89b72195041518dffc4a9d5"],
         description="WMT20 robustness task, set 3",
         langpairs={
@@ -474,7 +474,7 @@ DATASETS = {
     ),
     "wmt19": FakeSGMLDataset(
         "wmt19",
-        data=["http://data.statmt.org/wmt19/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt19/translation-task/test.tgz"],
         description="Official evaluation data.",
         md5=["84de7162d158e28403103b01aeefc39a"],
         citation=r"""@proceedings{ws-2019-machine,
@@ -583,7 +583,7 @@ DATASETS = {
     ),
     "wmt19/dev": FakeSGMLDataset(
         "wmt19/dev",
-        data=["http://data.statmt.org/wmt19/translation-task/dev.tgz"],
+        data=["https://data.statmt.org/wmt19/translation-task/dev.tgz"],
         description="Development data for tasks new to 2019.",
         md5=["f2ec7af5947c19e0cacb3882eb208002"],
         langpairs={
@@ -616,7 +616,7 @@ DATASETS = {
     "wmt19/google/ar": WMTAdditionDataset(
         "wmt19/google/ar",
         data=[
-            "http://data.statmt.org/wmt19/translation-task/test.tgz",
+            "https://data.statmt.org/wmt19/translation-task/test.tgz",
             "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-ar.ref",
         ],
         description="Additional high-quality reference for WMT19/en-de.",
@@ -629,7 +629,7 @@ DATASETS = {
     "wmt19/google/arp": WMTAdditionDataset(
         "wmt19/google/arp",
         data=[
-            "http://data.statmt.org/wmt19/translation-task/test.tgz",
+            "https://data.statmt.org/wmt19/translation-task/test.tgz",
             "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-arp.ref",
         ],
         description="Additional paraphrase of wmt19/google/ar.",
@@ -642,7 +642,7 @@ DATASETS = {
     "wmt19/google/wmtp": WMTAdditionDataset(
         "wmt19/google/wmtp",
         data=[
-            "http://data.statmt.org/wmt19/translation-task/test.tgz",
+            "https://data.statmt.org/wmt19/translation-task/test.tgz",
             "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-wmtp.ref",
         ],
         description="Additional paraphrase of the official WMT19 reference.",
@@ -655,7 +655,7 @@ DATASETS = {
     "wmt19/google/hqr": WMTAdditionDataset(
         "wmt19/google/hqr",
         data=[
-            "http://data.statmt.org/wmt19/translation-task/test.tgz",
+            "https://data.statmt.org/wmt19/translation-task/test.tgz",
             "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-hqr.ref",
         ],
         description="Best human selected-reference between wmt19 and wmt19/google/ar.",
@@ -668,7 +668,7 @@ DATASETS = {
     "wmt19/google/hqp": WMTAdditionDataset(
         "wmt19/google/hqp",
         data=[
-            "http://data.statmt.org/wmt19/translation-task/test.tgz",
+            "https://data.statmt.org/wmt19/translation-task/test.tgz",
             "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-hqp.ref",
         ],
         description="Best human-selected reference between wmt19/google/arp and wmt19/google/wmtp.",
@@ -681,7 +681,7 @@ DATASETS = {
     "wmt19/google/hqall": WMTAdditionDataset(
         "wmt19/google/hqall",
         data=[
-            "http://data.statmt.org/wmt19/translation-task/test.tgz",
+            "https://data.statmt.org/wmt19/translation-task/test.tgz",
             "https://raw.githubusercontent.com/google/wmt19-paraphrased-references/master/wmt19/ende/wmt19-ende-hqall.ref",
         ],
         description="Best human-selected reference among original official reference and the Google reference and paraphrases.",
@@ -693,7 +693,7 @@ DATASETS = {
     ),
     "wmt18": FakeSGMLDataset(
         "wmt18",
-        data=["http://data.statmt.org/wmt18/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt18/translation-task/test.tgz"],
         md5=["f996c245ecffea23d0006fa4c34e9064"],
         description="Official evaluation data.",
         citation='@inproceedings{bojar-etal-2018-findings,\n    title = "Findings of the 2018 Conference on Machine Translation ({WMT}18)",\n    author = "Bojar, Ond{\v{r}}ej  and\n      Federmann, Christian  and\n      Fishel, Mark  and\n      Graham, Yvette  and\n      Haddow, Barry  and\n      Koehn, Philipp  and\n      Monz, Christof",\n    booktitle = "Proceedings of the Third Conference on Machine Translation: Shared Task Papers",\n    month = oct,\n    year = "2018",\n    address = "Belgium, Brussels",\n    publisher = "Association for Computational Linguistics",\n    url = "https://www.aclweb.org/anthology/W18-6401",\n    pages = "272--303",\n}',
@@ -758,7 +758,7 @@ DATASETS = {
     ),
     "wmt18/test-ts": FakeSGMLDataset(
         "wmt18/test-ts",
-        data=["http://data.statmt.org/wmt18/translation-task/test-ts.tgz"],
+        data=["https://data.statmt.org/wmt18/translation-task/test-ts.tgz"],
         md5=["5c621a34d512cc2dd74162ae7d00b320"],
         description="Official evaluation sources with extra test sets interleaved.",
         langpairs={
@@ -780,7 +780,7 @@ DATASETS = {
     ),
     "wmt18/dev": FakeSGMLDataset(
         "wmt18/dev",
-        data=["http://data.statmt.org/wmt18/translation-task/dev.tgz"],
+        data=["https://data.statmt.org/wmt18/translation-task/dev.tgz"],
         md5=["486f391da54a7a3247f02ebd25996f24"],
         description="Development data (Estonian<>English).",
         langpairs={
@@ -796,7 +796,7 @@ DATASETS = {
     ),
     "wmt17": FakeSGMLDataset(
         "wmt17",
-        data=["http://data.statmt.org/wmt17/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt17/translation-task/test.tgz"],
         md5=["86a1724c276004aa25455ae2a04cef26"],
         description="Official evaluation data.",
         citation="@InProceedings{bojar-EtAl:2017:WMT1,\n  author    = {Bojar, Ond\\v{r}ej  and  Chatterjee, Rajen  and  Federmann, Christian  and  Graham, Yvette  and  Haddow, Barry  and  Huang, Shujian  and  Huck, Matthias  and  Koehn, Philipp  and  Liu, Qun  and  Logacheva, Varvara  and  Monz, Christof  and  Negri, Matteo  and  Post, Matt  and  Rubino, Raphael  and  Specia, Lucia  and  Turchi, Marco},\n  title     = {Findings of the 2017 Conference on Machine Translation (WMT17)},\n  booktitle = {Proceedings of the Second Conference on Machine Translation, Volume 2: Shared Task Papers},\n  month     = {September},\n  year      = {2017},\n  address   = {Copenhagen, Denmark},\n  publisher = {Association for Computational Linguistics},\n  pages     = {169--214},\n  url       = {http://www.aclweb.org/anthology/W17-4717}\n}",
@@ -861,7 +861,7 @@ DATASETS = {
     ),
     "wmt17/B": FakeSGMLDataset(
         "wmt17/B",
-        data=["http://data.statmt.org/wmt17/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt17/translation-task/test.tgz"],
         md5=["86a1724c276004aa25455ae2a04cef26"],
         description="Additional reference for EN-FI and FI-EN.",
         langpairs={
@@ -873,7 +873,7 @@ DATASETS = {
     ),
     "wmt17/tworefs": FakeSGMLDataset(
         "wmt17/tworefs",
-        data=["http://data.statmt.org/wmt17/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt17/translation-task/test.tgz"],
         md5=["86a1724c276004aa25455ae2a04cef26"],
         description="Systems with two references.",
         langpairs={
@@ -886,7 +886,7 @@ DATASETS = {
     ),
     "wmt17/improved": FakeSGMLDataset(
         "wmt17/improved",
-        data=["http://data.statmt.org/wmt17/translation-task/test-update-1.tgz"],
+        data=["https://data.statmt.org/wmt17/translation-task/test-update-1.tgz"],
         md5=["91dbfd5af99bc6891a637a68e04dfd41"],
         description="Improved zh-en and en-zh translations.",
         langpairs={
@@ -896,7 +896,7 @@ DATASETS = {
     ),
     "wmt17/dev": FakeSGMLDataset(
         "wmt17/dev",
-        data=["http://data.statmt.org/wmt17/translation-task/dev.tgz"],
+        data=["https://data.statmt.org/wmt17/translation-task/dev.tgz"],
         md5=["9b1aa63c1cf49dccdd20b962fe313989"],
         description="Development sets released for new languages in 2017.",
         langpairs={
@@ -922,7 +922,7 @@ DATASETS = {
         "wmt17/ms",
         data=[
             "https://github.com/MicrosoftTranslator/Translator-HumanParityData/archive/master.zip",
-            "http://data.statmt.org/wmt17/translation-task/test-update-1.tgz",
+            "https://data.statmt.org/wmt17/translation-task/test-update-1.tgz",
         ],
         md5=["18fdaa7a3c84cf6ef688da1f6a5fa96f", "91dbfd5af99bc6891a637a68e04dfd41"],
         description="Additional Chinese-English references from Microsoft Research.",
@@ -938,7 +938,7 @@ DATASETS = {
     ),
     "wmt16": FakeSGMLDataset(
         "wmt16",
-        data=["http://data.statmt.org/wmt16/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt16/translation-task/test.tgz"],
         md5=["3d809cd0c2c86adb2c67034d15c4e446"],
         description="Official evaluation data.",
         citation="@InProceedings{bojar-EtAl:2016:WMT1,\n  author    = {Bojar, Ond\\v{r}ej  and  Chatterjee, Rajen  and  Federmann, Christian  and  Graham, Yvette  and  Haddow, Barry  and  Huck, Matthias  and  Jimeno Yepes, Antonio  and  Koehn, Philipp  and  Logacheva, Varvara  and  Monz, Christof  and  Negri, Matteo  and  Neveol, Aurelie  and  Neves, Mariana  and  Popel, Martin  and  Post, Matt  and  Rubino, Raphael  and  Scarton, Carolina  and  Specia, Lucia  and  Turchi, Marco  and  Verspoor, Karin  and  Zampieri, Marcos},\n  title     = {Findings of the 2016 Conference on Machine Translation},\n  booktitle = {Proceedings of the First Conference on Machine Translation},\n  month     = {August},\n  year      = {2016},\n  address   = {Berlin, Germany},\n  publisher = {Association for Computational Linguistics},\n  pages     = {131--198},\n  url       = {http://www.aclweb.org/anthology/W/W16/W16-2301}\n}",
@@ -995,7 +995,7 @@ DATASETS = {
     ),
     "wmt16/B": FakeSGMLDataset(
         "wmt16/B",
-        data=["http://data.statmt.org/wmt16/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt16/translation-task/test.tgz"],
         md5=["3d809cd0c2c86adb2c67034d15c4e446"],
         description="Additional reference for EN-FI.",
         langpairs={
@@ -1007,7 +1007,7 @@ DATASETS = {
     ),
     "wmt16/tworefs": FakeSGMLDataset(
         "wmt16/tworefs",
-        data=["http://data.statmt.org/wmt16/translation-task/test.tgz"],
+        data=["https://data.statmt.org/wmt16/translation-task/test.tgz"],
         md5=["3d809cd0c2c86adb2c67034d15c4e446"],
         description="EN-FI with two references.",
         langpairs={
@@ -1020,7 +1020,7 @@ DATASETS = {
     ),
     "wmt16/dev": FakeSGMLDataset(
         "wmt16/dev",
-        data=["http://data.statmt.org/wmt16/translation-task/dev.tgz"],
+        data=["https://data.statmt.org/wmt16/translation-task/dev.tgz"],
         md5=["4a3dc2760bb077f4308cce96b06e6af6"],
         description="Development sets released for new languages in 2016.",
         langpairs={
@@ -1044,7 +1044,7 @@ DATASETS = {
     ),
     "wmt15": FakeSGMLDataset(
         "wmt15",
-        data=["http://statmt.org/wmt15/test.tgz"],
+        data=["https://statmt.org/wmt15/test.tgz"],
         md5=["67e3beca15e69fe3d36de149da0a96df"],
         description="Official evaluation data.",
         citation="@InProceedings{bojar-EtAl:2015:WMT,\n  author    = {Bojar, Ond\\v{r}ej  and  Chatterjee, Rajen  and  Federmann, Christian  and  Haddow, Barry  and  Huck, Matthias  and  Hokamp, Chris  and  Koehn, Philipp  and  Logacheva, Varvara  and  Monz, Christof  and  Negri, Matteo  and  Post, Matt  and  Scarton, Carolina  and  Specia, Lucia  and  Turchi, Marco},\n  title     = {Findings of the 2015 Workshop on Statistical Machine Translation},\n  booktitle = {Proceedings of the Tenth Workshop on Statistical Machine Translation},\n  month     = {September},\n  year      = {2015},\n  address   = {Lisbon, Portugal},\n  publisher = {Association for Computational Linguistics},\n  pages     = {1--46},\n  url       = {http://aclweb.org/anthology/W15-3001}\n}",
@@ -1093,7 +1093,7 @@ DATASETS = {
     ),
     "wmt14": FakeSGMLDataset(
         "wmt14",
-        data=["http://statmt.org/wmt14/test-filtered.tgz"],
+        data=["https://statmt.org/wmt14/test-filtered.tgz"],
         md5=["84c597844c1542e29c2aff23aaee4310"],
         description="Official evaluation data.",
         citation="@InProceedings{bojar-EtAl:2014:W14-33,\n  author    = {Bojar, Ondrej  and  Buck, Christian  and  Federmann, Christian  and  Haddow, Barry  and  Koehn, Philipp  and  Leveling, Johannes  and  Monz, Christof  and  Pecina, Pavel  and  Post, Matt  and  Saint-Amand, Herve  and  Soricut, Radu  and  Specia, Lucia  and  Tamchyna, Ale\\v{s}},\n  title     = {Findings of the 2014 Workshop on Statistical Machine Translation},\n  booktitle = {Proceedings of the Ninth Workshop on Statistical Machine Translation},\n  month     = {June},\n  year      = {2014},\n  address   = {Baltimore, Maryland, USA},\n  publisher = {Association for Computational Linguistics},\n  pages     = {12--58},\n  url       = {http://www.aclweb.org/anthology/W/W14/W14-3302}\n}",
@@ -1142,7 +1142,7 @@ DATASETS = {
     ),
     "wmt14/full": FakeSGMLDataset(
         "wmt14/full",
-        data=["http://statmt.org/wmt14/test-full.tgz"],
+        data=["https://statmt.org/wmt14/test-full.tgz"],
         md5=["a8cd784e006feb32ac6f3d9ec7eb389a"],
         description="Evaluation data released after official evaluation for further research.",
         langpairs={
@@ -1190,7 +1190,7 @@ DATASETS = {
     ),
     "wmt13": FakeSGMLDataset(
         "wmt13",
-        data=["http://statmt.org/wmt13/test.tgz"],
+        data=["https://statmt.org/wmt13/test.tgz"],
         md5=["48eca5d02f637af44e85186847141f67"],
         description="Official evaluation data.",
         citation="@InProceedings{bojar-EtAl:2013:WMT,\n  author    = {Bojar, Ond\\v{r}ej  and  Buck, Christian  and  Callison-Burch, Chris  and  Federmann, Christian  and  Haddow, Barry  and  Koehn, Philipp  and  Monz, Christof  and  Post, Matt  and  Soricut, Radu  and  Specia, Lucia},\n  title     = {Findings of the 2013 {Workshop on Statistical Machine Translation}},\n  booktitle = {Proceedings of the Eighth Workshop on Statistical Machine Translation},\n  month     = {August},\n  year      = {2013},\n  address   = {Sofia, Bulgaria},\n  publisher = {Association for Computational Linguistics},\n  pages     = {1--44},\n  url       = {http://www.aclweb.org/anthology/W13-2201}\n}",
@@ -1209,7 +1209,7 @@ DATASETS = {
     ),
     "wmt12": FakeSGMLDataset(
         "wmt12",
-        data=["http://statmt.org/wmt12/test.tgz"],
+        data=["https://statmt.org/wmt12/test.tgz"],
         md5=["608232d34ebc4ba2ff70fead45674e47"],
         description="Official evaluation data.",
         citation="@InProceedings{callisonburch-EtAl:2012:WMT,\n  author    = {Callison-Burch, Chris  and  Koehn, Philipp  and  Monz, Christof  and  Post, Matt  and  Soricut, Radu  and  Specia, Lucia},\n  title     = {Findings of the 2012 Workshop on Statistical Machine Translation},\n  booktitle = {Proceedings of the Seventh Workshop on Statistical Machine Translation},\n  month     = {June},\n  year      = {2012},\n  address   = {Montr{'e}al, Canada},\n  publisher = {Association for Computational Linguistics},\n  pages     = {10--51},\n  url       = {http://www.aclweb.org/anthology/W12-3102}\n}",
@@ -1226,7 +1226,7 @@ DATASETS = {
     ),
     "wmt11": FakeSGMLDataset(
         "wmt11",
-        data=["http://statmt.org/wmt11/test.tgz"],
+        data=["https://statmt.org/wmt11/test.tgz"],
         md5=["b0c9680adf32d394aefc2b24e3a5937e"],
         description="Official evaluation data.",
         citation="@InProceedings{callisonburch-EtAl:2011:WMT,\n  author    = {Callison-Burch, Chris  and  Koehn, Philipp  and  Monz, Christof  and  Zaidan, Omar},\n  title     = {Findings of the 2011 Workshop on Statistical Machine Translation},\n  booktitle = {Proceedings of the Sixth Workshop on Statistical Machine Translation},\n  month     = {July},\n  year      = {2011},\n  address   = {Edinburgh, Scotland},\n  publisher = {Association for Computational Linguistics},\n  pages     = {22--64},\n  url       = {http://www.aclweb.org/anthology/W11-2103}\n}",
@@ -1243,7 +1243,7 @@ DATASETS = {
     ),
     "wmt10": FakeSGMLDataset(
         "wmt10",
-        data=["http://statmt.org/wmt10/test.tgz"],
+        data=["https://statmt.org/wmt10/test.tgz"],
         md5=["491cb885a355da5a23ea66e7b3024d5c"],
         description="Official evaluation data.",
         citation="@InProceedings{callisonburch-EtAl:2010:WMT,\n  author    = {Callison-Burch, Chris  and  Koehn, Philipp  and  Monz, Christof  and  Peterson, Kay  and  Przybocki, Mark  and  Zaidan, Omar},\n  title     = {Findings of the 2010 Joint Workshop on Statistical Machine Translation and Metrics for Machine Translation},\n  booktitle = {Proceedings of the Joint Fifth Workshop on Statistical Machine Translation and MetricsMATR},\n  month     = {July},\n  year      = {2010},\n  address   = {Uppsala, Sweden},\n  publisher = {Association for Computational Linguistics},\n  pages     = {17--53},\n  note      = {Revised August 2010},\n  url       = {http://www.aclweb.org/anthology/W10-1703}\n}",
@@ -1260,7 +1260,7 @@ DATASETS = {
     ),
     "wmt09": FakeSGMLDataset(
         "wmt09",
-        data=["http://statmt.org/wmt09/test.tgz"],
+        data=["https://statmt.org/wmt09/test.tgz"],
         md5=["da227abfbd7b666ec175b742a0d27b37"],
         description="Official evaluation data.",
         citation="@InProceedings{callisonburch-EtAl:2009:WMT-09,\n  author    = {Callison-Burch, Chris  and  Koehn, Philipp  and  Monz, Christof  and  Schroeder, Josh},\n  title     = {Findings of the 2009 {W}orkshop on {S}tatistical {M}achine {T}ranslation},\n  booktitle = {Proceedings of the Fourth Workshop on Statistical Machine Translation},\n  month     = {March},\n  year      = {2009},\n  address   = {Athens, Greece},\n  publisher = {Association for Computational Linguistics},\n  pages     = {1--28},\n  url       = {http://www.aclweb.org/anthology/W/W09/W09-0401}\n}",
@@ -1281,7 +1281,7 @@ DATASETS = {
     ),
     "wmt08": FakeSGMLDataset(
         "wmt08",
-        data=["http://statmt.org/wmt08/test.tgz"],
+        data=["https://statmt.org/wmt08/test.tgz"],
         md5=["0582e4e894a3342044059c894e1aea3d"],
         description="Official evaluation data.",
         citation="@InProceedings{callisonburch-EtAl:2008:WMT,\n  author    = {Callison-Burch, Chris  and  Fordyce, Cameron  and  Koehn, Philipp  and  Monz, Christof  and  Schroeder, Josh},\n  title     = {Further Meta-Evaluation of Machine Translation},\n  booktitle = {Proceedings of the Third Workshop on Statistical Machine Translation},\n  month     = {June},\n  year      = {2008},\n  address   = {Columbus, Ohio},\n  publisher = {Association for Computational Linguistics},\n  pages     = {70--106},\n  url       = {http://www.aclweb.org/anthology/W/W08/W08-0309}\n}",
@@ -1300,7 +1300,7 @@ DATASETS = {
     ),
     "wmt08/nc": FakeSGMLDataset(
         "wmt08/nc",
-        data=["http://statmt.org/wmt08/test.tgz"],
+        data=["https://statmt.org/wmt08/test.tgz"],
         md5=["0582e4e894a3342044059c894e1aea3d"],
         description="Official evaluation data (news commentary).",
         langpairs={
@@ -1310,7 +1310,7 @@ DATASETS = {
     ),
     "wmt08/europarl": FakeSGMLDataset(
         "wmt08/europarl",
-        data=["http://statmt.org/wmt08/test.tgz"],
+        data=["https://statmt.org/wmt08/test.tgz"],
         md5=["0582e4e894a3342044059c894e1aea3d"],
         description="Official evaluation data (Europarl).",
         langpairs={

@@ -423,9 +423,7 @@ def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
     with portalocker.Lock(lockfile, timeout=60):
 
         if not os.path.exists(dest_path) or os.path.getsize(dest_path) == 0:
-
             sacrelogger.info(f"Downloading {source_path} to {dest_path}")
-            md5 = hashlib.md5()
 
             try:
                 with urllib.request.urlopen(source_path) as f, open(dest_path, 'wb') as out:
@@ -441,7 +439,7 @@ def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
                 if cur_md5 != expected_md5:
                     sacrelogger.error(f'Fatal: MD5 sum of downloaded file was incorrect (got {cur_md5}, expected {expected_md5}).')
                     sacrelogger.error(f'Please manually delete {dest_path!r} and rerun the command.')
-                    sacrelogger.error(f'If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
+                    sacrelogger.error('If the problem persists, the tarball may have changed, in which case, please contact the SacreBLEU maintainer.')
                     sys.exit(1)
 
             # Extract the tarball
@@ -594,4 +592,4 @@ def print_subset_results(metrics, full_system, full_refs, args):
             print(f'{key}: sentences={n_system:<6} {score.name:<{max_metric_width}} = {score.score:.{w}f}')
 
 # import at the end to avoid circular import
-from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES
+from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES  # noqa: E402

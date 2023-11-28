@@ -7,3 +7,4 @@ sacrebleu.egg-info
 .sacrebleu
 *~
 .DS_Store
+.idea/

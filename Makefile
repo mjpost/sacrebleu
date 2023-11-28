@@ -1,5 +1,6 @@
 .PHONY: test
 test:
+	mypy sacrebleu scripts test
 	python3 -m pytest
 	bash test.sh
 

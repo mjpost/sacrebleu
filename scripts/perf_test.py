@@ -5,8 +5,8 @@ import statistics
 
 sys.path.insert(0, '.')
 
-import sacrebleu
-from sacrebleu.metrics import BLEU, CHRF
+import sacrebleu  # noqa: E402
+from sacrebleu.metrics import BLEU, CHRF  # noqa: E402
 
 
 N_REPEATS = 5

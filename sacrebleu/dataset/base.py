@@ -4,7 +4,7 @@ The base class for all types of datasets.
 import os
 import re
 from abc import ABCMeta, abstractmethod
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from ..utils import SACREBLEU_DIR, download_file, smart_open
 
@@ -13,10 +13,10 @@ class Dataset(metaclass=ABCMeta):
     def __init__(
         self,
         name: str,
-        data: List[str] = None,
-        description: str = None,
-        citation: str = None,
-        md5: List[str] = None,
+        data: Optional[List[str]] = None,
+        description: Optional[str] = None,
+        citation: Optional[str] = None,
+        md5: Optional[List[str]] = None,
         langpairs=Dict[str, List[str]],
         **kwargs,
     ):

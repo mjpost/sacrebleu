@@ -29,8 +29,6 @@ jobs:
           - os: ubuntu-20.04
             python-version: '3.6'   # test Python 3.6 on older Ubuntu instead
     steps:
-      # - name: update
-      #  run: sudo apt-get -y update
       - uses: actions/checkout@v3
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
@@ -44,12 +42,18 @@ jobs:
         run: choco install wget unzip
       - name: Install python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest
-          pip install .[ja]
-          pip install .[ko]
+          python3 -m pip install --upgrade pip
+          pip3 install .[dev]
+          pip3 install .[ja]
+          pip3 install .[ko]
+      - name: Lint with Mypy
+        run: mypy sacrebleu scripts test
+      - name: Lint with Ruff
+        uses: chartboost/ruff-action@v1
       - name: Python pytest test suite
         run: python3 -m pytest
       - name: CLI bash test suite
         shell: bash
         run: ./test.sh
+      - name: Build
+        run: python3 setup.py sdist bdist_wheel

@@ -76,7 +76,7 @@ class WMTXMLDataset(Dataset):
             def get_sents(doc):
                 return {
                     int(seg.get("id")): seg.text if seg.text else ""
-                    for seg in doc.findall(f".//seg")
+                    for seg in doc.findall(".//seg")
                 }
 
             ref_docs = doc.findall(".//ref")
@@ -114,7 +114,7 @@ class WMTXMLDataset(Dataset):
         in order to allow for overriding which test set to use.
         """
         langpair_data = self._get_langpair_metadata(langpair)[langpair]
-        rel_path = langpair_data["path"] if type(langpair_data) == dict else langpair_data[0]
+        rel_path = langpair_data["path"] if isinstance(langpair_data, dict) else langpair_data[0]
         return os.path.join(self._rawdir, rel_path)
 
     def process_to_text(self, langpair=None):
@@ -156,7 +156,7 @@ class WMTXMLDataset(Dataset):
         """
         defaults = self.kwargs.get("refs", [])
         langpair_data = self._get_langpair_metadata(langpair)[langpair]
-        if type(langpair_data) == dict:
+        if isinstance(langpair_data, dict):
             allowed_refs = langpair_data.get("refs", defaults)
         else:
             allowed_refs = defaults
