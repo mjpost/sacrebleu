@@ -74,6 +74,35 @@ DOMAINS = sorted(list({v.split("-")[1] for v in SUBSETS["wmt19"].values()}))
 
 DATASETS = {
     # wmt
+    "wmt23": WMTXMLDataset(
+        "wmt23",
+        data=["https://github.com/wmt-conference/wmt23-news-systems/archive/refs/tags/v.0.1.tar.gz"],
+        description="Official evaluation and system data for WMT23.",
+        md5=["63576405e4ce07130a19ad76ba7eb75b"],
+        langpairs={
+            "cs-uk": ["wmt23-news-systems-v.0.1/xml/wmttest2023.cs-uk.all.xml"],
+            "de-en": ["wmt23-news-systems-v.0.1/xml/wmttest2023.de-en.all.xml"],
+            "en-cs": ["wmt23-news-systems-v.0.1/xml/wmttest2023.en-cs.all.xml"],
+            "en-de": ["wmt23-news-systems-v.0.1/xml/wmttest2023.en-de.all.xml"],
+            "en-he": {
+                "path": "wmt23-news-systems-v.0.1/xml/wmttest2023.en-he.all.xml",
+                "refs": ["B"],
+            },
+            "en-ja": ["wmt23-news-systems-v.0.1/xml/wmttest2023.en-ja.all.xml"],
+            "en-ru": ["wmt23-news-systems-v.0.1/xml/wmttest2023.en-ru.all.xml"],
+            "en-uk": ["wmt23-news-systems-v.0.1/xml/wmttest2023.en-uk.all.xml"],
+            "en-zh": ["wmt23-news-systems-v.0.1/xml/wmttest2023.en-zh.all.xml"],
+            "he-en": {
+                "path": "wmt23-news-systems-v.0.1/xml/wmttest2023.he-en.all.xml",
+                "refs": ["B"],
+            },
+            "ja-en": ["wmt23-news-systems-v.0.1/xml/wmttest2023.ja-en.all.xml"],
+            "ru-en": ["wmt23-news-systems-v.0.1/xml/wmttest2023.ru-en.all.xml"],
+            "uk-en": ["wmt23-news-systems-v.0.1/xml/wmttest2023.uk-en.all.xml"],
+            "zh-en": ["wmt23-news-systems-v.0.1/xml/wmttest2023.zh-en.all.xml"],
+        },
+        refs=["A"],
+    ),
     "wmt22": WMTXMLDataset(
         "wmt22",
         data=["https://github.com/wmt-conference/wmt22-news-systems/archive/refs/tags/v1.1.tar.gz"],

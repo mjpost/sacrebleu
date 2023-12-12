@@ -1,5 +1,9 @@
 # Release Notes
 
+- 2.4.0 (2023-12-11)
+  Added:
+  - WMT23 test sets (test set `wmt23`)
+
 - 2.3.3 (2023-11-28)
   Fixed:
   - Typing issues (#249, #250)
@@ -15,7 +19,7 @@
 
 - 2.3.1 (2022-10-18)
   Bugfix:
-  - Set lru_cache to 2**16 for SPM tokenizer (was set to infinite)
+  - Set lru_cache to 2^16 for SPM tokenizer (was set to infinite)
 
 - 2.3.0 (2022-10-18)
   Features:
