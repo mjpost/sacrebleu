@@ -1,9 +1,13 @@
 # Release Notes
 
-
-- 2.4.0 (2023-11-07)
+- 2.4.0 (2023-12-11)
   Added:
   - WMT23 test sets (test set `wmt23`)
+
+- 2.3.3 (2023-11-28)
+  Fixed:
+  - Typing issues (#249, #250)
+  - Improved builds (#252)
 
 - 2.3.2 (2023-11-06)
   Fixed:

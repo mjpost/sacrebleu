@@ -1,7 +1,7 @@
 import os
 import logging
 import multiprocessing as mp
-from typing import Sequence, Dict, Optional, Tuple, List, Union, Any
+from typing import Sequence, Dict, Optional, Tuple, List, Union, Any, Mapping
 
 import numpy as np
 
@@ -77,11 +77,11 @@ def _bootstrap_resample(stats: List[List[Union[int, float]]],
     idxs = rng.choice(len(stats), size=(n_samples, len(stats)), replace=True)
 
     # convert to numpy array. float32 is more efficient
-    stats = np.array(stats, dtype='float32')
+    stats_np = np.array(stats, dtype='float32')
 
     # recompute scores for all resamples
     scores = [
-        metric._compute_score_from_stats(_s.sum(0)) for _s in stats[idxs]]
+        metric._compute_score_from_stats(_s.sum(0)) for _s in stats_np[idxs]]
 
     return str(seed).lower(), scores
 
@@ -98,7 +98,7 @@ def _compute_p_value(stats: np.ndarray, real_difference: float) -> float:
     # "the != is important. if we want to score the same system against itself
     # having a zero difference should not be attributed to chance."
 
-    c = np.sum(stats > real_difference)
+    c = np.sum(stats > real_difference).item()
 
     # "+1 applies here, though it only matters for small numbers of shufflings,
     # which we typically never do. it's necessary to ensure the probability of
@@ -186,8 +186,9 @@ def _paired_ar_test(baseline_info: Dict[str, Tuple[np.ndarray, Result]],
             sacrelogger.info(f' > Performing bootstrap resampling for confidence interval (# resamples: {n_ar_confidence})')
             sys_stats = np.array(sys_stats, dtype='float32')
             # recompute scores for all resamples
-            sys_scores = [
-                metric._compute_score_from_stats(_s.sum(0)).score for _s in sys_stats[bs_idxs]]
+            sys_scores = np.array([
+                metric._compute_score_from_stats(_s.sum(0)).score for _s in sys_stats[bs_idxs]
+            ])
             res.mean, res.ci = estimate_ci(sys_scores)
 
         # Store the result
@@ -300,7 +301,7 @@ class PairedTest:
     }
 
     def __init__(self, named_systems: List[Tuple[str, Sequence[str]]],
-                 metrics: Dict[str, Metric],
+                 metrics: Mapping[str, Metric],
                  references: Optional[Sequence[Sequence[str]]],
                  test_type: str = 'ar',
                  n_samples: int = 0,

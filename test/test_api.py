@@ -44,7 +44,7 @@ def test_api_get_available_testsets():
     the test sets found.
     """
     available = get_available_testsets()
-    assert type(available) is list
+    assert isinstance(available, list)
     assert "wmt19" in available
     assert "wmt05" not in available
 
@@ -59,12 +59,12 @@ def test_api_get_available_testsets_for_langpair():
     the test sets found.
     """
     available = get_available_testsets_for_langpair('en-it')
-    assert type(available) is list
+    assert isinstance(available, list)
     assert "wmt09" in available
     assert "wmt15" not in available
 
     available = get_available_testsets_for_langpair('en-fr')
-    assert type(available) is list
+    assert isinstance(available, list)
     assert "wmt11" in available
     assert "mtedx/test" in available
     assert "wmt20" not in available
@@ -77,7 +77,7 @@ def test_api_get_langpairs_for_testset():
     """
     for testset in DATASETS.keys():
         available = get_langpairs_for_testset(testset)
-        assert type(available) is list
+        assert isinstance(available, list)
         for langpair in DATASETS[testset].langpairs.keys():
             # skip non-language keys
             if "-" not in langpair:

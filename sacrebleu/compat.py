@@ -64,7 +64,7 @@ def raw_corpus_bleu(hypotheses: Sequence[str],
 def sentence_bleu(hypothesis: str,
                   references: Sequence[str],
                   smooth_method: str = 'exp',
-                  smooth_value: float = None,
+                  smooth_value: Optional[float] = None,
                   lowercase: bool = False,
                   tokenize=BLEU.TOKENIZER_DEFAULT,
                   use_effective_order: bool = True) -> BLEUScore:

@@ -130,6 +130,9 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 3 :: Only',
+
+        # Indicate that type hints are provided
+        'Typing :: Typed'
     ],
 
     # What does your project relate to?
@@ -151,7 +154,8 @@ setup(
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-    extras_require={'ja': ['mecab-python3>=1.0.5,<=1.0.6', 'ipadic>=1.0,<2.0'],
+    extras_require={'dev': ['wheel', 'pytest', 'mypy', 'types-tabulate', 'lxml-stubs'],
+                    'ja': ['mecab-python3>=1.0.5,<=1.0.6', 'ipadic>=1.0,<2.0'],
                     'ko': ['mecab-ko>=1.0.0,<=1.0.1', 'mecab-ko-dic>=1.0,<2.0']},
 
     # To provide executable scripts, use entry points in preference to the

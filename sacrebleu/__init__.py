@@ -18,14 +18,26 @@ __version__ = '2.4.0'
 __description__ = 'Hassle-free computation of shareable, comparable, and reproducible BLEU, chrF, and TER scores'
 
 
-from .utils import smart_open, SACREBLEU_DIR, download_test_set  # noqa: F401
-from .utils import get_source_file, get_reference_files  # noqa: F401
-from .utils import get_available_testsets, get_langpairs_for_testset  # noqa: F401
-from .metrics.helpers import extract_word_ngrams, extract_char_ngrams  # noqa: F401
-from .dataset import DATASETS  # noqa: F401
-from .metrics import BLEU, CHRF, TER  # noqa: F401
+from .utils import smart_open, SACREBLEU_DIR, download_test_set
+from .utils import get_source_file, get_reference_files
+from .utils import get_available_testsets, get_langpairs_for_testset
+from .metrics.helpers import extract_word_ngrams, extract_char_ngrams
+from .dataset import DATASETS
+from .metrics import BLEU, CHRF, TER
 
 # Backward compatibility functions for old style API access (<= 1.4.10)
-from .compat import corpus_bleu, raw_corpus_bleu, sentence_bleu  # noqa: F401
-from .compat import corpus_chrf, sentence_chrf  # noqa: F401
-from .compat import corpus_ter, sentence_ter  # noqa: F401
+from .compat import corpus_bleu, raw_corpus_bleu, sentence_bleu
+from .compat import corpus_chrf, sentence_chrf
+from .compat import corpus_ter, sentence_ter
+
+__all__ = [
+    'smart_open', 'SACREBLEU_DIR', 'download_test_set',
+    'get_source_file', 'get_reference_files',
+    'get_available_testsets', 'get_langpairs_for_testset',
+    'extract_word_ngrams', 'extract_char_ngrams',
+    'DATASETS',
+    'BLEU', 'CHRF', 'TER',
+    'corpus_bleu', 'raw_corpus_bleu', 'sentence_bleu',
+    'corpus_chrf', 'sentence_chrf',
+    'corpus_ter', 'sentence_ter'
+]

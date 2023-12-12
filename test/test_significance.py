@@ -1,9 +1,10 @@
 import os
 
 from collections import defaultdict
+from typing import DefaultDict
 
 from sacrebleu.metrics import BLEU
-from sacrebleu.significance import PairedTest
+from sacrebleu.significance import PairedTest, Result
 
 import pytest
 
@@ -57,8 +58,8 @@ MULTEVAL_P_VALS = {
 }
 
 
-SACREBLEU_BS_P_VALS = defaultdict(float)
-SACREBLEU_AR_P_VALS = defaultdict(float)
+SACREBLEU_BS_P_VALS: DefaultDict[str, float] = defaultdict(float)
+SACREBLEU_AR_P_VALS: DefaultDict[str, float] = defaultdict(float)
 
 # Load data from pickled file to not bother with WMT17 downloading
 named_systems = _read_pickle_file()
@@ -75,7 +76,9 @@ bs_scores = PairedTest(
     test_type='bs', n_samples=2000)()[1]
 
 for name, result in zip(bs_scores['System'], bs_scores['BLEU']):
+    assert isinstance(result, Result)
     if result.p_value is not None:
+        assert isinstance(name, str)
         SACREBLEU_BS_P_VALS[name] += result.p_value
 
 
@@ -87,7 +90,9 @@ ar_scores = PairedTest(named_systems, metrics, references=None,
                        test_type='ar', n_samples=10000)()[1]
 
 for name, result in zip(ar_scores['System'], ar_scores['BLEU']):
+    assert isinstance(result, Result)
     if result.p_value is not None:
+        assert isinstance(name, str)
         SACREBLEU_AR_P_VALS[name] += result.p_value
 
 
