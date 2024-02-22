@@ -251,7 +251,7 @@ class BLEU(Metric):
             bp = 1.0
 
         # n-gram precisions
-        precisions = [0.0 for x in range(max_ngram_order)]
+        precisions = [0.0] * max_ngram_order
 
         # Early stop if there are no matches (#141)
         if not any(correct):
