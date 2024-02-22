@@ -245,10 +245,9 @@ class BLEU(Metric):
             smooth_value = BLEU.SMOOTH_DEFAULTS[smooth_method]
 
         # Compute brevity penalty
+        bp = 1.0
         if sys_len < ref_len:
-            bp = math.exp(1 - ref_len / sys_len) if sys_len > 0 else 0.0
-        else:
-            bp = 1.0
+            bp = math.exp(1 - ref_len / sys_len) if sys_len > 0 else 0.0            
 
         # n-gram precisions
         precisions = [0.0] * max_ngram_order
