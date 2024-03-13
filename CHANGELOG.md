@@ -1,5 +1,9 @@
 # Release Notes
 
+- 2.4.1 (2024-03-12)
+  Fixed:
+  - Add exports to package __init__.py
+
 - 2.4.0 (2023-12-11)
   Added:
   - WMT23 test sets (test set `wmt23`)
