@@ -86,7 +86,7 @@ DATASETS = {
             "en-de": ["wmt23-news-systems-v.0.1/xml/wmttest2023.en-de.all.xml"],
             "en-he": {
                 "path": "wmt23-news-systems-v.0.1/xml/wmttest2023.en-he.all.xml",
-                "refs": ["B"],
+                "refs": ["refB"],
             },
             "en-ja": ["wmt23-news-systems-v.0.1/xml/wmttest2023.en-ja.all.xml"],
             "en-ru": ["wmt23-news-systems-v.0.1/xml/wmttest2023.en-ru.all.xml"],
@@ -94,14 +94,14 @@ DATASETS = {
             "en-zh": ["wmt23-news-systems-v.0.1/xml/wmttest2023.en-zh.all.xml"],
             "he-en": {
                 "path": "wmt23-news-systems-v.0.1/xml/wmttest2023.he-en.all.xml",
-                "refs": ["B"],
+                "refs": ["refB"],
             },
             "ja-en": ["wmt23-news-systems-v.0.1/xml/wmttest2023.ja-en.all.xml"],
             "ru-en": ["wmt23-news-systems-v.0.1/xml/wmttest2023.ru-en.all.xml"],
             "uk-en": ["wmt23-news-systems-v.0.1/xml/wmttest2023.uk-en.all.xml"],
             "zh-en": ["wmt23-news-systems-v.0.1/xml/wmttest2023.zh-en.all.xml"],
         },
-        refs=["A"],
+        refs=["refA"],
     ),
     "wmt22": WMTXMLDataset(
         "wmt22",
