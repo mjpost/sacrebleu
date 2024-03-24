@@ -488,7 +488,7 @@ def get_available_testsets_for_langpair(langpair: str) -> List[str]:
 
 
 def get_available_origlangs(test_sets, langpair) -> List[str]:
-    """Return a list of origlang values in according to the raw SGM files."""
+    """Return a list of origlang values according to the raw XML/SGM files."""
     if test_sets is None:
         return []
 
@@ -496,6 +496,10 @@ def get_available_origlangs(test_sets, langpair) -> List[str]:
     for test_set in test_sets.split(','):
         dataset = DATASETS[test_set]
         rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', dataset.langpairs[langpair][0])
+        from .dataset.wmt_xml import WMTXMLDataset
+        if isinstance(dataset, WMTXMLDataset):
+            for origlang in dataset._unwrap_wmt21_or_later(rawfile)['origlang']:
+                origlangs.add(origlang)
         if rawfile.endswith('.sgm'):
             with smart_open(rawfile) as fin:
                 for line in fin:
@@ -504,6 +508,25 @@ def get_available_origlangs(test_sets, langpair) -> List[str]:
                         origlangs.add(doc_origlang)
     return sorted(list(origlangs))
 
+
+def get_available_subsets(test_sets, langpair) -> List[str]:
+    """Return a list of domain values according to the raw XML files and domain/country values from the SGM files."""
+    if test_sets is None:
+        return []
+
+    subsets = set()
+    for test_set in test_sets.split(','):
+        dataset = DATASETS[test_set]
+        from .dataset.wmt_xml import WMTXMLDataset
+        if isinstance(dataset, WMTXMLDataset):
+            rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', dataset.langpairs[langpair][0])
+            fields = dataset._unwrap_wmt21_or_later(rawfile)
+            if 'domain' in fields:
+                subsets |= set(fields['domain'])
+        elif test_set in SUBSETS:
+            subsets |= set("country:" + v.split("-")[0] for v in SUBSETS[test_set].values())
+            subsets |= set(v.split("-")[1] for v in SUBSETS[test_set].values())
+    return sorted(list(subsets))
 
 def filter_subset(systems, test_sets, langpair, origlang, subset=None):
     """Filter sentences with a given origlang (or subset) according to the raw SGM files."""
@@ -516,37 +539,49 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
     re_id = re.compile(r'.* docid="([^"]+)".*\n')
 
     indices_to_keep = []
-
     for test_set in test_sets.split(','):
         dataset = DATASETS[test_set]
         rawfile = os.path.join(SACREBLEU_DIR, test_set, 'raw', dataset.langpairs[langpair][0])
-        if not rawfile.endswith('.sgm'):
-            raise Exception(f'--origlang and --subset supports only *.sgm files, not {rawfile!r}')
-        if subset is not None:
-            if test_set not in SUBSETS:
-                raise Exception('No subset annotation available for test set ' + test_set)
-            doc_to_tags = SUBSETS[test_set]
-        number_sentences_included = 0
-        with smart_open(rawfile) as fin:
-            include_doc = False
-            for line in fin:
-                if line.startswith('<doc '):
-                    if origlang is None:
-                        include_doc = True
+        from .dataset.wmt_xml import WMTXMLDataset
+        if isinstance(dataset, WMTXMLDataset):
+            fields = dataset._unwrap_wmt21_or_later(rawfile)
+            for doc_origlang, doc_domain in zip(fields['origlang'], fields['domain']):
+                if origlang is None:
+                    include_doc = True
+                else:
+                    if origlang.startswith('non-'):
+                        include_doc = doc_origlang != origlang[4:]
                     else:
-                        doc_origlang = re_origlang.sub(r'\1', line)
-                        if origlang.startswith('non-'):
-                            include_doc = doc_origlang != origlang[4:]
+                        include_doc = doc_origlang == origlang
+                if subset is not None and (doc_domain is None or not re.search(subset, doc_domain)):
+                    include_doc = False
+                indices_to_keep.append(include_doc)
+        elif rawfile.endswith('.sgm'):
+            if subset is not None:
+                if test_set not in SUBSETS:
+                    raise Exception('No subset annotation available for test set ' + test_set)
+                doc_to_tags = SUBSETS[test_set]
+            with smart_open(rawfile) as fin:
+                include_doc = False
+                for line in fin:
+                    if line.startswith('<doc '):
+                        if origlang is None:
+                            include_doc = True
                         else:
-                            include_doc = doc_origlang == origlang
+                            doc_origlang = re_origlang.sub(r'\1', line)
+                            if origlang.startswith('non-'):
+                                include_doc = doc_origlang != origlang[4:]
+                            else:
+                                include_doc = doc_origlang == origlang
 
-                    if subset is not None:
-                        doc_id = re_id.sub(r'\1', line)
-                        if not re.search(subset, doc_to_tags.get(doc_id, '')):
-                            include_doc = False
-                if line.startswith('<seg '):
-                    indices_to_keep.append(include_doc)
-                    number_sentences_included += 1 if include_doc else 0
+                        if subset is not None:
+                            doc_id = re_id.sub(r'\1', line)
+                            if not re.search(subset, doc_to_tags.get(doc_id, '')):
+                                include_doc = False
+                    if line.startswith('<seg '):
+                        indices_to_keep.append(include_doc)
+        else:
+            raise Exception(f'--origlang and --subset supports only WMT *.xml and *.sgm files, not {rawfile!r}')
     return [[sentence for sentence, keep in zip(sys, indices_to_keep) if keep] for sys in systems]
 
 
@@ -565,8 +600,9 @@ def print_subset_results(metrics, full_system, full_refs, args):
         subsets = [None]
         if args.subset is not None:
             subsets += [args.subset]
-        elif all(t in SUBSETS for t in args.test_set.split(',')):
-            subsets += COUNTRIES + DOMAINS
+        else:
+            subsets += get_available_subsets(args.test_set, args.langpair)
+
         for subset in subsets:
             system, *refs = filter_subset(
                 [full_system, *full_refs], args.test_set, args.langpair, origlang, subset)
@@ -575,9 +611,11 @@ def print_subset_results(metrics, full_system, full_refs, args):
                 continue
 
             key = f'origlang={origlang}'
-            if subset in COUNTRIES:
-                key += f' country={subset}'
-            elif subset in DOMAINS:
+            if subset is None:
+                key += f' domain=ALL'
+            elif subset.startswith('country:'):
+                key += f' country={subset[8:]}'
+            else:
                 key += f' domain={subset}'
 
             for metric in metrics.values():

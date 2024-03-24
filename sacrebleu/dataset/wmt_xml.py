@@ -26,10 +26,12 @@ class WMTXMLDataset(Dataset):
         This script is adapted from https://github.com/wmt-conference/wmt-format-tools
 
         :param raw_file: The raw xml file to unwrap.
-        :return: Dictionary which contains the following fields:
+        :return: Dictionary which contains the following fields
+            (each a list with values for each sentence):
             - `src`: The source sentences.
             - `docid`: ID indicating which document the sentences belong to.
             - `origlang`: The original language of the document.
+            - `domain`: Domain of the document.
             - `ref:{translator}`: The references produced by each translator.
             - `ref`: An alias for the references from the first translator.
         """
@@ -60,13 +62,8 @@ class WMTXMLDataset(Dataset):
 
         systems = defaultdict(list)
 
-        src_sent_count, doc_count = 0, 0
+        src_sent_count, doc_count, seen_domain = 0, 0, False
         for doc in tree.getroot().findall(".//doc"):
-            docid = doc.attrib["id"]
-            origlang = doc.attrib["origlang"]
-            # present wmt22++
-            domain = doc.attrib.get("domain", None)
-
             # Skip the testsuite
             if "testsuite" in doc.attrib:
                 continue
@@ -104,17 +101,17 @@ class WMTXMLDataset(Dataset):
                 src.append(src_sents[seg_id])
                 for system_name in hyps.keys():
                     systems[system_name].append(hyps[system_name][seg_id])
-                docids.append(docid)
-                orig_langs.append(origlang)
-                if domain is not None:
-                    domains.append(domain)
+                docids.append(doc.attrib["id"])
+                orig_langs.append(doc.attrib["origlang"])
+                # The "domain" attribute is missing in WMT21 and WMT22
+                domains.append(doc.get("domain"))
+                seen_domain = doc.get("domain") is not None
                 src_sent_count += 1
 
-        data = {"src": src, **refs, "docid": docids, "origlang": orig_langs, **systems}
-        if len(domains):
-            data["domain"] = domains
-
-        return data
+        fields = {"src": src, **refs, "docid": docids, "origlang": orig_langs, **systems}
+        if seen_domain:
+            fields["domain"] = domains
+        return fields
 
     def _get_langpair_path(self, langpair):
         """
