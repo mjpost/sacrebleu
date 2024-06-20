@@ -102,8 +102,8 @@ setup(
     author_email='post@cs.jhu.edu',
     maintainer_email='post@cs.jhu.edu',
     license='Apache License 2.0',
-    # We don't support Python < 3.6 anymore
-    python_requires='>=3.6',
+    # We don't support Python < 3.8 anymore
+    python_requires='>=3.8',
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         # How mature is this project? Common values are
@@ -154,8 +154,8 @@ setup(
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-    extras_require={'dev': ['wheel', 'pytest', 'mypy', 'types-tabulate', 'lxml-stubs'],
-                    'ja': ['mecab-python3>=1.0.5,<=1.0.6', 'ipadic>=1.0,<2.0'],
+    extras_require={'dev': ['wheel', 'pytest', 'mypy', 'types-tabulate', 'lxml-stubs', 'setuptools'],
+                    'ja': ['mecab-python3>=1.0.9,<2.0.0', 'ipadic>=1.0,<2.0'],
                     'ko': ['mecab-ko>=1.0.0,<=1.0.1', 'mecab-ko-dic>=1.0,<2.0']},
 
     # To provide executable scripts, use entry points in preference to the
