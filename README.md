@@ -50,7 +50,7 @@ $ sacrebleu -i output.detok.txt -t wmt17 -l en-de | jq -r .score
 
 # Installation
 
-Install the official Python module from PyPI (**Python>=3.6 only**):
+Install the official Python module from PyPI (**Python>=3.8 only**):
 
     pip install sacrebleu
 

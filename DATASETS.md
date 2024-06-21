@@ -2,6 +2,16 @@
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
 | mtedx/valid                    | mTEDx evaluation data, valid: [URL](http://openslr.org/100)                                                         |
 | mtedx/test                     | mTEDx evaluation data, test: [URL](http://openslr.org/100)                                                          |
+| wmt23                          | Official evaluation and system data for WMT23.	|
+| wmt22                          | Official evaluation and system data for WMT22.	|
+| wmt21/systems                  | WMT21 system output.	|
+| wmt21/dev                      | Development data for WMT21，if multiple references are available, the first one is used.	|
+| wmt21/D                        | Official evaluation data for WMT21 with reference D	|
+| wmt21/C                        | Official evaluation data for WMT21 with reference C	|
+| wmt21/B                        | Official evaluation data for WMT21 with reference B.	|
+| wmt21/AC                       | Official evaluation data for WMT21 with references A and C	|
+| wmt21/AB                       | Official evaluation data for WMT21 with references A and B.	|
+| wmt21                          | Official evaluation data for WMT21.	|
 | wmt20/robust/set1              | WMT20 robustness task, set 1                                                                                        |
 | wmt20/robust/set2              | WMT20 robustness task, set 2                                                                                        |
 | wmt20/robust/set3              | WMT20 robustness task, set 3                                                                                        |
