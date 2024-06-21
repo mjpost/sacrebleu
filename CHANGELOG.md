@@ -1,5 +1,9 @@
 # Release Notes
 
+- 2.4.2 (2024-04-12)
+  Added:
+  - Add printing of domain if present (via --echo)
+
 - 2.4.1 (2024-03-12)
   Fixed:
   - Add exports to package __init__.py
