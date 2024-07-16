@@ -612,7 +612,7 @@ def print_subset_results(metrics, full_system, full_refs, args):
 
             key = f'origlang={origlang}'
             if subset is None:
-                key += f' domain=ALL'
+                key += ' domain=ALL'
             elif subset.startswith('country:'):
                 key += f' country={subset[8:]}'
             else:
@@ -630,4 +630,4 @@ def print_subset_results(metrics, full_system, full_refs, args):
             print(f'{key}: sentences={n_system:<6} {score.name:<{max_metric_width}} = {score.score:.{w}f}')
 
 # import at the end to avoid circular import
-from .dataset import DATASETS, SUBSETS, DOMAINS, COUNTRIES  # noqa: E402
+from .dataset import DATASETS, SUBSETS  # noqa: E402
