@@ -535,6 +535,9 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
     if test_sets is None or langpair is None:
         raise ValueError('Filtering for --origlang or --subset needs a test (-t) and a language pair (-l).')
 
+    if subset is not None and subset.startswith('country:'):
+        subset = subset[8:]
+
     re_origlang = re.compile(r'.* origlang="([^"]+)".*\n')
     re_id = re.compile(r'.* docid="([^"]+)".*\n')
 
@@ -557,6 +560,7 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
                     include_doc = False
                 indices_to_keep.append(include_doc)
         elif rawfile.endswith('.sgm'):
+            doc_to_tags = {}
             if subset is not None:
                 if test_set not in SUBSETS:
                     raise Exception('No subset annotation available for test set ' + test_set)
