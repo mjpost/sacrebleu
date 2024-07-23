@@ -1,3 +1,4 @@
+import itertools
 import json
 import os
 import re
@@ -548,7 +549,8 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
         from .dataset.wmt_xml import WMTXMLDataset
         if isinstance(dataset, WMTXMLDataset):
             fields = dataset._unwrap_wmt21_or_later(rawfile)
-            for doc_origlang, doc_domain in zip(fields['origlang'], fields['domain']):
+            domains = fields['domain'] if 'domain' in fields else itertools.repeat(None)
+            for doc_origlang, doc_domain in zip(fields['origlang'], domains):
                 if origlang is None:
                     include_doc = True
                 else:
