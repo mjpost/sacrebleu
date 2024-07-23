@@ -242,8 +242,7 @@ def main():
 
     if args.list:
         if args.test_set:
-            langpairs = get_langpairs_for_testset(args.test_set)
-            for pair in langpairs:
+            for pair in [args.langpair] if args.langpair else get_langpairs_for_testset(args.test_set):
                 fields = DATASETS[args.test_set].fieldnames(pair)
                 print(f'{pair}: {", ".join(fields)}')
         else:
