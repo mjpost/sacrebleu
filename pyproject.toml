@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=64"]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "sacrebleu"
-version = "2.4.1"
+dynamic = ["version"]
 authors = [{ name = "Matt Post", email = "post@cs.jhu.edu" }]
 maintainers = [{ name = "Matt Post", email = "post@cs.jhu.edu" }]
 description = "Hassle-free computation of shareable, comparable, and reproducible BLEU, chrF, and TER scores"
@@ -75,3 +75,6 @@ include = ["sacrebleu*"]
 
 [tool.setuptools.package-data]
 sacrebleu = ["py.typed"]
+
+[tool.setuptools_scm]
+version_file = "sacrebleu/version.py"
