@@ -8,12 +8,12 @@ seamlessly with the rest of the codebase.
 import json
 import logging
 import statistics
-from typing import List, Sequence, Any, Optional, Dict
 from abc import ABCMeta, abstractmethod
+from typing import Any, Dict, List, Optional, Sequence
 
-from .. import __version__
+from ..version import __version__
 
-sacrelogger = logging.getLogger('sacrebleu')
+sacrelogger = logging.getLogger("sacrebleu")
 
 
 class Score:
@@ -22,6 +22,7 @@ class Score:
     :param name: The name of the underlying metric.
     :param score: A floating point number for the final metric.
     """
+
     def __init__(self, name: str, score: float):
         """`Score` initializer."""
         self.name = name
@@ -32,10 +33,15 @@ class Score:
         self._ci = -1.0
 
         # More info can be added right after the score
-        self._verbose = ''
+        self._verbose = ""
 
-    def format(self, width: int = 2, score_only: bool = False,
-               signature: str = '', is_json: bool = False) -> str:
+    def format(
+        self,
+        width: int = 2,
+        score_only: bool = False,
+        signature: str = "",
+        is_json: bool = False,
+    ) -> str:
         """Returns a pretty representation of the score.
         :param width: Floating point decimal precision width.
         :param score_only: If `True`, and the format is not `json`,
@@ -46,43 +52,43 @@ class Score:
         :return: A plain or JSON-formatted string representation.
         """
         d = {
-            'name': self.name,
-            'score': float(f'{self.score:.{width}f}'),
-            'signature': signature,
+            "name": self.name,
+            "score": float(f"{self.score:.{width}f}"),
+            "signature": signature,
         }
 
-        sc = f'{self.score:.{width}f}'
+        sc = f"{self.score:.{width}f}"
 
         if self._mean > 0:
-            confidence_mean = f'{self._mean:.{width}f}'
-            confidence_var = f'{self._ci:.{width}f}'
-            confidence_str = f'μ = {confidence_mean} ± {confidence_var}'
+            confidence_mean = f"{self._mean:.{width}f}"
+            confidence_var = f"{self._ci:.{width}f}"
+            confidence_str = f"μ = {confidence_mean} ± {confidence_var}"
 
-            sc += f' ({confidence_str})'
+            sc += f" ({confidence_str})"
             if is_json:
-                d['confidence_mean'] = float(confidence_mean)
-                d['confidence_var'] = float(confidence_var)
-                d['confidence'] = confidence_str
+                d["confidence_mean"] = float(confidence_mean)
+                d["confidence_var"] = float(confidence_var)
+                d["confidence"] = confidence_str
 
         # Construct full score line
         full_score = f"{self.name}|{signature}" if signature else self.name
         full_score = f"{full_score} = {sc}"
         if self._verbose:
-            full_score += f' {self._verbose}'
-            d['verbose_score'] = self._verbose
+            full_score += f" {self._verbose}"
+            d["verbose_score"] = self._verbose
 
         if score_only:
             return sc
 
         if is_json:
-            for param in signature.split('|'):
-                key, value = param.split(':')
+            for param in signature.split("|"):
+                key, value = param.split(":")
                 d[key] = value
             return json.dumps(d, indent=1, ensure_ascii=False)
 
         return full_score
 
-    def estimate_ci(self, scores: List['Score']):
+    def estimate_ci(self, scores: List["Score"]):
         """Takes a list of scores and stores mean, stdev and 95% confidence
         interval around the mean.
 
@@ -110,42 +116,44 @@ class Signature:
 
     :param args: key-value dictionary passed from the actual metric instance.
     """
+
     def __init__(self, args: dict):
         """`Signature` initializer."""
         # Global items that are shared across all metrics
         self._abbr = {
-            'version': 'v',
-            'nrefs': '#',
-            'test': 't',
-            'lang': 'l',
-            'subset': 'S',
-            'origlang': 'o',
-            'bs': 'bs',     # Bootstrap resampling trials
-            'ar': 'ar',     # Approximate randomization trials
-            'seed': 'rs',   # RNG's seed
+            "version": "v",
+            "nrefs": "#",
+            "test": "t",
+            "lang": "l",
+            "subset": "S",
+            "origlang": "o",
+            "bs": "bs",  # Bootstrap resampling trials
+            "ar": "ar",  # Approximate randomization trials
+            "seed": "rs",  # RNG's seed
         }
 
-        if 'num_refs' not in args:
+        if "num_refs" not in args:
             raise ValueError(
-                'Number of references unknown, please evaluate the metric first.')
+                "Number of references unknown, please evaluate the metric first."
+            )
 
-        num_refs = args['num_refs']
+        num_refs = args["num_refs"]
         if num_refs == -1:
             # Detect variable number of refs
-            num_refs = 'var'
+            num_refs = "var"
 
         # Global items that are shared across all metrics
         # None's will be ignored
         self.info = {
-            'version': __version__,
-            'nrefs': num_refs,
-            'bs': args.get('n_bootstrap', None),
-            'ar': None,
-            'seed': args.get('seed', None),
-            'test': args.get('test_set', None),
-            'lang': args.get('langpair', None),
-            'origlang': args.get('origlang', None),
-            'subset': args.get('subset', None),
+            "version": __version__,
+            "nrefs": num_refs,
+            "bs": args.get("n_bootstrap", None),
+            "ar": None,
+            "seed": args.get("seed", None),
+            "test": args.get("test_set", None),
+            "lang": args.get("langpair", None),
+            "origlang": args.get("origlang", None),
+            "subset": args.get("subset", None),
         }
 
     def format(self, short: bool = False) -> str:
@@ -157,17 +165,17 @@ class Signature:
         pairs = []
         keys = list(self.info.keys())
         # keep version always at end
-        keys.remove('version')
-        for name in keys + ['version']:
+        keys.remove("version")
+        for name in keys + ["version"]:
             value = self.info[name]
             if value is not None:
                 if isinstance(value, bool):
                     # Replace True/False with yes/no
-                    value = 'yes' if value else 'no'
+                    value = "yes" if value else "no"
                 final_name = self._abbr[name] if short else name
-                pairs.append(f'{final_name}:{value}')
+                pairs.append(f"{final_name}:{value}")
 
-        return '|'.join(pairs)
+        return "|".join(pairs)
 
     def update(self, key: str, value: Any):
         """Add a new item or update an existing one.
@@ -217,17 +225,18 @@ class Metric(metaclass=ABCMeta):
         err_msg = None
 
         if not isinstance(hyp, str):
-            err_msg = 'The argument `hyp` should be a string.'
+            err_msg = "The argument `hyp` should be a string."
         elif isinstance(refs, str) or not isinstance(refs, Sequence):
-            err_msg = 'The argument `refs` should be a sequence of strings.'
+            err_msg = "The argument `refs` should be a sequence of strings."
         elif not isinstance(refs[0], str) and refs[0] is not None:
-            err_msg = 'Each element of `refs` should be a string.'
+            err_msg = "Each element of `refs` should be a string."
 
         if err_msg:
-            raise TypeError(f'{prefix}: {err_msg}')
+            raise TypeError(f"{prefix}: {err_msg}")
 
-    def _check_corpus_score_args(self, hyps: Sequence[str],
-                                 refs: Optional[Sequence[Sequence[str]]]):
+    def _check_corpus_score_args(
+        self, hyps: Sequence[str], refs: Optional[Sequence[Sequence[str]]]
+    ):
         """Performs sanity checks on `corpus_score` method's arguments.
 
         :param hypses: A sequence of hypothesis strings.
@@ -242,7 +251,7 @@ class Metric(metaclass=ABCMeta):
         if not isinstance(hyps, Sequence):
             err_msg = "`hyps` should be a sequence of strings."
         elif not isinstance(hyps[0], str):
-            err_msg = 'Each element of `hyps` should be a string.'
+            err_msg = "Each element of `hyps` should be a string."
         elif any(line is None for line in hyps):
             err_msg = "Undefined line in hypotheses stream!"
 
@@ -255,7 +264,7 @@ class Metric(metaclass=ABCMeta):
                 err_msg = "`refs` should be a sequence of sequence of strings."
 
         if err_msg:
-            raise TypeError(f'{prefix}: {err_msg}')
+            raise TypeError(f"{prefix}: {err_msg}")
 
     @abstractmethod
     def _aggregate_and_compute(self, stats: List[List[Any]]) -> Any:
@@ -296,7 +305,9 @@ class Metric(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _compute_segment_statistics(self, hypothesis: str, ref_kwargs: Dict) -> List[Any]:
+    def _compute_segment_statistics(
+        self, hypothesis: str, ref_kwargs: Dict
+    ) -> List[Any]:
         """Given a (pre-processed) hypothesis sentence and already computed
         reference info, returns the best match statistics across the
         references. The return type is usually a List of ints or floats.
@@ -345,8 +356,9 @@ class Metric(metaclass=ABCMeta):
 
         return ref_cache
 
-    def _extract_corpus_statistics(self, hypotheses: Sequence[str],
-                                   references: Optional[Sequence[Sequence[str]]]) -> Any:
+    def _extract_corpus_statistics(
+        self, hypotheses: Sequence[str], references: Optional[Sequence[Sequence[str]]]
+    ) -> Any:
         """Reads the corpus and returns sentence-level match statistics for
         faster re-computations esp. during statistical tests.
 
@@ -363,14 +375,14 @@ class Metric(metaclass=ABCMeta):
         elif self._ref_cache:
             ref_cache = self._ref_cache
         else:
-            raise RuntimeError('No references provided and the cache is empty.')
+            raise RuntimeError("No references provided and the cache is empty.")
 
         stats = []
         tok_count = 0
 
         for hyp, ref_kwargs in zip(hypotheses, ref_cache):
             # Check for already-tokenized input problem (only for BLEU)
-            if not self._force and hyp.endswith(' .'):
+            if not self._force and hyp.endswith(" ."):
                 tok_count += 1
 
             hyp = self._preprocess_segment(hyp)
@@ -380,8 +392,12 @@ class Metric(metaclass=ABCMeta):
 
         if tok_count >= 100:
             sacrelogger.warning("That's 100 lines that end in a tokenized period ('.')")
-            sacrelogger.warning("It looks like you forgot to detokenize your test data, which may hurt your score.")
-            sacrelogger.warning("If you insist your data is detokenized, or don't care, you can suppress this message with the `force` parameter.")
+            sacrelogger.warning(
+                "It looks like you forgot to detokenize your test data, which may hurt your score."
+            )
+            sacrelogger.warning(
+                "If you insist your data is detokenized, or don't care, you can suppress this message with the `force` parameter."
+            )
 
         return stats
 
@@ -395,12 +411,16 @@ class Metric(metaclass=ABCMeta):
         self._check_sentence_score_args(hypothesis, references)
 
         stats = self._extract_corpus_statistics(
-            [hypothesis], [[refs] for refs in references])
+            [hypothesis], [[refs] for refs in references]
+        )
         return self._aggregate_and_compute(stats)
 
-    def corpus_score(self, hypotheses: Sequence[str],
-                     references: Optional[Sequence[Sequence[str]]],
-                     n_bootstrap: int = 1) -> Any:
+    def corpus_score(
+        self,
+        hypotheses: Sequence[str],
+        references: Optional[Sequence[Sequence[str]]],
+        n_bootstrap: int = 1,
+    ) -> Any:
         """Compute the metric for a corpus against a single (or multiple) reference(s).
 
         :param hypotheses: A sequence of hypothesis strings.

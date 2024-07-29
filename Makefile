@@ -5,7 +5,7 @@ test:
 	bash test.sh
 
 pip:
-	python3 setup.py sdist bdist_wheel
+	python3 -m build .
 
 publish: pip
 	twine upload dist/*
