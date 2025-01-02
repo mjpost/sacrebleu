@@ -1,5 +1,9 @@
 # Release Notes
 
+- 2.5.0 (2025-01-02)
+  Added:
+  - WMT 2024 test sets (test set `wmt24`)
+
 - 2.4.2 (2024-04-12)
   Added:
   - Add printing of domain if present (via --echo)
