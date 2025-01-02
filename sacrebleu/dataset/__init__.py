@@ -92,6 +92,7 @@ DATASETS = {
             "en-zh": ["xml/wmttest2024.en-zh.all.xml"],
             "ja-zh": ["xml/wmttest2024.ja-zh.all.xml"],
         },
+        refs=["refA"],
     ),
     "wmt23": WMTXMLDataset(
         "wmt23",
