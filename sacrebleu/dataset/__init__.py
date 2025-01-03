@@ -74,6 +74,26 @@ DOMAINS = sorted(list({v.split("-")[1] for v in SUBSETS["wmt19"].values()}))
 
 DATASETS = {
     # wmt
+    "wmt24": WMTXMLDataset(
+        "wmt24",
+        data=["https://github.com/wmt-conference/wmt24-news-systems/releases/download/v1.1/data_nots.tar.gz"],
+        description="WMT24 official test set release, v1.1 (excluding TS)",
+        md5=["35ea35f398190de3a17bcb9a08333b1b"],
+        langpairs={
+            "cs-uk": ["xml/wmttest2024.cs-uk.all.xml"],
+            "en-cs": ["xml/wmttest2024.en-cs.all.xml"],
+            "en-de": ["xml/wmttest2024.en-de.all.xml"],
+            "en-es": ["xml/wmttest2024.en-es.all.xml"],
+            "en-hi": ["xml/wmttest2024.en-hi.all.xml"],
+            "en-is": ["xml/wmttest2024.en-is.all.xml"],
+            "en-ja": ["xml/wmttest2024.en-ja.all.xml"],
+            "en-ru": ["xml/wmttest2024.en-ru.all.xml"],
+            "en-uk": ["xml/wmttest2024.en-uk.all.xml"],
+            "en-zh": ["xml/wmttest2024.en-zh.all.xml"],
+            "ja-zh": ["xml/wmttest2024.ja-zh.all.xml"],
+        },
+        refs=["refA"],
+    ),
     "wmt23": WMTXMLDataset(
         "wmt23",
         data=["https://github.com/wmt-conference/wmt23-news-systems/archive/refs/tags/v.0.1.tar.gz"],
