@@ -76,9 +76,9 @@ DATASETS = {
     # wmt
     "wmt24": WMTXMLDataset(
         "wmt24",
-        data=["https://github.com/wmt-conference/wmt24-news-systems/releases/download/v1.1/data_nots.tar.gz"],
+        data=["https://github.com/wmt-conference/wmt24-news-systems/releases/download/v1.1/data_onlyxml.tar.gz"],
         description="WMT24 official test set release, v1.1 (excluding TS)",
-        md5=["35ea35f398190de3a17bcb9a08333b1b"],
+        md5=["299963fcb7b4e86d6d212bf69beb9580"],
         langpairs={
             "cs-uk": ["xml/wmttest2024.cs-uk.all.xml"],
             "en-cs": ["xml/wmttest2024.en-cs.all.xml"],
