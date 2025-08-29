@@ -24,6 +24,11 @@ SPM_MODELS = {
         "url": "https://tinyurl.com/flores200sacrebleuspm",
         "signature": "flores200",
     },
+    ### Added for spBLEU-1K tokenizer by AbdelRahim Elmadany
+    "spBLEU-1K": {
+          "url": "https://www.dlnlp.ai/spBLEU-1K/spbleu-1k_tokenizer_spm.model",
+        "signature": "spBLEU-1K",
+    },
 }
 
 class TokenizerSPM(BaseTokenizer):
@@ -68,3 +73,8 @@ class Flores200Tokenizer(TokenizerSPM):
 class Flores101Tokenizer(TokenizerSPM):
     def __init__(self):
         super().__init__("flores101")
+
+### Added for spBLEU-1K tokenizer by AbdelRahim Elmadany
+class spBLEU1KTokenizer(TokenizerSPM):
+    def __init__(self):
+        super().__init__("spBLEU-1K")
