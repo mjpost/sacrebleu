@@ -288,7 +288,8 @@ but it expects that you pass through the entire translated test set.
    - `ja-mecab` tokenizes **Japanese** inputs using the [MeCab](https://pypi.org/project/mecab-python3) morphological analyzer
    - `ko-mecab` tokenizes **Korean** inputs using the [MeCab-ko](https://pypi.org/project/mecab-ko) morphological analyzer
    - `flores101` and `flores200` uses the SentencePiece model built from the Flores-101 and [Flores-200](https://github.com/facebookresearch/flores/blob/main/flores200/README.md#languages-in-flores-200) dataset, respectively. Note: the canonical .spm file will be automatically fetched if not found locally.
-   - `spBLEU-1K` is a newly introduced **multilingual** SentencePiece tokenizer, trained on **over 1,000** data sources, as proposed in the [Toucan](https://aclanthology.org/2024.findings-acl.781/) paper (ACL 2024).
+   - `spBLEU-1K` is a newly introduced **multilingual** SentencePiece tokenizer, trained on **over 1,000** data sources, as proposed in the [Toucan](https://aclanthology.org/2024.findings-acl.781/) paper (ACL 2024).  For more details, see spBLEU's [GitHub repository](https://github.com/UBC-NLP/Toucan/tree/main/spBLEU-1K).
+
 
 - You can switch tokenizers using the `--tokenize` flag of sacreBLEU. Alternatively, if you provide language-pair strings
   using `--language-pair/-l`, `zh`, `ja-mecab` and `ko-mecab` tokenizers will be used if the target language is `zh` or `ja` or `ko`, respectively.
