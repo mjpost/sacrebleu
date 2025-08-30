@@ -26,6 +26,8 @@ _TOKENIZERS = {
     'spm': 'tokenizer_spm.TokenizerSPM',
     'flores101': 'tokenizer_spm.Flores101Tokenizer',
     'flores200': 'tokenizer_spm.Flores200Tokenizer',
+    ### Added for spBLEU-1K tokenizer by AbdelRahim Elmadany
+    'spBLEU-1K':'tokenizer_spm.spBLEU1KTokenizer',
 }
 
 
