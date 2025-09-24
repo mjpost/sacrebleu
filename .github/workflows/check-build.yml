@@ -35,15 +35,8 @@ jobs:
       - if: matrix.os == 'windows-latest'
         name: Install Windows requirements
         run: choco install wget unzip
-      - if: ${{ matrix.os != 'macos-14' && matrix.python-version != '3.12' }}
-        name: Install python dependencies
+      - name: Install python dependencies
         run: pip install ".[dev,ja,ko]"
-      - # mecab-ko doesn't support Apple Silicon or Python 3.12 yet.
-        if: ${{ matrix.os == 'macos-14' || matrix.python-version == '3.12' }}
-        name: Install Python dependencies on Apple Silicon or Python 3.12
-        run: |
-          pip install ".[dev,ja]"
-          echo "SKIP_MECAB_KO=true" >> $GITHUB_ENV
       - name: Lint with Mypy
         run: mypy sacrebleu scripts test
       - name: Lint with Ruff
