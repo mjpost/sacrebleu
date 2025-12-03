@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8"]
+requires = ["setuptools>=77", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,7 +9,7 @@ authors = [{ name = "Matt Post", email = "post@cs.jhu.edu" }]
 maintainers = [{ name = "Matt Post", email = "post@cs.jhu.edu" }]
 description = "Hassle-free computation of shareable, comparable, and reproducible BLEU, chrF, and TER scores"
 readme = "README.md"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 classifiers = [
     # How mature is this project? Common values are
     #   3 - Alpha
@@ -37,7 +37,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 
 keywords = [
     "machine translation",
@@ -59,7 +59,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["wheel", "pytest", "mypy", "types-tabulate", "lxml-stubs", "setuptools"]
 ja = ["mecab-python3>=1.0.9,<2.0.0", "ipadic>=1.0,<2.0"]
-ko = ["mecab-ko>=1.0.0,<2.0.0", "mecab-ko-dic>=1.0,<2.0"]
+ko = ["mecab-ko>=1.0.2,<2.0.0", "mecab-ko-dic>=1.0,<2.0"]
 
 [project.scripts]
 sacrebleu = "sacrebleu.sacrebleu:main"
