@@ -25,9 +25,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Text Processing",
 
-    # Pick your license as you wish (should match "license" above)
-    "License :: OSI Approved :: Apache Software License",
-
     # List operating systems
     "Operating System :: POSIX",
     "Operating System :: MacOS :: MacOS X",
