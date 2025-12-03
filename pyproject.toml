@@ -10,7 +10,6 @@ maintainers = [{ name = "Matt Post", email = "post@cs.jhu.edu" }]
 description = "Hassle-free computation of shareable, comparable, and reproducible BLEU, chrF, and TER scores"
 readme = "README.md"
 license = "Apache-2.0"
-license-files = ["LICENSE.txt"]
 classifiers = [
     # How mature is this project? Common values are
     #   3 - Alpha
