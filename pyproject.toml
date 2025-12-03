@@ -62,7 +62,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["wheel", "pytest", "mypy", "types-tabulate", "lxml-stubs", "setuptools"]
 ja = ["mecab-python3>=1.0.9,<2.0.0", "ipadic>=1.0,<2.0"]
-ko = ["mecab-ko>=1.0.0,<=1.0.1", "mecab-ko-dic>=1.0,<2.0"]
+ko = ["mecab-ko>=1.0.0,<=1.0.2", "mecab-ko-dic>=1.0,<2.0"]
 
 [project.scripts]
 sacrebleu = "sacrebleu.sacrebleu:main"
