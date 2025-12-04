@@ -19,10 +19,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-13, macos-14, windows-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-        exclude:
-          - os: windows-latest
-            python-version: '3.12'
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python ${{ matrix.python-version }}
@@ -35,15 +32,8 @@ jobs:
       - if: matrix.os == 'windows-latest'
         name: Install Windows requirements
         run: choco install wget unzip
-      - if: ${{ matrix.os != 'macos-14' && matrix.python-version != '3.12' }}
-        name: Install python dependencies
+      - name: Install python dependencies
         run: pip install ".[dev,ja,ko]"
-      - # mecab-ko doesn't support Apple Silicon or Python 3.12 yet.
-        if: ${{ matrix.os == 'macos-14' || matrix.python-version == '3.12' }}
-        name: Install Python dependencies on Apple Silicon or Python 3.12
-        run: |
-          pip install ".[dev,ja]"
-          echo "SKIP_MECAB_KO=true" >> $GITHUB_ENV
       - name: Lint with Mypy
         run: mypy sacrebleu scripts test
       - name: Lint with Ruff
