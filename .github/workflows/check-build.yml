@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13, macos-14, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - if: ${{ matrix.os == 'macos-13' || matrix.os == 'macos-14' }}
+      - if: ${{ matrix.os == 'macos-latest' || matrix.os == 'macos-14' }}
         name: Install Mac OS requirements
         run: brew install bash
       - if: matrix.os == 'windows-latest'
