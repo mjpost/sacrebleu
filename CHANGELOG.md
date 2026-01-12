@@ -1,5 +1,12 @@
 # Release Notes
 
+## 2.6.0 (2026-01-12)
+- Dropped Python 3.8, added Python 3.13 (requires-python = ">=3.9")
+- License Format: Changed to PEP 639 bare SPDX format (license = "Apache-2.0")
+- Build System: Updated setuptools requirement from >=64 to >=77 for PEP 639 support
+- mecab-ko: Updated dependency to >=1.0.2,<2.0.0 (now supports Apple Silicon and Python 3.12+)
+- new tokenizer: `spBLEU-1K`
+
 ## 2.5.1 (2025-01-03)
 
 ### Fixed
