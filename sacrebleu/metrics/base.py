@@ -248,8 +248,10 @@ class Metric(metaclass=ABCMeta):
         prefix = self.__class__.__name__
         err_msg = None
 
-        if not isinstance(hyps, Sequence):
+        if isinstance(hyps, str) or not isinstance(hyps, Sequence):
             err_msg = "`hyps` should be a sequence of strings."
+        elif len(hyps) == 0:
+            err_msg = "`hyps` should not be empty."
         elif not isinstance(hyps[0], str):
             err_msg = "Each element of `hyps` should be a string."
         elif any(line is None for line in hyps):
@@ -258,7 +260,9 @@ class Metric(metaclass=ABCMeta):
         if refs is not None:
             if not isinstance(refs, Sequence):
                 err_msg = "`refs` should be a sequence of sequence of strings."
-            elif not isinstance(refs[0], Sequence):
+            elif len(refs) == 0:
+                err_msg = "`refs` should not be empty."
+            elif isinstance(refs[0], str) or not isinstance(refs[0], Sequence):
                 err_msg = "Each element of `refs` should be a sequence of strings."
             elif not isinstance(refs[0][0], str) and refs[0][0] is not None:
                 err_msg = "`refs` should be a sequence of sequence of strings."
