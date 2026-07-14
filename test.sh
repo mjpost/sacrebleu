@@ -37,7 +37,7 @@ trap "rm -f .tmp* data/.tmp*" EXIT INT TERM
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   PYTHON="python"
   CMD="$PYTHON -m sacrebleu"
-elif [[ "$OSTYPE" == "msys" ]]; then
+elif [[ "$OSTYPE" == "msys"* ]]; then
   PYTHON="python"
   CMD="$PYTHON -m sacrebleu"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
