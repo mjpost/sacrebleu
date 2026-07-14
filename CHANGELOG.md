@@ -1,5 +1,10 @@
 # Release Notes
 
+## Unreleased
+
+### Added
+- Stricter validation of input hypotheses and references
+
 ## 2.6.0 (2026-01-12)
 - Dropped Python 3.8, added Python 3.13 (requires-python = ">=3.9")
 - License Format: Changed to PEP 639 bare SPDX format (license = "Apache-2.0")

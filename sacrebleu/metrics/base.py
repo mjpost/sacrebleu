@@ -226,9 +226,11 @@ class Metric(metaclass=ABCMeta):
 
         if not isinstance(hyp, str):
             err_msg = "The argument `hyp` should be a string."
-        elif isinstance(refs, str) or not isinstance(refs, Sequence):
+        elif isinstance(refs, (str, bytes)) or not isinstance(refs, Sequence):
             err_msg = "The argument `refs` should be a sequence of strings."
-        elif not isinstance(refs[0], str) and refs[0] is not None:
+        elif len(refs) == 0:
+            err_msg = "The argument `refs` should not be empty."
+        elif any(not isinstance(ref, str) and ref is not None for ref in refs):
             err_msg = "Each element of `refs` should be a string."
 
         if err_msg:
@@ -239,7 +241,7 @@ class Metric(metaclass=ABCMeta):
     ):
         """Performs sanity checks on `corpus_score` method's arguments.
 
-        :param hypses: A sequence of hypothesis strings.
+        :param hyps: A sequence of hypothesis strings.
         :param refs: A sequence of reference documents with document being
         defined as a sequence of reference strings. If `None`, cached references
         will be used.
@@ -248,20 +250,40 @@ class Metric(metaclass=ABCMeta):
         prefix = self.__class__.__name__
         err_msg = None
 
-        if not isinstance(hyps, Sequence):
+        if isinstance(hyps, (str, bytes)) or not isinstance(hyps, Sequence):
             err_msg = "`hyps` should be a sequence of strings."
-        elif not isinstance(hyps[0], str):
-            err_msg = "Each element of `hyps` should be a string."
+        elif len(hyps) == 0:
+            err_msg = "`hyps` should not be empty."
         elif any(line is None for line in hyps):
             err_msg = "Undefined line in hypotheses stream!"
+        elif any(not isinstance(hyp, str) for hyp in hyps):
+            err_msg = "Each element of `hyps` should be a string."
 
-        if refs is not None:
+        if refs is not None and err_msg is None:
             if not isinstance(refs, Sequence):
                 err_msg = "`refs` should be a sequence of sequence of strings."
-            elif not isinstance(refs[0], Sequence):
-                err_msg = "Each element of `refs` should be a sequence of strings."
-            elif not isinstance(refs[0][0], str) and refs[0][0] is not None:
-                err_msg = "`refs` should be a sequence of sequence of strings."
+            elif len(refs) == 0:
+                err_msg = "`refs` should not be empty."
+            else:
+                for refs_streams in refs:
+                    if isinstance(refs_streams, (str, bytes)) or not isinstance(
+                        refs_streams, Sequence
+                    ):
+                        err_msg = (
+                            "Each element of `refs` should be a sequence of strings."
+                        )
+                    elif len(refs_streams) != len(hyps):
+                        err_msg = (
+                            "Each references stream in `refs` must have the same "
+                            "length as `hyps`."
+                        )
+                    elif any(
+                        not isinstance(line, str) and line is not None
+                        for line in refs_streams
+                    ):
+                        err_msg = "`refs` should be a sequence of sequence of strings."
+                    if err_msg is not None:
+                        break
 
         if err_msg:
             raise TypeError(f"{prefix}: {err_msg}")
