@@ -11,11 +11,15 @@ import re
 import sys
 from argparse import Namespace
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
+from typing import IO, TYPE_CHECKING, Any, Final, TypeVar, cast, overload
 
 import colorama
 import portalocker
 from tabulate import tabulate
+
+if TYPE_CHECKING:
+    from .metrics.base import Metric
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
@@ -23,10 +27,10 @@ from tabulate import tabulate
 # Querying for a HOME environment variable can result in None (e.g., on Windows)
 # in which case the os.path.join() throws a TypeError. Using expanduser() is
 # a safe way to get the user's home folder.
-USERHOME = os.path.expanduser("~")
-SACREBLEU_DIR = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
+USERHOME: Final[str] = os.path.expanduser("~")
+SACREBLEU_DIR: Final[str] = os.environ.get('SACREBLEU', os.path.join(USERHOME, '.sacrebleu'))
 
-sacrelogger = logging.getLogger('sacrebleu')
+sacrelogger: Final[logging.Logger] = logging.getLogger('sacrebleu')
 
 
 class Color:
@@ -49,7 +53,7 @@ class Color:
         return msg
 
 
-def _format_score_lines(scores: dict,
+def _format_score_lines(scores: dict[str, list[str]],
                         width: int = 2,
                         multiline: bool = True) -> dict[str, list[str]]:
     """Formats the scores prior to tabulating them."""
@@ -90,14 +94,16 @@ def _format_score_lines(scores: dict,
     return new_scores
 
 
-def print_results_table(results: dict, signatures: dict, args: Namespace):
+def print_results_table(results: dict[str, list[str]],
+                        signatures: dict[str, str],
+                        args: Namespace) -> None:
     """Prints out a nicely formatted table for multi-system evaluation mode."""
 
     if args.format == 'json':
         proper_json = []
         dict_keys = list(results.keys())
         for i in range(len(results['System'])):
-            value = {}
+            value: dict[str, str | dict[str, Any]] = {}
             value['system'] = results['System'][i]
             # parse metrics
             for j in range(1, len(dict_keys)):
@@ -189,7 +195,7 @@ def print_results_table(results: dict, signatures: dict, args: Namespace):
         print(f' - {name:<10} {sig}')
 
 
-def print_single_results(results: list[str], args: Namespace):
+def print_single_results(results: list[str], args: Namespace) -> None:
     """Re-process metric strings to align them nicely."""
     if args.format == 'json':
         if len(results) > 1:
@@ -229,7 +235,7 @@ def print_single_results(results: list[str], args: Namespace):
 
 def sanity_check_lengths(system: Sequence[str],
                          refs: Sequence[Sequence[str]],
-                         test_set: str | None = None):
+                         test_set: str | None = None) -> None:
     n_hyps = len(system)
     if any(len(ref_stream) != n_hyps for ref_stream in refs):
         sacrelogger.error("System and reference streams have different lengths.")
@@ -242,7 +248,7 @@ def sanity_check_lengths(system: Sequence[str],
         sys.exit(1)
 
 
-def smart_open(file, mode='rt', encoding='utf-8'):
+def smart_open(file: str, mode: str = 'rt', encoding: str = 'utf-8') -> IO[Any] | gzip.GzipFile:
     """Convenience function for reading compressed or plain text files.
     :param file: The file to read.
     :param mode: The file mode (read, write).
@@ -266,7 +272,9 @@ def my_log(num: float) -> float:
     return math.log(num)
 
 
-def sum_of_lists(lists):
+_NumericT = TypeVar("_NumericT", int, float)
+
+def sum_of_lists(lists: Sequence[list[_NumericT]]) -> list[_NumericT]:
     """Aggregates list of numeric lists by summing."""
     if len(lists) == 1:
         return lists[0]
@@ -274,14 +282,16 @@ def sum_of_lists(lists):
     # Preserve datatype
     size = len(lists[0])
     init_val = type(lists[0][0])(0.0)
-    total = [init_val] * size
+    total: list[_NumericT] = [init_val] * size
     for ll in lists:
         for i in range(size):
             total[i] += ll[i]
     return total
 
 
-def args_to_dict(args, prefix: str, strip_prefix: bool = False):
+def args_to_dict(args: Namespace,
+                 prefix: str,
+                 strip_prefix: bool = False) -> dict[str, Any]:
     """Filters argparse's `Namespace` into dictionary with arguments
     beginning with the given prefix."""
     prefix += '_'
@@ -293,7 +303,11 @@ def args_to_dict(args, prefix: str, strip_prefix: bool = False):
     return d
 
 
-def print_test_set(test_set, langpair, requested_fields, origlang=None, subset=None):
+def print_test_set(test_set: str,
+                   langpair: str,
+                   requested_fields: list[str],
+                   origlang: str | None = None,
+                   subset: str | None = None) -> None:
     """Prints to STDOUT the specified side of the specified test set.
 
     :param test_set: the test set to print
@@ -331,8 +345,8 @@ def print_test_set(test_set, langpair, requested_fields, origlang=None, subset=N
         index = fieldnames.index(field)
         files.append(all_files[index])
 
-    streams = [smart_open(file) for file in files]
-    streams = filter_subset(streams, test_set, langpair, origlang, subset)
+    streams_in = [cast(Iterable[str], smart_open(file)) for file in files]
+    streams = filter_subset(streams_in, test_set, langpair, origlang, subset)
     for lines in zip(*streams):
         print('\t'.join(x.rstrip() for x in lines))
 
@@ -366,7 +380,7 @@ def get_reference_files(test_set: str, langpair: str) -> list[str]:
     return DATASETS[test_set].get_reference_files(langpair)
 
 
-def get_files(test_set, langpair) -> list[str]:
+def get_files(test_set: str, langpair: str) -> list[str]:
     """
     Returns the path of the source file and all reference files for
     the provided test set / language pair.
@@ -382,7 +396,7 @@ def get_files(test_set, langpair) -> list[str]:
     return DATASETS[test_set].get_files(langpair)
 
 
-def extract_tarball(filepath, destdir):
+def extract_tarball(filepath: str, destdir: str | os.PathLike[str]) -> None:
     sacrelogger.info(f'Extracting {filepath} to {destdir}')
     if filepath.endswith(('.tar.gz', '.tgz')):
         import tarfile
@@ -390,11 +404,11 @@ def extract_tarball(filepath, destdir):
             tar.extractall(path=destdir)
     elif filepath.endswith('.zip'):
         import zipfile
-        with zipfile.ZipFile(filepath, 'r') as zipfile:
-            zipfile.extractall(path=destdir)
+        with zipfile.ZipFile(filepath, "r") as zip_:
+            zip_.extractall(path=destdir)
 
 
-def get_md5sum(dest_path):
+def get_md5sum(dest_path: str | os.PathLike[str]) -> str:
     # Check md5sum
     md5 = hashlib.md5()
     with open(dest_path, 'rb') as infile:
@@ -403,7 +417,10 @@ def get_md5sum(dest_path):
     return md5.hexdigest()
 
 
-def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
+def download_file(source_path: str,
+                  dest_path: str,
+                  extract_to: str | os.PathLike[str] | None = None,
+                  expected_md5: str | None = None) -> None:
     """Downloading utility.
 
     Downloads the specified test to the system location specified by the SACREBLEU environment variable.
@@ -459,7 +476,7 @@ def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
                 extract_tarball(dest_path, extract_to)
 
 
-def download_test_set(test_set, langpair=None):
+def download_test_set(test_set: str, langpair: str | None = None) -> list[str]:
     """Downloads the specified test to the system location specified by the SACREBLEU environment variable.
 
     :param test_set: the test set to download
@@ -499,7 +516,7 @@ def get_available_testsets_for_langpair(langpair: str) -> list[str]:
     return testsets
 
 
-def get_available_origlangs(test_sets, langpair) -> list[str]:
+def get_available_origlangs(test_sets: str, langpair: str) -> list[str]:
     """Return a list of origlang values according to the raw XML/SGM files."""
     if test_sets is None:
         return []
@@ -514,14 +531,14 @@ def get_available_origlangs(test_sets, langpair) -> list[str]:
                 origlangs.add(origlang)
         if rawfile.endswith('.sgm'):
             with smart_open(rawfile) as fin:
-                for line in fin:
+                for line in cast(IO[str], fin):
                     if line.startswith('<doc '):
                         doc_origlang = re.sub(r'.* origlang="([^"]+)".*\n', '\\1', line)
                         origlangs.add(doc_origlang)
     return sorted(origlangs)
 
 
-def get_available_subsets(test_sets, langpair) -> list[str]:
+def get_available_subsets(test_sets: str, langpair: str) -> list[str]:
     """Return a list of domain values according to the raw XML files and domain/country values from the SGM files."""
     if test_sets is None:
         return []
@@ -540,7 +557,29 @@ def get_available_subsets(test_sets, langpair) -> list[str]:
             subsets |= {v.split("-")[1] for v in SUBSETS[test_set].values()}
     return sorted(subsets)
 
-def filter_subset(systems, test_sets, langpair, origlang, subset=None):
+@overload
+def filter_subset(systems: list[Iterable[str]],
+                  test_sets: str | None,
+                  langpair: str | None,
+                  origlang: None,
+                  subset: None = None) -> list[Iterable[str]]: ...
+@overload
+def filter_subset(systems: list[Iterable[str]],
+                  test_sets: str | None,
+                  langpair: str | None,
+                  origlang: str,
+                  subset: str | None = None) -> list[list[str]]: ...
+@overload
+def filter_subset(systems: list[Iterable[str]],
+                  test_sets: str | None,
+                  langpair: str | None,
+                  origlang: None,
+                  subset: str) -> list[list[str]]: ...
+def filter_subset(systems: list[Iterable[str]],
+                  test_sets: str | None,
+                  langpair: str | None,
+                  origlang: str | None,
+                  subset: str | None = None) -> list[Iterable[str]] | list[list[str]]:
     """Filter sentences with a given origlang (or subset) according to the raw SGM files."""
     if origlang is None and subset is None:
         return systems
@@ -580,7 +619,7 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
                 doc_to_tags = SUBSETS[test_set]
             with smart_open(rawfile) as fin:
                 include_doc = False
-                for line in fin:
+                for line in cast(IO[str], fin):
                     if line.startswith('<doc '):
                         if origlang is None:
                             include_doc = True
@@ -602,7 +641,10 @@ def filter_subset(systems, test_sets, langpair, origlang, subset=None):
     return [[sentence for sentence, keep in zip(sys, indices_to_keep) if keep] for sys in systems]
 
 
-def print_subset_results(metrics, full_system, full_refs, args):
+def print_subset_results(metrics: dict[str, Metric],
+                         full_system: list[str],
+                         full_refs: list[list[str]],
+                         args: Namespace) -> None:
     w = args.width
     origlangs = args.origlang if args.origlang else \
         get_available_origlangs(args.test_set, args.langpair)
@@ -614,7 +656,7 @@ def print_subset_results(metrics, full_system, full_refs, args):
     results = defaultdict(list)
 
     for origlang in origlangs:
-        subsets = [None]
+        subsets: list[str | None] = [None]
         if args.subset is not None:
             subsets += [args.subset]
         else:
