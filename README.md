@@ -95,7 +95,7 @@ $ sacrebleu -t wmt21/systems -l zh-en --echo NiuTrans
 This provides a convenient way to score:
 
 ```bash
-$ sacrebleu -t wmt21/system -l zh-en --echo NiuTrans | sacrebleu -t wmt21/systems -l zh-en
+$ sacrebleu -t wmt21/systems -l zh-en --echo NiuTrans | sacrebleu -t wmt21/systems -l zh-en
 ```
 
 You can see a list of the available outputs by passing an invalid value to `--echo`.
