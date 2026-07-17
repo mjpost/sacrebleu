@@ -34,13 +34,9 @@ export SACREBLEU_FORMAT="text"
 trap "rm -f .tmp* data/.tmp*" EXIT INT TERM
 
 # For Travis CI to work on Windows/Mac OS X
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  PYTHON="python"
-  CMD="$PYTHON -m sacrebleu"
-elif [[ "$OSTYPE" == "msys" ]]; then
-  PYTHON="python"
-  CMD="$PYTHON -m sacrebleu"
-elif [[ "$OSTYPE" == "darwin"* ]]; then
+PYTHON="python"
+CMD="$PYTHON -m sacrebleu"
+if [[ "$OSTYPE" == "darwin"* ]]; then
   # OS X ships python -> python2 by default, be explicit
   PYTHON=python3
   CMD="$PYTHON -m sacrebleu"
