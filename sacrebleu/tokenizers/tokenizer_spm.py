@@ -55,14 +55,26 @@ class TokenizerSPM(BaseTokenizer):
             download_file(url, model_path)
         self.sp.Load(model_path)
 
-    @lru_cache(maxsize=2**16)
+        # Cache per instance (bound to self._tokenize, so the cache key is just
+        # `line`), not via a decorator on __call__ itself. A decorator on an
+        # instance method caches on (self, line): since callers like
+        # sentence_bleu()/corpus_bleu() construct a fresh tokenizer instance
+        # per call, that shared class-level cache accumulates a strong
+        # reference to every instance (and its loaded SentencePieceProcessor)
+        # ever created, for the life of the process -- an unbounded memory
+        # leak. Binding the cache per instance lets it die with the instance.
+        self._call = lru_cache(maxsize=2**16)(self._tokenize)
+
+    def _tokenize(self, line):
+        return " ".join(self.sp.EncodeAsPieces(line))
+
     def __call__(self, line):
         """Tokenizes all the characters in the input line.
 
         :param line: a segment to tokenize
         :return: the tokenized line
         """
-        return " ".join(self.sp.EncodeAsPieces(line))
+        return self._call(line)
 
 
 class Flores200Tokenizer(TokenizerSPM):
