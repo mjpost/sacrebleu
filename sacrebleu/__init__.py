@@ -22,13 +22,15 @@ from .compat import (
     corpus_bleu,
     corpus_chrf,
     corpus_ter,
+    corpus_wer,
     raw_corpus_bleu,
     sentence_bleu,
     sentence_chrf,
     sentence_ter,
+    sentence_wer,
 )
 from .dataset import DATASETS
-from .metrics import BLEU, CHRF, TER
+from .metrics import BLEU, CHRF, TER, WER
 from .metrics.helpers import extract_char_ngrams, extract_word_ngrams
 from .utils import (
     SACREBLEU_DIR,
@@ -55,6 +57,7 @@ __all__ = [
     "BLEU",
     "CHRF",
     "TER",
+    "WER",
     "corpus_bleu",
     "raw_corpus_bleu",
     "sentence_bleu",
@@ -62,5 +65,7 @@ __all__ = [
     "sentence_chrf",
     "corpus_ter",
     "sentence_ter",
+    "corpus_wer",
+    "sentence_wer",
     "__version__",
 ]

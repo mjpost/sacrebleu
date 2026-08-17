@@ -1,6 +1,6 @@
 from typing import Sequence, Optional
 
-from .metrics import BLEU, CHRF, TER, BLEUScore, CHRFScore, TERScore
+from .metrics import BLEU, CHRF, TER, WER, BLEUScore, CHRFScore, TERScore, WERScore
 
 
 ######################################################################
@@ -202,4 +202,35 @@ def sentence_ter(hypothesis: str,
         no_punct=no_punct,
         asian_support=asian_support,
         case_sensitive=case_sensitive)
+    return metric.sentence_score(hypothesis, references)
+
+
+def corpus_wer(hypotheses: Sequence[str],
+               references: Sequence[Sequence[str]],
+               case_sensitive: bool = False) -> WERScore:
+    """
+    Computes WER for a corpus against a single (or multiple) reference(s).
+
+    :param hypotheses: A sequence of hypothesis strings.
+    :param references: A sequence of reference documents with document being
+        defined as a sequence of reference strings.
+    :param case_sensitive: Enables case-sensitivity.
+    :return: A `WERScore` object.
+    """
+    metric = WER(case_sensitive=case_sensitive)
+    return metric.corpus_score(hypotheses, references)
+
+
+def sentence_wer(hypothesis: str,
+                 references: Sequence[str],
+                 case_sensitive: bool = False) -> WERScore:
+    """
+    Computes WER for a single hypothesis against a single (or multiple) reference(s).
+
+    :param hypothesis: A single hypothesis string.
+    :param references: A sequence of reference strings.
+    :param case_sensitive: Enable case-sensitivity.
+    :return: A `WERScore` object.
+    """
+    metric = WER(case_sensitive=case_sensitive)
     return metric.sentence_score(hypothesis, references)
