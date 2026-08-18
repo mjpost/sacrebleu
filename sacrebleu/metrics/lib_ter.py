@@ -302,7 +302,7 @@ class BeamEditDistance:
         self._initial_row = [(i * _COST_INS, _OP_INS)
                              for i in range(self._n_words_ref + 1)]
 
-        self._cache = {}  # type: Dict[str, Tuple]
+        self._cache: dict[str, tuple] = {}
         self._cache_size = 0
 
         # Precomputed empty matrix row. Contains infinities so that beam search
