@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 # Copyright 2017--2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
@@ -68,8 +67,8 @@ SUBSETS = {
     k: {d.split("=")[0]: d.split("=")[1] for d in v.split()}
     for (k, v) in _SUBSETS.items()
 }
-COUNTRIES = sorted(list({v.split("-")[0] for v in SUBSETS["wmt19"].values()}))
-DOMAINS = sorted(list({v.split("-")[1] for v in SUBSETS["wmt19"].values()}))
+COUNTRIES = sorted({v.split("-")[0] for v in SUBSETS["wmt19"].values()})
+DOMAINS = sorted({v.split("-")[1] for v in SUBSETS["wmt19"].values()})
 
 DATASETS = {
     # wmt
