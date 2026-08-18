@@ -61,9 +61,9 @@ sacrelogger = logging.getLogger('sacrebleu')
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
     # If SIGPIPE is available, change behaviour to default instead of ignore.
-    from signal import (
+    from signal import (  # type: ignore[attr-defined]
         SIG_DFL,
-        SIGPIPE,  # type: ignore
+        SIGPIPE,
         signal,
     )
     signal(SIGPIPE, SIG_DFL)
