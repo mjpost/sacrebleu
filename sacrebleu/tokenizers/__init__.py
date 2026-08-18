@@ -1,2 +1,2 @@
 # Base tokenizer to derive from
-from .tokenizer_base import BaseTokenizer   # noqa: F401
+from .tokenizer_base import BaseTokenizer  # noqa: F401

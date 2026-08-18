@@ -2,7 +2,6 @@ import pytest
 
 from sacrebleu.tokenizers.tokenizer_ter import TercomTokenizer
 
-
 test_cases_default = [
     ("a b c d", "a b c d"),
     ("", ""),

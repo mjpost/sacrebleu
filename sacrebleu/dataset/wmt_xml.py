@@ -1,11 +1,10 @@
 import os
+from collections import defaultdict
 
 import lxml.etree as ET
 
 from ..utils import smart_open
 from .base import Dataset
-
-from collections import defaultdict
 
 
 def _get_field_by_translator(translator):
@@ -92,14 +91,14 @@ class WMTXMLDataset(Dataset):
 
             for seg_id in sorted(src_sents.keys()):
                 # no ref translation is available for this segment
-                if not any([value.get(seg_id, "") for value in trans_to_ref.values()]):
+                if not any(value.get(seg_id, "") for value in trans_to_ref.values()):
                     continue
                 for translator in translators:
                     refs[_get_field_by_translator(translator)].append(
                         trans_to_ref.get(translator, {translator: {}}).get(seg_id, "")
                     )
                 src.append(src_sents[seg_id])
-                for system_name in hyps.keys():
+                for system_name in hyps:
                     systems[system_name].append(hyps[system_name][seg_id])
                 docids.append(doc.attrib["id"])
                 orig_langs.append(doc.attrib["origlang"])

@@ -16,8 +16,6 @@
 
 
 import math
-from typing import List, Tuple, Dict
-
 
 _COST_INS = 1
 _COST_DEL = 1
@@ -42,7 +40,7 @@ _OP_UNDEF = 'x'
 _FLIP_OPS = str.maketrans(_OP_INS + _OP_DEL, _OP_DEL + _OP_INS)
 
 
-def translation_edit_rate(words_hyp: List[str], words_ref: List[str]) -> Tuple[int, int]:
+def translation_edit_rate(words_hyp: list[str], words_ref: list[str]) -> tuple[int, int]:
     """Calculate the translation edit rate.
 
     :param words_hyp: Tokenized translation hypothesis.
@@ -52,8 +50,6 @@ def translation_edit_rate(words_hyp: List[str], words_ref: List[str]) -> Tuple[i
     n_words_ref = len(words_ref)
     n_words_hyp = len(words_hyp)
     if n_words_ref == 0:
-        # FIXME: This trace here is not used?
-        trace = _OP_DEL * n_words_hyp
         # special treatment of empty refs
         return n_words_hyp, 0
 
@@ -75,14 +71,14 @@ def translation_edit_rate(words_hyp: List[str], words_ref: List[str]) -> Tuple[i
         shifts += 1
         input_words = new_input_words
 
-    edit_distance, trace = cached_ed(input_words)
+    edit_distance, _trace = cached_ed(input_words)
     total_edits = shifts + edit_distance
 
     return total_edits, n_words_ref
 
 
-def _shift(words_h: List[str], words_r: List[str], cached_ed,
-           checked_candidates: int) -> Tuple[int, List[str], int]:
+def _shift(words_h: list[str], words_r: list[str], cached_ed,
+           checked_candidates: int) -> tuple[int, list[str], int]:
     """Attempt to shift words in hypothesis to match reference.
 
     Returns the shift that reduces the edit distance the most.
@@ -166,7 +162,7 @@ def _shift(words_h: List[str], words_r: List[str], cached_ed,
         return best_score, shifted_words, checked_candidates
 
 
-def _perform_shift(words: List[str], start: int, length: int, target: int) -> List[str]:
+def _perform_shift(words: list[str], start: int, length: int, target: int) -> list[str]:
     """Perform a shift in `words` from `start` to `target`.
 
     :param words: Words to shift.
@@ -189,7 +185,7 @@ def _perform_shift(words: List[str], start: int, length: int, target: int) -> Li
             + words[start: start + length] + words[length + target:]
 
 
-def _find_shifted_pairs(words_h: List[str], words_r: List[str]):
+def _find_shifted_pairs(words_h: list[str], words_r: list[str]):
     """Find matching word sub-sequences in two lists of words.
 
     Ignores sub-sequences starting at the same position.
@@ -229,7 +225,7 @@ def _flip_trace(trace):
     return trace.translate(_FLIP_OPS)
 
 
-def trace_to_alignment(trace: str) -> Tuple[Dict, List, List]:
+def trace_to_alignment(trace: str) -> tuple[dict, list, list]:
     """Transform trace of edit operations into an alignment of the sequences.
 
     :param trace: Trace of edit operations (' '=no change or 's'/'i'/'d').
@@ -294,7 +290,7 @@ class BeamEditDistance:
 
     :param words_ref: A list of reference tokens.
     """
-    def __init__(self, words_ref: List[str]):
+    def __init__(self, words_ref: list[str]):
         """`BeamEditDistance` initializer."""
         self._words_ref = words_ref
         self._n_words_ref = len(self._words_ref)
@@ -304,14 +300,14 @@ class BeamEditDistance:
         self._initial_row = [(i * _COST_INS, _OP_INS)
                              for i in range(self._n_words_ref + 1)]
 
-        self._cache = {}  # type: Dict[str, Tuple]
+        self._cache: dict[str, tuple] = {}
         self._cache_size = 0
 
         # Precomputed empty matrix row. Contains infinities so that beam search
         # avoids using the uninitialized cells.
         self._empty_row = [(_INT_INFINITY, _OP_UNDEF)] * (self._n_words_ref + 1)
 
-    def __call__(self, words_hyp: List[str]) -> Tuple[int, str]:
+    def __call__(self, words_hyp: list[str]) -> tuple[int, str]:
         """Calculate edit distance between self._words_ref and the hypothesis.
 
         Uses cache to skip some of the computation.
@@ -333,8 +329,8 @@ class BeamEditDistance:
 
         return edit_distance, trace
 
-    def _edit_distance(self, words_h: List[str], start_h: int,
-                       cache: List[List[Tuple[int, str]]]) -> Tuple[int, List, str]:
+    def _edit_distance(self, words_h: list[str], start_h: int,
+                       cache: list[list[tuple[int, str]]]) -> tuple[int, list, str]:
         """Actual edit distance calculation.
 
         Can be initialized with the last cached row and a start position in
@@ -422,7 +418,7 @@ class BeamEditDistance:
 
         return dist[-1][-1][0], dist[len(cache):], trace
 
-    def _add_cache(self, words_hyp: List[str], mat: List[List[Tuple]]):
+    def _add_cache(self, words_hyp: list[str], mat: list[list[tuple]]):
         """Add newly computed rows to cache.
 
         Since edit distance is only calculated on the hypothesis suffix that
@@ -456,7 +452,7 @@ class BeamEditDistance:
             value = node[word]
             node = value[0]
 
-    def _find_cache(self, words_hyp: List[str]) -> Tuple[int, List[List]]:
+    def _find_cache(self, words_hyp: list[str]) -> tuple[int, list[list]]:
         """Find the already computed rows of the edit distance matrix in cache.
 
         Returns a partially computed edit distance matrix.

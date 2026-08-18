@@ -1,13 +1,12 @@
 #!/usr/bin/env python
+import statistics
 import sys
 import time
-import statistics
 
 sys.path.insert(0, '.')
 
-import sacrebleu  # noqa: E402
-from sacrebleu.metrics import BLEU, CHRF  # noqa: E402
-
+import sacrebleu
+from sacrebleu.metrics import BLEU, CHRF
 
 N_REPEATS = 5
 

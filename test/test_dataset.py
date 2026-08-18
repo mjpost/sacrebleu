@@ -1,8 +1,8 @@
 import os
-import shutil
 import random
+import shutil
 
-import sacrebleu.dataset as dataset
+from sacrebleu import dataset
 from sacrebleu.utils import smart_open
 
 

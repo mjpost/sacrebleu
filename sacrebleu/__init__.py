@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # Copyright 2017--2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
@@ -42,25 +40,25 @@ from .utils import (
 from .version import __version__
 
 __all__ = [
-    "smart_open",
-    "SACREBLEU_DIR",
-    "download_test_set",
-    "get_source_file",
-    "get_reference_files",
-    "get_available_testsets",
-    "get_langpairs_for_testset",
-    "extract_word_ngrams",
-    "extract_char_ngrams",
-    "DATASETS",
     "BLEU",
     "CHRF",
+    "DATASETS",
+    "SACREBLEU_DIR",
     "TER",
+    "__version__",
     "corpus_bleu",
+    "corpus_chrf",
+    "corpus_ter",
+    "download_test_set",
+    "extract_char_ngrams",
+    "extract_word_ngrams",
+    "get_available_testsets",
+    "get_langpairs_for_testset",
+    "get_reference_files",
+    "get_source_file",
     "raw_corpus_bleu",
     "sentence_bleu",
-    "corpus_chrf",
     "sentence_chrf",
-    "corpus_ter",
     "sentence_ter",
-    "__version__",
+    "smart_open",
 ]
