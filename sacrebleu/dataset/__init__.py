@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 # -*- coding: utf-8 -*-
 
 # Copyright 2017--2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
