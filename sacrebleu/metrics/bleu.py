@@ -1,13 +1,14 @@
 """The implementation of the BLEU metric (Papineni et al., 2002)."""
+from __future__ import annotations
 
-import math
 import logging
+import math
+from collections.abc import Sequence
 from importlib import import_module
-from typing import List, Sequence, Optional, Dict, Any
+from typing import Any
 
 from ..utils import my_log, sum_of_lists
-
-from .base import Score, Signature, Metric
+from .base import Metric, Score, Signature
 from .helpers import extract_all_word_ngrams
 
 sacrelogger = logging.getLogger('sacrebleu')
@@ -88,8 +89,8 @@ class BLEUScore(Score):
     :param sys_len: The cumulative system length.
     :param ref_len: The cumulative reference length.
     """
-    def __init__(self, score: float, counts: List[int], totals: List[int],
-                 precisions: List[float], bp: float,
+    def __init__(self, score: float, counts: list[int], totals: list[int],
+                 precisions: list[float], bp: float,
                  sys_len: int, ref_len: int):
         """`BLEUScore` initializer."""
         super().__init__('BLEU', score)
@@ -127,7 +128,7 @@ class BLEU(Metric):
     across many systems.
     """
 
-    SMOOTH_DEFAULTS: Dict[str, Optional[float]] = {
+    SMOOTH_DEFAULTS: dict[str, float | None] = {
         # The defaults for `floor` and `add-k` are obtained from the following paper
         # A Systematic Comparison of Smoothing Techniques for Sentence-Level BLEU
         # Boxing Chen and Colin Cherry
@@ -155,13 +156,13 @@ class BLEU(Metric):
 
     def __init__(self, lowercase: bool = False,
                  force: bool = False,
-                 tokenize: Optional[str] = None,
+                 tokenize: str | None = None,
                  smooth_method: str = 'exp',
-                 smooth_value: Optional[float] = None,
+                 smooth_value: float | None = None,
                  max_ngram_order: int = MAX_NGRAM_ORDER,
                  effective_order: bool = False,
                  trg_lang: str = '',
-                 references: Optional[Sequence[Sequence[str]]] = None):
+                 references: Sequence[Sequence[str]] | None = None):
         """`BLEU` initializer."""
         super().__init__()
 
@@ -174,7 +175,7 @@ class BLEU(Metric):
         self.effective_order = effective_order
 
         # Sanity check
-        assert self.smooth_method in self.SMOOTH_DEFAULTS.keys(), \
+        assert self.smooth_method in self.SMOOTH_DEFAULTS, \
             "Unknown smooth_method {self.smooth_method!r}"
 
         # If the tokenizer wasn't specified, choose it according to the
@@ -210,8 +211,8 @@ class BLEU(Metric):
             self._ref_cache = self._cache_references(references)
 
     @staticmethod
-    def compute_bleu(correct: List[int],
-                     total: List[int],
+    def compute_bleu(correct: list[int],
+                     total: list[int],
                      sys_len: int,
                      ref_len: int,
                      smooth_method: str = 'none',
@@ -239,7 +240,7 @@ class BLEU(Metric):
         :param max_ngram_order: If given, it overrides the maximum n-gram order (default: 4) when computing precisions.
         :return: A `BLEUScore` instance.
         """
-        assert smooth_method in BLEU.SMOOTH_DEFAULTS.keys(), \
+        assert smooth_method in BLEU.SMOOTH_DEFAULTS, \
             "Unknown smooth_method {smooth_method!r}"
 
         # Fetch the default value for floor and add-k
@@ -301,7 +302,7 @@ class BLEU(Metric):
             sent = sent.lower()
         return self.tokenizer(sent.rstrip())
 
-    def _compute_score_from_stats(self, stats: List[int]) -> BLEUScore:
+    def _compute_score_from_stats(self, stats: list[int]) -> BLEUScore:
         """Computes the final score from already aggregated statistics.
 
         :param stats: A list or numpy array of segment-level statistics.
@@ -316,7 +317,7 @@ class BLEU(Metric):
             max_ngram_order=self.max_ngram_order
         )
 
-    def _aggregate_and_compute(self, stats: List[List[int]]) -> BLEUScore:
+    def _aggregate_and_compute(self, stats: list[list[int]]) -> BLEUScore:
         """Computes the final BLEU score given the pre-computed corpus statistics.
 
         :param stats: A list of segment-level statistics
@@ -324,7 +325,7 @@ class BLEU(Metric):
         """
         return self._compute_score_from_stats(sum_of_lists(stats))
 
-    def _get_closest_ref_len(self, hyp_len: int, ref_lens: List[int]) -> int:
+    def _get_closest_ref_len(self, hyp_len: int, ref_lens: list[int]) -> int:
         """Given a hypothesis length and a list of reference lengths, returns
         the closest reference length to be used by BLEU.
 
@@ -344,7 +345,7 @@ class BLEU(Metric):
 
         return closest_len
 
-    def _extract_reference_info(self, refs: Sequence[str]) -> Dict[str, Any]:
+    def _extract_reference_info(self, refs: Sequence[str]) -> dict[str, Any]:
         """Given a list of reference segments, extract the n-grams and reference lengths.
         The latter will be useful when comparing hypothesis and reference lengths for BLEU.
 
@@ -372,7 +373,7 @@ class BLEU(Metric):
         return {'ref_ngrams': ngrams, 'ref_lens': ref_lens}
 
     def _compute_segment_statistics(self, hypothesis: str,
-                                    ref_kwargs: Dict) -> List[int]:
+                                    ref_kwargs: dict) -> list[int]:
         """Given a (pre-processed) hypothesis sentence and already computed
         reference n-grams & lengths, returns the best match statistics across the
         references.

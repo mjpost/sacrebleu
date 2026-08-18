@@ -1,4 +1,5 @@
 from functools import lru_cache
+
 from .tokenizer_base import BaseTokenizer
 from .tokenizer_re import TokenizerRegexp
 

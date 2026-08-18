@@ -1,10 +1,9 @@
 """Various utility functions for word and character n-gram extraction."""
 
 from collections import Counter
-from typing import List, Tuple
 
 
-def extract_all_word_ngrams(line: str, min_order: int, max_order: int) -> Tuple[Counter, int]:
+def extract_all_word_ngrams(line: str, min_order: int, max_order: int) -> tuple[Counter, int]:
     """Extracts all ngrams (min_order <= n <= max_order) from a sentence.
 
     :param line: A string sentence.
@@ -17,13 +16,13 @@ def extract_all_word_ngrams(line: str, min_order: int, max_order: int) -> Tuple[
     tokens = line.split()
 
     for n in range(min_order, max_order + 1):
-        for i in range(0, len(tokens) - n + 1):
+        for i in range(len(tokens) - n + 1):
             ngrams.append(tuple(tokens[i: i + n]))
 
     return Counter(ngrams), len(tokens)
 
 
-def extract_word_ngrams(tokens: List[str], n: int) -> Counter:
+def extract_word_ngrams(tokens: list[str], n: int) -> Counter:
     """Extracts n-grams with order `n` from a list of tokens.
 
     :param tokens: A list of tokens.
@@ -48,7 +47,7 @@ def extract_char_ngrams(line: str, n: int, include_whitespace: bool = False) -> 
 
 
 def extract_all_char_ngrams(
-        line: str, max_order: int, include_whitespace: bool = False) -> List[Counter]:
+        line: str, max_order: int, include_whitespace: bool = False) -> list[Counter]:
     """Extracts all character n-grams at once for convenience.
 
     :param line: A segment containing a sequence of words.

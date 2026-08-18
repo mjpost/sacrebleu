@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 
-import os
 import logging
-
+import os
 from functools import lru_cache
+
 from ..utils import SACREBLEU_DIR, download_file
 from .tokenizer_base import BaseTokenizer
 
@@ -39,7 +38,7 @@ class TokenizerSPM(BaseTokenizer):
         self.name = SPM_MODELS[key]["signature"]
 
         if key == "spm":
-            sacrelogger.warn("Tokenizer 'spm' has been changed to 'flores101', and may be removed in the future.")
+            sacrelogger.warning("Tokenizer 'spm' has been changed to 'flores101', and may be removed in the future.")
 
         try:
             import sentencepiece as spm

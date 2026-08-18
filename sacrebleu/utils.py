@@ -1,20 +1,21 @@
+from __future__ import annotations
+
+import gzip
+import hashlib
 import itertools
 import json
+import logging
+import math
 import os
 import re
 import sys
-import gzip
-import math
-import hashlib
-import logging
-import portalocker
-from collections import defaultdict
-from typing import List, Optional, Sequence, Dict
 from argparse import Namespace
+from collections import defaultdict
+from collections.abc import Sequence
 
-from tabulate import tabulate
 import colorama
-
+import portalocker
+from tabulate import tabulate
 
 # Where to store downloaded test sets.
 # Define the environment variable $SACREBLEU, or use the default of ~/.sacrebleu.
@@ -50,7 +51,7 @@ class Color:
 
 def _format_score_lines(scores: dict,
                         width: int = 2,
-                        multiline: bool = True) -> Dict[str, List[str]]:
+                        multiline: bool = True) -> dict[str, list[str]]:
     """Formats the scores prior to tabulating them."""
     new_scores = {'System': scores.pop('System')}
     p_val_break_char = '\n' if multiline else ' '
@@ -126,7 +127,7 @@ def print_results_table(results: dict, signatures: dict, args: Namespace):
     # Color the column names and the baseline system name and scores
     has_baseline = False
     baseline_name = ''
-    for name in results.keys():
+    for name in results:
         val = results[name]
         if val[0].startswith('Baseline:') or has_baseline:
             if val[0].startswith('Baseline:'):
@@ -188,7 +189,7 @@ def print_results_table(results: dict, signatures: dict, args: Namespace):
         print(f' - {name:<10} {sig}')
 
 
-def print_single_results(results: List[str], args: Namespace):
+def print_single_results(results: list[str], args: Namespace):
     """Re-process metric strings to align them nicely."""
     if args.format == 'json':
         if len(results) > 1:
@@ -228,7 +229,7 @@ def print_single_results(results: List[str], args: Namespace):
 
 def sanity_check_lengths(system: Sequence[str],
                          refs: Sequence[Sequence[str]],
-                         test_set: Optional[str] = None):
+                         test_set: str | None = None):
     n_hyps = len(system)
     if any(len(ref_stream) != n_hyps for ref_stream in refs):
         sacrelogger.error("System and reference streams have different lengths.")
@@ -333,7 +334,7 @@ def print_test_set(test_set, langpair, requested_fields, origlang=None, subset=N
     streams = [smart_open(file) for file in files]
     streams = filter_subset(streams, test_set, langpair, origlang, subset)
     for lines in zip(*streams):
-        print('\t'.join(map(lambda x: x.rstrip(), lines)))
+        print('\t'.join(x.rstrip() for x in lines))
 
 
 def get_source_file(test_set: str, langpair: str) -> str:
@@ -351,7 +352,7 @@ def get_source_file(test_set: str, langpair: str) -> str:
     return DATASETS[test_set].get_source_file(langpair)
 
 
-def get_reference_files(test_set: str, langpair: str) -> List[str]:
+def get_reference_files(test_set: str, langpair: str) -> list[str]:
     """
     Returns a list of one or more reference file paths for the given testset/langpair.
     Downloads the references first if they are not already local.
@@ -365,7 +366,7 @@ def get_reference_files(test_set: str, langpair: str) -> List[str]:
     return DATASETS[test_set].get_reference_files(langpair)
 
 
-def get_files(test_set, langpair) -> List[str]:
+def get_files(test_set, langpair) -> list[str]:
     """
     Returns the path of the source file and all reference files for
     the provided test set / language pair.
@@ -383,7 +384,7 @@ def get_files(test_set, langpair) -> List[str]:
 
 def extract_tarball(filepath, destdir):
     sacrelogger.info(f'Extracting {filepath} to {destdir}')
-    if filepath.endswith('.tar.gz') or filepath.endswith('.tgz'):
+    if filepath.endswith(('.tar.gz', '.tgz')):
         import tarfile
         with tarfile.open(filepath) as tar:
             tar.extractall(path=destdir)
@@ -413,8 +414,8 @@ def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
     :param expected_md5: the MD5 sum
     :return: the set of processed file names
     """
-    import urllib.request
     import ssl
+    import urllib.request
 
     outdir = os.path.dirname(dest_path)
     os.makedirs(outdir, exist_ok=True)
@@ -462,18 +463,18 @@ def download_test_set(test_set, langpair=None):
     return file_paths
 
 
-def get_langpairs_for_testset(testset: str) -> List[str]:
+def get_langpairs_for_testset(testset: str) -> list[str]:
     """Return a list of language pairs for a given test set."""
     if testset not in DATASETS:
         return []
     return list(DATASETS[testset].langpairs.keys())
 
 
-def get_available_testsets() -> List[str]:
+def get_available_testsets() -> list[str]:
     """Return a list of available test sets."""
     return sorted(DATASETS.keys(), reverse=True)
 
-def get_available_testsets_for_langpair(langpair: str) -> List[str]:
+def get_available_testsets_for_langpair(langpair: str) -> list[str]:
     """Return a list of available test sets for a given language pair"""
     parts = langpair.split('-')
     srclang = parts[0]
@@ -488,7 +489,7 @@ def get_available_testsets_for_langpair(langpair: str) -> List[str]:
     return testsets
 
 
-def get_available_origlangs(test_sets, langpair) -> List[str]:
+def get_available_origlangs(test_sets, langpair) -> list[str]:
     """Return a list of origlang values according to the raw XML/SGM files."""
     if test_sets is None:
         return []
@@ -507,10 +508,10 @@ def get_available_origlangs(test_sets, langpair) -> List[str]:
                     if line.startswith('<doc '):
                         doc_origlang = re.sub(r'.* origlang="([^"]+)".*\n', '\\1', line)
                         origlangs.add(doc_origlang)
-    return sorted(list(origlangs))
+    return sorted(origlangs)
 
 
-def get_available_subsets(test_sets, langpair) -> List[str]:
+def get_available_subsets(test_sets, langpair) -> list[str]:
     """Return a list of domain values according to the raw XML files and domain/country values from the SGM files."""
     if test_sets is None:
         return []
@@ -525,9 +526,9 @@ def get_available_subsets(test_sets, langpair) -> List[str]:
             if 'domain' in fields:
                 subsets |= set(fields['domain'])
         elif test_set in SUBSETS:
-            subsets |= set("country:" + v.split("-")[0] for v in SUBSETS[test_set].values())
-            subsets |= set(v.split("-")[1] for v in SUBSETS[test_set].values())
-    return sorted(list(subsets))
+            subsets |= {"country:" + v.split("-")[0] for v in SUBSETS[test_set].values()}
+            subsets |= {v.split("-")[1] for v in SUBSETS[test_set].values()}
+    return sorted(subsets)
 
 def filter_subset(systems, test_sets, langpair, origlang, subset=None):
     """Filter sentences with a given origlang (or subset) according to the raw SGM files."""
@@ -628,12 +629,12 @@ def print_subset_results(metrics, full_system, full_refs, args):
                 score = metric.corpus_score(system, refs)
                 results[key].append((len(system), score))
 
-    max_left_width = max([len(k) for k in results.keys()]) + 1
-    max_metric_width = max([len(val[1].name) for val in list(results.values())[0]])
+    max_left_width = max([len(k) for k in results]) + 1
+    max_metric_width = max([len(val[1].name) for val in next(iter(results.values()))])
     for key, scores in results.items():
         key = Color.format(f'{key:<{max_left_width}}', 'yellow')
         for n_system, score in scores:
             print(f'{key}: sentences={n_system:<6} {score.name:<{max_metric_width}} = {score.score:.{w}f}')
 
 # import at the end to avoid circular import
-from .dataset import DATASETS, SUBSETS  # noqa: E402
+from .dataset import DATASETS, SUBSETS

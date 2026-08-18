@@ -4,12 +4,14 @@
 of abstract methods. This way, a correctly implemented metric will work
 seamlessly with the rest of the codebase.
 """
+from __future__ import annotations
 
 import json
 import logging
 import statistics
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from ..version import __version__
 
@@ -88,7 +90,7 @@ class Score:
 
         return full_score
 
-    def estimate_ci(self, scores: List["Score"]):
+    def estimate_ci(self, scores: list[Score]):
         """Takes a list of scores and stores mean, stdev and 95% confidence
         interval around the mean.
 
@@ -237,7 +239,7 @@ class Metric(metaclass=ABCMeta):
             raise TypeError(f"{prefix}: {err_msg}")
 
     def _check_corpus_score_args(
-        self, hyps: Sequence[str], refs: Optional[Sequence[Sequence[str]]]
+        self, hyps: Sequence[str], refs: Sequence[Sequence[str]] | None
     ):
         """Performs sanity checks on `corpus_score` method's arguments.
 
@@ -289,22 +291,20 @@ class Metric(metaclass=ABCMeta):
             raise TypeError(f"{prefix}: {err_msg}")
 
     @abstractmethod
-    def _aggregate_and_compute(self, stats: List[List[Any]]) -> Any:
+    def _aggregate_and_compute(self, stats: list[list[Any]]) -> Any:
         """Computes the final score given the pre-computed match statistics.
 
         :param stats: A list of segment-level statistics.
         :return: A `Score` instance.
         """
-        pass
 
     @abstractmethod
-    def _compute_score_from_stats(self, stats: List[Any]) -> Any:
+    def _compute_score_from_stats(self, stats: list[Any]) -> Any:
         """Computes the final score from already aggregated statistics.
 
         :param stats: A list or numpy array of segment-level statistics.
         :return: A `Score` object.
         """
-        pass
 
     @abstractmethod
     def _preprocess_segment(self, sent: str) -> str:
@@ -314,22 +314,20 @@ class Metric(metaclass=ABCMeta):
         :param sent: The input sentence.
         :return: The pre-processed output sentence.
         """
-        pass
 
     @abstractmethod
-    def _extract_reference_info(self, refs: Sequence[str]) -> Dict[str, Any]:
+    def _extract_reference_info(self, refs: Sequence[str]) -> dict[str, Any]:
         """Given a list of reference segments, extract the required
         information (such as n-grams for BLEU and chrF). This should be implemented
         for the generic `_cache_references()` to work across all metrics.
 
         :param refs: A sequence of strings.
         """
-        pass
 
     @abstractmethod
     def _compute_segment_statistics(
-        self, hypothesis: str, ref_kwargs: Dict
-    ) -> List[Any]:
+        self, hypothesis: str, ref_kwargs: dict
+    ) -> list[Any]:
         """Given a (pre-processed) hypothesis sentence and already computed
         reference info, returns the best match statistics across the
         references. The return type is usually a List of ints or floats.
@@ -339,9 +337,8 @@ class Metric(metaclass=ABCMeta):
         within. This is formulated as a dictionary as different metrics may
         require different information regarding a reference segment.
         """
-        pass
 
-    def _cache_references(self, references: Sequence[Sequence[str]]) -> List[Any]:
+    def _cache_references(self, references: Sequence[Sequence[str]]) -> list[Any]:
         """Given the full set of document references, extract segment n-grams
         (or other necessary information) for caching purposes.
 
@@ -371,7 +368,7 @@ class Metric(metaclass=ABCMeta):
             ref_cache.append(self._extract_reference_info(lines))
 
         if len(num_refs) == 1:
-            self.num_refs = list(num_refs)[0]
+            self.num_refs = next(iter(num_refs))
         else:
             # A variable number of refs exist
             self.num_refs = -1
@@ -379,7 +376,7 @@ class Metric(metaclass=ABCMeta):
         return ref_cache
 
     def _extract_corpus_statistics(
-        self, hypotheses: Sequence[str], references: Optional[Sequence[Sequence[str]]]
+        self, hypotheses: Sequence[str], references: Sequence[Sequence[str]] | None
     ) -> Any:
         """Reads the corpus and returns sentence-level match statistics for
         faster re-computations esp. during statistical tests.
@@ -440,7 +437,7 @@ class Metric(metaclass=ABCMeta):
     def corpus_score(
         self,
         hypotheses: Sequence[str],
-        references: Optional[Sequence[Sequence[str]]],
+        references: Sequence[Sequence[str]] | None,
         n_bootstrap: int = 1,
     ) -> Any:
         """Compute the metric for a corpus against a single (or multiple) reference(s).

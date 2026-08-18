@@ -28,8 +28,8 @@ if cmd == "--check":
             print("Downloading ", url)
             with urllib.request.urlopen(url) as f:
                 data = f.read()
-        except Exception as exc:
-            raise (exc)
+        except Exception:
+            raise
 
         if hashlib.md5(data).hexdigest() != md5_hash:
             print("MD5 check failed for", url)

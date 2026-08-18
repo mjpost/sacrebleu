@@ -21,14 +21,13 @@ It also knows all the standard test sets and handles downloading, processing, an
 See the [README.md] file for more information.
 """
 
-import io
-import os
-import sys
-import logging
-import pathlib
 import argparse
+import io
+import logging
+import os
+import pathlib
+import sys
 from collections import defaultdict
-
 
 # Allows calling the script as a standalone utility
 # See: https://github.com/mjpost/sacrebleu/issues/86
@@ -37,23 +36,36 @@ if __package__ is None and __name__ == '__main__':
     sys.path.insert(0, str(parent))
     __package__ = 'sacrebleu'
 
+from . import __version__ as VERSION
 from .dataset import DATASETS
 from .metrics import METRICS
-from .utils import smart_open, filter_subset, get_langpairs_for_testset, get_available_testsets
-from .utils import print_test_set, print_subset_results, get_reference_files, download_test_set
-from .utils import args_to_dict, sanity_check_lengths, print_results_table, print_single_results
-from .utils import get_available_testsets_for_langpair, Color
-
-from . import __version__ as VERSION
+from .utils import (
+    Color,
+    args_to_dict,
+    download_test_set,
+    filter_subset,
+    get_available_testsets,
+    get_available_testsets_for_langpair,
+    get_langpairs_for_testset,
+    get_reference_files,
+    print_results_table,
+    print_single_results,
+    print_subset_results,
+    print_test_set,
+    sanity_check_lengths,
+    smart_open,
+)
 
 sacrelogger = logging.getLogger('sacrebleu')
 
 try:
     # SIGPIPE is not available on Windows machines, throwing an exception.
-    from signal import SIGPIPE  # type: ignore
-
     # If SIGPIPE is available, change behaviour to default instead of ignore.
-    from signal import signal, SIG_DFL
+    from signal import (
+        SIG_DFL,
+        SIGPIPE,  # type: ignore
+        signal,
+    )
     signal(SIGPIPE, SIG_DFL)
 except ImportError:
     pass
@@ -202,7 +214,7 @@ def parse_args():
                                   '`json` and `text` apply to single-system mode only. This flag is overridden if the '
                                   'SACREBLEU_FORMAT environment variable is set to one of the valid choices (Default: %(default)s).')
 
-    arg_parser.add_argument('--version', '-V', action='version', version='%(prog)s {}'.format(VERSION))
+    arg_parser.add_argument('--version', '-V', action='version', version=f'%(prog)s {VERSION}')
 
     args = arg_parser.parse_args()
 
@@ -495,7 +507,7 @@ def main():
     # Handle sentence level and quit
     if args.sentence_level:
         # one metric and one system in use for sentence-level
-        metric, system = list(metrics.values())[0], systems[0]
+        metric, system = next(iter(metrics.values())), systems[0]
 
         for hypothesis, *references in zip(system, *refs):
             score = metric.sentence_score(hypothesis, references)

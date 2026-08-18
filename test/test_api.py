@@ -13,9 +13,14 @@
 
 import pytest
 
-from sacrebleu.utils import get_available_testsets, get_available_testsets_for_langpair, get_langpairs_for_testset
-from sacrebleu.utils import get_source_file, get_reference_files
 from sacrebleu.dataset import DATASETS
+from sacrebleu.utils import (
+    get_available_testsets,
+    get_available_testsets_for_langpair,
+    get_langpairs_for_testset,
+    get_reference_files,
+    get_source_file,
+)
 
 test_api_get_data = [
     ("wmt19", "de-en", 1, "Schöne Münchnerin 2018: Schöne Münchnerin 2018 in Hvar: Neun Dates", "The Beauty of Munich 2018: the Beauty of Munich 2018 in Hvar: Nine dates"),
@@ -48,7 +53,7 @@ def test_api_get_available_testsets():
     assert "wmt19" in available
     assert "wmt05" not in available
 
-    for testset in DATASETS.keys():
+    for testset in DATASETS:
         assert testset in available
         assert "slashdot_" + testset not in available
 
@@ -75,10 +80,10 @@ def test_api_get_langpairs_for_testset():
     Loop over the datasets directly, and ensure the API function
     returns each language pair in each test set.
     """
-    for testset in DATASETS.keys():
+    for testset in DATASETS:
         available = get_langpairs_for_testset(testset)
         assert isinstance(available, list)
-        for langpair in DATASETS[testset].langpairs.keys():
+        for langpair in DATASETS[testset].langpairs:
             # skip non-language keys
             if "-" not in langpair:
                 assert langpair not in available

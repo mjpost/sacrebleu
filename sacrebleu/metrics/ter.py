@@ -15,11 +15,14 @@
 # limitations under the License.
 
 
-from typing import List, Dict, Sequence, Optional, Any
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import Any
 
 from ..tokenizers.tokenizer_ter import TercomTokenizer
 from ..utils import sum_of_lists
-from .base import Score, Signature, Metric
+from .base import Metric, Score, Signature
 from .lib_ter import translation_edit_rate
 
 
@@ -97,7 +100,7 @@ class TER(Metric):
                  no_punct: bool = False,
                  asian_support: bool = False,
                  case_sensitive: bool = False,
-                 references: Optional[Sequence[Sequence[str]]] = None):
+                 references: Sequence[Sequence[str]] | None = None):
         """`TER` initializer."""
         super().__init__()
 
@@ -125,7 +128,7 @@ class TER(Metric):
         """
         return self.tokenizer(sent.rstrip())
 
-    def _compute_score_from_stats(self, stats: List[float]) -> TERScore:
+    def _compute_score_from_stats(self, stats: list[float]) -> TERScore:
         """Computes the final score from already aggregated statistics.
 
         :param stats: A list or numpy array of segment-level statistics.
@@ -142,7 +145,7 @@ class TER(Metric):
 
         return TERScore(100 * score, total_edits, sum_ref_lengths)
 
-    def _aggregate_and_compute(self, stats: List[List[float]]) -> TERScore:
+    def _aggregate_and_compute(self, stats: list[list[float]]) -> TERScore:
         """Computes the final TER score given the pre-computed corpus statistics.
 
         :param stats: A list of segment-level statistics
@@ -151,7 +154,7 @@ class TER(Metric):
         return self._compute_score_from_stats(sum_of_lists(stats))
 
     def _compute_segment_statistics(
-            self, hypothesis: str, ref_kwargs: Dict) -> List[float]:
+            self, hypothesis: str, ref_kwargs: dict) -> list[float]:
         """Given a (pre-processed) hypothesis sentence and already computed
         reference words, returns the segment statistics required to compute
         the full TER score.
@@ -173,13 +176,12 @@ class TER(Metric):
         for words_ref in ref_words:
             num_edits, ref_len = translation_edit_rate(words_hyp, words_ref)
             ref_lengths += ref_len
-            if num_edits < best_num_edits:
-                best_num_edits = num_edits
+            best_num_edits = min(best_num_edits, num_edits)
 
         avg_ref_len = ref_lengths / len(ref_words)
         return [best_num_edits, avg_ref_len]
 
-    def _extract_reference_info(self, refs: Sequence[str]) -> Dict[str, Any]:
+    def _extract_reference_info(self, refs: Sequence[str]) -> dict[str, Any]:
         """Given a list of reference segments, applies pre-processing & tokenization
         and returns list of tokens for each reference.
 

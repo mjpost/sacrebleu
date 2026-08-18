@@ -1,12 +1,10 @@
 import os
-
 from collections import defaultdict
-from typing import DefaultDict
+
+import pytest
 
 from sacrebleu.metrics import BLEU
 from sacrebleu.significance import PairedTest, Result
-
-import pytest
 
 
 def _read_pickle_file():
@@ -58,8 +56,8 @@ MULTEVAL_P_VALS = {
 }
 
 
-SACREBLEU_BS_P_VALS: DefaultDict[str, float] = defaultdict(float)
-SACREBLEU_AR_P_VALS: DefaultDict[str, float] = defaultdict(float)
+SACREBLEU_BS_P_VALS: defaultdict[str, float] = defaultdict(float)
+SACREBLEU_AR_P_VALS: defaultdict[str, float] = defaultdict(float)
 
 # Load data from pickled file to not bother with WMT17 downloading
 named_systems = _read_pickle_file()

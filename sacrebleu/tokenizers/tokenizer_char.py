@@ -1,4 +1,5 @@
 from functools import lru_cache
+
 from .tokenizer_base import BaseTokenizer
 
 
@@ -16,4 +17,4 @@ class TokenizerChar(BaseTokenizer):
         :param line: a segment to tokenize
         :return: the tokenized line
         """
-        return " ".join((char for char in line))
+        return " ".join(char for char in line)

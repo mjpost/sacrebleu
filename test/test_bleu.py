@@ -12,12 +12,11 @@
 # permissions and limitations under the License.
 
 from collections import namedtuple
+
 import pytest
 
 import sacrebleu
-
 from sacrebleu.metrics import BLEU
-
 
 EPSILON = 1e-8
 
