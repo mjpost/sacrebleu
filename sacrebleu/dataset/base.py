@@ -18,7 +18,7 @@ class Dataset(metaclass=ABCMeta):
         description: str | None = None,
         citation: str | None = None,
         md5: list[str] | None = None,
-        langpairs=dict[str, list[str]],
+        langpairs=None,
         **kwargs,
     ):
         """
@@ -36,7 +36,7 @@ class Dataset(metaclass=ABCMeta):
         self.description = description
         self.citation = citation
         self.md5 = md5
-        self.langpairs = langpairs
+        self.langpairs = {} if langpairs is None else langpairs
         self.kwargs = kwargs
 
         # Don't do any downloading or further processing now.

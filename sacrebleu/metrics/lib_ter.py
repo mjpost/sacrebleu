@@ -50,8 +50,6 @@ def translation_edit_rate(words_hyp: list[str], words_ref: list[str]) -> tuple[i
     n_words_ref = len(words_ref)
     n_words_hyp = len(words_hyp)
     if n_words_ref == 0:
-        # FIXME: This trace here is not used?
-        _OP_DEL * n_words_hyp
         # special treatment of empty refs
         return n_words_hyp, 0
 
