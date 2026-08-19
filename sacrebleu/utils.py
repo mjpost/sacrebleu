@@ -427,14 +427,24 @@ def download_file(source_path, dest_path, extract_to=None, expected_md5=None):
         if not os.path.exists(dest_path) or os.path.getsize(dest_path) == 0:
             sacrelogger.info(f"Downloading {source_path} to {dest_path}")
 
-            try:
-                with urllib.request.urlopen(source_path) as f, open(dest_path, 'wb') as out:
-                    out.write(f.read())
-            except ssl.SSLError:
-                sacrelogger.error('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
-                                    'you may need to run the "Install Certificates.command" file located in the '
-                                    '"Python 3" folder, often found under /Applications')
-                sys.exit(1)
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    with urllib.request.urlopen(source_path) as f, open(dest_path, 'wb') as out:
+                        out.write(f.read())
+                    break
+                except ssl.SSLError:
+                    sacrelogger.error('An SSL error was encountered in downloading the files. If you\'re on a Mac, '
+                                        'you may need to run the "Install Certificates.command" file located in the '
+                                        '"Python 3" folder, often found under /Applications')
+                    sys.exit(1)
+                except OSError as e:
+                    if attempt < max_retries - 1:
+                        import time
+                        sacrelogger.warning(f"Download attempt {attempt + 1} failed ({e}), retrying...")
+                        time.sleep(2 ** attempt)
+                    else:
+                        raise
 
             if expected_md5 is not None:
                 cur_md5 = get_md5sum(dest_path)
