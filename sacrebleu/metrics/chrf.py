@@ -1,10 +1,11 @@
 """The implementation of chrF (Popović 2015) and chrF++ (Popović 2017) metrics."""
+from __future__ import annotations
 
-from typing import List, Sequence, Optional, Dict
 from collections import Counter
+from collections.abc import Sequence
 
 from ..utils import sum_of_lists
-from .base import Score, Signature, Metric
+from .base import Metric, Score, Signature
 from .helpers import extract_all_char_ngrams, extract_word_ngrams
 
 
@@ -89,7 +90,7 @@ class CHRF(Metric):
                  lowercase: bool = False,
                  whitespace: bool = False,
                  eps_smoothing: bool = False,
-                 references: Optional[Sequence[Sequence[str]]] = None):
+                 references: Sequence[Sequence[str]] | None = None):
         """`CHRF` initializer."""
         super().__init__()
 
@@ -106,7 +107,7 @@ class CHRF(Metric):
             self._ref_cache = self._cache_references(references)
 
     @staticmethod
-    def _get_match_statistics(hyp_ngrams: Counter, ref_ngrams: Counter) -> List[int]:
+    def _get_match_statistics(hyp_ngrams: Counter, ref_ngrams: Counter) -> list[int]:
         """Computes the match statistics between hypothesis and reference n-grams.
 
         :param hyp_ngrams: A `Counter` holding hypothesis n-grams.
@@ -128,7 +129,7 @@ class CHRF(Metric):
             match_count,
         ]
 
-    def _remove_punctuation(self, sent: str) -> List[str]:
+    def _remove_punctuation(self, sent: str) -> list[str]:
         """Separates out punctuations from beginning and end of words for chrF.
         Adapted from https://github.com/m-popovic/chrF
 
@@ -157,7 +158,7 @@ class CHRF(Metric):
         """
         return sent.lower() if self.lowercase else sent
 
-    def _compute_f_score(self, statistics: List[int]) -> float:
+    def _compute_f_score(self, statistics: list[int]) -> float:
         """Compute the chrF score given the n-gram match statistics.
 
         :param statistics: A flattened list of 3 * (`char_order` + `word_order`)
@@ -202,7 +203,7 @@ class CHRF(Metric):
         else:
             return 0.0
 
-    def _compute_score_from_stats(self, stats: List[int]) -> CHRFScore:
+    def _compute_score_from_stats(self, stats: list[int]) -> CHRFScore:
         """Computes the final score from already aggregated statistics.
 
         :param stats: A list or numpy array of segment-level statistics.
@@ -212,7 +213,7 @@ class CHRF(Metric):
             self._compute_f_score(stats), self.char_order,
             self.word_order, self.beta)
 
-    def _aggregate_and_compute(self, stats: List[List[int]]) -> CHRFScore:
+    def _aggregate_and_compute(self, stats: list[list[int]]) -> CHRFScore:
         """Computes the final score given the pre-computed corpus statistics.
 
         :param stats: A list of segment-level statistics
@@ -220,7 +221,7 @@ class CHRF(Metric):
         """
         return self._compute_score_from_stats(sum_of_lists(stats))
 
-    def _extract_reference_info(self, refs: Sequence[str]) -> Dict[str, List[List[Counter]]]:
+    def _extract_reference_info(self, refs: Sequence[str]) -> dict[str, list[list[Counter]]]:
         """Given a list of reference segments, extract the character and word n-grams.
 
         :param refs: A sequence of reference segments.
@@ -244,7 +245,7 @@ class CHRF(Metric):
         return {'ref_ngrams': ngrams}
 
     def _compute_segment_statistics(
-            self, hypothesis: str, ref_kwargs: Dict) -> List[int]:
+            self, hypothesis: str, ref_kwargs: dict) -> list[int]:
         """Given a (pre-processed) hypothesis sentence and already computed
         reference n-grams, returns the best match statistics across the
         references.

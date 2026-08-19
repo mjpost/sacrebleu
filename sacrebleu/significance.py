@@ -1,7 +1,10 @@
-import os
+from __future__ import annotations
+
 import logging
 import multiprocessing as mp
-from typing import Sequence, Dict, Optional, Tuple, List, Union, Any, Mapping
+import os
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -24,18 +27,18 @@ class Result:
     :param ci: When paired bootstrap test is applied, this represents
     the 95% confidence interval around the true mean score `sys_mean`.
     """
-    def __init__(self, score: float, p_value: Optional[float] = None,
-                 mean: Optional[float] = None, ci: Optional[float] = None):
+    def __init__(self, score: float, p_value: float | None = None,
+                 mean: float | None = None, ci: float | None = None):
         self.score = score
         self.p_value = p_value
         self.mean = mean
         self.ci = ci
 
     def __repr__(self):
-        return ','.join([f'{k}={str(v)}' for k, v in self.__dict__.items()])
+        return ','.join([f'{k}={v!s}' for k, v in self.__dict__.items()])
 
 
-def estimate_ci(scores: np.ndarray) -> Tuple[float, float]:
+def estimate_ci(scores: np.ndarray) -> tuple[float, float]:
     """Takes a list of scores and returns mean and 95% confidence
     interval around the mean.
 
@@ -54,8 +57,8 @@ def estimate_ci(scores: np.ndarray) -> Tuple[float, float]:
     return (scores.mean(), ci)
 
 
-def _bootstrap_resample(stats: List[List[Union[int, float]]],
-                        metric: Metric, n_samples: int = 1000) -> Tuple[str, List[Score]]:
+def _bootstrap_resample(stats: list[list[int | float]],
+                        metric: Metric, n_samples: int = 1000) -> tuple[str, list[Score]]:
     """Performs bootstrap resampling for a single system to estimate
     a confidence interval around the true mean.
     :param stats: A list of statistics extracted from the system's hypotheses.
@@ -109,14 +112,14 @@ def _compute_p_value(stats: np.ndarray, real_difference: float) -> float:
     return p
 
 
-def _paired_ar_test(baseline_info: Dict[str, Tuple[np.ndarray, Result]],
+def _paired_ar_test(baseline_info: dict[str, tuple[np.ndarray, Result]],
                     sys_name: str,
                     hypotheses: Sequence[str],
-                    references: Optional[Sequence[Sequence[str]]],
-                    metrics: Dict[str, Metric],
+                    references: Sequence[Sequence[str]] | None,
+                    metrics: dict[str, Metric],
                     n_samples: int = 10000,
                     n_ar_confidence: int = -1,
-                    seed: Optional[int] = None) -> Tuple[str, Dict[str, Result]]:
+                    seed: int | None = None) -> tuple[str, dict[str, Result]]:
     """Paired two-sided approximate randomization (AR) test for MT evaluation.
 
     :param baseline_info: A dictionary with `Metric` instances as the keys,
@@ -197,14 +200,14 @@ def _paired_ar_test(baseline_info: Dict[str, Tuple[np.ndarray, Result]],
     return sys_name, results
 
 
-def _paired_bs_test(baseline_info: Dict[str, Tuple[np.ndarray, Result]],
+def _paired_bs_test(baseline_info: dict[str, tuple[np.ndarray, Result]],
                     sys_name: str,
                     hypotheses: Sequence[str],
-                    references: Optional[Sequence[Sequence[str]]],
-                    metrics: Dict[str, Metric],
+                    references: Sequence[Sequence[str]] | None,
+                    metrics: dict[str, Metric],
                     n_samples: int = 1000,
                     n_ar_confidence: int = -1,
-                    seed: Optional[int] = None) -> Tuple[str, Dict[str, Result]]:
+                    seed: int | None = None) -> tuple[str, dict[str, Result]]:
     """Paired bootstrap resampling test for MT evaluation. This function
     replicates the behavior of the Moses script called
     `bootstrap-hypothesis-difference-significance.pl`.
@@ -300,9 +303,9 @@ class PairedTest:
         'bs': 1000,
     }
 
-    def __init__(self, named_systems: List[Tuple[str, Sequence[str]]],
+    def __init__(self, named_systems: list[tuple[str, Sequence[str]]],
                  metrics: Mapping[str, Metric],
-                 references: Optional[Sequence[Sequence[str]]],
+                 references: Sequence[Sequence[str]] | None,
                  test_type: str = 'ar',
                  n_samples: int = 0,
                  n_ar_confidence: int = -1,
@@ -349,8 +352,8 @@ class PairedTest:
                 # Don't use more workers than the number of CPUs
                 self.n_jobs = min(n_max_jobs, self.n_systems)
 
-        self._signatures: Dict[str, Signature] = {}
-        self._baseline_info: Dict[str, Tuple[Any, Result]] = {}
+        self._signatures: dict[str, Signature] = {}
+        self._baseline_info: dict[str, tuple[Any, Result]] = {}
 
         ##################################################
         # Pre-compute and cache baseline system statistics
@@ -389,10 +392,10 @@ class PairedTest:
                 sig.update('bs', self.n_ar_confidence)
             self._signatures[bl_score.name] = sig
 
-    def __call__(self) -> Tuple[Dict[str, Signature], Dict[str, List[Union[str, Result]]]]:
+    def __call__(self) -> tuple[dict[str, Signature], dict[str, list[str | Result]]]:
         """Runs the paired test either on single or multiple worker processes."""
         tasks = []
-        scores: Dict[str, List[Union[str, Result]]] = {}
+        scores: dict[str, list[str | Result]] = {}
 
         # Add the name column
         scores['System'] = [ns[0] for ns in self.named_systems]

@@ -75,3 +75,16 @@ sacrebleu = ["py.typed"]
 
 [tool.setuptools_scm]
 version_file = "sacrebleu/version.py"
+
+[tool.ruff.lint]
+ignore = [
+    "B019",
+    "B020",
+    "PLR1704",
+    "PLW1508",
+    "RUF012",
+    "SIM115",
+    "SIM117",
+    "TRY002",
+    "TRY203",
+]

@@ -1,10 +1,11 @@
 """
 The base class for all types of datasets.
 """
+from __future__ import annotations
+
 import os
 import re
 from abc import ABCMeta, abstractmethod
-from typing import Dict, List, Optional
 
 from ..utils import SACREBLEU_DIR, download_file, smart_open
 
@@ -13,11 +14,11 @@ class Dataset(metaclass=ABCMeta):
     def __init__(
         self,
         name: str,
-        data: Optional[List[str]] = None,
-        description: Optional[str] = None,
-        citation: Optional[str] = None,
-        md5: Optional[List[str]] = None,
-        langpairs=Dict[str, List[str]],
+        data: list[str] | None = None,
+        description: str | None = None,
+        citation: str | None = None,
+        md5: list[str] | None = None,
+        langpairs=None,
         **kwargs,
     ):
         """
@@ -35,7 +36,7 @@ class Dataset(metaclass=ABCMeta):
         self.description = description
         self.citation = citation
         self.md5 = md5
-        self.langpairs = langpairs
+        self.langpairs = {} if langpairs is None else langpairs
         self.kwargs = kwargs
 
         # Don't do any downloading or further processing now.
@@ -118,9 +119,8 @@ class Dataset(metaclass=ABCMeta):
 
         :param langpair: The language pair to process. e.g. "en-de". If None, all files will be processed.
         """
-        pass
 
-    def fieldnames(self, langpair) -> List[str]:
+    def fieldnames(self, langpair) -> list[str]:
         """
         Return a list of all the field names. For most source, this is just
         the source and the reference. For others, it might include the document
@@ -141,8 +141,7 @@ class Dataset(metaclass=ABCMeta):
         all_files = self.get_files(langpair)
         all_fins = [smart_open(f) for f in all_files]
 
-        for item in zip(*all_fins):
-            yield item
+        yield from zip(*all_fins)
 
     def source(self, langpair):
         """
@@ -160,8 +159,7 @@ class Dataset(metaclass=ABCMeta):
         ref_files = self.get_reference_files(langpair)
         ref_fins = [smart_open(f) for f in ref_files]
 
-        for item in zip(*ref_fins):
-            yield item
+        yield from zip(*ref_fins)
 
     def get_source_file(self, langpair):
         all_files = self.get_files(langpair)

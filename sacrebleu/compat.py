@@ -1,4 +1,6 @@
-from typing import Sequence, Optional
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from .metrics import BLEU, CHRF, TER, WER, BLEUScore, CHRFScore, TERScore, WERScore
 
@@ -39,7 +41,7 @@ def corpus_bleu(hypotheses: Sequence[str],
 
 def raw_corpus_bleu(hypotheses: Sequence[str],
                     references: Sequence[Sequence[str]],
-                    smooth_value: Optional[float] = BLEU.SMOOTH_DEFAULTS['floor']) -> BLEUScore:
+                    smooth_value: float | None = BLEU.SMOOTH_DEFAULTS['floor']) -> BLEUScore:
     """Computes BLEU for a corpus against a single (or multiple) reference(s).
     This convenience function assumes a particular set of arguments i.e.
     it disables tokenization and applies a `floor` smoothing with value `0.1`.
@@ -64,7 +66,7 @@ def raw_corpus_bleu(hypotheses: Sequence[str],
 def sentence_bleu(hypothesis: str,
                   references: Sequence[str],
                   smooth_method: str = 'exp',
-                  smooth_value: Optional[float] = None,
+                  smooth_value: float | None = None,
                   lowercase: bool = False,
                   tokenize=BLEU.TOKENIZER_DEFAULT,
                   use_effective_order: bool = True) -> BLEUScore:

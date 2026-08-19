@@ -1,5 +1,6 @@
 from .tokenizer_base import BaseTokenizer
 
+
 class NoneTokenizer(BaseTokenizer):
     """Don't apply any tokenization. Not recommended!."""
 

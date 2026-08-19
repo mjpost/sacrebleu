@@ -66,7 +66,7 @@ class FakeSGMLDataset(Dataset):
                 origin_file = os.path.join(self._rawdir, origin_file)
                 output_file = self._get_txt_file_path(langpair, field)
 
-                if field.startswith("src") or field.startswith("ref"):
+                if field.startswith(("src", "ref")):
                     self._convert_format(origin_file, output_file)
                 else:
                     # document metadata keys

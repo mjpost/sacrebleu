@@ -43,29 +43,29 @@ from .tokenizer_base import BaseTokenizer
 from .tokenizer_re import TokenizerRegexp
 
 _UCODE_RANGES = [
-    (u'\u3400', u'\u4db5'),  # CJK Unified Ideographs Extension A, release 3.0
-    (u'\u4e00', u'\u9fa5'),  # CJK Unified Ideographs, release 1.1
-    (u'\u9fa6', u'\u9fbb'),  # CJK Unified Ideographs, release 4.1
-    (u'\uf900', u'\ufa2d'),  # CJK Compatibility Ideographs, release 1.1
-    (u'\ufa30', u'\ufa6a'),  # CJK Compatibility Ideographs, release 3.2
-    (u'\ufa70', u'\ufad9'),  # CJK Compatibility Ideographs, release 4.1
-    (u'\u20000', u'\u2a6d6'),  # (UTF16) CJK Unified Ideographs Extension B, release 3.1
-    (u'\u2f800', u'\u2fa1d'),  # (UTF16) CJK Compatibility Supplement, release 3.1
-    (u'\uff00', u'\uffef'),  # Full width ASCII, full width of English punctuation,
+    ('\u3400', '\u4db5'),  # CJK Unified Ideographs Extension A, release 3.0
+    ('\u4e00', '\u9fa5'),  # CJK Unified Ideographs, release 1.1
+    ('\u9fa6', '\u9fbb'),  # CJK Unified Ideographs, release 4.1
+    ('\uf900', '\ufa2d'),  # CJK Compatibility Ideographs, release 1.1
+    ('\ufa30', '\ufa6a'),  # CJK Compatibility Ideographs, release 3.2
+    ('\ufa70', '\ufad9'),  # CJK Compatibility Ideographs, release 4.1
+    ('\u20000', '\u2a6d6'),  # (UTF16) CJK Unified Ideographs Extension B, release 3.1
+    ('\u2f800', '\u2fa1d'),  # (UTF16) CJK Compatibility Supplement, release 3.1
+    ('\uff00', '\uffef'),  # Full width ASCII, full width of English punctuation,
                              # half width Katakana, half wide half width kana, Korean alphabet
-    (u'\u2e80', u'\u2eff'),  # CJK Radicals Supplement
-    (u'\u3000', u'\u303f'),  # CJK punctuation mark
-    (u'\u31c0', u'\u31ef'),  # CJK stroke
-    (u'\u2f00', u'\u2fdf'),  # Kangxi Radicals
-    (u'\u2ff0', u'\u2fff'),  # Chinese character structure
-    (u'\u3100', u'\u312f'),  # Phonetic symbols
-    (u'\u31a0', u'\u31bf'),  # Phonetic symbols (Taiwanese and Hakka expansion)
-    (u'\ufe10', u'\ufe1f'),
-    (u'\ufe30', u'\ufe4f'),
-    (u'\u2600', u'\u26ff'),
-    (u'\u2700', u'\u27bf'),
-    (u'\u3200', u'\u32ff'),
-    (u'\u3300', u'\u33ff'),
+    ('\u2e80', '\u2eff'),  # CJK Radicals Supplement
+    ('\u3000', '\u303f'),  # CJK punctuation mark
+    ('\u31c0', '\u31ef'),  # CJK stroke
+    ('\u2f00', '\u2fdf'),  # Kangxi Radicals
+    ('\u2ff0', '\u2fff'),  # Chinese character structure
+    ('\u3100', '\u312f'),  # Phonetic symbols
+    ('\u31a0', '\u31bf'),  # Phonetic symbols (Taiwanese and Hakka expansion)
+    ('\ufe10', '\ufe1f'),
+    ('\ufe30', '\ufe4f'),
+    ('\u2600', '\u26ff'),
+    ('\u2700', '\u27bf'),
+    ('\u3200', '\u32ff'),
+    ('\u3300', '\u33ff'),
 ]
 
 

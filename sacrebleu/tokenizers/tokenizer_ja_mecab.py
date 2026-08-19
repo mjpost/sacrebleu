@@ -1,8 +1,8 @@
 from functools import lru_cache
 
 try:
-    import MeCab
     import ipadic
+    import MeCab
 except ImportError:
     # Don't fail until the tokenizer is actually used
     MeCab = None
