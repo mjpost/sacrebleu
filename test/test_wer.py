@@ -1,4 +1,5 @@
 import pytest
+
 import sacrebleu
 
 EPSILON = 1e-3

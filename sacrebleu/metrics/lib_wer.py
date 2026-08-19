@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple
 
-
-def word_error_rate_stats(words_hyp: List[str], words_ref: List[str]) -> Tuple[int, int]:
+def word_error_rate_stats(words_hyp: list[str], words_ref: list[str]) -> tuple[int, int]:
     """Computes the word-level edit distance (Levenshtein distance, i.e. the
     minimum number of word substitutions, insertions and deletions) between a
     hypothesis and a reference, as used by Word Error Rate (WER).
