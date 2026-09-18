@@ -396,6 +396,12 @@ class Metric(metaclass=ABCMeta):
         else:
             raise RuntimeError("No references provided and the cache is empty.")
 
+        if len(hypotheses) != len(ref_cache):
+            raise TypeError(
+                f"{self.__class__.__name__}: The reference cache must have the "
+                "same length as `hypotheses`."
+            )
+
         stats = []
         tok_count = 0
 
