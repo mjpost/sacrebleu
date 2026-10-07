@@ -262,11 +262,14 @@ class BLEU(Metric):
         smooth_mteval = 1.
         eff_order = max_ngram_order
         for n in range(1, len(precisions) + 1):
+            # Smooth local copies so that the counts given by the caller
+            # (and stored in the returned score) stay unchanged
+            n_correct, n_total = correct[n - 1], total[n - 1]
             if smooth_method == 'add-k' and n > 1:
-                correct[n - 1] += smooth_value
-                total[n - 1] += smooth_value
+                n_correct += smooth_value
+                n_total += smooth_value
 
-            if total[n - 1] == 0:
+            if n_total == 0:
                 break
 
             # If the system guesses no i-grams, 1 <= i <= max_ngram_order,
@@ -278,14 +281,14 @@ class BLEU(Metric):
             if effective_order:
                 eff_order = n
 
-            if correct[n - 1] == 0:
+            if n_correct == 0:
                 if smooth_method == 'exp':
                     smooth_mteval *= 2
-                    precisions[n - 1] = 100. / (smooth_mteval * total[n - 1])
+                    precisions[n - 1] = 100. / (smooth_mteval * n_total)
                 elif smooth_method == 'floor':
-                    precisions[n - 1] = 100. * smooth_value / total[n - 1]
+                    precisions[n - 1] = 100. * smooth_value / n_total
             else:
-                precisions[n - 1] = 100. * correct[n - 1] / total[n - 1]
+                precisions[n - 1] = 100. * n_correct / n_total
 
         # Compute BLEU score
         score = bp * math.exp(

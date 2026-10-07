@@ -148,3 +148,21 @@ test_bleu_max_order = [
 def test_max_ngram_order(order, hyps, refs, expected_bleu):
     bleu = BLEU(max_ngram_order=order).corpus_score(hyps, refs)
     assert f"{bleu.score:.2f}" == expected_bleu
+
+
+def test_add_k_smoothing_keeps_counts():
+    correct, total = [3, 0, 0, 0], [5, 4, 3, 2]
+    score = BLEU.compute_bleu(correct, total, 5, 6, smooth_method='add-k')
+    # the caller's lists are not modified and the score keeps the raw counts
+    assert correct == [3, 0, 0, 0]
+    assert total == [5, 4, 3, 2]
+    assert score.counts == [3, 0, 0, 0]
+    assert score.totals == [5, 4, 3, 2]
+    # precisions for n > 1 are still smoothed with k = 1
+    assert score.precisions == [60.0, 20.0, 25.0, 100. / 3]
+
+    bleu = BLEU(smooth_method='add-k').corpus_score(
+        ["the cat sat on mat"], [["the cat sat on the mat"]])
+    assert bleu.counts == [5, 3, 2, 1]
+    assert bleu.totals == [5, 4, 3, 2]
+    assert f"{bleu.score:.2f}" == "65.11"
