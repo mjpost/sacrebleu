@@ -239,6 +239,8 @@ TER related arguments (The defaults replicate TERCOM's behavior):
 ### Version Signatures
 As you may have noticed, sacreBLEU generates version strings such as `BLEU|nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.0.0` for reproducibility reasons. It's strongly recommended to share these signatures in your papers!
 
+When using the Python API with a non-default `max_ngram_order`, the BLEU signature also includes `ngram:N` (`n:N` in the short signature), where `N` is the maximum n-gram order. This field is omitted for the default order of 4, preserving existing signatures.
+
 ### Outputting other metadata
 
 Sacrebleu knows about metadata for some test sets, and you can output it like this:

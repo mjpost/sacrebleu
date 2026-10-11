@@ -145,6 +145,22 @@ test_bleu_max_order = [
 
 
 @pytest.mark.parametrize("order, hyps, refs, expected_bleu", test_bleu_max_order)
-def test_max_ngram_order(order, hyps, refs, expected_bleu):
-    bleu = BLEU(max_ngram_order=order).corpus_score(hyps, refs)
-    assert f"{bleu.score:.2f}" == expected_bleu
+@pytest.mark.parametrize("short", [False, True])
+def test_max_ngram_order(order, hyps, refs, expected_bleu, short):
+    bleu = BLEU(max_ngram_order=order)
+    assert f"{bleu.corpus_score(hyps, refs).score:.2f}" == expected_bleu
+    expected = ("#:2|c:mixed|e:no|tok:13a|s:exp|" if short else
+                "nrefs:2|case:mixed|eff:no|tok:13a|smooth:exp|")
+    if order != 4:
+        expected += f"{'n' if short else 'ngram'}:{order}|"
+    expected += f"{'v' if short else 'version'}:{sacrebleu.__version__}"
+    assert bleu.get_signature().format(short=short) == expected
+
+
+@pytest.mark.parametrize("short", [False, True])
+def test_default_signature(short):
+    bleu = BLEU()
+    bleu.corpus_score(_hyps, _refs)
+    expected = ("#:2|c:mixed|e:no|tok:13a|s:exp|v:" if short else
+                "nrefs:2|case:mixed|eff:no|tok:13a|smooth:exp|version:")
+    assert bleu.get_signature().format(short=short) == expected + sacrebleu.__version__

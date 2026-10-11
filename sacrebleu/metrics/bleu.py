@@ -54,6 +54,7 @@ class BLEUSignature(Signature):
             'eff': 'e',
             'tok': 'tok',
             'smooth': 's',
+            'ngram': 'n',
         })
 
         # Construct a combined string for smoothing method and value
@@ -76,6 +77,10 @@ class BLEUSignature(Signature):
             'tok': args['tokenizer_signature'],
             'smooth': smooth_str,
         })
+
+        # Preserve the signature for the default maximum n-gram order.
+        if args['max_ngram_order'] != MAX_NGRAM_ORDER:
+            self.info['ngram'] = args['max_ngram_order']
 
 
 class BLEUScore(Score):
