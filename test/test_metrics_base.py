@@ -1,8 +1,23 @@
+import json
 from contextlib import nullcontext as does_not_raise
 
 import pytest
 
+from sacrebleu.metrics import BLEU, CHRF, TER
 from sacrebleu.metrics.base import Metric
+
+
+@pytest.mark.parametrize("metric_class", [BLEU, CHRF, TER])
+@pytest.mark.parametrize("kwargs", [{}, {"signature": ""}])
+def test_score_format_json_without_signature(metric_class, kwargs):
+    metric = metric_class()
+    score = metric.corpus_score(["The model learns from data."], [["The model learns from text."]])
+
+    result = json.loads(score.format(width=3, is_json=True, **kwargs))
+
+    assert result["name"] == score.name
+    assert result["score"] == round(score.score, 3)
+    assert result["signature"] == ""
 
 
 class ConcreteTestMetric(Metric):

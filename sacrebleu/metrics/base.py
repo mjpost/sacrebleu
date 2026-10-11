@@ -83,9 +83,10 @@ class Score:
             return sc
 
         if is_json:
-            for param in signature.split("|"):
-                key, value = param.split(":")
-                d[key] = value
+            if signature:
+                for param in signature.split("|"):
+                    key, value = param.split(":")
+                    d[key] = value
             return json.dumps(d, indent=1, ensure_ascii=False)
 
         return full_score
