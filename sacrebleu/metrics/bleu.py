@@ -19,6 +19,7 @@ MAX_NGRAM_ORDER = 4
 _TOKENIZERS = {
     'none': 'tokenizer_none.NoneTokenizer',
     'zh': 'tokenizer_zh.TokenizerZh',
+    'cjk': 'tokenizer_cjk.TokenizerCJK',
     '13a': 'tokenizer_13a.Tokenizer13a',
     'intl': 'tokenizer_intl.TokenizerV14International',
     'char': 'tokenizer_char.TokenizerChar',

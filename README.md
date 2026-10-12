@@ -213,7 +213,7 @@ BLEU related arguments:
                         Smoothing method: exponential decay, floor (increment zero counts), add-k (increment num/denom by k for n>1), or none. (Default: exp)
   --smooth-value BLEU_SMOOTH_VALUE, -sv BLEU_SMOOTH_VALUE
                         The smoothing value. Only valid for floor and add-k. (Defaults: floor: 0.1, add-k: 1)
-  --tokenize {none,zh,13a,char,intl,ja-mecab,ko-mecab}, -tok {none,zh,13a,char,intl,ja-mecab,ko-mecab}
+  --tokenize {none,zh,cjk,13a,char,intl,ja-mecab,ko-mecab}, -tok {none,zh,cjk,13a,char,intl,ja-mecab,ko-mecab}
                         Tokenization method to use for BLEU. If not provided, defaults to `zh` for Chinese, `ja-mecab` for Japanese, `ko-mecab` for Korean and `13a` (mteval) otherwise.
   --lowercase, -lc      If True, enables case-insensitivity. (Default: False)
   --force               Insist that your tokenized input is actually detokenized.
@@ -285,6 +285,7 @@ but it expects that you pass through the entire translated test set.
    - `char` for language-agnostic character-level tokenization
    - `intl` applies international tokenization and mimics the `mteval-v14` script from Moses
    - `zh` separates out **Chinese** characters and tokenizes the non-Chinese parts using `13a` tokenizer
+   - `cjk` extends `zh` with Hiragana and Katakana (U+3040–U+30FF), keeping Latin words intact. Select it explicitly with `--tokenize cjk` or `BLEU(tokenize="cjk")`; it does not change language defaults or add Hangul segmentation
    - `ja-mecab` tokenizes **Japanese** inputs using the [MeCab](https://pypi.org/project/mecab-python3) morphological analyzer
    - `ko-mecab` tokenizes **Korean** inputs using the [MeCab-ko](https://pypi.org/project/mecab-ko) morphological analyzer
    - `flores101` and `flores200` uses the SentencePiece model built from the Flores-101 and [Flores-200](https://github.com/facebookresearch/flores/blob/main/flores200/README.md#languages-in-flores-200) dataset, respectively. Note: the canonical .spm file will be automatically fetched if not found locally.
