@@ -45,6 +45,9 @@ class Score:
         is_json: bool = False,
     ) -> str:
         """Returns a pretty representation of the score.
+
+        Includes a computed confidence interval even when its mean is zero.
+
         :param width: Floating point decimal precision width.
         :param score_only: If `True`, and the format is not `json`,
         returns a single score string.
@@ -61,7 +64,7 @@ class Score:
 
         sc = f"{self.score:.{width}f}"
 
-        if self._mean > 0:
+        if self._mean >= 0:
             confidence_mean = f"{self._mean:.{width}f}"
             confidence_var = f"{self._ci:.{width}f}"
             confidence_str = f"μ = {confidence_mean} ± {confidence_var}"
