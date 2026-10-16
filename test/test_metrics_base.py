@@ -1,8 +1,9 @@
+import json
 from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from sacrebleu.metrics.base import Metric
+from sacrebleu.metrics.base import Metric, Score
 
 
 class ConcreteTestMetric(Metric):
@@ -353,3 +354,35 @@ def test_check_corpus_score_args(hyps, refs, expected_context):
     metric = ConcreteTestMetric()
     with expected_context:
         metric._check_corpus_score_args(hyps=hyps, refs=refs)
+
+
+@pytest.mark.parametrize("mean", [0.0, 1.0])
+def test_score_format_confidence_interval(mean):
+    score = Score("TEST", mean)
+    score.estimate_ci([score] * 40)
+    confidence = f"\u03bc = {mean:.2f} \u00b1 0.00"
+
+    assert score.format() == f"TEST = {mean:.2f} ({confidence})"
+    assert score.format(score_only=True) == f"{mean:.2f} ({confidence})"
+    assert json.loads(score.format(signature="version:test", is_json=True)) == {
+        "name": "TEST",
+        "score": mean,
+        "signature": "version:test",
+        "version": "test",
+        "confidence_mean": mean,
+        "confidence_var": 0.0,
+        "confidence": confidence,
+    }
+
+
+def test_score_format_without_confidence_interval():
+    score = Score("TEST", 0.0)
+
+    assert score.format() == "TEST = 0.00"
+    assert score.format(score_only=True) == "0.00"
+    assert json.loads(score.format(signature="version:test", is_json=True)) == {
+        "name": "TEST",
+        "score": 0.0,
+        "signature": "version:test",
+        "version": "test",
+    }
