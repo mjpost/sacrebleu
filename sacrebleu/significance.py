@@ -407,11 +407,9 @@ class PairedTest:
         # Prepare list of arguments for each comparison
         # Skip the baseline (pos: 0)
         for idx, (name, hyps) in enumerate(self.named_systems[1:]):
-            seed = self._seed if self._seed else None
-
             tasks.append(
                 (self._baseline_info, name, hyps, self.references,
-                 self.metrics, self.n_samples, self.n_ar_confidence, seed))
+                 self.metrics, self.n_samples, self.n_ar_confidence, self._seed))
 
         # Run the test(s)
         if self.n_jobs == 1:
