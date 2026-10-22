@@ -54,7 +54,7 @@ def estimate_ci(scores: np.ndarray) -> tuple[float, float]:
     upper_idx = n - lower_idx - 1
     lower, upper = scores[lower_idx], scores[upper_idx]
     ci = 0.5 * (upper - lower)
-    return (scores.mean(), ci)
+    return float(scores.mean()), float(ci)
 
 
 def _bootstrap_resample(stats: list[list[int | float]],
