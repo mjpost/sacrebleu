@@ -82,13 +82,13 @@ def _normalize_asian(sent: str) -> str:
     # 30A0—30FF Katakana
     # 31F0—31FF Katakana Phonetic Extensions
     sent = re.sub(
-        r"(^|^[\u3040-\u309f])([\u3040-\u309f]+)(?=$|^[\u3040-\u309f])",
+        r"(^|[^\u3040-\u309f])([\u3040-\u309f]+)(?=$|[^\u3040-\u309f])",
         r"\1 \2 ", sent)
     sent = re.sub(
-        r"(^|^[\u30a0-\u30ff])([\u30a0-\u30ff]+)(?=$|^[\u30a0-\u30ff])",
+        r"(^|[^\u30a0-\u30ff])([\u30a0-\u30ff]+)(?=$|[^\u30a0-\u30ff])",
         r"\1 \2 ", sent)
     sent = re.sub(
-        r"(^|^[\u31f0-\u31ff])([\u31f0-\u31ff]+)(?=$|^[\u31f0-\u31ff])",
+        r"(^|[^\u31f0-\u31ff])([\u31f0-\u31ff]+)(?=$|[^\u31f0-\u31ff])",
         r"\1 \2 ", sent)
 
     sent = re.sub(TercomTokenizer.ASIAN_PUNCT, r" \1 ", sent)

@@ -36,3 +36,17 @@ def test_ter(hypotheses, references, expected_score):
     metric = sacrebleu.metrics.TER()
     score = metric.corpus_score(hypotheses, [references]).score
     assert abs(score - 100 * expected_score) < EPSILON
+
+
+@pytest.mark.parametrize("normalized, asian_support, expected_score", [
+    (True, True, 50.0),
+    (True, False, 100.0),
+    (False, True, 100.0),
+    (False, False, 100.0),
+])
+def test_ter_mixed_kana(normalized, asian_support, expected_score):
+    metric = sacrebleu.TER(normalized=normalized, asian_support=asian_support)
+    # TERCOM splits each into two tokens: a shared noun and a changed ending.
+    hypothesis, reference = "カメラです", "カメラでした"
+    assert metric.sentence_score(hypothesis, [reference]).score == expected_score
+    assert metric.corpus_score([hypothesis], [[reference]]).score == expected_score
