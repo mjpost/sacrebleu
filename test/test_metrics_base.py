@@ -2,6 +2,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
+from sacrebleu.metrics import BLEU, CHRF, TER
 from sacrebleu.metrics.base import Metric
 
 
@@ -353,3 +354,36 @@ def test_check_corpus_score_args(hyps, refs, expected_context):
     metric = ConcreteTestMetric()
     with expected_context:
         metric._check_corpus_score_args(hyps=hyps, refs=refs)
+
+
+@pytest.mark.parametrize("metric_cls", [BLEU, CHRF, TER])
+@pytest.mark.parametrize("scoring", ["corpus", "cached_corpus", "sentence"])
+def test_scoring_clears_previous_bootstrap_signature(metric_cls, scoring, monkeypatch):
+    monkeypatch.setenv("SACREBLEU_SEED", "12345")
+    hypotheses = ["the cat sat on the mat", "a dog runs in the park"]
+    references = [["the cat slept on the mat", "a dog ran in the park"]]
+    metric = metric_cls(references=references)
+    metric.corpus_score(hypotheses, None, n_bootstrap=10)
+    signature = metric.get_signature()
+    assert "bs:10" in str(signature)
+    assert "seed:12345" in str(signature)
+
+    fresh = metric_cls(references=references)
+    if scoring == "sentence":
+        score = metric.sentence_score(hypotheses[0], [references[0][0]])
+        expected = fresh.sentence_score(hypotheses[0], [references[0][0]])
+    else:
+        refs = None if scoring == "cached_corpus" else references
+        score = metric.corpus_score(hypotheses, refs)
+        expected = fresh.corpus_score(hypotheses, refs)
+
+    assert score.score == expected.score
+    assert str(metric.get_signature()) == str(fresh.get_signature())
+    assert metric.get_signature().format(short=True) == fresh.get_signature().format(short=True)
+    # Previously obtained signatures remain snapshots of the earlier run.
+    assert "bs:10" in str(signature)
+
+    monkeypatch.setenv("SACREBLEU_SEED", "54321")
+    metric.corpus_score(hypotheses, None, n_bootstrap=20)
+    assert "bs:20" in str(metric.get_signature())
+    assert "seed:54321" in str(metric.get_signature())

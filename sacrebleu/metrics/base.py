@@ -432,7 +432,10 @@ class Metric(metaclass=ABCMeta):
         stats = self._extract_corpus_statistics(
             [hypothesis], [[refs] for refs in references]
         )
-        return self._aggregate_and_compute(stats)
+        score = self._aggregate_and_compute(stats)
+        self.n_bootstrap = None
+        self.seed = None
+        return score
 
     def corpus_score(
         self,
@@ -458,6 +461,9 @@ class Metric(metaclass=ABCMeta):
         # Compute the actual system score
         actual_score = self._aggregate_and_compute(stats)
 
+        # The signature describes this call, not a previous bootstrap run.
+        self.n_bootstrap = None
+        self.seed = None
         if n_bootstrap > 1:
             # Compute bootstrap estimate as well
             # Delayed import is to escape from numpy import if bootstrap

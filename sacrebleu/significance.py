@@ -384,6 +384,8 @@ class PairedTest:
             # Update metric signature as well
             sig = metric.get_signature()
             sig.update('seed', str(self._seed).lower())
+            # Do not inherit bootstrap metadata from an earlier corpus score.
+            sig.update('bs', None)
 
             # Num samples for bs, num trials for AR
             sig.update(self.test_type, self.n_samples)

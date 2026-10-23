@@ -3,7 +3,7 @@ from collections import defaultdict
 
 import pytest
 
-from sacrebleu.metrics import BLEU
+from sacrebleu.metrics import BLEU, CHRF, TER
 from sacrebleu.significance import PairedTest, Result
 
 
@@ -105,3 +105,25 @@ def test_paired_approximate_randomization(name, expected_p_vals):
     expected_bleu_p_val = expected_p_vals[0]
     p_val = SACREBLEU_AR_P_VALS[name]
     assert abs(p_val - expected_bleu_p_val) < 1e-2
+
+
+@pytest.mark.parametrize("metric_cls", [BLEU, CHRF, TER])
+@pytest.mark.parametrize("test_type, confidence", [("ar", -1), ("ar", 20), ("bs", -1)])
+def test_paired_signature_does_not_inherit_bootstrap(metric_cls, test_type, confidence, monkeypatch):
+    monkeypatch.setenv("SACREBLEU_SEED", "12345")
+    hypotheses = ["the cat sat on the mat", "a dog runs in the park"]
+    references = [["the cat slept on the mat", "a dog ran in the park"]]
+    metric = metric_cls(references=references)
+    metric.corpus_score(hypotheses, None, n_bootstrap=10)
+    systems = [("baseline", references[0]), ("candidate", hypotheses)]
+    kwargs = dict(test_type=test_type, n_samples=30, n_ar_confidence=confidence)
+    reused_signatures, reused_results = PairedTest(
+        systems, {"metric": metric}, references=None, **kwargs)()
+    fresh_signatures, fresh_results = PairedTest(
+        systems, {"metric": metric_cls(references=references)}, references=None, **kwargs)()
+
+    assert reused_signatures.keys() == fresh_signatures.keys()
+    for name in reused_signatures:
+        assert str(reused_signatures[name]) == str(fresh_signatures[name])
+        for reused, fresh in zip(reused_results[name], fresh_results[name]):
+            assert vars(reused) == vars(fresh)
