@@ -63,7 +63,6 @@ class FakeSGMLDataset(Dataset):
 
             for field, origin_file in zip(fieldnames, origin_files):
 
-                origin_file = os.path.join(self._rawdir, origin_file)
                 output_file = self._get_txt_file_path(langpair, field)
 
                 if field.startswith(("src", "ref")):

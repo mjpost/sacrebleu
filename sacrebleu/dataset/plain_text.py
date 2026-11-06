@@ -21,13 +21,8 @@ class PlainTextDataset(Dataset):
 
         for langpair in langpairs:
             fieldnames = self.fieldnames(langpair)
-            origin_files = [
-                os.path.join(self._rawdir, path) for path in langpairs[langpair]
-            ]
-
-            for field, origin_file in zip(fieldnames, origin_files):
-
-                origin_file = os.path.join(self._rawdir, origin_file)
+            for field, path in zip(fieldnames, langpairs[langpair]):
+                origin_file = os.path.join(self._rawdir, path)
                 output_file = self._get_txt_file_path(langpair, field)
 
                 with smart_open(origin_file) as fin:

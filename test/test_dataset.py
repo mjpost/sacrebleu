@@ -1,6 +1,9 @@
 import os
 import random
 import shutil
+from pathlib import Path
+
+import pytest
 
 from sacrebleu import dataset
 from sacrebleu.utils import smart_open
@@ -112,3 +115,24 @@ def test_wmt22_references():
             assert wmt22._get_langpair_allowed_refs(langpair) == ["ref:A"]
 
 
+
+
+@pytest.mark.parametrize("cache", ["relative", "absolute"])
+@pytest.mark.parametrize("sgml", [False, True], ids=["plaintext", "sgml"])
+def test_cached_raw_files(tmp_path, monkeypatch, cache, sgml):
+    monkeypatch.chdir(tmp_path)
+    cache_root = Path("cache") if cache == "relative" else tmp_path / "cache"
+    monkeypatch.setattr("sacrebleu.dataset.base.SACREBLEU_DIR", str(cache_root))
+
+    cls = dataset.FakeSGMLDataset if sgml else dataset.PlainTextDataset
+    corpus = cls("test", data=[], langpairs={"en-de": ["src", "ref"]})
+    raw = cache_root / "test" / "raw"
+    raw.mkdir(parents=True)
+    for name, text in [("src", "hello"), ("ref", "hallo")]:
+        if sgml:
+            text = f'<doc docid="d" genre="news" origlang="en">\n<seg id="1">{text}</seg>'
+        (raw / name).write_text(text + "\n", encoding="utf-8")
+
+    files = corpus.get_files("en-de")
+    expected = ["hello", "hallo"] + (["d", "news", "en"] if sgml else [])
+    assert [Path(f).read_text(encoding="utf-8").strip() for f in files] == expected
