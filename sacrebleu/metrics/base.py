@@ -387,12 +387,18 @@ class Metric(metaclass=ABCMeta):
         will be used.
         :return: A list where each sublist corresponds to segment statistics.
         """
+        # Save the constructor cache's count before an explicit reference set
+        # can replace the count used by get_signature().
+        if self._ref_cache and not hasattr(self, "_cached_num_refs"):
+            self._cached_num_refs = self.num_refs
+
         # Pre-compute references
         # Don't store the cache as the user is explicitly passing refs
         if references:
             ref_cache = self._cache_references(references)
         elif self._ref_cache:
             ref_cache = self._ref_cache
+            self.num_refs = self._cached_num_refs
         else:
             raise RuntimeError("No references provided and the cache is empty.")
 
