@@ -2,6 +2,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
+from sacrebleu.metrics import BLEU, CHRF, TER
 from sacrebleu.metrics.base import Metric
 
 
@@ -353,3 +354,23 @@ def test_check_corpus_score_args(hyps, refs, expected_context):
     metric = ConcreteTestMetric()
     with expected_context:
         metric._check_corpus_score_args(hyps=hyps, refs=refs)
+
+
+@pytest.mark.parametrize("metric_class", [BLEU, CHRF, TER])
+@pytest.mark.parametrize(
+    "second_reference, nrefs", [(["one", "two"], 2), (["one", None], "var")]
+)
+def test_signature_when_returning_to_cached_references(
+    metric_class, second_reference, nrefs
+):
+    hypotheses = ["one", "two"]
+    metric = metric_class(references=[hypotheses, second_reference])
+    initial = metric.corpus_score(hypotheses, None)
+    assert metric.get_signature().info["nrefs"] == nrefs
+
+    metric.corpus_score(hypotheses, [["three", "four"]])
+    assert metric.get_signature().info["nrefs"] == 1
+
+    cached = metric.corpus_score(hypotheses, None)
+    assert cached.score == initial.score
+    assert metric.get_signature().info["nrefs"] == nrefs
