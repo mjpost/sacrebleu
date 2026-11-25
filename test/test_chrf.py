@@ -11,9 +11,12 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
+import json
+
 import pytest
 
 import sacrebleu
+from sacrebleu.metrics import CHRF
 
 EPSILON = 1e-4
 
@@ -110,3 +113,45 @@ def test_chrf_keep_whitespace(hypotheses, references, expected_score):
 def test_chrf_sentence_level(hypothesis, references, expected_score):
     score = sacrebleu.sentence_chrf(hypothesis, references, eps_smoothing=True).score
     assert abs(score - expected_score) < EPSILON
+
+
+@pytest.mark.parametrize("short", [False, True])
+def test_chrf_signature_default_beta(short):
+    metric = CHRF()
+    metric.corpus_score(["the cat"], [["the cat sat on the mat"]])
+    expected = (
+        f"#:1|c:mixed|e:yes|nc:6|nw:0|s:no|v:{sacrebleu.__version__}"
+        if short
+        else f"nrefs:1|case:mixed|eff:yes|nc:6|nw:0|space:no|version:{sacrebleu.__version__}"
+    )
+    assert metric.get_signature().format(short=short) == expected
+
+
+@pytest.mark.parametrize("beta", [1, 3, 4])
+@pytest.mark.parametrize("short", [False, True])
+def test_chrf_signature_non_default_beta(beta, short):
+    metric = CHRF(beta=beta)
+    score = metric.corpus_score(["the cat"], [["the cat sat on the mat"]])
+    sig = metric.get_signature().format(short=short)
+    expected = (
+        f"#:1|c:mixed|e:yes|nc:6|nw:0|s:no|b:{beta}|v:{sacrebleu.__version__}"
+        if short
+        else f"nrefs:1|case:mixed|eff:yes|nc:6|nw:0|space:no|beta:{beta}|version:{sacrebleu.__version__}"
+    )
+    assert sig == expected
+
+    payload = json.loads(score.format(signature=sig, is_json=True))
+    key = "b" if short else "beta"
+    assert payload["signature"] == expected
+    assert payload[key] == str(beta)
+
+
+def test_chrf_signature_distinguishes_beta_values():
+    c1 = CHRF(beta=1)
+    c2 = CHRF(beta=2)
+    c4 = CHRF(beta=4)
+    s1 = c1.corpus_score(["the cat"], [["the cat sat on the mat"]])
+    s2 = c2.corpus_score(["the cat"], [["the cat sat on the mat"]])
+    s4 = c4.corpus_score(["the cat"], [["the cat sat on the mat"]])
+    assert s1.score != s2.score != s4.score
+    assert len({str(c1.get_signature()), str(c2.get_signature()), str(c4.get_signature())}) == 3

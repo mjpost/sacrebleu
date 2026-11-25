@@ -23,6 +23,7 @@ class CHRFSignature(Signature):
             'nc': 'nc',
             'nw': 'nw',
             'space': 's',
+            'beta': 'b',
         })
 
         self.info.update({
@@ -32,6 +33,10 @@ class CHRFSignature(Signature):
             'nw': args['word_order'],
             'space': 'yes' if args['whitespace'] else 'no',
         })
+
+        # Preserve existing signatures for the default beta value.
+        if args['beta'] != CHRF.BETA:
+            self.info['beta'] = args['beta']
 
 
 class CHRFScore(Score):
