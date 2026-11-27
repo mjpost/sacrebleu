@@ -227,6 +227,13 @@ def parse_args():
     return args
 
 
+def _split_tsv(line: str, maxsplit: int = -1) -> list[str]:
+    """Split before stripping the line ending so empty trailing fields survive."""
+    fields = line.split('\t', maxsplit)
+    fields[-1] = fields[-1].rstrip()
+    return fields
+
+
 def main():
     args = parse_args()
 
@@ -362,11 +369,10 @@ def main():
     for ref_files in concat_ref_files:
         for refno, ref_file in enumerate(ref_files):
             for lineno, line in enumerate(smart_open(ref_file, encoding=args.encoding), 1):
-                line = line.rstrip()
                 if args.num_refs == 1:
-                    full_refs[refno].append(line)
+                    full_refs[refno].append(line.rstrip())
                 else:
-                    refs = line.split(sep='\t', maxsplit=args.num_refs - 1)
+                    refs = _split_tsv(line, maxsplit=args.num_refs - 1)
                     # We are strict in fixed number of references through CLI
                     # But the API supports having variable refs per each segment
                     # by simply having '' or None's as dummy placeholders
@@ -388,7 +394,7 @@ def main():
         inputfh = io.TextIOWrapper(sys.stdin.buffer, encoding=args.encoding)
 
         # guess the number of systems by looking at the first line
-        fields = inputfh.readline().rstrip().split('\t')
+        fields = _split_tsv(inputfh.readline())
 
         # Set number of systems
         num_sys = len(fields)
@@ -401,7 +407,7 @@ def main():
 
         # Read the rest
         for line in inputfh:
-            fields = line.rstrip().split('\t')
+            fields = _split_tsv(line)
             if len(fields) != num_sys:
                 sacrelogger.error('FATAL: the number of tab-delimited fields in the input stream differ across lines.')
                 sys.exit(17)
